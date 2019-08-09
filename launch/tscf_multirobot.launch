@@ -1,0 +1,66 @@
+<launch>
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <!-- <node type="rviz" name="rviz" pkg="rviz"  /> -->
+  <node type="rqt_console" name="rqt_console" pkg="rqt_console"  />
+  <!-- <node pkg="tscf_exploration" type="printer" name="printer" /> -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find tscf_exploration)/urdf/pioneer3dx.xacro'" />
+
+  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-36.5" />
+        <arg name="init_pose_y" value="36.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv0" />
+        <arg name="use_sim_time" default="$(arg use_sim_time)"/>
+  </include>
+
+   <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-36.5" />
+        <arg name="init_pose_y" value="29.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv1" />
+  </include>
+
+  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-36.5" />
+        <arg name="init_pose_y" value="22.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv2" />
+  </include>
+<!--
+  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-29.5" />
+        <arg name="init_pose_y" value="36.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv3" />
+  </include>
+
+  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-22.5" />
+        <arg name="init_pose_y" value="36.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv4" />
+  </include>
+
+  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-15.5" />
+        <arg name="init_pose_y" value="36.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv5" />
+  </include>     -->
+
+  <node pkg="tscf_exploration" type="tscf_exploration_map_merger" name="tscf_exploration_map_merger" required="true" />
+  <node pkg="tscf_exploration" type="tscf_exploration_central_module" name="tscf_exploration_central_module"  required="true"/>
+  <node pkg="tscf_exploration" type="tscf_exploration_end_module" name="tscf_exploration_end_module" required="true" />
+
+</launch>
