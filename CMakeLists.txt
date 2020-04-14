@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   nav_msgs
   std_msgs
-  std_msgs
   rosbag
 )
 
@@ -167,7 +166,7 @@ add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModule_No
 add_executable(${PROJECT_NAME}_move_controller src/MoveController/move_controller.cpp src/MoveController/TCPClient.cpp)
 add_executable(${PROJECT_NAME}_robot src/Robot/RobotNode.cpp src/Robot/Robot.cpp)
 add_executable(${PROJECT_NAME}_end_module src/end_module.cpp src/utils.cpp)
-add_executable(${PROJECT_NAME}_monitor src/monitor.cpp src/CentralModule/CentralModule.cpp src/Robot/Robot.cpp)
+#add_executable(${PROJECT_NAME}_monitor src/monitor.cpp src/CentralModule/CentralModule.cpp src/Robot/Robot.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -199,16 +198,16 @@ target_link_libraries(${PROJECT_NAME}_robot
 target_link_libraries(${PROJECT_NAME}_end_module
  ${catkin_LIBRARIES}
 )
-target_link_libraries(${PROJECT_NAME}_monitor
- ${catkin_LIBRARIES}
-)
+#target_link_libraries(${PROJECT_NAME}_monitor
+# ${catkin_LIBRARIES}
+#)
 
 add_dependencies(${PROJECT_NAME}_map_merger tscf_exploration_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME}_central_module tscf_exploration_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME}_move_controller tscf_exploration_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME}_robot tscf_exploration_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME}_end_module tscf_exploration_generate_messages_cpp)
-add_dependencies(${PROJECT_NAME}_monitor tscf_exploration_generate_messages_cpp)
+#add_dependencies(${PROJECT_NAME}_monitor tscf_exploration_generate_messages_cpp)
 
 #############
 ## Install ##

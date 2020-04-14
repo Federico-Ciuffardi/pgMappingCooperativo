@@ -39,8 +39,8 @@ class Robot
     std::map<int,cv::Point2f> map_points;
     std::list<int> centros_de_frontera;
     bool first;
-    uint width;
-    uint height ;
+    int width;
+    int height ;
     int y_origin;
     int x_origin;
     int indice_origen;
