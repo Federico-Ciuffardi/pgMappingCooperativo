@@ -8,7 +8,7 @@
 
       <group ns="$(arg ns_name)">
 
-        <param name="robot_description" command="$(find xacro)/xacro.py '$(find tscf_exploration)/urdf/pioneer3dx.xacro'" />
+        <param name="robot_description" command="$(find xacro)/xacro '$(find tscf_exploration)/urdf/pioneer3dx.xacro'" />
 
         <node name="joint_state_publisher_$(arg ns_name)" pkg="joint_state_publisher" type="joint_state_publisher" ></node>
 

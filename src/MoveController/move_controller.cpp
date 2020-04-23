@@ -24,11 +24,11 @@ const double SPEED = 0.8;
 using namespace std;
 
 // VARIABLES
-ros::Publisher publisher;
-ros::Publisher publisher2;
-ros::Subscriber path_subscriber;
-ros::Subscriber pose_subscriber;
-ros::Subscriber map_subscriber;
+ros::Publisher path_result_pub;
+ros::Publisher path_info_pub;
+ros::Subscriber goalPath_sub;
+ros::Subscriber pose_sub;
+ros::Subscriber map_merged_sub;
 TCPClient client;
 tscf_exploration::goalList path;
 tscf_exploration::goalList path_saved;
@@ -59,7 +59,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg){
 		int sed = (clock() - startTime);
 		ss9 << "SUCCES: "<<metros<<" "<<sed<<" "<<path.indice;
 		msg_info.data = ss9.str();
-		publisher2.publish(msg_info);
+		path_info_pub.publish(msg_info);
 		//ROS_INFO("%s :: RECORRIO %f METROS", name_space.c_str(), metros);
 	}
 }
@@ -125,12 +125,12 @@ int main(int argc, char** argv){
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
 
-  path_subscriber = n.subscribe("goalPath", 10, pointListCallback);
-  pose_subscriber = n.subscribe("pose", 1, poseCallback);
-  map_subscriber = n.subscribe("/map_merged", 1, saveMap);
+  goalPath_sub = n.subscribe("goalPath", 10, pointListCallback);
+  pose_sub = n.subscribe("pose", 1, poseCallback);
+  map_merged_sub = n.subscribe("/map_merged", 1, saveMap);
   end_sub = n.subscribe("/end", 1, handleEnd);
-  publisher       = n.advertise<std_msgs::String>("path_result", 10);
-	publisher2       = n.advertise<std_msgs::String>("path_info", 10);
+  path_result_pub       = n.advertise<std_msgs::String>("path_result", 10);
+	path_info_pub       = n.advertise<std_msgs::String>("path_info", 10);
 
   ros::AsyncSpinner spinner(2);
   spinner.start();
@@ -143,7 +143,7 @@ int main(int argc, char** argv){
 	float last_distancie = 0;
   ros::Rate loop_rate(10);
 	int secondsPassed;
-  //while(publisher.getNumSubscribers() == 0){};
+  //while(path_result_pub.getNumSubscribers() == 0){};
   while(ros::ok()){
     switch ( estado ) {
     case 0:{
@@ -195,8 +195,8 @@ int main(int argc, char** argv){
 				secondsPassed = (clock() - startTime);
 				ss2 << " "<<metros<<" "<<secondsPassed<<" "<<path.indice;
 				msg_succes.data = ss2.str();
-				publisher.publish(msg_succes);
-				publisher2.publish(msg_succes);
+				path_result_pub.publish(msg_succes);
+				path_info_pub.publish(msg_succes);
 			}
 			break;}
     }
@@ -206,7 +206,7 @@ int main(int argc, char** argv){
 			int sed = (clock() - startTime);
 			ss9 << "SUCCES: "<<metros<<" "<<sed<<" "<<path.indice;
 			msg_info.data = ss9.str();
-			publisher2.publish(msg_info);
+			path_info_pub.publish(msg_info);
 			start = true;
 		  cont = 0;
 		  path_step = 0;

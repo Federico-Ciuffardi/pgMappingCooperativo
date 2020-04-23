@@ -3,9 +3,9 @@
 # Copyright (C) 2014 Zhi Yan
 
 from morse.builder import *
+import os
 
 ##################### ROBOT 0 ####################
-
 atrv0 = ATRV()
 atrv0.add_default_interface('ros')
 atrv0.translate(x=-36.5, y=36.5, z=0.0)
@@ -247,8 +247,8 @@ atrv2.append(keyboard)
 # keyboard = Keyboard()
 # atrv5.append(keyboard)
 ##################### ENVIRONMENT ####################
-
-env = Environment('src/tscf_exploration/morse/scenarios/maze.blend', fastmode=True)
+home = os.getenv("HOME")
+env = Environment(home+'/catkin_ws/src/tscf_exploration/morse/scenarios/maze.blend', fastmode=True)
 env.place_camera([0, 0, 80])
 env.set_time_scale(accelerate_by=3.0)
 env.aim_camera([0, 0, 0])

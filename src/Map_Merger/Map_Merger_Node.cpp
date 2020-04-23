@@ -5,8 +5,8 @@
 std::map< std::string, ros::Subscriber > map_sub;
 std::map< std::string, ros::Subscriber >  pose_sub;
 ros::Subscriber end_sub;
-ros::Publisher map_publisher;
-ros::Publisher map_controller;
+ros::Publisher map_merged_pub;
+ros::Publisher map_controller_pub;
 
 int number_robots;
 
@@ -27,8 +27,8 @@ void handleNewMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name){
       info.frontera = map_merger.getFrontera();
       info.obstaculos = map_merger.getObstaculos();
       info.sizeo = map_merger.getObstaculos().size();
-      map_controller.publish(info.mapa);
-      map_publisher.publish(info);
+      map_controller_pub.publish(info.mapa);
+      map_merged_pub.publish(info);
   }
 }
 
@@ -54,8 +54,8 @@ ros::NodeHandle n;
 
   n.param<int>("number_robots",number_robots,3);
 
-  map_publisher = n.advertise<tscf_exploration::mapMergedInfo>("/map_merged", 1);
-  map_controller = n.advertise<nav_msgs::OccupancyGrid>("/map_controller", 1);
+  map_merged_pub = n.advertise<tscf_exploration::mapMergedInfo>("/map_merged", 1);
+  map_controller_pub = n.advertise<nav_msgs::OccupancyGrid>("/map_controller", 1);
   end_sub = n.subscribe("/end", 1, handleEnd);
 
   ros::Rate loop_rate(5);

@@ -24,7 +24,7 @@ work original in ucs-ros-pkg.
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
 	<!-- properties (constants) -->
-	<property name="M_PI" value="3.14159" />
+	<xacro:property name="M_PI" value="3.14159" />
 
 	<!-- right/left hubcap + wheel -->
 	<xacro:macro name="p3dx_wheel" params="suffix parent reflect">
