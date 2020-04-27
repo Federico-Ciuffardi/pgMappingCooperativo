@@ -23,10 +23,10 @@ std::string end_msg("END");
 /* cuando: timer timeout */
 /* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */
 void timerRoutine(const ros::TimerEvent&){
-	ROS_INFO("CENTRAL MODULE :: auction");
 	if (centralModule.getEstado() == 2){
 		centralModule.setEstado(1); 
 		objetive_pub.publish(centralModule.assignTasks()); // ejecucion subasta (asignacion de tareas) y publicacion de resultados
+		ROS_INFO("CENTRAL MODULE :: auction end");
 	}else{
 		ROS_DEBUG("Wrong triggered");
 	}
@@ -42,6 +42,7 @@ void handleRequest(const std_msgs::StringConstPtr& msg){
 		centralModule.setEstado(2);
 		tscf_exploration::takeobjetive ret = centralModule.getObjetiveMap();
 		take_obj_pub.publish(ret); // publica puntos a subastar
+		ROS_INFO("CENTRAL MODULE :: auction start");
 		timer.start();
 	}
 }
@@ -52,6 +53,7 @@ void handleRequest(const std_msgs::StringConstPtr& msg){
 void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg){
 	if ((!FIN) && (centralModule.getEstado() != 2)){
 		/* update map */
+		//ROS_INFO("CENTRAL MODULE :: update map");
 		centralModule.saveMap(msg->mapa);
 		centralModule.setObstaculos(msg->obstaculos);
 		std::set<int> set(msg->frontera.begin(), msg->frontera.end());
@@ -64,6 +66,7 @@ void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg){
 		centralModule.resetArrivals();
 		centralModule.setEstado(2);
 		take_obj_pub.publish(centralModule.getObjetiveMap());// publica puntos a subastar
+		ROS_INFO("CENTRAL MODULE :: auction start");
 		timer.start();
 	}
 }
@@ -83,9 +86,8 @@ void handleEnd(const std_msgs::StringConstPtr& msg){
 /* que: esta se gurda */
 void handleReport(const tscf_exploration::frontierReportConstPtr& msg, std::string name){
 	if (!FIN){
-		ROS_DEBUG("CENTRAL MODULE :: ENTRO handleReport");
 		centralModule.saveBid(msg, name);
-		ROS_DEBUG("CENTRAL MODULE :: SALGO handleReport");
+		ROS_INFO("CENTRAL MODULE :: got bid from %s",name.c_str());
 	}
 }
 
@@ -121,7 +123,7 @@ int main(int argc, char* argv[]){
 			/* ROS_INFO("CENTRAL MODULE :: %d", cont_atrv); */
 			loop_rate.sleep();
 		}
-		ROS_INFO(" CENTRAL MODULE esperando por %d robots ", centralModule.getNumRobots() - cont_atrv);
+		ROS_INFO(" CENTRAL MODULE :: esperando por %d robots ", centralModule.getNumRobots() - cont_atrv);
 	}
 
 	ros::master::getTopics(topic_infos);

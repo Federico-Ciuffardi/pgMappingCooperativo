@@ -24,8 +24,8 @@ class MapMerger
     bool init;
     int y_origin;
     int x_origin;
-    int width;
-    int height;
+    uint width;
+    uint height;
     int indice_origen;
     std::set<int> frontera;
     std::set<int> obstaculos;

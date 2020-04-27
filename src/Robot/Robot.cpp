@@ -68,32 +68,37 @@ std::list<int> Robot::getCentrosF(){
 
 };
 
-
 std::string Robot::getRealInfoGain(){
-  int cont_libres = 0;
-  int cont_ocupadas = 0;
-  int cont_totales = 0;
-  std::vector<int>::iterator it_puntos;
+	int cont_libres = 0;
+	int cont_ocupadas = 0;
+	int cont_totales = 0;
+	std::vector<int>::iterator it_puntos;
+	//ROS_INFO("width %d", control_map.info.width);
+	//ROS_INFO("height %d", control_map.info.height);
 	for (it_puntos = last_info_gain.begin(); it_puntos != last_info_gain.end(); it_puntos++){
-    cont_totales++;
-    if (Robot::control_map.data[*it_puntos] != -1){
-      if (Robot::control_map.data[*it_puntos] != 100){
-        cont_ocupadas++;
-      }else{
-        cont_libres++;
-      }
-    }
+		//if(*it_puntos<control_map.info.width*control_map.info.height){
+			cont_totales++;
+			if (Robot::control_map.data[*it_puntos] != -1){
+				if (Robot::control_map.data[*it_puntos] != 100){
+					cont_ocupadas++;
+				}else{
+					cont_libres++;
+				}
+			}
+		//}
 	}
-  std::stringstream ret;
-  int error = cont_totales - (cont_libres + cont_ocupadas);
-  if (error <= 3){
-    Robot::errorCont += 1;
-  }else{
-    Robot::setErrorCont(0);
-  }
-  float errave = Robot::addErrorAverage(error);
-  ret << cont_libres << " " << cont_ocupadas << " " << cont_totales << " " << errave;
-  return ret.str();
+	
+	std::stringstream ret;
+	//int error = 0;
+	int error = cont_totales - (cont_libres + cont_ocupadas);
+	if (error <= 3){
+		Robot::errorCont += 1;
+	}else{
+		Robot::setErrorCont(0);
+	}
+	float errave = Robot::addErrorAverage(error);
+	ret << cont_libres << " " << cont_ocupadas << " " << cont_totales << " " << errave;
+	return ret.str();
 }
 
 void Robot::setCentrosF(std::vector<int> newFrontera){
@@ -120,7 +125,7 @@ void Robot::saveGlobalMap(nav_msgs::OccupancyGrid msg){
     Robot::height = msg.info.height;
     Robot::y_origin = msg.info.origin.position.x;
     Robot::x_origin = msg.info.origin.position.y;
-    Robot::indice_origen = abs(Robot::y_origin * Robot::width) + abs(Robot::x_origin);
+    Robot::indice_origen = (abs(Robot::y_origin) * Robot::width) + abs(Robot::x_origin);
     /*inicializo un mapa de puntos donde para cada indice me devuelve el punto (x,y) que le corresponde en un mapa.*/
     for (int i = 0; i < Robot::width*Robot::height; i++){
       int fila = i % Robot::width;;
@@ -151,6 +156,8 @@ void Robot::saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 };
 
 /*Funcion que me devuelve para cada centro de frontera una oleada*/
+/*Funcion que me devuelve para cada centro de frontera las distancias entre dicho centro y todas las celdas, si estas distancias son menores o iguales 
+	a la distancia entre dicho centro y robot*/
 std::map< int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg, int fin, std::list<int> centros_def, nav_msgs::OccupancyGrid& p){
   //ROS_INFO("Creo nueva oleada");
 	std::map< int, std::vector<int> > retorno;
@@ -233,7 +240,7 @@ tscf_exploration::frontierReport Robot::processMap(){
     return frontRep;
 
 }
-
+/* devuelve el objetivo con tu id o sea tu objetivo  */
 int Robot::getobjetive(const tscf_exploration::asignacionConstPtr& msg){
   int cant = 0;
   int centro = -1;
@@ -246,13 +253,14 @@ int Robot::getobjetive(const tscf_exploration::asignacionConstPtr& msg){
     }
     cant++;
   }
-  ROS_INFO(" %s :: Recibo Objetivo  ---> %d", nombreRobot.c_str(), centro);
+  //ROS_INFO(" %s :: Recibo Objetivo  ---> %d", nombreRobot.c_str(), centro);
   return centro;
 };
 
 void Robot::ajustarParedes(int centro, nav_msgs::OccupancyGrid& p, std::vector<int> obstaculos){
   //ROS_INFO("Ajusto Paredes");
   std::vector<int>::iterator it;
+	/*Para cada obstaculo o en obstaculos, pone obstaculo en los vecinos de o*/
 	for (it = obstaculos.begin(); it != obstaculos.end(); it++){
       if(p.data[*it] == 100){
         for(int j = 0; j<9; j++){
@@ -353,7 +361,7 @@ tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino, nav_ms
 	}
 	return list;
 }
-
+/*centro es el objetivo*/
 tscf_exploration::goalList Robot::getPathToObjetive(int centro, std::vector<int> obstaculos, nav_msgs::OccupancyGrid &p){
 
 	p.info = global_map.info;

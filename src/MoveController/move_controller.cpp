@@ -78,7 +78,7 @@ void pointListCallback(const tscf_exploration::goalList& msg){
 }
 
 void send_point(geometry_msgs::Point next_point){
-  ////ROS_INFO("Creating path step");
+  //ROS_INFO("Creating path step to (%d,%d)",next_point.x,next_point.y);
   stringstream ss;
   ss << msg_id << " "   << name_space     << ".waypoint " << "goto "
                << "["   << next_point.x   << ", "         << next_point.y   << ", " << next_point.z
@@ -86,7 +86,6 @@ void send_point(geometry_msgs::Point next_point){
   string msg = ss.str() ;
   //ROS_INFO("Sending path step ---> X = %f , Y = %f , Z = %f", next_point.x, next_point.y, next_point.z );
   client.send_msg(msg);
-	//ROS_INFO("Sended path step ---> X = %f , Y = %f , Z = %f", next_point.x, next_point.y, next_point.z );
   msg_id++;
 }
 
@@ -120,7 +119,7 @@ int main(int argc, char** argv){
   bool primera = true;
   char buffer_ns[20];
   ros::NodeHandle n;
-  name_space =  n.getNamespace().substr(2,5);
+  name_space =  n.getNamespace().substr(1,5);
 
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
@@ -136,10 +135,10 @@ int main(int argc, char** argv){
   spinner.start();
 
   // Initializing morse comunication
-  ROS_DEBUG("Starting TCP conection");
+  ROS_INFO("Starting TCP conection");
   client = TCPClient();
   client.setup("localhost", 4000);
-	ROS_DEBUG("End TCP conection");
+	ROS_INFO("End TCP conection");
 	float last_distancie = 0;
   ros::Rate loop_rate(10);
 	int secondsPassed;
@@ -165,11 +164,12 @@ int main(int argc, char** argv){
             estado = 2;
         break;}
     case 2:{
+
         float dist_to_target = getDistance(path_step -1);
-				if (dist_to_target == last_distancie){
-					send_point(path.listaGoals[path_step - 1 ]);
-					//ROS_INFO("resendig target");
-				}
+				//if (dist_to_target == last_distancie){
+				//	send_point(path.listaGoals[path_step - 1 ]);
+				//	ROS_INFO("resendig target");
+				//}
         if (dist_to_target <= TOLERANCE_WAYPOINTS){
           //ROS_INFO("Arriving");
           if (path_step == path.listaGoals.size()){ // if wait_last_point
@@ -195,7 +195,7 @@ int main(int argc, char** argv){
 				secondsPassed = (clock() - startTime);
 				ss2 << " "<<metros<<" "<<secondsPassed<<" "<<path.indice;
 				msg_succes.data = ss2.str();
-				path_result_pub.publish(msg_succes);
+				path_result_pub.publish(msg_succes);//se rompe despues de ejecutar esto
 				path_info_pub.publish(msg_succes);
 			}
 			break;}

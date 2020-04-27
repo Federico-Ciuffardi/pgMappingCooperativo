@@ -45,9 +45,9 @@ int NUM_ROBOTS = 3;
 void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg){
   int y_origin = msg->mapa.info.origin.position.x;
   int x_origin = msg->mapa.info.origin.position.y;
-  int width = msg->mapa.info.width;
-  int height = msg->mapa.info.height;
-  int indice_origen = abs(y_origin * width) + abs(x_origin);
+  uint width = msg->mapa.info.width;
+  uint height = msg->mapa.info.height;
+  int indice_origen = (abs(y_origin) * width) + abs(x_origin);
   int cont = 0;
   for (int i = 0; i < width*height; i++){
     if (msg->mapa.data[i] != -1){

@@ -31,6 +31,7 @@ void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg){
 }
 
 void handleControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
+	//ROS_INFO("guardo mapa");
 	robot.saveControlMap(msg);
 }
 
@@ -38,20 +39,19 @@ void handleControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 /* que: Valorarlos y enviarlos a la central*/
 void handleObjetiveSolicitation(const tscf_exploration::takeobjetiveConstPtr& msg){
 	if (!FIN){
-		ROS_INFO("Entro handleObjetiveSolicitation");
 		int indice = msg->indice;
 		robot.saveGlobalMap(msg->mapa);
 		robot.setCentrosF(msg->centrosf);
 		tscf_exploration::frontierReport report = robot.processMap();
 		report.indice = indice;
 		bid_pub.publish(report);
-		ROS_INFO("Salgo handleObjetiveSolicitation");
+		ROS_INFO("%s :: make bid", robot.getNombre().c_str());
 	}
 }
 
 void handlePathSucced(const std_msgs::String::ConstPtr& msg){
+	ROS_INFO("Entro handlePathSucced");
 	if (!FIN){
-		//ROS_INFO("Entro handlePathSucced");
 		std_msgs::String msg_request;
 		std::stringstream ss;
 		std::string ret = robot.getRealInfoGain();
@@ -63,7 +63,7 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg){
 			msg_request2.data = ss7.str();
 			end_robots_pub.publish(msg_request2);
 			FIN = true;
-			ROS_INFO("MUERO %s", robot.getNombre().c_str() );
+			ROS_INFO("%s MUERO", robot.getNombre().c_str() );
 		}
 		msg_request.data = ss.str();
 		request_objetive_pub.publish(msg_request);
@@ -94,18 +94,17 @@ void handleCoverage(const std_msgs::StringConstPtr& msg){
 
 void handleObjetive(const tscf_exploration::asignacionConstPtr& msg){
 	if (!FIN){
-		ROS_INFO("Entro handleObjetive");
 		int centro = robot.getobjetive(msg);
 		tscf_exploration::goalList path;
 		if (centro != -1){
 			nav_msgs::OccupancyGrid p;
 			path = robot.getPathToObjetive(centro, msg->obstaculos, p);
 			robot_debug_pub.publish(p);
-			ROS_INFO("Publico Camino");
+			ROS_INFO("%s :: Publico Camino", robot.getNombre().c_str());
 		}
-		path.indice = msg->indice;
+		path.indice = msg->indice;//numero de subasta
 		goalPath_pub.publish(path);
-		ROS_INFO("Salgo handleObjetive");
+		ROS_INFO("%s :: Objective handled", robot.getNombre().c_str());
 	}
 }
 
@@ -116,8 +115,7 @@ int main(int argc, char* argv[]){
 	ros::NodeHandle private_node_handle("~");
 
 	std::string nom = ros::this_node::getNamespace();
-	robot.setNombre(nom.erase(0,2));
-
+	robot.setNombre(nom.erase(0,1));
 	int x_ahora = -1;
 	int y_ahora = -1;
 

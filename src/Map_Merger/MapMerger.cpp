@@ -43,7 +43,7 @@ void MapMerger::initMapMerger(const nav_msgs::OccupancyGridConstPtr& msg){
   MapMerger::x_origin = MapMerger::map_merged.info.origin.position.y;
   MapMerger::width = MapMerger::map_merged.info.width;
   MapMerger::height = MapMerger::map_merged.info.height;
-  MapMerger::indice_origen = abs(MapMerger::y_origin * MapMerger::width) + abs(MapMerger::x_origin);
+  MapMerger::indice_origen = (abs(MapMerger::y_origin) * MapMerger::width) + abs(MapMerger::x_origin);
   /*inicializo un mapa de puntos donde para cada indice me devuelve el punto (x,y) que le corresponde en un mapa.*/
   for (int i = 0; i < MapMerger::width*MapMerger::height; i++){
     int fila = i % MapMerger::width;;
