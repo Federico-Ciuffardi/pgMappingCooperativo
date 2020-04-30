@@ -3,8 +3,12 @@
 #include <ctime>
 #include <cstdlib>
 
-Robot robot;
+/*
+ *  Variables
+ */ 
 
+//Topics
+/// Subscribers
 ros::Subscriber pose_sub;
 ros::Subscriber take_obj_sub;
 ros::Subscriber path_result_sub;
@@ -13,7 +17,7 @@ ros::Subscriber _map_sub;
 ros::Subscriber coverage_sub;
 ros::Subscriber end_sub;
 
-
+/// Publishers
 ros::Publisher debug_pub;
 ros::Publisher end_pub;
 ros::Publisher bid_pub;
@@ -23,9 +27,19 @@ ros::Publisher robot_debug_pub;
 ros::Publisher coverage_report_pub;
 ros::Publisher end_robots_pub;
 
+//others
+Robot robot;
+
 bool FIN = false;
+
 std::string end_msg("END");
 
+/*
+ *  Functions
+ */ 
+
+
+// Handlers
 void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg){
 	robot.savePose(msg);
 }
@@ -124,7 +138,8 @@ int main(int argc, char* argv[]){
 	robot.setPosition(x_ahora, y_ahora);
 	robot.setErrorAverage(0.0);
 	robot.resetCountError();
-	// Setear topicos para recibir informacion
+
+	//Subscribed to
 	pose_sub = n.subscribe("pose", 1, handlePose);
 	take_obj_sub = n.subscribe("/take_obj", 1, handleObjetiveSolicitation);
 	path_result_sub = n.subscribe("path_result", 1, handlePathSucced);
@@ -133,6 +148,7 @@ int main(int argc, char* argv[]){
 	coverage_sub = n.subscribe("/coverage", 1, handleCoverage);
 	end_sub = n.subscribe("/end", 1, handleEnd);
 
+	//Publishers
 	debug_pub = n.advertise<nav_msgs::OccupancyGrid>("/debug", 1);
 	bid_pub = n.advertise<tscf_exploration::frontierReport>("bid", 1);
 	request_objetive_pub = n.advertise<std_msgs::String>("/request_objetive", 1);

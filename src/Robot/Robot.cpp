@@ -76,16 +76,14 @@ std::string Robot::getRealInfoGain(){
 	//ROS_INFO("width %d", control_map.info.width);
 	//ROS_INFO("height %d", control_map.info.height);
 	for (it_puntos = last_info_gain.begin(); it_puntos != last_info_gain.end(); it_puntos++){
-		//if(*it_puntos<control_map.info.width*control_map.info.height){
-			cont_totales++;
-			if (Robot::control_map.data[*it_puntos] != -1){
-				if (Robot::control_map.data[*it_puntos] != 100){
-					cont_ocupadas++;
-				}else{
-					cont_libres++;
-				}
+		cont_totales++;
+		if (Robot::control_map.data[*it_puntos] != -1){
+			if (Robot::control_map.data[*it_puntos] != 100){
+				cont_ocupadas++;
+			}else{
+				cont_libres++;
 			}
-		//}
+		}
 	}
 	
 	std::stringstream ret;

@@ -71,6 +71,9 @@ add_message_files(
   resumenInstancia.msg
   mapMergedInfo.msg
   takeobjetive.msg
+  Point2D.msg
+  Polygon2D.msg
+  PolygonalMap.msg
 )
 
 ## Generate services in the 'srv' folder

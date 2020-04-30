@@ -3,12 +3,19 @@
 
 
 CentralModule::CentralModule(){
-	CentralModule::estado = 1;
+	CentralModule::estado = WaitingAuction;
 	CentralModule::first = true;
 	CentralModule::indice = 0;
 	CentralModule::number_robots = 3;
 	CentralModule::sensor_range = 6.0;
 	CentralModule::dist_info_gain_obst = 1.0 / sqrt(2);;
+}
+
+void CentralModule::updateMap(const tscf_exploration::mapMergedInfoConstPtr& newMap){
+	saveMap(newMap->mapa);
+	setObstaculos(newMap->obstaculos);
+	std::set<int> set(newMap->frontera.begin(), newMap->frontera.end());
+	setFrontera(set);
 }
 
 void CentralModule::resetArray(std::map< std::string, bool > map){
@@ -65,12 +72,12 @@ tscf_exploration::takeobjetive CentralModule::getObjetiveMap(){
 	return ret;
 }
 
-int CentralModule::getEstado(){
+centralMouleState CentralModule::getEstado(){
 	return CentralModule::estado;
 
 };
 
-void CentralModule::setEstado(int newEstado){
+void CentralModule::setEstado(centralMouleState newEstado){
 	CentralModule::estado = newEstado;
 };
 

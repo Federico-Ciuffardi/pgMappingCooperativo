@@ -18,10 +18,12 @@
 
 typedef std::map< int, std::list<int> > dict_clusters;
 
+enum centralMouleState {WaitingAuction=1, WaitingBids=2};
+
 class CentralModule
 {
   private:
-    int estado;
+    centralMouleState estado;
     int indice;
     int number_robots;
     bool first;
@@ -55,23 +57,37 @@ class CentralModule
     float distanciaArecta(int inicio, int fin, int punto);
 
   public:
-    CentralModule();
+    //getters and setters
     std::vector<int> getObstaculos();
     void setObstaculos(std::vector<int> newObstaculos);
+
     std::set<int> getFrontera();
     void setFrontera(std::set<int> newFrontera);
+
     std::vector<int> getCentrosF();
     void setCentrosF(std::vector<int> newCentrosf);
-    int getEstado();
-    void setEstado(int newEstado);
+
+    centralMouleState getEstado();
+    void setEstado(centralMouleState newEstado);
+
     int getNumRobots();
     void setNumRobots(int newNumRobots);
+
+    //others
+    CentralModule();
+  
+    void updateMap(const tscf_exploration::mapMergedInfoConstPtr&);
+
     void resetArrivals();
+
     void saveMap(const nav_msgs::OccupancyGrid map);
     nav_msgs::OccupancyGrid getMap();
     tscf_exploration::takeobjetive getObjetiveMap();
+
     void saveBid(const tscf_exploration::frontierReportConstPtr& msg, std::string name);
     tscf_exploration::asignacion assignTasks();
+
     std::vector<int> aplicarKmeans(std::set<int> frontera);
+
     std::set< int > getGainInfo(int celda);
 };

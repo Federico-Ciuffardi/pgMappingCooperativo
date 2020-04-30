@@ -1,13 +1,20 @@
 #include "MapMerger.h"
 
+/*
+ *  Variables
+ */ 
 
-//Topicos para la comunicacion con ROS
+//Topics
+/// Subscribers
 std::map< std::string, ros::Subscriber > map_sub;
 std::map< std::string, ros::Subscriber >  pose_sub;
 ros::Subscriber end_sub;
+
+/// Publishers
 ros::Publisher map_merged_pub;
 ros::Publisher map_controller_pub;
 
+//others
 int number_robots;
 
 MapMerger map_merger;
@@ -19,16 +26,21 @@ std::string end_msg("END");
 
 bool FIN = false;
 
+/*
+ *  Functions
+ */ 
+
+// Handlers
 void handleNewMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name){
   if (!FIN){
-      tscf_exploration::mapMergedInfo info;
-      info.mapa = map_merger.updateMap(msg,name);
-      info.sizef = map_merger.updateFrontera(map_merger.getMap(), name);
-      info.frontera = map_merger.getFrontera();
-      info.obstaculos = map_merger.getObstaculos();
-      info.sizeo = map_merger.getObstaculos().size();
-      map_controller_pub.publish(info.mapa);
-      map_merged_pub.publish(info);
+    tscf_exploration::mapMergedInfo info;
+    info.mapa = map_merger.updateMap(msg,name);
+    info.sizef = map_merger.updateFrontera(map_merger.getMap(), name);
+    info.frontera = map_merger.getFrontera();
+    info.obstaculos = map_merger.getObstaculos();
+    info.sizeo = map_merger.getObstaculos().size();
+    map_controller_pub.publish(info.mapa);
+    map_merged_pub.publish(info);
   }
 }
 
@@ -49,11 +61,12 @@ void handleEnd(const std_msgs::StringConstPtr& msg){
 }
 
 int main(int argc, char* argv[]){
-ros::init(argc, argv, "map_merger");
-ros::NodeHandle n;
+  ros::init(argc, argv, "map_merger");
+  ros::NodeHandle n;
 
   n.param<int>("number_robots",number_robots,3);
 
+  //Publishers
   map_merged_pub = n.advertise<tscf_exploration::mapMergedInfo>("/map_merged", 1);
   map_controller_pub = n.advertise<nav_msgs::OccupancyGrid>("/map_controller", 1);
   end_sub = n.subscribe("/end", 1, handleEnd);
@@ -79,6 +92,7 @@ ros::NodeHandle n;
 
   ros::master::getTopics(topic_infos);
 
+  //Subscribed to
   for(ros::master::V_TopicInfo::const_iterator it_topic = topic_infos.begin(); it_topic != topic_infos.end(); ++it_topic) {
     const ros::master::TopicInfo &published_topic = *it_topic;
     if(published_topic.name.find("/pose") != std::string::npos){
@@ -93,7 +107,6 @@ ros::NodeHandle n;
     }
 
   }
-
 
 	ros::spin();
 
