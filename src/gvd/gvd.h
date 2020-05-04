@@ -1,7 +1,7 @@
 #ifndef GVD_H
 #define GVD_H
 
-#include <heap.h>
+#include <bits/stdc++.h>
 #include <iostream>
 
 using namespace std;
@@ -11,16 +11,22 @@ typedef enum { Occupied, Unknown, Free } cell_type;
 typedef vector<cell_type> row_type;
 typedef vector<row_type> grid_type;
 
+typedef pair<int, int> pos;
+
 struct dist_cell {
-  vector<pair<int, int>> obs;
+  vector<pos> obs;
+
   float distance;
+
   dist_cell(){};
 
-  void add_obs(int x, int y);
+  void add_obs(pos);
 
-  bool has_obs(int x, int y);
+  bool has_obs(pos);
 
   bool operator>(const dist_cell& d) const;
+
+  bool operator==(const dist_cell& p) const;
 
   friend ostream& operator<<(ostream& out, const dist_cell& cell);
 };
@@ -28,8 +34,10 @@ struct dist_cell {
 typedef vector<dist_cell> dist_col;
 typedef vector<dist_col> dist_grid;
 
-dist_grid calculate_distances(grid_type original_grid);
+typedef pair<float, pos> dist_pos;
 
-vector<vector<bool>> get_grid_gvd(dist_grid dg);
+pair<dist_grid, priority_queue<dist_pos>> calculate_distances(grid_type ogrid);
+
+vector<vector<bool>> get_grid_gvd(dist_grid dg, priority_queue<dist_pos>);
 
 #endif
