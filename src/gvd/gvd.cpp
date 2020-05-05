@@ -74,7 +74,7 @@ bool on_grid(pos p, vector<vector<T>> grid) {
  */
 
 /* returns the dist_grid corresponding to the original grid */
-pair<dist_grid, priority_queue<dist_pos>> calculate_distances(grid_type ogrid) {
+boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid) {
   // get grid size
   pair<int, int> size = get_grid_size(ogrid);
 
@@ -82,10 +82,10 @@ pair<dist_grid, priority_queue<dist_pos>> calculate_distances(grid_type ogrid) {
   dist_grid dgrid;
 
   // initialize the dgrid and the distance queue (dqueue)
-  priority_queue<dist_pos> dqueue;
-  priority_queue<dist_pos> full_dqueue;
+  dist_pos_queue dqueue;
+  dist_pos_queue full_dqueue;
   for (int x = 0; x < size.first; x++) {
-    dgrid.push_back(dist_col());
+    dgrid.push_back(dist_row());
     for (int y = 0; y < size.second; y++) {
       dgrid[x].push_back(dist_cell());
       if (ogrid[x][y] == Occupied) {
@@ -99,7 +99,7 @@ pair<dist_grid, priority_queue<dist_pos>> calculate_distances(grid_type ogrid) {
     }
   }
 
-  priority_queue<dist_pos> next_dqueue;
+  dist_pos_queue next_dqueue;
   while (!dqueue.empty()) {
     while (!dqueue.empty()) {
       // get the first cell to process
@@ -155,11 +155,10 @@ pair<dist_grid, priority_queue<dist_pos>> calculate_distances(grid_type ogrid) {
       }
     }
     dqueue = next_dqueue;
-    next_dqueue=priority_queue<dist_pos>();
+    next_dqueue = dist_pos_queue();
   }
-  return pair<dist_grid, priority_queue<dist_pos>>(dgrid, full_dqueue);
+  return boost::make_tuple(dgrid, full_dqueue);
 }
-
 /*falta hacer el mapa de dist a celdas a esa dist para despues poder erosionar
   bien y despues habria que hace algo para pasar de grid a grafo (o capaz que no
   sirve)*/
@@ -167,14 +166,14 @@ pair<dist_grid, priority_queue<dist_pos>> calculate_distances(grid_type ogrid) {
 vector<pos> P = {pos(-1, -1), pos(-1, 0), pos(-1, 1), pos(0, 1),
                  pos(1, 1),   pos(1, 0),  pos(1, -1), pos(0, -1)};
 
-int A(pos p, vector<vector<bool>> grid_gvd) {
+int A(pos p, grid_gvd ggvd) {
   int res = 0;
   bool prev_np = 0;
   for (int i = 0; i < 8; i++) {
-    bool v1 = cell(grid_gvd, p + P[i]);
-    bool v2 = cell(grid_gvd, p + P[(i + 1) % 8]);
+    bool v1 = cell(ggvd, p + P[i]);
+    bool v2 = cell(ggvd, p + P[(i + 1) % 8]);
     if (P[i].first == 0 || P[i].second == 0) {
-      bool v3 = cell(grid_gvd, p + P[(i + 2) % 8]);
+      bool v3 = cell(ggvd, p + P[(i + 2) % 8]);
       res += v1 && !v2 && !v3;
     } else {
       res += v1 && !v2;
@@ -185,12 +184,12 @@ int A(pos p, vector<vector<bool>> grid_gvd) {
 
 /* returns a boolean matrix, a cell is true if it belongs to the gvd and false
  * otherwise*/
-vector<vector<bool>> get_grid_gvd(dist_grid dg, priority_queue<dist_pos> dqueue) {
+grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
   // get sizes
   pair<int, int> size = get_grid_size(dg);
 
   // initialize grid_gvd
-  vector<vector<bool>> grid_gvd;
+  grid_gvd grid_gvd;
   for (int i = 0; i < size.first; i++) {
     grid_gvd.push_back(vector<bool>());
     for (int j = 0; j < size.second; j++) {
@@ -214,4 +213,71 @@ vector<vector<bool>> get_grid_gvd(dist_grid dg, priority_queue<dist_pos> dqueue)
     }
   }
   return grid_gvd;
+}
+
+/*
+ *  gvd implementation
+ */
+
+boost::tuple<gvd::Vertex, bool> gvd::add_v(pos p) {
+  NameVertexMap::iterator pos_it;
+  bool inserted;
+  Vertex u;
+  boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
+  if (inserted) {
+    u = add_vertex(g);
+    g[u] = gvd_vertex(p, false);
+    pos_it->second = u;
+  } else {
+    u = pos_it->second;
+  }
+  return boost::make_tuple(u, inserted);
+}
+
+pair<gvd::Edge, bool> gvd::add_e(Vertex u, Vertex v) {
+  return add_edge(u, v, g);
+}
+
+gvd::gvd(grid_gvd ggvd) {
+  pair<int, int> size = get_grid_size(ggvd);
+
+  // initialize grid_gvd
+  for (int x = 0; x < size.first; x++) {
+    for (int y = 0; y < size.second; y++) {
+      if (!ggvd[x][y])
+        continue;
+
+      // insert (x,y) to the graph
+      Vertex u;
+      bool inserted;
+      boost::tie(u, inserted) = add_v(pos(x, y));
+
+      // for each neighbor (nx,ny) of (i,j)
+      for (int i = -1; i <= 1; i++) {
+        int nx = x + i;
+        for (int j = -1; j <= 1; j++) {
+          int ny = y + j;
+          if ((i != 0 || j != 0) && on_grid(nx, ny, ggvd) && ggvd[nx][ny]) {
+            // add it to the graph
+            Vertex v;
+            bool inserted;
+            boost::tie(v, inserted) = add_v(pos(nx, ny));
+            // and also add an edge connecting them
+            graph_traits<Graph>::edge_descriptor e;
+            add_e(u, v);
+          }
+        }
+      }
+    }
+  }
+}
+
+void get_critical_points_rec(grid_gvd ggvd,
+                             pos current_pos,
+                             map<pos, bool>& get_critical_points) {}
+
+map<pos, bool> get_critical_points(grid_gvd ggvd, pos root) {
+  map<pos, bool> critical_points;
+  get_critical_points_rec(ggvd, root, critical_points);
+  return critical_points;
 }
