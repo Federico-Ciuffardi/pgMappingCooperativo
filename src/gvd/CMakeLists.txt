@@ -15,6 +15,6 @@ include_directories(GLOB MAIN_INCLUDES
   .
 )
 
-add_executable(test ${MAIN_SOURCES})
+add_executable(tests ${MAIN_SOURCES})
 
-target_include_directories(test PRIVATE ${MAIN_INCLUDES})
+target_include_directories(tests PRIVATE ${MAIN_INCLUDES})

@@ -51,8 +51,24 @@ grid_type grid6 = {
     {Occupied, Free, Free, Free, Free, Occupied},
     {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
 
+grid_type grid7 = {
+    {Occupied, Unknown, Occupied, Occupied, Occupied, Occupied},
+    {Occupied, Frontier, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Occupied, Occupied},
+    {Occupied, Free, Free, Free, Occupied, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
+
 int main(int argc, char** argv) {
-  grid_type grid = grid6;
+  grid_type grid = grid7;
   int grid_size_x = grid.size();
   int grid_size_y = grid[0].size();
   for (int x = 0; x < grid_size_x; x++) {
@@ -63,7 +79,7 @@ int main(int argc, char** argv) {
   }
   dist_grid dgrid;
   dist_pos_queue dqueue;
-  boost::tie(dgrid, dqueue) = calculate_distances(grid);
+  boost::tie(dgrid, dqueue) = calculate_distances(grid, Occupied);
   cout << "distance grid:" << endl;
   for (int x = 0; x < grid_size_x; x++) {
     for (int y = 0; y < grid_size_y; y++) {
@@ -77,9 +93,11 @@ int main(int argc, char** argv) {
     for (int y = 0; y < grid_size_y; y++) {
       if (ggvd[x][y]) {
         cout << "*|";
-      } else if (dgrid[x][y].distance == 0) {
+      } else if (grid[x][y] == Occupied) {
         cout << "=|";
-      } else {
+      } else if(grid[x][y] == Unknown){
+        cout << "?|";
+      } else{
         cout << " |";
       }
     }
@@ -100,5 +118,31 @@ int main(int argc, char** argv) {
               << GVD.g[target(*it.first, GVD.g)].p.first << ","
               << GVD.g[target(*it.first, GVD.g)].p.second << ")|";
   std::cout << std::endl;
+
+  cout<<"////////////////////////////////////////////////////////////"<<endl;
+  map<pos, dist_pos> cf = get_critical_points(grid, GVD);
+
+  cout<< cf.size() <<endl;
+
+  cout << "gvd grid :" << endl;
+  for (int x = 0; x < grid_size_x; x++) {
+    for (int y = 0; y < grid_size_y; y++) {
+      if (ggvd[x][y]) {
+        if(cf.find(pos(x,y))!= cf.end()){
+          cout << "o|";
+          continue; 
+        }
+        cout << "*|";
+      } else if (grid[x][y] == Occupied) {
+        cout << "=|";
+      } else if(grid[x][y] == Unknown){
+        cout << "?|";
+      } else{
+        cout << " |";
+      }
+    }
+    cout << endl;
+  }
+
   return 0;
 }

@@ -12,7 +12,7 @@ using namespace std;
 /*
  *  ocupancy grid
  */
-enum cell_type { Occupied, Unknown, Free };
+enum cell_type { Occupied, Unknown, Free, Critical, Frontier };
 typedef vector<cell_type> row_type;
 typedef vector<row_type> grid_type;
 
@@ -61,10 +61,11 @@ struct gvd_vertex {
 };
 
 struct gvd {
-  typedef adjacency_list<vecS, vecS, bidirectionalS, gvd_vertex> Graph;
+  typedef adjacency_list<vecS, vecS, undirectedS, gvd_vertex> Graph;
   typedef graph_traits<Graph>::vertex_descriptor Vertex;
   typedef std::map<pos, Vertex> NameVertexMap;
   typedef graph_traits<Graph>::edge_descriptor Edge;
+  //typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 
   Graph g;
   NameVertexMap positions;
@@ -79,8 +80,10 @@ using namespace std;
 /*
  *  functions
  */
-boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid);
+boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cell_type from_type);
 
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
+
+map<pos, dist_pos> get_critical_points(grid_type ogrid, gvd &GVD);
 
 #endif

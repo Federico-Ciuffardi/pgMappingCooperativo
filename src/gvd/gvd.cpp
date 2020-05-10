@@ -73,8 +73,8 @@ bool on_grid(pos p, vector<vector<T>> grid) {
  *  main funcs
  */
 
-/* returns the dist_grid corresponding to the original grid */
-boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid) {
+/* returns the dist_grid corresponding to the original grid, relative to Occupide or Critical (from_type) */
+boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cell_type from_type) {
   // get grid size
   pair<int, int> size = get_grid_size(ogrid);
 
@@ -88,11 +88,12 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid) {
     dgrid.push_back(dist_row());
     for (int y = 0; y < size.second; y++) {
       dgrid[x].push_back(dist_cell());
-      if (ogrid[x][y] == Occupied) {
+      if (ogrid[x][y] == from_type || ogrid[x][y] == Unknown) {
         dgrid[x][y].distance = 0;
-        dgrid[x][y].add_obs(pos(x, y));
-
-        dqueue.push(dist_pos(0, pos(x, y)));
+        if(ogrid[x][y] == from_type){
+          dgrid[x][y].add_obs(pos(x, y));
+          dqueue.push(dist_pos(0, pos(x, y)));
+        }
       } else {
         dgrid[x][y].distance = FLT_MAX;
       }
@@ -113,7 +114,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid) {
         for (int j = -1; j <= 1; j++) {
           int ny = current_pos.second + j;
           if ((i != 0 || j != 0) && on_grid(nx, ny, ogrid)) {
-            if (ogrid[nx][ny] != Occupied &&
+            if (ogrid[nx][ny]!= Unknown && ogrid[nx][ny]!= from_type &&
                 dgrid[nx][ny].distance == FLT_MAX) {
               float min_distance = FLT_MAX;
               // look at neighbors of freecell to find cells whose
@@ -148,6 +149,9 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid) {
                 }
               }
               next_dqueue.push(dist_pos(min_distance, pos(nx, ny)));
+              if( from_type == Critical && ogrid[nx][ny] != Frontier){
+                continue;
+              }
               full_dqueue.push(dist_pos(min_distance, pos(nx, ny)));
             }
           }
@@ -272,12 +276,53 @@ gvd::gvd(grid_gvd ggvd) {
   }
 }
 
-void get_critical_points_rec(grid_gvd ggvd,
-                             pos current_pos,
-                             map<pos, bool>& get_critical_points) {}
+int degree_constraint(gvd GVD, grid_type &ogrid){
+  int criticals_count = 0;
+  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first){
+    if (boost::degree(*vp.first, GVD.g) == 4){
+      cout<<"hay alguno de grado: "<<endl;
+      int c = 0;
+      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first){
+        //cout<<"tiene adj de grado: "<<degree(*ad.first, GVD.g)<<endl;
+        c++;
+        if(degree(*ad.first, GVD.g) == 6){
+          //cout<<"con adj de grado 3"<<endl;
+          pos critical_pos = GVD.g[*vp.first].p;
+          ogrid[critical_pos.first][critical_pos.second] = Critical;
+          criticals_count++;
+          break;
+        }
+        
+      }
+      cout<<c; 
+    }
+  }
+  return criticals_count;
+}
 
-map<pos, bool> get_critical_points(grid_gvd ggvd, pos root) {
-  map<pos, bool> critical_points;
-  get_critical_points_rec(ggvd, root, critical_points);
-  return critical_points;
+map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd &GVD,int criticals_count){
+  dist_grid dgrid;
+  dist_pos_queue dqueue;
+  map<pos, dist_pos> critical_with_frontier; 
+  boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);
+  while (criticals_count > 0 && !dqueue.empty()) {
+    dist_pos frontier = dqueue.top();
+    pos current_pos = frontier.second;
+    dqueue.pop();
+    pos critical_pos = cell(dgrid, current_pos).obs[0];
+    gvd::Vertex v = GVD.positions[critical_pos];
+    if(!GVD.g[v].is_critical){
+      GVD.g[v].is_critical= true;
+      critical_with_frontier[critical_pos] = frontier;
+      criticals_count--;
+    }
+  }
+  return critical_with_frontier;
+}
+
+map<pos, dist_pos> get_critical_points(grid_type ogrid, gvd &GVD) {
+  int criticals_count = degree_constraint(GVD, ogrid);
+  cout<<criticals_count<<endl;
+  map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
+  return critical_with_frontier;
 }
