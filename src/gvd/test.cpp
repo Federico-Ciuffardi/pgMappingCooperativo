@@ -52,14 +52,27 @@ grid_type grid6 = {
     {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
 
 grid_type grid7 = {
-    {Occupied, Unknown, Occupied, Occupied, Occupied, Occupied},
-    {Occupied, Frontier, Free, Free, Free, Occupied},
+    {Occupied, Occupied, Occupied, Unknown, Occupied, Occupied, Occupied},
+    {Occupied, Free, Frontier, Unknown, Frontier, Free, Occupied},
+    {Occupied, Free, Frontier, Frontier, Frontier, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Free, Occupied},
+    {Occupied, Occupied, Free, Free, Occupied, Occupied, Occupied},
+    {Occupied, Free, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Free, Occupied},
+    {Occupied, Free, Free, Free, Free, Free, Occupied},
+    {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
+
+grid_type grid8 = {
+    {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+    {Occupied, Free, Free, Free, Free, Occupied},
+    {Occupied, Frontier, Frontier, Free, Free, Occupied},
+    {Occupied, Unknown, Frontier, Free, Free, Occupied},
+    {Occupied, Frontier, Frontier, Free, Free, Occupied},
     {Occupied, Free, Free, Free, Free, Occupied},
     {Occupied, Free, Free, Free, Free, Occupied},
     {Occupied, Free, Free, Free, Free, Occupied},
-    {Occupied, Free, Free, Free, Free, Occupied},
-    {Occupied, Free, Free, Free, Occupied, Occupied},
-    {Occupied, Free, Free, Free, Occupied, Occupied},
     {Occupied, Free, Free, Free, Free, Occupied},
     {Occupied, Free, Free, Free, Free, Occupied},
     {Occupied, Free, Free, Free, Free, Occupied},
@@ -110,7 +123,7 @@ int main(int argc, char** argv) {
     cout << "(" << GVD.g[*vp.first].p.first << "," << GVD.g[*vp.first].p.second
          << ") ";
   cout << endl;
-
+  
   cout << "GVD edges: ";
   for (auto it = edges(GVD.g); it.first != it.second; ++it.first++)
     std::cout << "|(" << GVD.g[source(*it.first, GVD.g)].p.first << ","
@@ -120,9 +133,31 @@ int main(int argc, char** argv) {
   std::cout << std::endl;
 
   cout<<"////////////////////////////////////////////////////////////"<<endl;
-  map<pos, dist_pos> cf = get_critical_points(grid, GVD);
+  /*map<pos,bool> lmins = get_local_mins(dgrid, GVD);
 
-  cout<< cf.size() <<endl;
+  cout << "gvd grid :" << endl;
+  for (int x = 0; x < grid_size_x; x++) {
+    for (int y = 0; y < grid_size_y; y++) {
+      if (ggvd[x][y]) {
+        if(lmins[pos(x,y)]){
+          cout << "o|";
+          continue; 
+        }
+        cout << "*|";
+      } else if (grid[x][y] == Occupied) {
+        cout << "=|";
+      } else if(grid[x][y] == Unknown){
+        cout << "?|";
+      } else{
+        cout << " |";
+      }
+    }
+    cout << endl;
+  }*/
+
+  map<pos, dist_pos> cf = get_critical_points(grid, dgrid, GVD);
+
+  //cout<< cf.size() <<endl;
 
   cout << "gvd grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {

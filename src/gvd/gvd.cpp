@@ -276,25 +276,42 @@ gvd::gvd(grid_gvd ggvd) {
   }
 }
 
-int degree_constraint(gvd GVD, grid_type &ogrid){
+//could be of less order, maybe using trees
+map<pos,bool> get_local_mins(dist_grid dg, gvd GVD){
+  map<pos,bool> lmins;
+  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first){
+    bool auxmin = true;
+    pos current_pos = GVD.g[*vp.first].p; 
+    bool not_processed = lmins.find(current_pos) == lmins.end();
+    if(not_processed){
+      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first){
+        pos adj_pos = GVD.g[*ad.first].p;
+        bool is_min = cell(dg, current_pos).distance < cell(dg, adj_pos).distance;
+        if(is_min){
+          lmins[adj_pos] = false;
+        }
+        auxmin = is_min && auxmin;
+      }
+      lmins[current_pos] = auxmin;
+    }
+  }
+  return lmins;
+}
+
+int degree_constraint(grid_type &ogrid, gvd GVD, map<pos,bool> lmins){
   int criticals_count = 0;
   for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first){
-    if (boost::degree(*vp.first, GVD.g) == 4){
-      cout<<"hay alguno de grado: "<<endl;
-      int c = 0;
+    pos current_pos = GVD.g[*vp.first].p;
+    bool is_min = lmins[current_pos];
+    if (is_min && (out_degree(*vp.first, GVD.g) == 2)){
       for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first){
-        //cout<<"tiene adj de grado: "<<degree(*ad.first, GVD.g)<<endl;
-        c++;
-        if(degree(*ad.first, GVD.g) == 6){
-          //cout<<"con adj de grado 3"<<endl;
-          pos critical_pos = GVD.g[*vp.first].p;
-          ogrid[critical_pos.first][critical_pos.second] = Critical;
+        if(out_degree(*ad.first, GVD.g) >= 3){
+          ogrid[current_pos.first][current_pos.second] = Critical;
           criticals_count++;
           break;
         }
         
-      }
-      cout<<c; 
+      } 
     }
   }
   return criticals_count;
@@ -320,8 +337,9 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd &GVD,int critica
   return critical_with_frontier;
 }
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, gvd &GVD) {
-  int criticals_count = degree_constraint(GVD, ogrid);
+map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd &GVD) {
+  map<pos,bool> local_mins = get_local_mins(dg, GVD);
+  int criticals_count = degree_constraint(ogrid, GVD, local_mins);
   cout<<criticals_count<<endl;
   map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
   return critical_with_frontier;

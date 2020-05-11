@@ -4,6 +4,6 @@ Makefile
 cmake_install.cmake
 compile_commands.json
 .vscode
-test
+build
 CTestTestfile.cmake
 libMAIN_SOURCES.a
