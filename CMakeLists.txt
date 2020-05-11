@@ -165,7 +165,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/tscf_exploration_node.cpp)
 add_executable(${PROJECT_NAME}_map_merger src/Map_Merger/Map_Merger_Node.cpp src/Map_Merger/MapMerger.cpp)
-add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModule_Node.cpp src/CentralModule/CentralModule.cpp)
+add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModule_Node.cpp src/CentralModule/CentralModule.cpp src/gvd/gvd.cpp)
 add_executable(${PROJECT_NAME}_move_controller src/MoveController/move_controller.cpp src/MoveController/TCPClient.cpp)
 add_executable(${PROJECT_NAME}_robot src/Robot/RobotNode.cpp src/Robot/Robot.cpp)
 add_executable(${PROJECT_NAME}_end_module src/end_module.cpp src/utils.cpp)
@@ -204,7 +204,6 @@ target_link_libraries(${PROJECT_NAME}_end_module
 #target_link_libraries(${PROJECT_NAME}_monitor
 # ${catkin_LIBRARIES}
 #)
-
 add_dependencies(${PROJECT_NAME}_map_merger tscf_exploration_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME}_central_module tscf_exploration_generate_messages_cpp)
 add_dependencies(${PROJECT_NAME}_move_controller tscf_exploration_generate_messages_cpp)

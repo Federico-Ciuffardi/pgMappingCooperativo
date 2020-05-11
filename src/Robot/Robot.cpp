@@ -1,386 +1,422 @@
 #include "Robot.h"
 
-Robot::Robot(){
+Robot::Robot() {
   Robot::first = true;
   Robot::sensor_range = 6.0;
   Robot::lado = 1;
   Robot::dist_info_gain_obst = lado / sqrt(2);
 }
 
-
-void Robot::setPosition(int x, int y){
+void Robot::setPosition(int x, int y) {
   Robot::position.pose.position.x = x;
   Robot::position.pose.position.y = y;
 };
 
-geometry_msgs::PoseStamped Robot::getPosition(){
+geometry_msgs::PoseStamped Robot::getPosition() {
   return Robot::position;
 };
 
-void Robot::setNombre(std::string nom){
+void Robot::setNombre(std::string nom) {
   Robot::nombreRobot = nom;
 };
 
-std::string Robot::getNombre(){
+std::string Robot::getNombre() {
   return Robot::nombreRobot;
 };
 
-void Robot::setErrorCont(int i){
+void Robot::setErrorCont(int i) {
   Robot::errorCont = i;
 };
 
-int CANT_ERRR =4;
+int CANT_ERRR = 4;
 
-bool Robot::isFinByError(){
-  ROS_INFO("Cant Error %s - %d", Robot::nombreRobot.c_str(), Robot::errorCont );
+bool Robot::isFinByError() {
+  ROS_INFO("Cant Error %s - %d", Robot::nombreRobot.c_str(), Robot::errorCont);
   return (Robot::errorCont >= CANT_ERRR);
 };
 
-float Robot::getErrorAverage(){
+float Robot::getErrorAverage() {
   return Robot::error_average;
 };
 
-void Robot::setErrorAverage(float err){
+void Robot::setErrorAverage(float err) {
   Robot::error_average = err;
 };
 
-float Robot::addErrorAverage(int err){
-  Robot::cant_errors = Robot::cant_errors +1 ;
-  Robot::error_average = Robot::error_average + ((err - Robot::error_average)/Robot::cant_errors);
+float Robot::addErrorAverage(int err) {
+  Robot::cant_errors = Robot::cant_errors + 1;
+  Robot::error_average = Robot::error_average + ((err - Robot::error_average) / Robot::cant_errors);
   return Robot::error_average;
 };
 
-void Robot::resetCountError(){
+void Robot::resetCountError() {
   Robot::cant_errors = 0.0;
 };
 
-
-void Robot::setLastInfoGain(std::vector<int> nom){
+void Robot::setLastInfoGain(std::vector<int> nom) {
   Robot::last_info_gain = nom;
 };
 
-std::vector<int> Robot::getLastInfoGain(){
+std::vector<int> Robot::getLastInfoGain() {
   return Robot::last_info_gain;
 };
 
-std::list<int> Robot::getCentrosF(){
-	return Robot::centros_de_frontera;
-
+std::list<int> Robot::getCentrosF() {
+  return Robot::centros_de_frontera;
 };
 
-std::string Robot::getRealInfoGain(){
-	int cont_libres = 0;
-	int cont_ocupadas = 0;
-	int cont_totales = 0;
-	std::vector<int>::iterator it_puntos;
-	//ROS_INFO("width %d", control_map.info.width);
-	//ROS_INFO("height %d", control_map.info.height);
-	for (it_puntos = last_info_gain.begin(); it_puntos != last_info_gain.end(); it_puntos++){
-		cont_totales++;
-		if (Robot::control_map.data[*it_puntos] != -1){
-			if (Robot::control_map.data[*it_puntos] != 100){
-				cont_ocupadas++;
-			}else{
-				cont_libres++;
-			}
-		}
-	}
-	
-	std::stringstream ret;
-	//int error = 0;
-	int error = cont_totales - (cont_libres + cont_ocupadas);
-	if (error <= 3){
-		Robot::errorCont += 1;
-	}else{
-		Robot::setErrorCont(0);
-	}
-	float errave = Robot::addErrorAverage(error);
-	ret << cont_libres << " " << cont_ocupadas << " " << cont_totales << " " << errave;
-	return ret.str();
+std::string Robot::getRealInfoGain() {
+  int cont_libres = 0;
+  int cont_ocupadas = 0;
+  int cont_totales = 0;
+  std::vector<int>::iterator it_puntos;
+  // ROS_INFO("width %d", control_map.info.width);
+  // ROS_INFO("height %d", control_map.info.height);
+  for (it_puntos = last_info_gain.begin(); it_puntos != last_info_gain.end(); it_puntos++) {
+    cont_totales++;
+    if (Robot::control_map.data[*it_puntos] != -1) {
+      if (Robot::control_map.data[*it_puntos] != 100) {
+        cont_ocupadas++;
+      } else {
+        cont_libres++;
+      }
+    }
+  }
+
+  std::stringstream ret;
+  // int error = 0;
+  int error = cont_totales - (cont_libres + cont_ocupadas);
+  if (error <= 3) {
+    Robot::errorCont += 1;
+  } else {
+    Robot::setErrorCont(0);
+  }
+  float errave = Robot::addErrorAverage(error);
+  ret << cont_libres << " " << cont_ocupadas << " " << cont_totales << " " << errave;
+  return ret.str();
 }
 
-void Robot::setCentrosF(std::vector<int> newFrontera){
+void Robot::setCentrosF(std::vector<int> newFrontera) {
   Robot::centros_de_frontera.clear();
   std::vector<int>::iterator it_puntos;
-  //ROS_INFO("Guardo %d nuevos centros de frontera", newFrontera.size());
-	for (it_puntos = newFrontera.begin(); it_puntos != newFrontera.end(); it_puntos++){
-    if (*it_puntos != -1){
+  // ROS_INFO("Guardo %d nuevos centros de frontera", newFrontera.size());
+  for (it_puntos = newFrontera.begin(); it_puntos != newFrontera.end(); it_puntos++) {
+    if (*it_puntos != -1) {
       // /std::cout << "Centro nuevo  ---> " << *it_puntos;
       Robot::centros_de_frontera.push_back(*it_puntos);
     }
-	}
+  }
 };
 
-void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg){
+void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
   Robot::position.pose.position.x = msg->pose.position.x;
   Robot::position.pose.position.y = msg->pose.position.y;
 }
 
-void Robot::saveGlobalMap(nav_msgs::OccupancyGrid msg){
-  //ROS_INFO("Guardo nuevo mapa");
-  if (first){
+void Robot::saveGlobalMap(nav_msgs::OccupancyGrid msg) {
+  // ROS_INFO("Guardo nuevo mapa");
+  if (first) {
     Robot::width = msg.info.width;
     Robot::height = msg.info.height;
     Robot::y_origin = msg.info.origin.position.x;
     Robot::x_origin = msg.info.origin.position.y;
     Robot::indice_origen = (abs(Robot::y_origin) * Robot::width) + abs(Robot::x_origin);
-    /*inicializo un mapa de puntos donde para cada indice me devuelve el punto (x,y) que le corresponde en un mapa.*/
-    for (int i = 0; i < Robot::width*Robot::height; i++){
-      int fila = i % Robot::width;;
+    /*inicializo un mapa de puntos donde para cada indice me devuelve el punto
+     * (x,y) que le corresponde en un mapa.*/
+    for (int i = 0; i < Robot::width * Robot::height; i++) {
+      int fila = i % Robot::width;
+      ;
       int columna = i / Robot::width;
       float a = ((Robot::x_origin + fila) + 0.5);
-      float b = ((Robot::y_origin + columna)+0.5);
+      float b = ((Robot::y_origin + columna) + 0.5);
       Robot::map_points[i] = cv::Point2f(a, b);
     }
     Robot::first = false;
   }
   Robot::global_map.info = msg.info;
-	Robot::global_map.header = msg.header;
-	Robot::global_map.data = msg.data;
+  Robot::global_map.header = msg.header;
+  Robot::global_map.data = msg.data;
 };
 
-nav_msgs::OccupancyGrid Robot::getGlobalMap(){
+nav_msgs::OccupancyGrid Robot::getGlobalMap() {
   return Robot::global_map;
 };
 
-nav_msgs::OccupancyGrid Robot::getControlMap(){
+nav_msgs::OccupancyGrid Robot::getControlMap() {
   return Robot::control_map;
 };
 
-void Robot::saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
+void Robot::saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
   Robot::control_map.info = msg->info;
-	Robot::control_map.header = msg->header;
-	Robot::control_map.data = msg->data;
+  Robot::control_map.header = msg->header;
+  Robot::control_map.data = msg->data;
 };
 
 /*Funcion que me devuelve para cada centro de frontera una oleada*/
-/*Funcion que me devuelve para cada centro de frontera las distancias entre dicho centro y todas las celdas, si estas distancias son menores o iguales 
-	a la distancia entre dicho centro y robot*/
-std::map< int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg, int fin, std::list<int> centros_def, nav_msgs::OccupancyGrid& p){
-  //ROS_INFO("Creo nueva oleada");
-	std::map< int, std::vector<int> > retorno;
-	std::set< int > nivel_actual;
-	std::set< int > nivel_siguiente;
-	// ros::Rate loop_rate(0.1);
-	std::list<int>::iterator it;
-	for (it = centros_def.begin(); it != centros_def.end(); it++){
-			bool terminar = false;
-			std::vector< int > oleada(msg.data.size(), -1);
-			nivel_siguiente.insert(*it);
-			oleada[*it] = 0;
-			while(!nivel_siguiente.empty()){
+/*Funcion que me devuelve para cada centro de frontera las distancias entre
+   dicho centro y todas las celdas, si estas distancias son menores o iguales
+        a la distancia entre dicho centro y robot*/
+std::map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg,
+                                                     int fin,
+                                                     std::list<int> centros_def,
+                                                     nav_msgs::OccupancyGrid& p) {
+  // ROS_INFO("Creo nueva oleada");
+  std::map<int, std::vector<int> > retorno;
+  std::set<int> nivel_actual;
+  std::set<int> nivel_siguiente;
+  // ros::Rate loop_rate(0.1);
+  std::list<int>::iterator it;
+  for (it = centros_def.begin(); it != centros_def.end(); it++) {
+    bool terminar = false;
+    std::vector<int> oleada(msg.data.size(), -1);
+    nivel_siguiente.insert(*it);
+    oleada[*it] = 0;
+    while (!nivel_siguiente.empty()) {
+      nivel_actual.clear();
+      nivel_actual = nivel_siguiente;
+      nivel_siguiente.clear();
 
-				nivel_actual.clear();
-				nivel_actual = nivel_siguiente;
-				nivel_siguiente.clear();
+      std::set<int>::iterator it_nivel_actual;
+      for (it_nivel_actual = nivel_actual.begin(); it_nivel_actual != nivel_actual.end();
+           ++it_nivel_actual) {
+        for (int i = 0; i < 9; i++) {
+          int pos_vecino = posicionRelativa(*it_nivel_actual, i, Robot::width);
+          // si esta libre
+          if ((msg.data[pos_vecino] == 0) && (i != 4) && (oleada[pos_vecino] == -1)) {
+            oleada[pos_vecino] = oleada[*it_nivel_actual] + 1;
+            nivel_siguiente.insert(pos_vecino);
+          }
+        }
+      }
+      std::set<int>::iterator buscador;
 
-				std::set<int>::iterator it_nivel_actual;
-				for (it_nivel_actual=nivel_actual.begin(); it_nivel_actual!=nivel_actual.end(); ++it_nivel_actual) {
-					for (int i = 0; i < 9; i++){
-						int pos_vecino = posicionRelativa(*it_nivel_actual, i,Robot::width);
-					 	// si esta libre
-					 	if ((msg.data[pos_vecino] == 0) && (i != 4) && (oleada[pos_vecino] == -1)){
-							oleada[pos_vecino] = oleada[*it_nivel_actual] +1;
-							nivel_siguiente.insert(pos_vecino);
-						}
-					}
-				}
-				std::set<int>::iterator buscador;
-
-	  		buscador = nivel_actual.find(fin);
-				if (buscador != nivel_actual.end()){
-					nivel_siguiente.clear();
-          //ROS_INFO("%s - Objetivo de oleada  ---> %d, con costo %d",Robot::nombreRobot.c_str(), *it, oleada[fin]);
-				}
-
-			}
-      std::vector<int>::iterator f;
-			retorno[*it] = oleada;
-
-	}
-	return retorno;
+      buscador = nivel_actual.find(fin);
+      if (buscador != nivel_actual.end()) {
+        nivel_siguiente.clear();
+        // ROS_INFO("%s - Objetivo de oleada  ---> %d, con costo
+        // %d",Robot::nombreRobot.c_str(), *it, oleada[fin]);
+      }
+    }
+    std::vector<int>::iterator f;
+    retorno[*it] = oleada;
+  }
+  return retorno;
 }
 
-tscf_exploration::frontierReport Robot::consultarCostosInfo(std::map< int, std::vector<int> > oleadas, int posicionActual, nav_msgs::OccupancyGrid& p){
-	tscf_exploration::frontierReport ret;
-	ret.idRobot = nombreRobot;
-	ret.infoCentros.clear();
-	std::list<int>::iterator it;
-  //ROS_INFO("Tengo costo - info");
-	for (it = centros_de_frontera.begin(); it != centros_de_frontera.end(); it++){
-		p.data[*it] = 100;
-		tscf_exploration::infoCentro inf;
-		inf.centro =(*it);
-		inf.cost = oleadas[*it][posicionActual];
-    //ROS_INFO("InfoCentro  ---> %d , %d",inf.centro, inf.cost );
-		ret.infoCentros.push_back(inf);
-	}
-	ret.cant_centros = ret.infoCentros.size();
-	return ret;
+tscf_exploration::frontierReport Robot::consultarCostosInfo(
+    std::map<int, std::vector<int> > oleadas,
+    int posicionActual,
+    nav_msgs::OccupancyGrid& p) {
+  tscf_exploration::frontierReport ret;
+  ret.idRobot = nombreRobot;
+  ret.infoCentros.clear();
+  std::list<int>::iterator it;
+  // ROS_INFO("Tengo costo - info");
+  for (it = centros_de_frontera.begin(); it != centros_de_frontera.end(); it++) {
+    p.data[*it] = 100;
+    tscf_exploration::infoCentro inf;
+    inf.centro = (*it);
+    inf.cost = oleadas[*it][posicionActual];
+    // ROS_INFO("InfoCentro  ---> %d , %d",inf.centro, inf.cost );
+    ret.infoCentros.push_back(inf);
+  }
+  ret.cant_centros = ret.infoCentros.size();
+  return ret;
 }
 
-tscf_exploration::frontierReport Robot::processMap(){
-		//Lista de puntos de frontera
+tscf_exploration::frontierReport Robot::processMap() {
+  // Lista de puntos de frontera
 
-    nav_msgs::OccupancyGrid p;
-    p.info = global_map.info;
-    p.header = global_map.header;
-    p.data = global_map.data;
+  nav_msgs::OccupancyGrid p;
+  p.info = global_map.info;
+  p.header = global_map.header;
+  p.data = global_map.data;
 
-    int posicionActual = Robot::indice_origen + (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x)*1) + ((int)Robot::position.pose.position.y) * Robot::width);
+  int posicionActual =
+      Robot::indice_origen +
+      (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x) * 1) +
+       ((int)Robot::position.pose.position.y) * Robot::width);
 
-    std::map< int, std::vector<int> > oleadas = Robot::crearOleadas(global_map, posicionActual, centros_de_frontera, p);
+  std::map<int, std::vector<int> > oleadas =
+      Robot::crearOleadas(global_map, posicionActual, centros_de_frontera, p);
 
-    tscf_exploration::frontierReport frontRep = Robot::consultarCostosInfo(oleadas, posicionActual, p);
+  tscf_exploration::frontierReport frontRep =
+      Robot::consultarCostosInfo(oleadas, posicionActual, p);
 
-    // Robot::printFrontierReport(frontRep);
+  // Robot::printFrontierReport(frontRep);
 
-    return frontRep;
-
+  return frontRep;
 }
 /* devuelve el objetivo con tu id o sea tu objetivo  */
-int Robot::getobjetive(const tscf_exploration::asignacionConstPtr& msg){
+int Robot::getobjetive(const tscf_exploration::asignacionConstPtr& msg) {
   int cant = 0;
   int centro = -1;
   bool encontre = false;
-  while ((!encontre) && (cant < msg->cantidad)){
+  while ((!encontre) && (cant < msg->cantidad)) {
     encontre = msg->asignaciones[cant].idRobot.compare(nombreRobot) == 0;
-    if (encontre){
+    if (encontre) {
       centro = msg->asignaciones[cant].objetivo;
       Robot::setLastInfoGain(msg->asignaciones[cant].gain_cels);
     }
     cant++;
   }
-  //ROS_INFO(" %s :: Recibo Objetivo  ---> %d", nombreRobot.c_str(), centro);
+  // ROS_INFO(" %s :: Recibo Objetivo  ---> %d", nombreRobot.c_str(), centro);
   return centro;
 };
 
-void Robot::ajustarParedes(int centro, nav_msgs::OccupancyGrid& p, std::vector<int> obstaculos){
-  //ROS_INFO("Ajusto Paredes");
+void Robot::ajustarParedes(int centro, nav_msgs::OccupancyGrid& p, std::vector<int> obstaculos) {
+  // ROS_INFO("Ajusto Paredes");
   std::vector<int>::iterator it;
-	/*Para cada obstaculo o en obstaculos, pone obstaculo en los vecinos de o*/
-	for (it = obstaculos.begin(); it != obstaculos.end(); it++){
-      if(p.data[*it] == 100){
-        for(int j = 0; j<9; j++){
-					int vecino = posicionRelativa(*it,j, Robot::width);
-					if ((j!=4)&&(vecino!=centro)){
-						global_map.data[vecino]=100;
-					}
-				}
+  /*Para cada obstaculo o en obstaculos, pone obstaculo en los vecinos de o*/
+  for (it = obstaculos.begin(); it != obstaculos.end(); it++) {
+    if (p.data[*it] == 100) {
+      for (int j = 0; j < 9; j++) {
+        int vecino = posicionRelativa(*it, j, Robot::width);
+        if ((j != 4) && (vecino != centro)) {
+          global_map.data[vecino] = 100;
+        }
+      }
     }
   }
 }
 
-/*Funcion que dada una grilla de costos asociada a un centro de frontera, nos devuelve el
-camino de menor costo*/
-std::list<int> Robot::caminoAfrontera(std::vector<int> oleada, int obj, int start, nav_msgs::OccupancyGrid& p){
-	std::list<int> camino;
-	// ros::Rate loop_rate(0.5);
-	int actual = start;
-	int paso_actual = oleada[start];
-  //ROS_INFO("Busco Camino a Frontera");
-	while (actual != obj){
-
-		int candidato = -1;
-		int paso_candidato = paso_actual;
-		for(int i = 0; i< 9; i++ ){
-			if (i != 4){
-				int pos_vecino = posicionRelativa(actual, i, Robot::width);
-				if (oleada[pos_vecino] != -1){
-					if ((candidato == -1) || (oleada[pos_vecino] < paso_candidato) || ( (oleada[pos_vecino] == paso_candidato) && (distacia2Puntos(map_points[actual], map_points[pos_vecino]) < distacia2Puntos(map_points[actual], map_points[candidato]))) ) {
-
-	 					 candidato = pos_vecino;
-	 					 paso_candidato = oleada[pos_vecino];
-					}
-				}
-			}
-		}
-    //ROS_INFO("Paso :::: %d", candidato);
-		if (candidato < 0){
-      //ROS_INFO("ALgo salio mal. :::: %d", candidato);
-      actual = obj;
-    }else{
-      actual = candidato;
-  		p.data[actual] = 100;
-  		paso_actual = paso_candidato;
-  		camino.push_back(candidato);
+/*Funcion que dada una grilla de costos asociada a un centro de frontera, nos
+devuelve el camino de menor costo*/
+std::list<int> Robot::caminoAfrontera(std::vector<int> oleada,
+                                      int obj,
+                                      int start,
+                                      nav_msgs::OccupancyGrid& p) {
+  std::list<int> camino;
+  // ros::Rate loop_rate(0.5);
+  int actual = start;
+  int paso_actual = oleada[start];
+  // ROS_INFO("Busco Camino a Frontera");
+  while (actual != obj) {
+    int candidato = -1;
+    int paso_candidato = paso_actual;
+    for (int i = 0; i < 9; i++) {
+      if (i != 4) {
+        int pos_vecino = posicionRelativa(actual, i, Robot::width);
+        if (oleada[pos_vecino] != -1) {
+          if ((candidato == -1) || (oleada[pos_vecino] < paso_candidato) ||
+              ((oleada[pos_vecino] == paso_candidato) &&
+               (distacia2Puntos(map_points[actual], map_points[pos_vecino]) <
+                distacia2Puntos(map_points[actual], map_points[candidato])))) {
+            candidato = pos_vecino;
+            paso_candidato = oleada[pos_vecino];
+          }
+        }
+      }
     }
-	}
+    // ROS_INFO("Paso :::: %d", candidato);
+    if (candidato < 0) {
+      // ROS_INFO("ALgo salio mal. :::: %d", candidato);
+      actual = obj;
+    } else {
+      actual = candidato;
+      p.data[actual] = 100;
+      paso_actual = paso_candidato;
+      camino.push_back(candidato);
+    }
+  }
   camino.push_back(obj);
-	return camino;
+  return camino;
 }
-/*Funcion que calcula los caminos y obtiene el indice de el punto de frontera mas cercano */
-std::map< int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano, std::map< int, std::vector<int> > oleadas, int posicionActual, std::list<int> centros_def, nav_msgs::OccupancyGrid& p){
-	//ros::Rate loop_rate(0.1);
-	std::map< int, std::list<int> > caminos;
-	int costo_mas_cercano = 10000;
-	std::list<int>::iterator it;
-	for (it = centros_def.begin(); it != centros_def.end(); it++){
-		p.data[*it] = 100;
-		caminos[*it] = Robot::caminoAfrontera(oleadas[*it], *it, posicionActual, p);
-		int posible_largo = caminos[*it].size();
-		if (posible_largo <= costo_mas_cercano){
-			camino_mas_cercano = *it;
-			costo_mas_cercano = posible_largo;
-		}
-	}
-	return caminos;
+/*Funcion que calcula los caminos y obtiene el indice de el punto de frontera
+ * mas cercano */
+std::map<int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano,
+                                                     std::map<int, std::vector<int> > oleadas,
+                                                     int posicionActual,
+                                                     std::list<int> centros_def,
+                                                     nav_msgs::OccupancyGrid& p) {
+  // ros::Rate loop_rate(0.1);
+  std::map<int, std::list<int> > caminos;
+  int costo_mas_cercano = 10000;
+  std::list<int>::iterator it;
+  for (it = centros_def.begin(); it != centros_def.end(); it++) {
+    p.data[*it] = 100;
+    caminos[*it] = Robot::caminoAfrontera(oleadas[*it], *it, posicionActual, p);
+    int posible_largo = caminos[*it].size();
+    if (posible_largo <= costo_mas_cercano) {
+      camino_mas_cercano = *it;
+      costo_mas_cercano = posible_largo;
+    }
+  }
+  return caminos;
 }
 
 /*Funcion que a partir de una lista de indices obtiene un goal_path*/
-tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino, nav_msgs::OccupancyGrid& p){
+tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino,
+                                              nav_msgs::OccupancyGrid& p) {
+  tscf_exploration::goalList list;
+  list.listaGoals.clear();
 
-	tscf_exploration::goalList list;
-	list.listaGoals.clear();
-
-	std::list<int>::iterator it_camino;
-	for(it_camino = list_camino.begin(); it_camino != (--list_camino.end()); it_camino++){
-
-		cv::Point2f ps = map_points[*it_camino];
-		geometry_msgs::Point pos;
-		pos.x = ps.x;
-		pos.y = ps.y;
-		pos.z = 0.0;
-		if ( !(*it_camino> width*(height-1)) && (( ( (global_map.data[*it_camino-1+width] == 100) && (global_map.data[*it_camino+width] == 100) ) || ( (global_map.data[*it_camino+width] == 100) && (global_map.data[*it_camino+1+width] == 100) ) ))){
-			pos.y = ps.y - 1.0;
-		}
-		if (!(*it_camino% width == 0) && ((((global_map.data[*it_camino-1+width] == 100) && (global_map.data[*it_camino-1] == 100)) || ((global_map.data[*it_camino-1] == 100) && (global_map.data[*it_camino-1-width] == 100)) ))){
-			pos.x = ps.x + 1.0;
-		}
-		if (!(*it_camino< width) && ((((global_map.data[*it_camino-1-width] == 100) && (global_map.data[*it_camino-width] == 100)) || ((global_map.data[*it_camino-width] == 100) && (global_map.data[*it_camino+1-width] == 100)) ))){
-			pos.y = ps.y + 1.0;
-		}
-		if (!(*it_camino% width == width - 1) && ((((global_map.data[*it_camino+1-width] == 100) && (global_map.data[*it_camino+1] == 100)) || ((global_map.data[*it_camino+1] == 100) && (global_map.data[*it_camino+1+width] == 100)) ))){
-			pos.x = ps.x - 1.0;
-		}
-		list.listaGoals.push_back(pos);
-		p.data[(*it_camino)] = 100;
-
-	}
-	return list;
+  std::list<int>::iterator it_camino;
+  for (it_camino = list_camino.begin(); it_camino != (--list_camino.end()); it_camino++) {
+    cv::Point2f ps = map_points[*it_camino];
+    geometry_msgs::Point pos;
+    pos.x = ps.x;
+    pos.y = ps.y;
+    pos.z = 0.0;
+    if (!(*it_camino > width * (height - 1)) &&
+        ((((global_map.data[*it_camino - 1 + width] == 100) &&
+           (global_map.data[*it_camino + width] == 100)) ||
+          ((global_map.data[*it_camino + width] == 100) &&
+           (global_map.data[*it_camino + 1 + width] == 100))))) {
+      pos.y = ps.y - 1.0;
+    }
+    if (!(*it_camino % width == 0) && ((((global_map.data[*it_camino - 1 + width] == 100) &&
+                                         (global_map.data[*it_camino - 1] == 100)) ||
+                                        ((global_map.data[*it_camino - 1] == 100) &&
+                                         (global_map.data[*it_camino - 1 - width] == 100))))) {
+      pos.x = ps.x + 1.0;
+    }
+    if (!(*it_camino < width) && ((((global_map.data[*it_camino - 1 - width] == 100) &&
+                                    (global_map.data[*it_camino - width] == 100)) ||
+                                   ((global_map.data[*it_camino - width] == 100) &&
+                                    (global_map.data[*it_camino + 1 - width] == 100))))) {
+      pos.y = ps.y + 1.0;
+    }
+    if (!(*it_camino % width == width - 1) &&
+        ((((global_map.data[*it_camino + 1 - width] == 100) &&
+           (global_map.data[*it_camino + 1] == 100)) ||
+          ((global_map.data[*it_camino + 1] == 100) &&
+           (global_map.data[*it_camino + 1 + width] == 100))))) {
+      pos.x = ps.x - 1.0;
+    }
+    list.listaGoals.push_back(pos);
+    p.data[(*it_camino)] = 100;
+  }
+  return list;
 }
 /*centro es el objetivo*/
-tscf_exploration::goalList Robot::getPathToObjetive(int centro, std::vector<int> obstaculos, nav_msgs::OccupancyGrid &p){
+tscf_exploration::goalList Robot::getPathToObjetive(int centro,
+                                                    std::vector<int> obstaculos,
+                                                    nav_msgs::OccupancyGrid& p) {
+  p.info = global_map.info;
+  p.header = global_map.header;
+  p.data = global_map.data;
 
-	p.info = global_map.info;
-	p.header = global_map.header;
-	p.data = global_map.data;
+  int posicionActual =
+      Robot::indice_origen +
+      (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x) * 1) +
+       ((int)Robot::position.pose.position.y) * Robot::width);
 
-	int posicionActual = Robot::indice_origen + (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x)*1) + ((int)Robot::position.pose.position.y) * Robot::width);
+  std::list<int> list;
+  list.push_back(centro);
+  Robot::ajustarParedes(centro, p, obstaculos);
+  std::map<int, std::vector<int> > oleadas =
+      Robot::crearOleadas(global_map, posicionActual, list, p);
+  int camino_mas_cercano = -1;
+  // ROS_INFO("obtenerCaminos");
+  std::map<int, std::list<int> > caminos =
+      Robot::obtenerCaminos(camino_mas_cercano, oleadas, posicionActual, list, p);
 
-	std::list<int> list;
-	list.push_back(centro);
-	Robot::ajustarParedes(centro, p, obstaculos);
-	std::map< int, std::vector<int> > oleadas = Robot::crearOleadas(global_map, posicionActual, list, p);
-	int camino_mas_cercano = -1;
-  //ROS_INFO("obtenerCaminos");
-	std::map< int, std::list<int> > caminos = Robot::obtenerCaminos(camino_mas_cercano, oleadas, posicionActual,list, p);
-
-	for(std::list<int>::iterator it = caminos[camino_mas_cercano].begin(); it!=caminos[camino_mas_cercano].end(); it++ ){
-		p.data[(*it)] = 100;
-	}
-  //ROS_INFO("getGoalPath");
-	tscf_exploration::goalList pathlist = getGoalPath(caminos[camino_mas_cercano], p);
-	return pathlist;
-
+  for (std::list<int>::iterator it = caminos[camino_mas_cercano].begin();
+       it != caminos[camino_mas_cercano].end(); it++) {
+    p.data[(*it)] = 100;
+  }
+  // ROS_INFO("getGoalPath");
+  tscf_exploration::goalList pathlist = getGoalPath(caminos[camino_mas_cercano], p);
+  return pathlist;
 };

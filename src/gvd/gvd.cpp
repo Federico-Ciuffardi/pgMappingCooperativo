@@ -73,7 +73,8 @@ bool on_grid(pos p, vector<vector<T>> grid) {
  *  main funcs
  */
 
-/* returns the dist_grid corresponding to the original grid, relative to Occupide or Critical (from_type) */
+/* returns the dist_grid corresponding to the original grid, relative to
+ * Occupide or Critical (from_type) */
 boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cell_type from_type) {
   // get grid size
   pair<int, int> size = get_grid_size(ogrid);
@@ -90,7 +91,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
       dgrid[x].push_back(dist_cell());
       if (ogrid[x][y] == from_type || ogrid[x][y] == Unknown) {
         dgrid[x][y].distance = 0;
-        if(ogrid[x][y] == from_type){
+        if (ogrid[x][y] == from_type) {
           dgrid[x][y].add_obs(pos(x, y));
           dqueue.push(dist_pos(0, pos(x, y)));
         }
@@ -114,7 +115,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
         for (int j = -1; j <= 1; j++) {
           int ny = current_pos.second + j;
           if ((i != 0 || j != 0) && on_grid(nx, ny, ogrid)) {
-            if (ogrid[nx][ny]!= Unknown && ogrid[nx][ny]!= from_type &&
+            if (ogrid[nx][ny] != Unknown && ogrid[nx][ny] != from_type &&
                 dgrid[nx][ny].distance == FLT_MAX) {
               float min_distance = FLT_MAX;
               // look at neighbors of freecell to find cells whose
@@ -127,29 +128,26 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
                     if (dgrid[nxk][nyl].obs.size() > 0) {
                       // find distance to neighbor's closest cell
                       // and update the number of obstacles at that distance
-                      float d = dist(nx, ny, dgrid[nxk][nyl].obs[0].first,
-                                     dgrid[nxk][nyl].obs[0].second);
+                      float d =
+                          dist(nx, ny, dgrid[nxk][nyl].obs[0].first, dgrid[nxk][nyl].obs[0].second);
                       if (d < min_distance) {
                         min_distance = d;
                         dgrid[nx][ny].obs.clear();
                         dgrid[nx][ny].add_obs(
-                            pos(dgrid[nxk][nyl].obs[0].first,
-                                dgrid[nxk][nyl].obs[0].second));
+                            pos(dgrid[nxk][nyl].obs[0].first, dgrid[nxk][nyl].obs[0].second));
                         dgrid[nx][ny].distance = min_distance;
                       } else if (d == min_distance &&
-                                 !dgrid[nx][ny].has_obs(
-                                     pos(dgrid[nxk][nyl].obs[0].first,
-                                         dgrid[nxk][nyl].obs[0].second))) {
+                                 !dgrid[nx][ny].has_obs(pos(dgrid[nxk][nyl].obs[0].first,
+                                                            dgrid[nxk][nyl].obs[0].second))) {
                         dgrid[nx][ny].add_obs(
-                            pos(dgrid[nxk][nyl].obs[0].first,
-                                dgrid[nxk][nyl].obs[0].second));
+                            pos(dgrid[nxk][nyl].obs[0].first, dgrid[nxk][nyl].obs[0].second));
                       }
                     }
                   }
                 }
               }
               next_dqueue.push(dist_pos(min_distance, pos(nx, ny)));
-              if( from_type == Critical && ogrid[nx][ny] != Frontier){
+              if (from_type == Critical && ogrid[nx][ny] != Frontier) {
                 continue;
               }
               full_dqueue.push(dist_pos(min_distance, pos(nx, ny)));
@@ -276,18 +274,18 @@ gvd::gvd(grid_gvd ggvd) {
   }
 }
 
-//could be of less order, maybe using trees
-map<pos,bool> get_local_mins(dist_grid dg, gvd GVD){
-  map<pos,bool> lmins;
-  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first){
+// could be of less order, maybe using trees
+map<pos, bool> get_local_mins(dist_grid dg, gvd GVD) {
+  map<pos, bool> lmins;
+  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
     bool auxmin = true;
-    pos current_pos = GVD.g[*vp.first].p; 
+    pos current_pos = GVD.g[*vp.first].p;
     bool not_processed = lmins.find(current_pos) == lmins.end();
-    if(not_processed){
-      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first){
+    if (not_processed) {
+      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first) {
         pos adj_pos = GVD.g[*ad.first].p;
         bool is_min = cell(dg, current_pos).distance < cell(dg, adj_pos).distance;
-        if(is_min){
+        if (is_min) {
           lmins[adj_pos] = false;
         }
         auxmin = is_min && auxmin;
@@ -298,29 +296,28 @@ map<pos,bool> get_local_mins(dist_grid dg, gvd GVD){
   return lmins;
 }
 
-int degree_constraint(grid_type &ogrid, gvd GVD, map<pos,bool> lmins){
+int degree_constraint(grid_type& ogrid, gvd GVD, map<pos, bool> lmins) {
   int criticals_count = 0;
-  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first){
+  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
     pos current_pos = GVD.g[*vp.first].p;
     bool is_min = lmins[current_pos];
-    if (is_min && (out_degree(*vp.first, GVD.g) == 2)){
-      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first){
-        if(out_degree(*ad.first, GVD.g) >= 3){
+    if (is_min && (out_degree(*vp.first, GVD.g) == 2)) {
+      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first) {
+        if (out_degree(*ad.first, GVD.g) >= 3) {
           ogrid[current_pos.first][current_pos.second] = Critical;
           criticals_count++;
           break;
         }
-        
-      } 
+      }
     }
   }
   return criticals_count;
 }
 
-map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd &GVD,int criticals_count){
+map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd& GVD, int criticals_count) {
   dist_grid dgrid;
   dist_pos_queue dqueue;
-  map<pos, dist_pos> critical_with_frontier; 
+  map<pos, dist_pos> critical_with_frontier;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);
   while (criticals_count > 0 && !dqueue.empty()) {
     dist_pos frontier = dqueue.top();
@@ -328,8 +325,8 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd &GVD,int critica
     dqueue.pop();
     pos critical_pos = cell(dgrid, current_pos).obs[0];
     gvd::Vertex v = GVD.positions[critical_pos];
-    if(!GVD.g[v].is_critical){
-      GVD.g[v].is_critical= true;
+    if (!GVD.g[v].is_critical) {
+      GVD.g[v].is_critical = true;
       critical_with_frontier[critical_pos] = frontier;
       criticals_count--;
     }
@@ -337,10 +334,10 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd &GVD,int critica
   return critical_with_frontier;
 }
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd &GVD) {
-  map<pos,bool> local_mins = get_local_mins(dg, GVD);
+map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd& GVD) {
+  map<pos, bool> local_mins = get_local_mins(dg, GVD);
   int criticals_count = degree_constraint(ogrid, GVD, local_mins);
-  cout<<criticals_count<<endl;
+  cout << criticals_count << endl;
   map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
   return critical_with_frontier;
 }

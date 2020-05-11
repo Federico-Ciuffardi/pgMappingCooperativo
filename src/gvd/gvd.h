@@ -65,7 +65,7 @@ struct gvd {
   typedef graph_traits<Graph>::vertex_descriptor Vertex;
   typedef std::map<pos, Vertex> NameVertexMap;
   typedef graph_traits<Graph>::edge_descriptor Edge;
-  //typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
+  // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 
   Graph g;
   NameVertexMap positions;
@@ -84,7 +84,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
 
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd &GVD);
-//map<pos,bool> get_local_mins(dist_grid dg, gvd GVD);
+map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd& GVD);
+// map<pos,bool> get_local_mins(dist_grid dg, gvd GVD);
 
 #endif
