@@ -283,7 +283,7 @@ gvd::gvd(grid_gvd ggvd) {
 }
 
 // could be of less order, maybe using trees
-map<pos, bool> get_local_mins(dist_grid dg, gvd GVD) {
+map<pos, bool> get_local_mins(dist_grid dg, gvd& GVD) {
   map<pos, bool> lmins;
   for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
     bool auxmin = true;
@@ -306,20 +306,22 @@ map<pos, bool> get_local_mins(dist_grid dg, gvd GVD) {
 
 void collapse_vertices(gvd& GVD, map<pos, bool> lmins){
 
-  // Remove all the vertices. This is OK.
+  /*// Remove all the vertices. This is OK.
   graph_traits<gvd::Graph>::vertex_iterator vi, vi_end, next;
   tie(vi, vi_end) = vertices(GVD.g);
   for (next = vi; vi != vi_end; vi = next) {
     ++next;
     remove_vertex(*vi, GVD.g);
-  }
+  }*/
 
-  /*list<gvd::Vertex> remove_aux;
-  for (auto vp = vertices(GVD.g); vp.first != vp.second;++vp.first) {
-    pos current_pos = GVD.g[*vp.first].p;
+  //list<gvd::Vertex> remove_aux;
+  for (auto vp = vertices(GVD.g); vp.first != vp.second;) {
+    auto vp_aux = vp.first; 
+    ++vp.first;
+    pos current_pos = GVD.g[*vp_aux].p;
     bool is_min = lmins[current_pos];
-    if(!is_min && out_degree(*vp.first, GVD.g) == 2){
-      auto adj = adjacent_vertices(*vp.first, GVD.g);
+    if(!is_min && out_degree(*vp_aux, GVD.g) == 2){
+      auto adj = adjacent_vertices(*vp_aux, GVD.g);
       auto adj1 = GVD.g[*adj.first];
       pos adj1_aux = adj1.p - current_pos;
       auto adj_aux = adj;
@@ -327,19 +329,19 @@ void collapse_vertices(gvd& GVD, map<pos, bool> lmins){
       auto adj2 = GVD.g[*adj.first];
       pos adj2_aux = (-1)*(adj2.p - current_pos);
       if(adj1_aux == adj2_aux){
+        //cout<<"( "<< current_pos.first <<" , " <<current_pos.second<< " )"<<endl;
         GVD.add_e(*adj_aux.first, *adj.first);
         GVD.add_e(*adj.first, *adj_aux.first);
-        remove_aux.push_back(*vp.first);
+        clear_vertex(*vp_aux, GVD.g);
+        remove_vertex(*vp_aux, GVD.g);
+       
       }
     }
-  }*/
+  }
 }
 
 int degree_constraint(grid_type& ogrid, gvd& GVD) {
   ofstream outfile;
-  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/gvd/map.txt", ios::out | std::ofstream::app);
-  outfile<<"Entre a degree"<<endl;
-  outfile.close();
   int criticals_count = 0;
   for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
     pos current_pos = GVD.g[*vp.first].p;
@@ -380,15 +382,11 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd& GVD, int critic
 map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd& GVD) {
   map<pos, bool> local_mins = get_local_mins(dg, GVD);
   collapse_vertices(GVD, local_mins);
-  ofstream outfile;
-  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/gvd/map.txt", ios::out | std::ofstream::app);
-  outfile<<"Sali de collapse"<<endl;
-  outfile.close();
   int criticals_count = degree_constraint(ogrid, GVD);
   //cout << criticals_count << endl;
-  /*map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
-  return critical_with_frontier;*/
-  return map<pos, dist_pos>();
+  map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
+  return critical_with_frontier;
+  //return map<pos, dist_pos>();
 }
 
 void print_grid(grid_gvd ggvd, grid_type grid){
