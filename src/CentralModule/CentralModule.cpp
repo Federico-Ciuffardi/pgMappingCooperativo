@@ -61,7 +61,7 @@ void CentralModule::setCentrosF(std::vector<int> newCentrosF) {
 };
 
 /* De ocupancy grid a state grid*/
-grid_type og2sg(nav_msgs::OccupancyGrid og, set<int> frontera) {
+grid_type og2gt(nav_msgs::OccupancyGrid og, set<int> frontera) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
   grid_type res;
@@ -69,7 +69,7 @@ grid_type og2sg(nav_msgs::OccupancyGrid og, set<int> frontera) {
     res.push_back(row_type());
     for (int j = 0; j < mapWidth; j++) {
       cell_type ct = Unknown;
-      switch (og.data[i * mapHeight + j]) {
+      switch (og.data[i * mapWidth + j]) {
         case 0:
           ct = Free;
           break;
@@ -88,7 +88,7 @@ grid_type og2sg(nav_msgs::OccupancyGrid og, set<int> frontera) {
 
   for (auto it = frontera.begin(); it != frontera.end(); it++) {
     int pos = *it;
-    res[pos % mapHeight][pos / mapHeight] = Frontier;
+    res[pos / mapWidth][pos % mapWidth] = Frontier;
   }
   return res;
 }
@@ -96,11 +96,25 @@ grid_type og2sg(nav_msgs::OccupancyGrid og, set<int> frontera) {
 tscf_exploration::takeobjetive CentralModule::getObjetiveMap() {
   tscf_exploration::takeobjetive ret;
   ret.mapa = CentralModule::getMap();
-  CentralModule::aplicarKmeans(CentralModule::frontera);
-  ret.centrosf = CentralModule::getCentrosF();
-  ret.sizecf = CentralModule::getCentrosF().size();
-  ret.indice = CentralModule::indice;
-  CentralModule::indice++;
+	grid_type gt = og2gt(ret.mapa,CentralModule::frontera);
+	set<pos> poi = get_points_of_interest(gt);
+	//ROS_INFO("Numero de puntos: %d",poi.size());
+	//if(poi.size() == 0){
+		CentralModule::aplicarKmeans(CentralModule::frontera);
+		ret.centrosf = CentralModule::getCentrosF();
+		ret.sizecf = CentralModule::getCentrosF().size();
+	/*}else{
+		ROS_INFO("USANDO GVD! ");
+		vector<int> centrosf;
+		for(auto it = poi.begin(); it != poi.end(); it++){
+			centrosf.push_back(it->first*ret.mapa.info.width + it->second);
+		}
+		ret.centrosf = centrosf;
+		ret.sizecf = centrosf.size();
+	}*/
+
+	ret.indice = CentralModule::indice;
+	CentralModule::indice++;
   return ret;
 }
 
@@ -134,7 +148,6 @@ void CentralModule::saveMap(const nav_msgs::OccupancyGrid map) {
      * (x,y) que le corresponde en un mapa.*/
     for (int i = 0; i < width * height; i++) {
       int fila = i % width;
-      ;
       int columna = i / width;
       float a = ((x_origin + fila) + 0.5);
       float b = ((y_origin + columna) + 0.5);
