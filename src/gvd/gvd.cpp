@@ -304,28 +304,42 @@ map<pos, bool> get_local_mins(dist_grid dg, gvd GVD) {
   return lmins;
 }
 
-void collapse_vertices(gvd&GVD, map<pos, bool> lmins){
-  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
+void collapse_vertices(gvd& GVD, map<pos, bool> lmins){
+
+  // Remove all the vertices. This is OK.
+  graph_traits<gvd::Graph>::vertex_iterator vi, vi_end, next;
+  tie(vi, vi_end) = vertices(GVD.g);
+  for (next = vi; vi != vi_end; vi = next) {
+    ++next;
+    remove_vertex(*vi, GVD.g);
+  }
+
+  /*list<gvd::Vertex> remove_aux;
+  for (auto vp = vertices(GVD.g); vp.first != vp.second;++vp.first) {
     pos current_pos = GVD.g[*vp.first].p;
     bool is_min = lmins[current_pos];
     if(!is_min && out_degree(*vp.first, GVD.g) == 2){
-      auto ad = adjacent_vertices(*vp.first, GVD.g);
-      auto ad1 = GVD.g[*ad.first];
-      pos ad1_aux = ad1.p - current_pos;
-      auto ad_aux = ad;
-      ++ad.first;
-      auto ad2 = GVD.g[*ad.first];
-      pos ad2_aux = (-1)*(ad2.p - current_pos);
-      if(ad1_aux == ad2_aux){
-        GVD.add_e(*ad_aux.first, *ad.first);
-        GVD.add_e(*ad.first, *ad_aux.first);
-        remove_vertex(*vp.first,GVD.g);
+      auto adj = adjacent_vertices(*vp.first, GVD.g);
+      auto adj1 = GVD.g[*adj.first];
+      pos adj1_aux = adj1.p - current_pos;
+      auto adj_aux = adj;
+      ++adj.first;
+      auto adj2 = GVD.g[*adj.first];
+      pos adj2_aux = (-1)*(adj2.p - current_pos);
+      if(adj1_aux == adj2_aux){
+        GVD.add_e(*adj_aux.first, *adj.first);
+        GVD.add_e(*adj.first, *adj_aux.first);
+        remove_aux.push_back(*vp.first);
       }
-    }  
-  }
+    }
+  }*/
 }
 
-int degree_constraint(grid_type& ogrid, gvd GVD, map<pos, bool> lmins) {
+int degree_constraint(grid_type& ogrid, gvd& GVD) {
+  ofstream outfile;
+  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/gvd/map.txt", ios::out | std::ofstream::app);
+  outfile<<"Entre a degree"<<endl;
+  outfile.close();
   int criticals_count = 0;
   for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
     pos current_pos = GVD.g[*vp.first].p;
@@ -366,10 +380,15 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd& GVD, int critic
 map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd& GVD) {
   map<pos, bool> local_mins = get_local_mins(dg, GVD);
   collapse_vertices(GVD, local_mins);
-  int criticals_count = degree_constraint(ogrid, GVD, local_mins);
-  cout << criticals_count << endl;
-  map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
-  return critical_with_frontier;
+  ofstream outfile;
+  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/gvd/map.txt", ios::out | std::ofstream::app);
+  outfile<<"Sali de collapse"<<endl;
+  outfile.close();
+  int criticals_count = degree_constraint(ogrid, GVD);
+  //cout << criticals_count << endl;
+  /*map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
+  return critical_with_frontier;*/
+  return map<pos, dist_pos>();
 }
 
 void print_grid(grid_gvd ggvd, grid_type grid){
@@ -403,7 +422,7 @@ set<pos> get_points_of_interest(grid_type ogrid){
   dist_pos_queue dqueue;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied);
   grid_gvd ggvd = get_grid_gvd(dgrid, dqueue);
-  print_grid(ggvd, ogrid);
+  //print_grid(ggvd, ogrid);
   gvd GVD(ggvd);
   map<pos, dist_pos> cf = get_critical_points(ogrid, dgrid, GVD);
   for(auto it = cf.begin(); it!=cf.begin(); ++it){
