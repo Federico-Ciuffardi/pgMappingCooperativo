@@ -1,5 +1,5 @@
 #include <iostream>
-#include "gvd.h"
+#include "GVD.h"
 
 using namespace std;
 
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     cout << endl;
   }
   grid_gvd ggvd = get_grid_gvd(dgrid, dqueue);
-  cout << "gvd grid :" << endl;
+  cout << "GVD grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {
     for (int y = 0; y < grid_size_y; y++) {
       if (ggvd[x][y]) {
@@ -112,24 +112,24 @@ int main(int argc, char** argv) {
     cout << endl;
   }
 
-  gvd GVD(ggvd);
-  cout << "GVD vertices: ";
-  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first)
-    cout << "(" << GVD.g[*vp.first].p.first << "," << GVD.g[*vp.first].p.second << ") ";
+  GVD gvd(ggvd);
+  cout << "gvd vertices: ";
+  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first)
+    cout << "(" << gvd.g[*vp.first].p.first << "," << gvd.g[*vp.first].p.second << ") ";
   cout << endl;
 
-  cout << "GVD edges: ";
-  for (auto it = edges(GVD.g); it.first != it.second; ++it.first++)
-    std::cout << "|(" << GVD.g[source(*it.first, GVD.g)].p.first << ","
-              << GVD.g[source(*it.first, GVD.g)].p.second << ")-("
-              << GVD.g[target(*it.first, GVD.g)].p.first << ","
-              << GVD.g[target(*it.first, GVD.g)].p.second << ")|";
+  cout << "gvd edges: ";
+  for (auto it = edges(gvd.g); it.first != it.second; ++it.first++)
+    std::cout << "|(" << gvd.g[source(*it.first, gvd.g)].p.first << ","
+              << gvd.g[source(*it.first, gvd.g)].p.second << ")-("
+              << gvd.g[target(*it.first, gvd.g)].p.first << ","
+              << gvd.g[target(*it.first, gvd.g)].p.second << ")|";
   std::cout << std::endl;
 
   cout << "////////////////////////////////////////////////////////////" << endl;
-  /*map<pos,bool> lmins = get_local_mins(dgrid, GVD);
+  /*map<pos,bool> lmins = get_local_mins(dgrid, gvd);
 
-  cout << "gvd grid :" << endl;
+  cout << "GVD grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {
     for (int y = 0; y < grid_size_y; y++) {
       if (ggvd[x][y]) {
@@ -149,11 +149,11 @@ int main(int argc, char** argv) {
     cout << endl;
   }*/
 
-  map<pos, dist_pos> cf = get_critical_points(grid, dgrid, GVD);
+  map<pos, dist_pos> cf = get_critical_points(grid, dgrid, gvd);
 
   // cout<< cf.size() <<endl;
 
-  cout << "gvd grid :" << endl;
+  cout << "GVD grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {
     for (int y = 0; y < grid_size_y; y++) {
       if (ggvd[x][y]) {

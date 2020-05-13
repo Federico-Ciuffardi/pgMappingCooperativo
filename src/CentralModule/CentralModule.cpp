@@ -1,5 +1,4 @@
 #include "CentralModule.h"
-#include "../gvd/gvd.h"
 
 CentralModule::CentralModule() {
   CentralModule::estado = WaitingAuction;
@@ -65,11 +64,11 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, set<int> frontera) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
   grid_type res;
-  for (int i = 0; i < mapHeight; i++) {
+  for (int x = 0; x < mapWidth; x++) {
     res.push_back(row_type());
-    for (int j = 0; j < mapWidth; j++) {
+    for (int y = 0; y < mapHeight; y++) {
       cell_type ct = Unknown;
-      switch (og.data[i * mapWidth + j]) {
+      switch (og.data[y * mapWidth + x]) {
         case 0:
           ct = Free;
           break;
@@ -82,23 +81,27 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, set<int> frontera) {
         default:
           ct = (cell_type)-1;
       }
-      res[i].push_back(ct);
+      res[x].push_back(ct);
     }
   }
 
   for (auto it = frontera.begin(); it != frontera.end(); it++) {
     int pos = *it;
-    res[pos / mapWidth][pos % mapWidth] = Frontier;
+    res[pos % mapWidth][pos / mapWidth] = Frontier;
   }
   return res;
 }
 
-tscf_exploration::takeobjetive CentralModule::getObjetiveMap() {
+boost::tuple<tscf_exploration::takeobjetive,GVD> CentralModule::getObjetiveMap() {
   tscf_exploration::takeobjetive ret;
   ret.mapa = CentralModule::getMap();
 	grid_type gt = og2gt(ret.mapa,CentralModule::frontera);
-	set<pos> poi = get_points_of_interest(gt);
-	//ROS_INFO("Numero de puntos: %d",poi.size());
+
+	set<pos> poi;
+  GVD gvd;
+  boost::tie(poi,gvd) = get_points_of_interest(gt);
+
+	ROS_INFO("Numero de puntos: %d",poi.size());
 	//if(poi.size() == 0){
 		CentralModule::aplicarKmeans(CentralModule::frontera);
 		ret.centrosf = CentralModule::getCentrosF();
@@ -115,7 +118,7 @@ tscf_exploration::takeobjetive CentralModule::getObjetiveMap() {
 
 	ret.indice = CentralModule::indice;
 	CentralModule::indice++;
-  return ret;
+  return boost::make_tuple(ret,gvd);
 }
 
 centralMouleState CentralModule::getEstado() {

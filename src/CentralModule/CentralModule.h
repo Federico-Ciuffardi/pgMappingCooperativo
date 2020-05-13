@@ -14,7 +14,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <visualization_msgs/Marker.h>
 #include "../utils.cpp"
+#include "../GVD/GVD.h"
 
 typedef std::map<int, std::list<int> > dict_clusters;
 
@@ -89,7 +91,7 @@ class CentralModule {
 
   void saveMap(const nav_msgs::OccupancyGrid map);
   nav_msgs::OccupancyGrid getMap();
-  tscf_exploration::takeobjetive getObjetiveMap();
+  boost::tuple<tscf_exploration::takeobjetive,GVD> getObjetiveMap();
 
   void saveBid(const tscf_exploration::frontierReportConstPtr& msg, std::string name);
   tscf_exploration::asignacion assignTasks();

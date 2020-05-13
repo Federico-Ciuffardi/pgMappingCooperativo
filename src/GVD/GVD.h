@@ -44,7 +44,7 @@ typedef vector<dist_cell> dist_row;
 typedef vector<dist_row> dist_grid;
 
 /*
- *  gvd
+ *  GVD
  */
 typedef vector<vector<bool>> grid_gvd;
 
@@ -60,7 +60,7 @@ struct gvd_vertex {
   }
 };
 
-struct gvd {
+struct GVD {
   typedef adjacency_list<listS, listS, bidirectionalS, gvd_vertex> Graph; // maybe using list is not the most eficient way
   typedef graph_traits<Graph>::vertex_descriptor Vertex;
   typedef std::map<pos, Vertex> NameVertexMap;
@@ -69,10 +69,10 @@ struct gvd {
 
   Graph g;
   NameVertexMap positions;
-
-  gvd(grid_gvd);
-  boost::tuple<gvd::Vertex, bool> add_v(pos p);
-  pair<gvd::Edge, bool> add_e(Vertex a, Vertex b);
+  GVD(){};
+  GVD(grid_gvd);
+  boost::tuple<GVD::Vertex, bool> add_v(pos p);
+  pair<GVD::Edge, bool> add_e(Vertex a, Vertex b);
 };
 
 using namespace std;
@@ -84,10 +84,10 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
 
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd& GVD);
-// map<pos,bool> get_local_mins(dist_grid dg, gvd GVD);
+map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);
+// map<pos,bool> get_local_mins(dist_grid dg, GVD gvd);
 
 
-set<pos> get_points_of_interest(grid_type g);
+boost::tuple<set<pos>,GVD> get_points_of_interest(grid_type g);
 
 #endif

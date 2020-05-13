@@ -1,4 +1,4 @@
-#include "gvd.h"
+#include "GVD.h"
 
 #include <math.h>
 #include <cfloat>
@@ -192,7 +192,7 @@ int A(pos p, grid_gvd ggvd) {
   return res;
 }
 
-/* returns a boolean matrix, a cell is true if it belongs to the gvd and false
+/* returns a boolean matrix, a cell is true if it belongs to the GVD and false
  * otherwise*/
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
   // get sizes
@@ -207,7 +207,7 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
     }
   }
 
-  // compute grid gvd
+  // compute grid GVD
   while (!dqueue.empty()) {
     // get the first cell to process
     pos current_pos = dqueue.top().second;
@@ -216,8 +216,8 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
     int cx = current_pos.first;
     int cy = current_pos.second;
 
-    // Remove from gvd if it does not belongs to the gvd by definition ands does
-    // not disconects the gvd
+    // Remove from GVD if it does not belongs to the GVD by definition ands does
+    // not disconects the GVD
     if (dg[cx][cy].obs.size() <= 1 && A(current_pos, grid_gvd) <= 1) {
       grid_gvd[cx][cy] = false;
     }
@@ -226,10 +226,10 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
 }
 
 /*
- *  gvd implementation
+ *  GVD implementation
  */
 
-boost::tuple<gvd::Vertex, bool> gvd::add_v(pos p) {
+boost::tuple<GVD::Vertex, bool> GVD::add_v(pos p) {
   NameVertexMap::iterator pos_it;
   bool inserted;
   Vertex u;
@@ -244,11 +244,11 @@ boost::tuple<gvd::Vertex, bool> gvd::add_v(pos p) {
   return boost::make_tuple(u, inserted);
 }
 
-pair<gvd::Edge, bool> gvd::add_e(Vertex u, Vertex v) {
+pair<GVD::Edge, bool> GVD::add_e(Vertex u, Vertex v) {
   return add_edge(u, v, g);
 }
 
-gvd::gvd(grid_gvd ggvd) {
+GVD::GVD(grid_gvd ggvd) {
   pair<int, int> size = get_grid_size(ggvd);
 
   // initialize grid_gvd
@@ -283,15 +283,15 @@ gvd::gvd(grid_gvd ggvd) {
 }
 
 // could be of less order, maybe using trees
-map<pos, bool> get_local_mins(dist_grid dg, gvd& GVD) {
+map<pos, bool> get_local_mins(dist_grid dg, GVD& gvd) {
   map<pos, bool> lmins;
-  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
+  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     bool auxmin = true;
-    pos current_pos = GVD.g[*vp.first].p;
+    pos current_pos = gvd.g[*vp.first].p;
     bool not_processed = lmins.find(current_pos) == lmins.end();
     if (not_processed) {
-      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first) {
-        pos adj_pos = GVD.g[*ad.first].p;
+      for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
+        pos adj_pos = gvd.g[*ad.first].p;
         bool is_min = cell(dg, current_pos).distance < cell(dg, adj_pos).distance;
         if (is_min) {
           lmins[adj_pos] = false;
@@ -304,51 +304,50 @@ map<pos, bool> get_local_mins(dist_grid dg, gvd& GVD) {
   return lmins;
 }
 
-void collapse_vertices(gvd& GVD, map<pos, bool> lmins){
+void collapse_vertices(GVD& gvd, map<pos, bool> lmins){
 
   /*// Remove all the vertices. This is OK.
-  graph_traits<gvd::Graph>::vertex_iterator vi, vi_end, next;
-  tie(vi, vi_end) = vertices(GVD.g);
+  graph_traits<GVD::Graph>::vertex_iterator vi, vi_end, next;
+  tie(vi, vi_end) = vertices(gvd.g);
   for (next = vi; vi != vi_end; vi = next) {
     ++next;
-    remove_vertex(*vi, GVD.g);
+    remove_vertex(*vi, gvd.g);
   }*/
 
-  //list<gvd::Vertex> remove_aux;
-  for (auto vp = vertices(GVD.g); vp.first != vp.second;) {
+  //list<GVD::Vertex> remove_aux;
+  for (auto vp = vertices(gvd.g); vp.first != vp.second;) {
     auto vp_aux = vp.first; 
     ++vp.first;
-    pos current_pos = GVD.g[*vp_aux].p;
+    pos current_pos = gvd.g[*vp_aux].p;
     bool is_min = lmins[current_pos];
-    if(!is_min && out_degree(*vp_aux, GVD.g) == 2){
-      auto adj = adjacent_vertices(*vp_aux, GVD.g);
-      auto adj1 = GVD.g[*adj.first];
+    if(!is_min && out_degree(*vp_aux, gvd.g) == 2){
+      auto adj = adjacent_vertices(*vp_aux, gvd.g);
+      auto adj1 = gvd.g[*adj.first];
       pos adj1_aux = adj1.p - current_pos;
       auto adj_aux = adj;
       ++adj.first;
-      auto adj2 = GVD.g[*adj.first];
+      auto adj2 = gvd.g[*adj.first];
       pos adj2_aux = (-1)*(adj2.p - current_pos);
       if(adj1_aux == adj2_aux){
         //cout<<"( "<< current_pos.first <<" , " <<current_pos.second<< " )"<<endl;
-        GVD.add_e(*adj_aux.first, *adj.first);
-        GVD.add_e(*adj.first, *adj_aux.first);
-        clear_vertex(*vp_aux, GVD.g);
-        remove_vertex(*vp_aux, GVD.g);
+        gvd.add_e(*adj_aux.first, *adj.first);
+        gvd.add_e(*adj.first, *adj_aux.first);
+        clear_vertex(*vp_aux, gvd.g);
+        remove_vertex(*vp_aux, gvd.g);
        
       }
     }
   }
 }
 
-int degree_constraint(grid_type& ogrid, gvd& GVD) {
-  ofstream outfile;
+int degree_constraint(grid_type& ogrid, GVD& gvd) {
   int criticals_count = 0;
-  for (auto vp = vertices(GVD.g); vp.first != vp.second; ++vp.first) {
-    pos current_pos = GVD.g[*vp.first].p;
+  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
+    pos current_pos = gvd.g[*vp.first].p;
     //bool is_min = lmins[current_pos];
-    if (out_degree(*vp.first, GVD.g) == 2) {
-      for (auto ad = adjacent_vertices(*vp.first, GVD.g); ad.first != ad.second; ++ad.first) {
-        if (out_degree(*ad.first, GVD.g) >= 3) {
+    if (out_degree(*vp.first, gvd.g) == 2) {
+      for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
+        if (out_degree(*ad.first, gvd.g) >= 3) {
           ogrid[current_pos.first][current_pos.second] = Critical;
           criticals_count++;
           break;
@@ -359,7 +358,7 @@ int degree_constraint(grid_type& ogrid, gvd& GVD) {
   return criticals_count;
 }
 
-map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd& GVD, int criticals_count) {
+map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int criticals_count) {
   dist_grid dgrid;
   dist_pos_queue dqueue;
   map<pos, dist_pos> critical_with_frontier;
@@ -369,9 +368,9 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd& GVD, int critic
     pos current_pos = frontier.second;
     dqueue.pop();
     pos critical_pos = cell(dgrid, current_pos).obs[0];
-    gvd::Vertex v = GVD.positions[critical_pos];
-    if (!GVD.g[v].is_critical) {
-      GVD.g[v].is_critical = true;
+    GVD::Vertex v = gvd.positions[critical_pos];
+    if (!gvd.g[v].is_critical) {
+      gvd.g[v].is_critical = true;
       critical_with_frontier[critical_pos] = frontier;
       criticals_count--;
     }
@@ -379,26 +378,29 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, gvd& GVD, int critic
   return critical_with_frontier;
 }
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, gvd& GVD) {
-  map<pos, bool> local_mins = get_local_mins(dg, GVD);
-  collapse_vertices(GVD, local_mins);
-  int criticals_count = degree_constraint(ogrid, GVD);
+map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
+  map<pos, bool> local_mins = get_local_mins(dg, gvd);
+  collapse_vertices(gvd, local_mins);
+  int criticals_count = degree_constraint(ogrid, gvd);
   //cout << criticals_count << endl;
-  map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, GVD, criticals_count);
+  map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
   return critical_with_frontier;
   //return map<pos, dist_pos>();
 }
 
-void print_grid(grid_gvd ggvd, grid_type grid){
+void print_grid(grid_gvd ggvd, grid_type grid, map<pos,dist_pos>cf){
   ofstream outfile;
-  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/gvd/map.txt", ios::out | std::ofstream::app);
+  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt", ios::out | std::ofstream::app);
   int grid_size_x = grid.size();
   int grid_size_y = grid[0].size();
-  //freopen( "../src/gvd/maps.txt", "rw", stdout );
-  outfile << "gvd grid :" << endl;
+  outfile << "GVD grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {
     for (int y = 0; y < grid_size_y; y++) {
       if (ggvd[x][y]) {
+        if (cf.find(pos(x, y)) != cf.end()) {
+          outfile << "o|";
+          continue;
+        }
         outfile << "*|";
       } else if (grid[x][y] == Occupied) {
         outfile << "=|";
@@ -414,17 +416,17 @@ void print_grid(grid_gvd ggvd, grid_type grid){
   //fclose(stdout);
 }
 
-set<pos> get_points_of_interest(grid_type ogrid){
+boost::tuple<set<pos>,GVD> get_points_of_interest(grid_type ogrid){
   set<pos> res;
   dist_grid dgrid;
   dist_pos_queue dqueue;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied);
   grid_gvd ggvd = get_grid_gvd(dgrid, dqueue);
-  //print_grid(ggvd, ogrid);
-  gvd GVD(ggvd);
-  map<pos, dist_pos> cf = get_critical_points(ogrid, dgrid, GVD);
+  GVD gvd(ggvd);
+  map<pos, dist_pos> cf = get_critical_points(ogrid, dgrid, gvd);
+  print_grid(ggvd, ogrid,cf);
   for(auto it = cf.begin(); it!=cf.begin(); ++it){
     res.insert(it->second.second);
   }
-  return res;
+  return boost::make_tuple(res,gvd);
 }
