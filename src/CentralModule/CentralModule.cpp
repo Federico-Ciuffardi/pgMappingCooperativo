@@ -92,33 +92,42 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, set<int> frontera) {
   return res;
 }
 
-boost::tuple<tscf_exploration::takeobjetive,GVD> CentralModule::getObjetiveMap() {
+boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap() {
   tscf_exploration::takeobjetive ret;
   ret.mapa = CentralModule::getMap();
-	grid_type gt = og2gt(ret.mapa,CentralModule::frontera);
+  grid_type gt = og2gt(ret.mapa, CentralModule::frontera);
 
-	set<pos> poi;
+  set<pos> poi;
   GVD gvd;
-  boost::tie(poi,gvd) = get_points_of_interest(gt);
+  boost::tie(poi, gvd) = get_points_of_interest(gt);
 
-	ROS_INFO("Numero de puntos: %d",poi.size());
-	//if(poi.size() == 0){
-		CentralModule::aplicarKmeans(CentralModule::frontera);
-		ret.centrosf = CentralModule::getCentrosF();
-		ret.sizecf = CentralModule::getCentrosF().size();
-	/*}else{
-		ROS_INFO("USANDO GVD! ");
-		vector<int> centrosf;
-		for(auto it = poi.begin(); it != poi.end(); it++){
-			centrosf.push_back(it->first*ret.mapa.info.width + it->second);
-		}
-		ret.centrosf = centrosf;
-		ret.sizecf = centrosf.size();
-	}*/
+  //ROS_INFO("Numero de puntos: %d", poi.size());
+  if(false){//*/poi.size() == 0){
+    CentralModule::aplicarKmeans(CentralModule::frontera);
+  }else{
+    //ROS_INFO("USANDO GVD! ");v
+    info_gain.clear();
+    centros_de_frontera.clear();
+    std::vector<int> objs;
+    for(auto it = poi.begin(); it != poi.end(); it++){
+      int odpos = it->second*ret.mapa.info.width + it->first; 
+      objs.push_back(odpos);
+      std::set<int> infoGain = CentralModule::getGainInfo(odpos);
+      info_gain.insert(std::pair<int, std::set<int> >(odpos, infoGain));
+      centros_de_frontera.push_back(odpos);
+    }
+    //auto it = poi.begin();
+    //it++;
+    //objs.push_back((it->second-1)*ret.mapa.info.width + it->first);
+    setCentrosF(objs);
+  }
 
-	ret.indice = CentralModule::indice;
-	CentralModule::indice++;
-  return boost::make_tuple(ret,gvd);
+  ret.centrosf = CentralModule::getCentrosF();
+  ret.sizecf = CentralModule::getCentrosF().size();
+
+  ret.indice = CentralModule::indice;
+  CentralModule::indice++;
+  return boost::make_tuple(ret, gvd);
 }
 
 centralMouleState CentralModule::getEstado() {

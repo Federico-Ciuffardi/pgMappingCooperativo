@@ -6,8 +6,6 @@ using namespace std;
  *  Variables
  */
 
-// Estado 1 = Esperando solicitud, Estado 2 = Esperando ofertas
-
 // Topics
 /// Subscribers
 map<string, ros::Subscriber> bids;
@@ -33,44 +31,116 @@ int mapsHandled = 0;
 string end_msg("END");
 
 /*
- *  Functions
+ *  Rviz mark functions
  */
 
+// typedefs
+
+typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
+
 // Auxiliar functions
-void mark_points(string ns, visualization_msgs::Marker::_points_type ps,std_msgs::ColorRGBA color){
+
+/* Converts from `pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
+   adjusting the latter with the `map_info` so it lands on it's correspoing world position */
+geometry_msgs::Point pos2point(pos position, map_info_type map_info) {
+  geometry_msgs::Point p;
+  p.x = position.first * map_info.resolution + map_info.origin.position.x + 0.5;
+  p.y = position.second * map_info.resolution + map_info.origin.position.y + 0.5;
+  p.z = 0;
+  return p;
+}
+
+/* Publishes mark points `ps` on the namespace `ns` with the color `color` to be visualized on rviz
+ */
+void mark_points(string ns,
+                 visualization_msgs::Marker::_points_type ps,
+                 std_msgs::ColorRGBA color) {
   visualization_msgs::Marker points;
+  // ns & id
+  points.ns = ns;
+  points.id = 0;
+  // header
   points.header.frame_id = "/world";
   points.header.stamp = ros::Time::now();
-  points.ns = ns;
+  // pose
   points.pose.orientation.w = 1.0;
-  points.id = 0;
+  // others
   points.type = visualization_msgs::Marker::POINTS;
   points.action = visualization_msgs::Marker::ADD;
   points.scale.x = 1;
   points.scale.y = 1;
   points.color = color;
-
   points.points = ps;
+
   marker_pub.publish(points);
 }
 
-void draw_gvd(GVD gvd, nav_msgs::OccupancyGrid::_info_type map_info){
-  visualization_msgs::Marker::_points_type ps;
-  boost::graph_traits<GVD::Graph>::vertex_iterator v_it, v_it_end;
-  for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++){
-    pos gp = gvd.g[*v_it].p;
-    geometry_msgs::Point p;
-    p.x = gp.first*map_info.resolution - 60 + 0.5;
-    p.y = gp.second*map_info.resolution - 60 + 0.5;
-    p.z = 0;
-    ps.push_back(p);
-  }
-  std_msgs::ColorRGBA color;
-  color.b = 1.0f;
-  color.a = 1.0; 
-  mark_points("gvd_vertices", ps,color);
+/* Publishes mark lines `ls` on the namespace `ns` with the color `color` to be visualized on rviz
+ */
+void mark_lines(string ns, visualization_msgs::Marker::_points_type ls, std_msgs::ColorRGBA color) {
+  visualization_msgs::Marker lines;
+  // ns & id
+  lines.ns = ns;
+  lines.id = 0;
+  // header
+  lines.header.frame_id = "/world";
+  lines.header.stamp = ros::Time::now();
+  // pose
+  lines.pose.orientation.w = 1.0;
+  lines.pose.position.z = -0.1;
+  // others
+  lines.type = visualization_msgs::Marker::LINE_LIST;
+  lines.action = visualization_msgs::Marker::ADD;
+  lines.scale.x = 0.2;
+  lines.color = color;
+  lines.points = ls;
+
+  marker_pub.publish(lines);
 }
 
+/* Publishes marks corresponding to the gvd to be visualized on rviz */
+void draw_gvd(GVD gvd, map_info_type map_info) {
+  // Colors
+  std_msgs::ColorRGBA blue;
+  blue.b = 1.0f;
+  blue.a = 1.0;
+  std_msgs::ColorRGBA yellow;
+  yellow.r = 1.0f;
+  yellow.g = 1.0f;
+  yellow.a = 1.0;
+
+  // set up vertices
+  visualization_msgs::Marker::_points_type points;
+  visualization_msgs::Marker::_points_type critical_points;
+  GVD::VertexIterator v_it, v_it_end;
+  for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++) {
+    if (gvd.g[*v_it].is_critical) {
+      critical_points.push_back(pos2point(gvd.g[*v_it].p, map_info));
+    } else {
+      points.push_back(pos2point(gvd.g[*v_it].p, map_info));
+    }
+  }
+
+  // set up edges
+  visualization_msgs::Marker::_points_type edges;
+  GVD::EdgeIterator e_it, e_it_end;
+  for (boost::tie(e_it, e_it_end) = boost::edges(gvd.g); e_it != e_it_end; e_it++) {
+    pos gp = gvd.g[(*e_it).m_source].p;
+    edges.push_back(pos2point(gvd.g[(*e_it).m_source].p, map_info));
+    edges.push_back(pos2point(gvd.g[(*e_it).m_target].p, map_info));
+  }
+
+  // publish
+  mark_points("gvd_vertices", points, blue);
+  mark_points("gvd_critical_vertices", critical_points, yellow);
+  mark_lines("gvd_edges", edges, blue);
+}
+
+/*
+ *  Handle Functions
+ */
+
+// Aux functions
 void startAuction() {
   auctionTimer.stop();
   auctionTimer.setPeriod(ros::Duration(1.0));
@@ -78,29 +148,26 @@ void startAuction() {
   centralModule.setEstado(WaitingBids);
   tscf_exploration::takeobjetive ret;
   GVD gvd;
-  boost::tie(ret,gvd) = centralModule.getObjetiveMap();
+  boost::tie(ret, gvd) = centralModule.getObjetiveMap();
 
   visualization_msgs::Marker::_points_type ps;
-  for(auto it = ret.centrosf.begin(); it != ret.centrosf.end(); it++){
-    geometry_msgs::Point p;
-    p.x = (*it % ret.mapa.info.width)*ret.mapa.info.resolution - 60 + 0.5;
-    p.y = (*it / ret.mapa.info.width)*ret.mapa.info.resolution - 60 + 0.5;
-    p.z = 0;
-    ps.push_back(p);
+  for (auto it = ret.centrosf.begin(); it != ret.centrosf.end(); it++) {
+    ps.push_back(
+        pos2point(pos(*it % ret.mapa.info.width, *it / ret.mapa.info.width), ret.mapa.info));
   }
   std_msgs::ColorRGBA color;
   color.g = 1.0f;
-  color.a = 1.0; 
-  mark_points("interest_points", ps,color);
+  color.a = 1.0;
+  mark_points("interest_points", ps, color);
 
-  draw_gvd(gvd,ret.mapa.info);
+  draw_gvd(gvd, ret.mapa.info);
 
   take_obj_pub.publish(ret);  // publica puntos a subastar
   ROS_INFO("CENTRAL MODULE :: auction start");
   auctionTimer.start();
 }
 
-// Handlers
+// Handler Functions
 
 /* cuando: auctionTimer timeout */
 /* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */

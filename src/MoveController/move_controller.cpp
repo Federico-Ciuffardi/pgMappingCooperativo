@@ -17,7 +17,7 @@
 
 const double TOLERANCE_GOAL = 0.30;
 const double TOLERANCE_WAYPOINTS = 0.50;
-const double SPEED =   0.8;
+const double SPEED = 0.8;
 
 // const std::string ODOM_FRAME = "p3dx0_tf/odom";
 

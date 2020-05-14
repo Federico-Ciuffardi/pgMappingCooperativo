@@ -114,6 +114,8 @@ void handleObjetive(const tscf_exploration::asignacionConstPtr& msg) {
       path = robot.getPathToObjetive(centro, msg->obstaculos, p);
       robot_debug_pub.publish(p);
       ROS_INFO("%s :: Publico Camino", robot.getNombre().c_str());
+    }else{
+      ROS_INFO("%s :: NO TENGO OBJETIVO :C", robot.getNombre().c_str());
     }
     path.indice = msg->indice;  // numero de subasta
     goalPath_pub.publish(path);

@@ -21,7 +21,7 @@ typedef vector<row_type> grid_type;
  */
 typedef pair<int, int> pos;
 typedef pair<float, pos> dist_pos;
-typedef priority_queue<dist_pos, vector<dist_pos>, greater<>> dist_pos_queue;
+typedef priority_queue<dist_pos, vector<dist_pos>, greater<dist_pos>> dist_pos_queue;
 
 /*
  *  dist cell, col and grid
@@ -61,10 +61,15 @@ struct gvd_vertex {
 };
 
 struct GVD {
-  typedef adjacency_list<listS, listS, bidirectionalS, gvd_vertex> Graph; // maybe using list is not the most eficient way
+  typedef adjacency_list<listS, listS, bidirectionalS, gvd_vertex>
+      Graph;  // maybe using list is not the most eficient way
   typedef graph_traits<Graph>::vertex_descriptor Vertex;
-  typedef std::map<pos, Vertex> NameVertexMap;
   typedef graph_traits<Graph>::edge_descriptor Edge;
+
+  typedef std::map<pos, Vertex> NameVertexMap;
+
+  typedef graph_traits<Graph>::vertex_iterator VertexIterator;
+  typedef graph_traits<Graph>::edge_iterator EdgeIterator;
   // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 
   Graph g;
@@ -87,7 +92,6 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);
 // map<pos,bool> get_local_mins(dist_grid dg, GVD gvd);
 
-
-boost::tuple<set<pos>,GVD> get_points_of_interest(grid_type g);
+boost::tuple<set<pos>, GVD> get_points_of_interest(grid_type g);
 
 #endif
