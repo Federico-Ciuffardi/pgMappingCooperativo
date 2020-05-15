@@ -415,7 +415,7 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int critic
     dqueue.pop();
     pos critical_pos = cell(dgrid, frontier_dp.second).obs[0];
     GVD::Vertex cv = gvd.positions[critical_pos];
-    if (!gvd.g[cv].is_critical) {
+    if (!gvd.g[cv].is_critical && (cell(dgrid, frontier_dp.second).obs.size() == 1)) {
       //print("Encontre un critico:");
       //print(critical_pos);
       //print("Y la frontera es:");
