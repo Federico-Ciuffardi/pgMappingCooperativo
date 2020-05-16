@@ -1,1 +1,5 @@
 - Dinamizar la generacion del gvd y derivados (mejorar tiempos de ejecucion)
+
+- Un robot asignado a un segmento deberia poder ir a la frontera mas optima (del segmento) y no solo a la mas cercana del punto critico
+
+- borrar los vecnios que sean los vecinos del vecnino de mayor grado

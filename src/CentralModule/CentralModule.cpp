@@ -60,7 +60,7 @@ void CentralModule::setCentrosF(std::vector<int> newCentrosF) {
 };
 
 /* De ocupancy grid a state grid*/
-grid_type og2gt(nav_msgs::OccupancyGrid og, set<int> frontera) {
+grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
   grid_type res;
@@ -94,21 +94,24 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, set<int> frontera) {
 
 boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap() {
   tscf_exploration::takeobjetive ret;
+  
   ret.mapa = CentralModule::getMap();
-  grid_type gt = og2gt(ret.mapa, CentralModule::frontera);
+  //taking into account the vision range of robot and leaving only significants frontiers 
+  CentralModule::aplicarKmeans(CentralModule::frontera);
+
+  grid_type gt = og2gt(ret.mapa, CentralModule::getCentrosF());
 
   set<pos> poi;
   GVD gvd;
   boost::tie(poi, gvd) = get_points_of_interest(gt);
 
-  //ROS_INFO("Numero de puntos: %d", poi.size());
-  if(false){//*/poi.size() == 0){
-    CentralModule::aplicarKmeans(CentralModule::frontera);
-  }else{
-    //ROS_INFO("USANDO GVD! ");v
+  std::vector<int> objs;
+
+  if(poi.size() >= 0){
+
     info_gain.clear();
     centros_de_frontera.clear();
-    std::vector<int> objs;
+    
     for(auto it = poi.begin(); it != poi.end(); it++){
       int odpos = it->second*ret.mapa.info.width + it->first; 
       objs.push_back(odpos);
@@ -116,9 +119,7 @@ boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap(
       info_gain.insert(std::pair<int, std::set<int> >(odpos, infoGain));
       centros_de_frontera.push_back(odpos);
     }
-    //auto it = poi.begin();
-    //it++;
-    //objs.push_back((it->second-1)*ret.mapa.info.width + it->first);
+
     setCentrosF(objs);
   }
 
@@ -127,6 +128,7 @@ boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap(
 
   ret.indice = CentralModule::indice;
   CentralModule::indice++;
+  
   return boost::make_tuple(ret, gvd);
 }
 
