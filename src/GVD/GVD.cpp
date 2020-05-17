@@ -176,7 +176,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
       // Look at neighbors to find a new free cell that needs its distance updated
       for (int i = 0; i <= neighbor.size(); i++) {
         pos np = p + neighbor[i];
-        if (on_grid(p, ogrid)) {
+        if (on_grid(np, ogrid)) {
           cell_type n_ctype = cell(ogrid, np);
           dist_cell& n_dcell = cell(dgrid, np);
           bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
@@ -387,6 +387,29 @@ void collapse_vertices(GVD& gvd, map<pos, bool> lmins) {
   }
 }
 
+void clean_up(GVD& gvd) {
+  /*GVD::VertexIterator v_it, v_it_end;
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
+    GVD::Vertex max_deg_v = *v_it; 
+    int max_deg = out_degree(*v_it, gvd.g);
+    if(max_deg > 2){ // just for not recalculating out_degree(*v_it, gvd.g) it does not have anything to do with the max deg itself
+      GVD::VertexIterator av_it, av_it_end;
+      for (tie(av_it, av_it_end) = adjacent_vertices(*v_it, gvd.g); av_it != av_it_end; ++av_it) {
+        if(out_degree(*av_it,gvd.g)>max_deg){
+          max_deg_v = *av_it;
+        }
+      }
+
+      for (tie(av_it, av_it_end) = adjacent_vertices(max_deg_v, gvd.g); av_it != av_it_end; ++av_it) {
+        if(out_degree(*av_it,gvd.g)>max_deg){
+          max_deg_v = *av_it;
+        }
+      }
+
+    }
+  }*/
+}
+
 int degree_constraint(grid_type& ogrid, GVD& gvd) {
   int criticals_count = 0;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
@@ -431,6 +454,7 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int critic
 map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   map<pos, bool> local_mins = get_local_mins(dg, gvd);
   collapse_vertices(gvd, local_mins);
+  clean_up(gvd);
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;
   map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
