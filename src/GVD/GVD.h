@@ -69,6 +69,8 @@ struct GVD {
   typedef std::map<pos, Vertex> NameVertexMap;
 
   typedef graph_traits<Graph>::vertex_iterator VertexIterator;
+  typedef graph_traits<Graph>::adjacency_iterator AdjacencyIterator;
+
   typedef graph_traits<Graph>::edge_iterator EdgeIterator;
   // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 

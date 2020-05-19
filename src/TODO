@@ -1,5 +1,15 @@
-- Dinamizar la generacion del gvd y derivados (mejorar tiempos de ejecucion)
+// TODO
+
+- Dinamizar la generacion del gvd y derivados (mejorar tiempos de ejecucion en general)
 
 - Un robot asignado a un segmento deberia poder ir a la frontera mas optima (del segmento) y no solo a la mas cercana del punto critico
 
-- borrar los vecnios que sean los vecinos del vecnino de mayor grado
+- Mejorar la asignacion de los puntos frontera equidistantes a dos (o mas) puntos criticos
+
+- otros todo menos necesarios en los cpp, por ejemplo:
+	- GVD.cpp mergear clean_up y collapse_vertices
+
+- Ordenar para que (nos olvidamos que queriamos poner :( )
+
+// DONE
+- borrar los vecnios que sean los vecinos del vecnino de mayor grado -> para solucuionar los triangulitos

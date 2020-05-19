@@ -59,7 +59,7 @@ pos operator/(const pos& p1, const float c) {
 
 ostream& operator<<(ostream& out, const pos& p) {
   // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
-  out<<"( "<< p.first <<" , " <<p.second<< " )"<<endl;
+  out<<"( "<< p.first <<" , " <<p.second<< " )";
   return out;
 }
 
@@ -153,7 +153,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
       cell_type ctype = cell(ogrid, p);
 
       dist_cell dcell;
-      if (ctype == from_type || ctype == Unknown) { //FIXME es asi porque sirve para una funcion posterior pero esta semanticamente mal
+      if (ctype == from_type || ctype == Unknown) { //TODO es asi porque sirve para una funcion posterior pero esta semanticamente mal
         dcell.distance = 0;
         if (ctype == from_type) {
           dcell.add_obs(pos(x, y));
@@ -387,27 +387,52 @@ void collapse_vertices(GVD& gvd, map<pos, bool> lmins) {
   }
 }
 
-void clean_up(GVD& gvd) {
-  /*GVD::VertexIterator v_it, v_it_end;
-  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
-    GVD::Vertex max_deg_v = *v_it; 
-    int max_deg = out_degree(*v_it, gvd.g);
-    if(max_deg > 2){ // just for not recalculating out_degree(*v_it, gvd.g) it does not have anything to do with the max deg itself
-      GVD::VertexIterator av_it, av_it_end;
-      for (tie(av_it, av_it_end) = adjacent_vertices(*v_it, gvd.g); av_it != av_it_end; ++av_it) {
-        if(out_degree(*av_it,gvd.g)>max_deg){
+void clean_up(GVD& gvd,dist_grid dgrid) {
+  GVD::VertexIterator v_it, v_it_end;
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; ) {
+    GVD::VertexIterator v_it_aux = v_it;
+    v_it++;
+
+    GVD::Vertex max_deg_v = *v_it_aux; 
+    int max_deg = out_degree(*v_it_aux, gvd.g);
+
+    if(max_deg > 2){ // just for not recalculating out_degree(*v_it_aux, gvd.g) it does not have anything to do with the max deg itself
+      GVD::AdjacencyIterator av_it, av_it_end;
+      for (boost::tie(av_it, av_it_end) = boost::adjacent_vertices(*v_it_aux, gvd.g); av_it != av_it_end; ++av_it) {
+        int current_degree = out_degree(*av_it,gvd.g);
+        if(current_degree>=max_deg){ // >= max clean up, > just when there is just one max_degree
           max_deg_v = *av_it;
+          max_deg = current_degree;
         }
       }
 
-      for (tie(av_it, av_it_end) = adjacent_vertices(max_deg_v, gvd.g); av_it != av_it_end; ++av_it) {
-        if(out_degree(*av_it,gvd.g)>max_deg){
-          max_deg_v = *av_it;
+      if(max_deg_v == *v_it_aux) continue;
+
+      for (tie(av_it, av_it_end) = adjacent_vertices(*v_it_aux, gvd.g); av_it != av_it_end; ) {
+        GVD::AdjacencyIterator av_it_aux = av_it;
+        ++av_it;
+        if(max_deg_v == *av_it_aux) continue;
+        if(edge(*av_it_aux, max_deg_v, gvd.g).second){
+          remove_edge(*av_it_aux,*v_it_aux,gvd.g);
+
+          if( out_degree(*av_it_aux, gvd.g) == 1){
+            clear_vertex(*av_it_aux, gvd.g);
+            break;
+          }else{
+            remove_edge(*v_it_aux,*av_it_aux,gvd.g);
+            tie(av_it, av_it_end) = adjacent_vertices(*v_it_aux, gvd.g);
+          }
         }
       }
-
     }
-  }*/
+  }
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; ) {
+    GVD::VertexIterator v_it_aux = v_it;
+    v_it++;
+    if( out_degree(*v_it_aux, gvd.g) == 0){
+      remove_vertex(*v_it_aux, gvd.g);
+    }
+  }
 }
 
 int degree_constraint(grid_type& ogrid, GVD& gvd) {
@@ -453,8 +478,11 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int critic
 
 map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   map<pos, bool> local_mins = get_local_mins(dg, gvd);
+
+  // TODO clean_up and collapse_vertices can be merged into one function
+  clean_up(gvd,dg);
   collapse_vertices(gvd, local_mins);
-  clean_up(gvd);
+
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;
   map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
@@ -512,7 +540,7 @@ boost::tuple<set<pos>, GVD> get_points_of_interest(grid_type ogrid) {
     res.insert(it->second.second);
     //frontier_aux[it->second.second] = true;
   }
-  print(to_string(res.size()));
+  //print(to_string(res.size()));
   //print_grid(ggvd, ogrid, cf, frontier_aux);
   return boost::make_tuple(res, gvd);
 }
