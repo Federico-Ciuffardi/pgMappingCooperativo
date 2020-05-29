@@ -108,10 +108,8 @@ boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap(
   std::vector<int> objs;
 
   if(poi.size() >= 0){
-
     info_gain.clear();
     centros_de_frontera.clear();
-    
     for(auto it = poi.begin(); it != poi.end(); it++){
       int odpos = it->second*ret.mapa.info.width + it->first; 
       objs.push_back(odpos);

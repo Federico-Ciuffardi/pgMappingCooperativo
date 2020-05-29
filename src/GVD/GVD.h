@@ -24,6 +24,16 @@ typedef pair<float, pos> dist_pos;
 typedef priority_queue<dist_pos, vector<dist_pos>, greater<dist_pos>> dist_pos_queue;
 
 /*
+ *  critical info 
+ */
+struct critical_info{
+  float min_fd; //min distance to frontier
+  vector<pos> frontiers;
+};
+typedef map<pos, critical_info> criticals_info;
+
+
+/*
  *  dist cell, col and grid
  */
 struct dist_cell {
@@ -53,10 +63,12 @@ using namespace boost;
 struct gvd_vertex {
   pos p;
   bool is_critical;
+  pos segment;
   gvd_vertex(){};
-  gvd_vertex(pos p, bool is_critical) {
+  gvd_vertex(pos p, bool is_critical, pos segment) {
     this->p = p;
     this->is_critical = is_critical;
+    this->segment;
   }
 };
 

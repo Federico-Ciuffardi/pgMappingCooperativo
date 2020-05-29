@@ -281,7 +281,7 @@ boost::tuple<GVD::Vertex, bool> GVD::add_v(pos p) {
   boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
   if (inserted) {
     u = add_vertex(g);
-    g[u] = gvd_vertex(p, false);
+    g[u] = gvd_vertex(p, false, pos(-1,-1));
     pos_it->second = u;
   } else {
     u = pos_it->second;
@@ -476,18 +476,57 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int critic
   return critical_with_frontier;
 }
 
+//Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
+criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
+  dist_grid dgrid;
+  dist_pos_queue dqueue;
+  criticals_info res;
+  boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical); //dqueue = frontier queue
+  while (!dqueue.empty()) {
+    dist_pos frontier_dp = dqueue.top();
+    dqueue.pop();
+    vector<pos> &frontier_crits = cell(dgrid, frontier_dp.second).obs;
+    int c_size = frontier_crits.size();
+    for(int i = 0; i < c_size; i++){
+      pos critical_pos = frontier_crits[i];
+      GVD::Vertex cv = gvd.positions[critical_pos];
+      if (!gvd.g[cv].is_critical) {
+        gvd.g[cv].is_critical = true;
+        //gvd.g[cv].segment = critical_pos;
+        res[critical_pos].min_fd = frontier_dp.first;
+        res[critical_pos].frontiers.push_back(frontier_dp.second);
+        //frontier_crits.clear();
+        frontier_crits[0] = critical_pos;
+        break;
+      }
+      if(i == (c_size - 1)){
+        res[critical_pos].frontiers.push_back(frontier_dp.second);
+        //frontier_crits.clear();
+        frontier_crits[0] = critical_pos;
+      }
+    }    
+  }
+  GVD::VertexIterator v_it, v_it_end;
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
+    gvd_vertex &v = gvd.g[*v_it];
+    v.segment = cell(dgrid, v.p).obs[0];
+  }
+  return res;
+}
+
 map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   map<pos, bool> local_mins = get_local_mins(dg, gvd);
 
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd,dg);
   collapse_vertices(gvd, local_mins);
-
+  //TODO borrar el criticals count no se usa
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;
   map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
+  //criticals_info cis = unknown_dist_constraint2(ogrid, gvd);
   return critical_with_frontier;
-  // return map<pos, dist_pos>();
+  // return cis;
 }
 
 void print_grid(grid_gvd ggvd, grid_type grid, map<pos, dist_pos> cf = map<pos, dist_pos>(), map<pos,bool> frontier_aux = map<pos,bool>()) {
@@ -536,6 +575,8 @@ boost::tuple<set<pos>, GVD> get_points_of_interest(grid_type ogrid) {
   GVD gvd(ggvd);
   //map<pos,bool> frontier_aux;
   map<pos, dist_pos> cf = get_critical_points(ogrid, dgrid, gvd);
+  //cis = get_critical_points(ogrid, dgrid, gvd);
+  //return boost::make_tuple(res, gvd)
   for (auto it = cf.begin(); it != cf.end(); ++it) {
     res.insert(it->second.second);
     //frontier_aux[it->second.second] = true;
