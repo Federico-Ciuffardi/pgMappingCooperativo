@@ -9,6 +9,7 @@
 #include <tscf_exploration/infoCentro.h>
 #include <tscf_exploration/mapMergedInfo.h>
 #include <tscf_exploration/takeobjetive.h>
+#include <tscf_exploration/SegmentAuctionC.h>
 #include <visualization_msgs/Marker.h>
 #include <iostream>
 #include <list>

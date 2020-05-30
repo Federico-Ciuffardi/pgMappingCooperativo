@@ -73,8 +73,9 @@ add_message_files(
   mapMergedInfo.msg
   takeobjetive.msg
   Point2D.msg
-  Polygon2D.msg
-  PolygonalMap.msg
+  Edge.msg
+  Graph.msg
+  SegmentAuctionC.msg
 )
 
 ## Generate services in the 'srv' folder

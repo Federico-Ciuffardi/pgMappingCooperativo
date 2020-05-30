@@ -18,7 +18,7 @@ ros::Publisher take_obj_pub;
 ros::Publisher objetive_pub;
 ros::Publisher obj_pub2;
 ros::Publisher marker_pub;
-
+ros::Publisher segment_auction_pub;
 // others
 ros::Timer auctionTimer;
 
@@ -236,6 +236,7 @@ int main(int argc, char* argv[]) {
   objetive_pub = n.advertise<tscf_exploration::asignacion>("/objetive", 1);
   obj_pub2 = n.advertise<nav_msgs::OccupancyGrid>("/debbi", 1);
   marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+  segment_auction_pub = n.advertise<tscf_exploration::SegmentAuctionC>("/debbi", 1);
 
   // Subscribed to
   map_merged_sub = n.subscribe<tscf_exploration::mapMergedInfo>("/map_merged", 1, handleNewMap);
