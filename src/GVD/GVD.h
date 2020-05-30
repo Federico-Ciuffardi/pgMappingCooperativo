@@ -103,9 +103,9 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
 
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);
+//map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);
 // map<pos,bool> get_local_mins(dist_grid dg, GVD gvd);
 
-boost::tuple<set<pos>, GVD> get_points_of_interest(grid_type g);
+boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type g);
 
 #endif

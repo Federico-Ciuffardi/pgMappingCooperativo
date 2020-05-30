@@ -101,12 +101,14 @@ boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap(
 
   grid_type gt = og2gt(ret.mapa, CentralModule::getCentrosF());
 
-  set<pos> poi;
+  criticals_info cis;
   GVD gvd;
-  boost::tie(poi, gvd) = get_points_of_interest(gt);
-
+  boost::tie(cis, gvd) = get_points_of_interest(gt);
+  set<pos> poi;
   std::vector<int> objs;
-
+  for(auto it = cis.begin(); it != cis.end(); it++){
+    poi.insert(it->second.frontiers[0]);
+  }
   if(poi.size() >= 0){
     info_gain.clear();
     centros_de_frontera.clear();

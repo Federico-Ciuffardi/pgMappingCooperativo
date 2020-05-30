@@ -514,7 +514,7 @@ criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
   return res;
 }
 
-map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
+criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   map<pos, bool> local_mins = get_local_mins(dg, gvd);
 
   // TODO clean_up and collapse_vertices can be merged into one function
@@ -523,10 +523,10 @@ map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) 
   //TODO borrar el criticals count no se usa
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;
-  map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
-  //criticals_info cis = unknown_dist_constraint2(ogrid, gvd);
-  return critical_with_frontier;
-  // return cis;
+  // map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
+  criticals_info cis = unknown_dist_constraint2(ogrid, gvd);
+  //return critical_with_frontier;
+  return cis;
 }
 
 void print_grid(grid_gvd ggvd, grid_type grid, map<pos, dist_pos> cf = map<pos, dist_pos>(), map<pos,bool> frontier_aux = map<pos,bool>()) {
@@ -566,7 +566,7 @@ void print_grid(grid_gvd ggvd, grid_type grid, map<pos, dist_pos> cf = map<pos, 
   // fclose(stdout);
 }
 
-boost::tuple<set<pos>, GVD> get_points_of_interest(grid_type ogrid) {
+boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type ogrid) {
   set<pos> res;
   dist_grid dgrid;
   dist_pos_queue dqueue;
@@ -574,14 +574,15 @@ boost::tuple<set<pos>, GVD> get_points_of_interest(grid_type ogrid) {
   grid_gvd ggvd = get_grid_gvd(dgrid, dqueue);
   GVD gvd(ggvd);
   //map<pos,bool> frontier_aux;
-  map<pos, dist_pos> cf = get_critical_points(ogrid, dgrid, gvd);
+  criticals_info cis = get_critical_points(ogrid, dgrid, gvd);
   //cis = get_critical_points(ogrid, dgrid, gvd);
   //return boost::make_tuple(res, gvd)
-  for (auto it = cf.begin(); it != cf.end(); ++it) {
-    res.insert(it->second.second);
+  //for (auto it = cf.begin(); it != cf.end(); ++it) {
+    //res.insert(it->second.second);
     //frontier_aux[it->second.second] = true;
-  }
+  //}
   //print(to_string(res.size()));
   //print_grid(ggvd, ogrid, cf, frontier_aux);
-  return boost::make_tuple(res, gvd);
+  //return boost::make_tuple(res, gvd);
+  return boost::make_tuple(cis, gvd);
 }
