@@ -76,7 +76,7 @@ grid_type grid8 = {{Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
                    {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
 
 int main(int argc, char** argv) {
-  grid_type grid = grid7;
+  grid_type grid = grid8;
   int grid_size_x = grid.size();
   int grid_size_y = grid[0].size();
   for (int x = 0; x < grid_size_x; x++) {
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     }
     cout << endl;
   }
-
+/*
   GVD gvd(ggvd);
   cout << "gvd vertices: ";
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first)
@@ -125,9 +125,9 @@ int main(int argc, char** argv) {
               << gvd.g[target(*it.first, gvd.g)].p.first << ","
               << gvd.g[target(*it.first, gvd.g)].p.second << ")|";
   std::cout << std::endl;
-
+  
   cout << "////////////////////////////////////////////////////////////" << endl;
-  /*map<pos,bool> lmins = get_local_mins(dgrid, gvd);
+  map<pos,bool> lmins = get_local_mins(dgrid, gvd);
 
   cout << "GVD grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {
@@ -147,9 +147,9 @@ int main(int argc, char** argv) {
       }
     }
     cout << endl;
-  }*/
-
-  map<pos, dist_pos> cf = get_critical_points(grid, dgrid, gvd);
+  }
+  */
+  /*map<pos, dist_pos> cf = get_critical_points(grid, dgrid, gvd);
 
   // cout<< cf.size() <<endl;
 
@@ -171,7 +171,24 @@ int main(int argc, char** argv) {
       }
     }
     cout << endl;
-  }
+  }*/
+  GVD gvd;
+  criticals_info cis;
+  boost::tie(cis, gvd) = get_points_of_interest(grid);
+    cout << "gvd vertices: ";
+  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first)
+    cout << "(" << gvd.g[*vp.first].p.first << "," << gvd.g[*vp.first].p.second << ") ";
+  cout << endl;
+
+  cout << "gvd edges: ";
+  for (auto it = edges(gvd.g); it.first != it.second; ++it.first++)
+    std::cout << "|(" << gvd.g[source(*it.first, gvd.g)].p.first << ","
+              << gvd.g[source(*it.first, gvd.g)].p.second << ")-("
+              << gvd.g[target(*it.first, gvd.g)].p.first << ","
+              << gvd.g[target(*it.first, gvd.g)].p.second << ")|";
+  std::cout << std::endl;
+
+  //get_path(gvd,pos(1,1),pos(12,4));
 
   return 0;
 }

@@ -9,7 +9,8 @@
 #include <tscf_exploration/infoCentro.h>
 #include <tscf_exploration/mapMergedInfo.h>
 #include <tscf_exploration/takeobjetive.h>
-#include <tscf_exploration/SegmentAuctionC.h>
+#include <tscf_exploration/SegmentAuction.h>
+#include <tscf_exploration/SegmentAssignment.h>
 #include <visualization_msgs/Marker.h>
 #include <iostream>
 #include <list>
@@ -18,6 +19,7 @@
 #include <vector>
 #include "../GVD/GVD.h"
 #include "../utils.cpp"
+#include "../conversion.cpp"
 
 typedef std::map<int, std::list<int> > dict_clusters;
 
@@ -41,6 +43,8 @@ class CentralModule {
   std::vector<int> centros_de_frontera;
   std::vector<int> obstaculos;
   std::set<int> frontera;
+
+  criticals_info cis;
 
   void resetArray(std::map<std::string, bool> map);
   tscf_exploration::asignacionCelda getMaxUtility();
@@ -86,6 +90,10 @@ class CentralModule {
   // others
   CentralModule();
 
+  boost::tuple<tscf_exploration::SegmentAuction, GVD> getSegmentAuctionInfo();
+
+  tscf_exploration::SegmentAssignment assignSegment();
+
   void updateMap(const tscf_exploration::mapMergedInfoConstPtr&);
 
   void resetArrivals();
@@ -95,6 +103,9 @@ class CentralModule {
   boost::tuple<tscf_exploration::takeobjetive, GVD> getObjetiveMap();
 
   void saveBid(const tscf_exploration::frontierReportConstPtr& msg, std::string name);
+
+  void saveSegmentBid( tscf_exploration::SegmentBid msg, std::string name);
+  
   tscf_exploration::asignacion assignTasks();
 
   std::vector<int> aplicarKmeans(std::set<int> frontera);

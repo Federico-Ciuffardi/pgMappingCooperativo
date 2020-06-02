@@ -92,6 +92,41 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
   return res;
 }
 
+boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuctionInfo() {
+  tscf_exploration::SegmentAuction segment_auction;
+  nav_msgs::OccupancyGrid map = getMap();
+
+  //taking into account the vision range of robot and leaving only significants frontiers 
+  aplicarKmeans(frontera);
+
+  grid_type gt = og2gt(map, getCentrosF());
+
+  //criticals_info cis_aux;
+  GVD gvd;
+  boost::tie(cis, gvd) = get_points_of_interest(gt); 
+
+  GVD::VertexIterator v_it, v_it_end;
+  for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++) {
+    segment_auction.gvd.vertices.push_back(p_to_p2d(gvd.g[*v_it].p));
+    segment_auction.vertex_segment.push_back(p_to_p2d(gvd.g[*v_it].segment));
+  }
+  
+  GVD::EdgeIterator e_it, e_it_end;
+  for (boost::tie(e_it, e_it_end) = boost::edges(gvd.g); e_it != e_it_end; e_it++) {
+    tscf_exploration::Edge e;
+    e.from = p_to_p2d(gvd.g[(*e_it).m_source].p);
+    e.to = p_to_p2d(gvd.g[(*e_it).m_target].p);
+    segment_auction.gvd.edges.push_back(e) ;
+  }
+
+  for(auto it = cis.begin(); it != cis.end(); it++){
+    segment_auction.criticals.push_back(p_to_p2d(it->first));
+    segment_auction.mind_f.push_back(it->second.mind_f);
+  }
+
+  return boost::make_tuple(segment_auction, gvd);
+}
+
 boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap() {
   tscf_exploration::takeobjetive ret;
   
@@ -196,6 +231,27 @@ void CentralModule::saveBid(const tscf_exploration::frontierReportConstPtr& msg,
     CentralModule::bids_arrivals[name] = true;
     CentralModule::asignations[name] = false;
   }
+}
+
+void CentralModule::saveSegmentBid(tscf_exploration::SegmentBid msg, std::string name) {
+  /*if (CentralModule::estado == 2) {
+    std::map<int, std::set<int> >::iterator itm;
+    // ROS_INFO(" CENTRAL MODULE :: Guardo Informe del robot %s con nombre %s y
+    // cantidad de %d centros", msg->idRobot.c_str(),
+    // name.c_str(),msg->cant_centros);
+    for (int i = 0; i < msg->cant_centros; i++) {
+      CentralModule::cost_saved[msg->idRobot][msg->infoCentros[i].centro] =
+          msg->infoCentros[i].cost;
+      for (itm = info_gain.begin(); itm != info_gain.end(); ++itm)
+        if (itm->first != -1) {
+          CentralModule::info_gain_saved[msg->idRobot][itm->first] = itm->second;
+        }
+      // ROS_INFO(" -------------------- centro %d ->, costo %d",
+      // msg->infoCentros[i].centro, msg->infoCentros[i].cost);
+    }
+    CentralModule::bids_arrivals[name] = true;
+    CentralModule::asignations[name] = false;
+  }*/
 }
 
 float CentralModule::calcularUtilidad(int info_gain_celda, int cost_celda) {
@@ -317,6 +373,13 @@ tscf_exploration::asignacion CentralModule::assignTasks() {
   asign.obstaculos = CentralModule::getObstaculos();
   asign.indice = CentralModule::indice - 1;
   return asign;
+}
+
+tscf_exploration::SegmentAssignment CentralModule::assignSegment(){
+  tscf_exploration::SegmentAssignment sa;
+  sa.segment.x=0;
+  sa.segment.y=0;
+  return sa;
 }
 
 /*Funcion que clasifica los puntos de frontera en clases de equivalencia*/

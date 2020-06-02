@@ -1,3 +1,4 @@
+#include "../GVD/GVD.h"
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <math.h>
@@ -13,6 +14,9 @@
 #include <tscf_exploration/infoCentro.h>
 #include <tscf_exploration/resumenInstancia.h>
 #include <tscf_exploration/takeobjetive.h>
+#include <tscf_exploration/SegmentAuction.h>
+#include <tscf_exploration/SegmentBid.h>
+#include <tscf_exploration/SegmentAssignment.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -23,7 +27,7 @@
 #include <string>
 #include <vector>
 #include "../utils.cpp"
-#include "std_msgs/String.h"
+#include "../conversion.cpp"
 
 typedef std::map<int, std::list<int> > dict_clusters;
 
@@ -35,6 +39,7 @@ class Robot {
   nav_msgs::OccupancyGrid control_map;
   std::map<int, cv::Point2f> map_points;
   std::list<int> centros_de_frontera;
+  std::map<pos,std::list<VecGVD::Vertex>> paths;
   bool first;
   uint width;
   uint height;
@@ -61,6 +66,7 @@ class Robot {
   Robot();
   void setPosition(int x, int y);
   geometry_msgs::PoseStamped getPosition();
+  pos getPos();
   void setNombre(std::string nom);
   std::string getNombre();
   void setCentrosF(std::vector<int> cdf);
@@ -72,6 +78,9 @@ class Robot {
   void saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
   tscf_exploration::frontierReport processMap();
   int getobjetive(const tscf_exploration::asignacionConstPtr& msg);
+
+  tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
+
   tscf_exploration::goalList getPathToObjetive(int centro,
                                                std::vector<int> obstaculos,
                                                nav_msgs::OccupancyGrid& p);

@@ -1,3 +1,4 @@
+Point2D[] criticals
+float32[] mind_f
+Point2D[] vertex_segment
 Graph gvd
-Point2D[] segments 
-Point2D[] crits

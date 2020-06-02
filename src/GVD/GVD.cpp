@@ -131,6 +131,97 @@ void print(string s){
 }
 
 /*
+ *  GVD implementation
+ */
+boost::tuple<GVD::Vertex, bool> GVD::add_v(pos p) {
+  NameVertexMap::iterator pos_it;
+  bool inserted;
+  Vertex u;
+  boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
+  if (inserted) {
+    u = add_vertex(g);
+    g[u] = gvd_vertex(p, false, pos(-1,-1));
+    pos_it->second = u;
+  } else {
+    u = pos_it->second;
+  }
+  return boost::make_tuple(u, inserted);
+}
+
+pair<GVD::Edge, bool> GVD::add_e(Vertex u, Vertex v, float w = -1) {
+  if(w == -1){
+    return add_edge(u, v, g);
+  }
+  return add_edge(u,v,w,g);
+}  
+
+GVD::GVD(grid_gvd ggvd) {
+  pair<int, int> size = get_grid_size(ggvd);
+
+  // initialize grid_gvd
+  for (int x = 0; x < size.first; x++) {
+    for (int y = 0; y < size.second; y++) {
+      if (!ggvd[x][y])
+        continue;
+
+      // insert (x,y) to the graph
+      Vertex u;
+      bool inserted;
+      boost::tie(u, inserted) = add_v(pos(x, y));
+
+      // for each neighbor (nx,ny) of (i,j)
+      for (int i = -1; i <= 1; i++) {
+        int nx = x + i;
+        for (int j = -1; j <= 1; j++) {
+          int ny = y + j;
+          if ((i != 0 || j != 0) && on_grid(nx, ny, ggvd) && ggvd[nx][ny]) {
+            // add it to the graph
+            Vertex v;
+            bool inserted;
+            boost::tie(v, inserted) = add_v(pos(nx, ny));
+            // and also add an edge connecting them
+            graph_traits<Graph>::edge_descriptor e;
+            add_e(u, v);
+          }
+        }
+      }
+    }
+  }
+}
+
+/*
+ *  VecGVD implementation
+ */
+boost::tuple<VecGVD::Vertex, bool> VecGVD::add_v(pos p) {
+  NameVertexMap::iterator pos_it;
+  bool inserted;
+  Vertex u;
+  boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
+  if (inserted) {
+    u = add_vertex(g);
+    g[u] = gvd_vertex(p, false, pos(-1,-1));
+    pos_it->second = u;
+  } else {
+    u = pos_it->second;
+  }
+  return boost::make_tuple(u, inserted);
+}
+
+pair<VecGVD::Edge, bool> VecGVD::add_e(Vertex u, Vertex v, float w = -1) {
+  /*if(edge(u,v,g).second){
+    cout<<"warning edge is already on graph"<<endl;
+    return edge(u,v,g);
+  }else{*/
+    //cout<<g[u].p<<","<<g[v].p<<endl;
+    if(w == -1){
+      return add_edge(u, v, g);
+    }
+    return add_edge(u,v,w,g);
+  //}
+}  
+
+
+/*
  *  main funcs
  */
 
@@ -270,63 +361,6 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
   return grid_gvd;
 }
 
-/*
- *  GVD implementation
- */
-
-boost::tuple<GVD::Vertex, bool> GVD::add_v(pos p) {
-  NameVertexMap::iterator pos_it;
-  bool inserted;
-  Vertex u;
-  boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
-  if (inserted) {
-    u = add_vertex(g);
-    g[u] = gvd_vertex(p, false, pos(-1,-1));
-    pos_it->second = u;
-  } else {
-    u = pos_it->second;
-  }
-  return boost::make_tuple(u, inserted);
-}
-
-pair<GVD::Edge, bool> GVD::add_e(Vertex u, Vertex v) {
-  return add_edge(u, v, g);
-}
-
-GVD::GVD(grid_gvd ggvd) {
-  pair<int, int> size = get_grid_size(ggvd);
-
-  // initialize grid_gvd
-  for (int x = 0; x < size.first; x++) {
-    for (int y = 0; y < size.second; y++) {
-      if (!ggvd[x][y])
-        continue;
-
-      // insert (x,y) to the graph
-      Vertex u;
-      bool inserted;
-      boost::tie(u, inserted) = add_v(pos(x, y));
-
-      // for each neighbor (nx,ny) of (i,j)
-      for (int i = -1; i <= 1; i++) {
-        int nx = x + i;
-        for (int j = -1; j <= 1; j++) {
-          int ny = y + j;
-          if ((i != 0 || j != 0) && on_grid(nx, ny, ggvd) && ggvd[nx][ny]) {
-            // add it to the graph
-            Vertex v;
-            bool inserted;
-            boost::tie(v, inserted) = add_v(pos(nx, ny));
-            // and also add an edge connecting them
-            graph_traits<Graph>::edge_descriptor e;
-            add_e(u, v);
-          }
-        }
-      }
-    }
-  }
-}
-
 // could be of less order, maybe using trees
 map<pos, bool> get_local_mins(dist_grid dg, GVD& gvd) {
   map<pos, bool> lmins;
@@ -354,15 +388,6 @@ bool same_direcction(pos p1, pos p2) {
 }
 
 void collapse_vertices(GVD& gvd, map<pos, bool> lmins) {
-  /*// Remove all the vertices. This is OK.
-  graph_traits<GVD::Graph>::vertex_iterator vi, vi_end, next;
-  tie(vi, vi_end) = vertices(gvd.g);
-  for (next = vi; vi != vi_end; vi = next) {
-    ++next;
-    remove_vertex(*vi, gvd.g);
-  }*/
-
-  // list<GVD::Vertex> remove_aux;
   for (auto vp = vertices(gvd.g); vp.first != vp.second;) {
     auto vp_aux = vp.first;
     ++vp.first;
@@ -377,7 +402,6 @@ void collapse_vertices(GVD& gvd, map<pos, bool> lmins) {
       auto adj2 = gvd.g[*adj.first];
       pos adj2_aux = (adj2.p - current_pos);
       if (same_direcction(adj1_aux, adj2_aux)) {
-        // cout<<"( "<< current_pos.first <<" , " <<current_pos.second<< " )"<<endl;
         gvd.add_e(*adj_aux.first, *adj.first);
         gvd.add_e(*adj.first, *adj_aux.first);
         clear_vertex(*vp_aux, gvd.g);
@@ -493,7 +517,7 @@ criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
       if (!gvd.g[cv].is_critical) {
         gvd.g[cv].is_critical = true;
         //gvd.g[cv].segment = critical_pos;
-        res[critical_pos].min_fd = frontier_dp.first;
+        res[critical_pos].mind_f = frontier_dp.first;
         res[critical_pos].frontiers.push_back(frontier_dp.second);
         //frontier_crits.clear();
         frontier_crits[0] = critical_pos;
@@ -585,4 +609,82 @@ boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type ogrid) {
   //print_grid(ggvd, ogrid, cf, frontier_aux);
   //return boost::make_tuple(res, gvd);
   return boost::make_tuple(cis, gvd);
+}
+
+//A*
+
+/// euclidean distance heuristic
+template <class Graph, class CostType, class LocMap>
+class distance_heuristic : public astar_heuristic<Graph, CostType>
+{
+public:
+  typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
+  distance_heuristic(LocMap l, Vertex goal)
+    : m_location(l), m_goal(goal) {}
+  CostType operator()(Vertex u)
+  {
+    return dist(m_location[u].p,m_location[m_goal].p);
+  }
+private:
+  LocMap m_location;
+  Vertex m_goal;
+};
+
+
+struct found_goal {}; // exception for termination
+
+/// visitor that terminates when we find the goal
+template <class Vertex>
+class astar_goal_visitor : public boost::default_astar_visitor
+{
+public:
+  astar_goal_visitor(Vertex goal) : m_goal(goal) {}
+  template <class Graph>
+  void examine_vertex(Vertex u, Graph& g) {
+    if(u == m_goal)
+      throw found_goal();
+  }
+private:
+  Vertex m_goal;
+};
+
+/// get the shortestpath and the cost of reaching the goal
+boost::tuple<list<VecGVD::Vertex>,float> get_path(VecGVD gvd, pos from, pos to){
+  VecGVD::Graph g = gvd.g;
+  VecGVD::Vertex start = gvd.positions[from];
+  VecGVD::Vertex goal = gvd.positions[to];
+  typedef VecGVD::Graph mygraph_t;
+  typedef VecGVD::Vertex vertex;
+  typedef float cost;
+
+  vector<mygraph_t::vertex_descriptor> p(num_vertices(g));
+  vector<cost> d(num_vertices(g));
+  list<vertex> shortest_path;
+  try {
+    //call astar named parameter interface
+    astar_search_tree
+      (g, start,
+       distance_heuristic<mygraph_t, cost, VecGVD::Graph>
+        (gvd.g, goal),
+       predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g))).
+       distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g))).
+       visitor(astar_goal_visitor<vertex>(goal)));
+  } catch(found_goal fg) { // found a path to the goal
+    
+    for(vertex v = goal;; v = p[v]) {
+      shortest_path.push_front(v);
+      if(p[v] == v)
+        break;
+    }
+    cout << "Shortest path from " << from << " to "
+         << to << ": ";
+         
+    list<vertex>::iterator spi = shortest_path.begin();
+    cout << from;
+    for(++spi; spi != shortest_path.end(); ++spi)
+      cout << " -> " << gvd.g[*spi].p;
+     
+    cout << endl << "Total travel time: " << d[goal] << endl;
+  }
+  return boost::make_tuple(shortest_path,d[goal]);
 }
