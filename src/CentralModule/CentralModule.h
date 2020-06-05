@@ -11,7 +11,7 @@
 #include <tscf_exploration/takeobjetive.h>
 #include <tscf_exploration/SegmentAuction.h>
 #include <tscf_exploration/SegmentAssignment.h>
-#include <visualization_msgs/Marker.h>
+
 #include <iostream>
 #include <list>
 #include <sstream>
@@ -20,6 +20,7 @@
 #include "../GVD/GVD.h"
 #include "../utils.cpp"
 #include "../conversion.cpp"
+#include "../rviz.cpp"
 
 typedef std::map<int, std::list<int> > dict_clusters;
 
@@ -45,6 +46,7 @@ class CentralModule {
   std::set<int> frontera;
 
   criticals_info cis;
+  map<string,map<pos,float>> segment_bids;
 
   void resetArray(std::map<std::string, bool> map);
   tscf_exploration::asignacionCelda getMaxUtility();
@@ -92,7 +94,7 @@ class CentralModule {
 
   boost::tuple<tscf_exploration::SegmentAuction, GVD> getSegmentAuctionInfo();
 
-  tscf_exploration::SegmentAssignment assignSegment();
+  map<string,tscf_exploration::SegmentAssignment> assignSegment();
 
   void updateMap(const tscf_exploration::mapMergedInfoConstPtr&);
 

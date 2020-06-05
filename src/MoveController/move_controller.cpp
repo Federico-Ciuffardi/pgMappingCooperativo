@@ -15,8 +15,8 @@
 
 // Constantes
 
-const double TOLERANCE_GOAL = 0.30;
-const double TOLERANCE_WAYPOINTS = 0.50;
+const double TOLERANCE_GOAL = 1;//0.30;
+const double TOLERANCE_WAYPOINTS = 1;// 0.50;
 const double SPEED = 0.8;
 
 // const std::string ODOM_FRAME = "p3dx0_tf/odom";
@@ -69,7 +69,7 @@ void poseCallback(const geometry_msgs::PoseStamped& msg) {
   position = msg;
 }
 
-void pointListCallback(const tscf_exploration::goalList& msg) {
+void setPath(const tscf_exploration::goalList& msg) {
   if (msg.listaGoals.size() != 0) {
     path_saved = msg;
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
-  goalPath_sub = n.subscribe("goalPath", 10, pointListCallback);
+  goalPath_sub = n.subscribe("goalPath", 10, setPath);
   pose_sub = n.subscribe("pose", 1, poseCallback);
   map_merged_sub = n.subscribe("/map_merged", 1, saveMap);
   end_sub = n.subscribe("/end", 1, handleEnd);

@@ -114,31 +114,38 @@ void handleCoverage(const std_msgs::StringConstPtr& msg) {
 
 void handleObjetive(const tscf_exploration::asignacionConstPtr& msg) {
   if (!FIN) {
-    int centro = robot.getobjetive(msg);
-    tscf_exploration::goalList path;
-    if (centro != -1) {
-      nav_msgs::OccupancyGrid p;
-      path = robot.getPathToObjetive(centro, msg->obstaculos, p);
-      robot_debug_pub.publish(p);
-      ROS_INFO("%s :: Publico Camino", robot.getNombre().c_str());
-    }else{
-      ROS_INFO("%s :: NO TENGO OBJETIVO :C", robot.getNombre().c_str());
+
+      int centro = robot.getobjetive(msg);
+      tscf_exploration::goalList path;
+      if (centro != -1) {
+        nav_msgs::OccupancyGrid p;
+        path = robot.getPathToObjetive(centro, msg->obstaculos, p);
+        robot_debug_pub.publish(p);
+        ROS_INFO("%s :: Publico Camino", robot.getNombre().c_str());
+      }else{
+        ROS_INFO("%s :: NO TENGO OBJETIVO :C", robot.getNombre().c_str());
+      }
+      path.indice = msg->indice;  // numero de subasta
+    if(robot.nombreRobot == "atrv2"){
+      goalPath_pub.publish(path);
+      
+      ROS_INFO("%s :: Objective handled", robot.getNombre().c_str());
     }
-    path.indice = msg->indice;  // numero de subasta
-    goalPath_pub.publish(path);
-    ROS_INFO("%s :: Objective handled", robot.getNombre().c_str());
   }
 }
 
 //The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   if (!FIN) {
+
     ROS_INFO("%s :: Me llego el mensaje con los segmentos", robot.getNombre().c_str());
+    if(robot.nombreRobot != "atrv2"){
+      tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
+      ROS_INFO("%s :: Voy a enviar los segment_bid", robot.getNombre().c_str());
+      
+      segment_bid_pub.publish(segment_bid);
+    }
     
-    tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
-    ROS_INFO("%s :: Voy a enviar los segment_bid", robot.getNombre().c_str());
-    segment_bid_pub.publish(segment_bid);
-   
     /*int centro = robot.getobjetive(msg);
     tscf_exploration::goalList path;
     if (centro != -1) {
@@ -158,9 +165,14 @@ void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
 
 //The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
-  if (!FIN) {
-    ROS_INFO("%s :: Recibi mi segmento!", robot.getNombre().c_str());
-  }
+  //if (!FIN) {
+    ROS_INFO("%s :: Recibi mi segmento: (%d, %d)!", robot.getNombre().c_str(),msg->segment.x,msg->segment.y);
+    tscf_exploration::goalList path = robot.getPathToSegment(msg->segment);
+    if(robot.nombreRobot != "atrv2"){
+      //robot.getPathToObjetive(centro, msg->obstaculos, p);
+      if (path.listaGoals.size() >0) goalPath_pub.publish(path);
+    }
+  //}
 }
 
 
@@ -186,7 +198,7 @@ int main(int argc, char* argv[]) {
   take_obj_sub = n.subscribe("/take_obj", 1, handleObjetiveSolicitation);
   //Segment Auction sub
   segment_auction_sub = n.subscribe("/segment_auction", 1, handleSegmentAuction);
-  segment_assignment_sub = n.subscribe("/" + nom + "/segment_bid", 1, handleSegmentAssignment);
+  segment_assignment_sub = n.subscribe("/" + nom + "/segment_assigment", 1, handleSegmentAssignment);
 
   path_result_sub = n.subscribe("path_result", 1, handlePathSucced);
   objetive_sub = n.subscribe("/objetive", 1, handleObjetive);

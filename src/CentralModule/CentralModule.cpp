@@ -86,13 +86,18 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
   }
 
   for (auto it = frontera.begin(); it != frontera.end(); it++) {
-    int pos = *it;
-    res[pos % mapWidth][pos / mapWidth] = Frontier;
+    int p1d = *it;
+    pos p = p1d_to_pos(p1d,mapWidth);
+    res[p.first][p.second] = Frontier;
   }
   return res;
 }
 
 boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuctionInfo() {
+  //restart the previous aution
+  segment_bids = map<string,map<pos,float>>(); //TODO care
+  cis = criticals_info();//TODO care
+
   tscf_exploration::SegmentAuction segment_auction;
   nav_msgs::OccupancyGrid map = getMap();
 
@@ -107,20 +112,21 @@ boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuc
 
   GVD::VertexIterator v_it, v_it_end;
   for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++) {
-    segment_auction.gvd.vertices.push_back(p_to_p2d(gvd.g[*v_it].p));
-    segment_auction.vertex_segment.push_back(p_to_p2d(gvd.g[*v_it].segment));
+    segment_auction.gvd.vertices.push_back(pos_to_p2d(gvd.g[*v_it].p));
+    segment_auction.vertex_segment.push_back(pos_to_p2d(gvd.g[*v_it].segment));
   }
   
   GVD::EdgeIterator e_it, e_it_end;
   for (boost::tie(e_it, e_it_end) = boost::edges(gvd.g); e_it != e_it_end; e_it++) {
     tscf_exploration::Edge e;
-    e.from = p_to_p2d(gvd.g[(*e_it).m_source].p);
-    e.to = p_to_p2d(gvd.g[(*e_it).m_target].p);
+    e.from = pos_to_p2d(gvd.g[(*e_it).m_source].p);
+    e.to = pos_to_p2d(gvd.g[(*e_it).m_target].p);
     segment_auction.gvd.edges.push_back(e) ;
   }
 
   for(auto it = cis.begin(); it != cis.end(); it++){
-    segment_auction.criticals.push_back(p_to_p2d(it->first));
+    segment_auction.criticals.push_back(pos_to_p2d(it->first));
+    ROS_INFO("critical: %d , %d",it->first.first,it->first.second);
     segment_auction.mind_f.push_back(it->second.mind_f);
   }
 
@@ -233,25 +239,11 @@ void CentralModule::saveBid(const tscf_exploration::frontierReportConstPtr& msg,
   }
 }
 
-void CentralModule::saveSegmentBid(tscf_exploration::SegmentBid msg, std::string name) {
-  /*if (CentralModule::estado == 2) {
-    std::map<int, std::set<int> >::iterator itm;
-    // ROS_INFO(" CENTRAL MODULE :: Guardo Informe del robot %s con nombre %s y
-    // cantidad de %d centros", msg->idRobot.c_str(),
-    // name.c_str(),msg->cant_centros);
-    for (int i = 0; i < msg->cant_centros; i++) {
-      CentralModule::cost_saved[msg->idRobot][msg->infoCentros[i].centro] =
-          msg->infoCentros[i].cost;
-      for (itm = info_gain.begin(); itm != info_gain.end(); ++itm)
-        if (itm->first != -1) {
-          CentralModule::info_gain_saved[msg->idRobot][itm->first] = itm->second;
-        }
-      // ROS_INFO(" -------------------- centro %d ->, costo %d",
-      // msg->infoCentros[i].centro, msg->infoCentros[i].cost);
-    }
-    CentralModule::bids_arrivals[name] = true;
-    CentralModule::asignations[name] = false;
-  }*/
+void CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, std::string name) {
+  //segment_bids[name].clear();
+  for(int i = 0; i< sb.criticals.size(); i++){
+    segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
+  }
 }
 
 float CentralModule::calcularUtilidad(int info_gain_celda, int cost_celda) {
@@ -375,11 +367,85 @@ tscf_exploration::asignacion CentralModule::assignTasks() {
   return asign;
 }
 
-tscf_exploration::SegmentAssignment CentralModule::assignSegment(){
-  tscf_exploration::SegmentAssignment sa;
-  sa.segment.x=0;
-  sa.segment.y=0;
-  return sa;
+map<string,tscf_exploration::SegmentAssignment> CentralModule::assignSegment(){
+  typedef pair<string,pos> assignment;
+  typedef pair<float, assignment> bid;
+  priority_queue<bid, vector<bid>, greater<bid>> bids_queue;
+
+  std::map<string,pos> robot_segment;//std::unordered_map?
+  std::map<pos,int> segment_frontier_num;//std::unordered_map?
+  std::map<pos,int> segment_robots_num;//std::unordered_map?
+
+  for(auto itr = segment_bids.begin(); itr!=segment_bids.end(); itr++){
+    string r_name = itr->first;
+    map<pos,float> rBids = itr->second;
+    for(auto itb = rBids.begin(); itb != rBids.end(); itb++){
+      float value = itb->second;
+      pos segment = itb->first;    
+      bids_queue.push(bid(value,assignment(r_name,segment)));
+      segment_frontier_num[segment] = cis[segment].frontiers.size();
+    }
+  }
+
+  int total_robots = segment_bids.size();
+  int total_segments = cis.size();
+
+  int assigned_robots = 0;
+  int segment_with_extra_robot = 0;
+
+  int robots_per_segment = total_robots / total_segments;
+  int reminder_robots = total_robots % total_segments;
+
+  int max_robot_per_segment;
+  if(reminder_robots == 0){
+    max_robot_per_segment = robots_per_segment;
+  }else{
+    max_robot_per_segment = robots_per_segment + 1;
+  }
+
+  //cout<<"arranca la sasignacion"<<endl;
+  //ROS_INFO("Arranca la asignacion");
+  while(/*assigned_robots < total_robots&&*/  !bids_queue.empty()){
+    bid b = bids_queue.top(); bids_queue.pop();
+    float value = b.first;
+    string r_name = b.second.first; 
+    pos segment = b.second.second;
+    ROS_INFO("assignSegment: robot = %s | value = %f | segment = %d,%d",r_name.c_str(),value,segment.first,segment.second);
+    ROS_INFO("assignSegment: %d && %d && %d",robot_segment.find(r_name) == robot_segment.end() ,segment_robots_num[segment] < max_robot_per_segment,segment_frontier_num[segment] > 0);
+    
+    //robot no asignado, segmento no supera el maximo admitido de robots y quedan fronteras disponibles
+    if(robot_segment.find(r_name) == robot_segment.end() && segment_robots_num[segment] < max_robot_per_segment && segment_frontier_num[segment] > 0){
+      robot_segment[r_name] =segment;
+      assigned_robots++;
+      segment_robots_num[segment]++;
+      segment_frontier_num[segment]--;
+
+      if(segment_robots_num[segment]==robots_per_segment+1){
+        segment_with_extra_robot++;
+        if(segment_with_extra_robot == reminder_robots){
+          max_robot_per_segment = robots_per_segment;
+        }
+      }
+      //cout<<r_name<<endl;
+      //ROS_INFO("%s-> (%d, %d)",r_name.c_str(),segment.first,segment.second);
+      //ROS_INFO("segment_robots_num (%d, %d) = %d",segment.first,segment.second,segment_robots_num[segment]);
+      //ROS_INFO("segment_frontier_num (%d, %d) = %d",segment.first,segment.second,segment_frontier_num[segment]);
+    }else{
+      continue;
+    }
+  }
+
+  //cout<<"termina la sasignacion"<<endl;
+  map<string,tscf_exploration::SegmentAssignment> ret;
+  for(auto it = robot_segment.begin(); it!=robot_segment.end();it++){
+    string r_name = it->first;
+    pos seg = it->second;
+    tscf_exploration::SegmentAssignment sa;
+    sa.segment = pos_to_p2d(seg);
+    ret[r_name] = sa;
+  }
+  
+  return ret;
 }
 
 /*Funcion que clasifica los puntos de frontera en clases de equivalencia*/

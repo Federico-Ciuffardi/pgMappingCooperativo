@@ -22,13 +22,11 @@ ros::Publisher objetive_pub;
 ros::Publisher obj_pub2;
 ros::Publisher marker_pub;
 ros::Publisher segment_auction_pub;
-vector<ros::Publisher> segment_assignment_pubs;
+map<string,ros::Publisher> segment_assignment_pubs;
 // others
 ros::Timer segmentAuctionTimer;
 ros::Timer auctionTimer;
-
 CentralModule centralModule;
-
 bool FIN = false;
 
 int mapsHandled = 0;
@@ -39,87 +37,8 @@ string end_msg("END");
  *  Rviz mark functions
  */
 
-// typedefs
-
-typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
-
-// Auxiliar functions
-
-/* Converts from `pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
-   adjusting the latter with the `map_info` so it lands on it's correspoing world position */
-geometry_msgs::Point p2d_to_p3d(tscf_exploration::Point2D p2d, map_info_type map_info) {
-  geometry_msgs::Point p3d;
-  p3d.x = p2d.x * map_info.resolution + map_info.origin.position.x + 0.5;
-  p3d.y = p2d.y * map_info.resolution + map_info.origin.position.y + 0.5;
-  p3d.z = 0;
-  return p3d;
-}
-
-geometry_msgs::Point p2d_to_p3d(tscf_exploration::Point2D p2d,float z, map_info_type map_info){
-  geometry_msgs::Point p3d = p2d_to_p3d(p2d, map_info); 
-  p3d.z = z;
-  return p3d;
-}
-
-geometry_msgs::Point pos_to_p3d(pos p, map_info_type map_info) {
-  geometry_msgs::Point p3d;
-  p3d.x = p.first * map_info.resolution + map_info.origin.position.x + 0.5;
-  p3d.y = p.second * map_info.resolution + map_info.origin.position.y + 0.5;
-  p3d.z = 0;
-  return p3d;
-}
-
-
-/* Publishes mark points `ps` on the namespace `ns` with the color `color` to be visualized on rviz
- */
-void mark_points(string ns,
-                 visualization_msgs::Marker::_points_type ps,
-                 std_msgs::ColorRGBA color) {
-  visualization_msgs::Marker points;
-  // ns & id
-  points.ns = ns;
-  points.id = 0;
-  // header
-  points.header.frame_id = "/world";
-  points.header.stamp = ros::Time::now();
-  // pose
-  points.pose.orientation.w = 1.0;
-  // others
-  points.type = visualization_msgs::Marker::POINTS;
-  points.action = visualization_msgs::Marker::ADD;
-  points.scale.x = 1;
-  points.scale.y = 1;
-  points.color = color;
-  points.points = ps;
-
-  marker_pub.publish(points);
-}
-
-/* Publishes mark lines `ls` on the namespace `ns` with the color `color` to be visualized on rviz
- */
-void mark_lines(string ns, visualization_msgs::Marker::_points_type ls, std_msgs::ColorRGBA color) {
-  visualization_msgs::Marker lines;
-  // ns & id
-  lines.ns = ns;
-  lines.id = 0;
-  // header
-  lines.header.frame_id = "/world";
-  lines.header.stamp = ros::Time::now();
-  // pose
-  lines.pose.orientation.w = 1.0;
-  lines.pose.position.z = -0.1;
-  // others
-  lines.type = visualization_msgs::Marker::LINE_LIST;
-  lines.action = visualization_msgs::Marker::ADD;
-  lines.scale.x = 0.2;
-  lines.color = color;
-  lines.points = ls;
-
-  marker_pub.publish(lines);
-}
-
 /* Publishes marks corresponding to the gvd to be visualized on rviz */
-void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_info) {
+static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_info) {
   // Colors
   std_msgs::ColorRGBA blue;
   blue.b = 1.0f;
@@ -149,10 +68,12 @@ void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_info) {
   }
 
   // publish
-  mark_points("gvd_vertices", points, blue);
-  mark_points("gvd_critical_vertices", critical_points, yellow);
-  mark_lines("gvd_edges", edges, blue);
+  marker_pub.publish(mark_points("gvd_vertices", points, blue));
+  marker_pub.publish(mark_points("gvd_critical_vertices", critical_points, yellow));
+  marker_pub.publish(mark_lines("gvd_edges", edges, blue));
 }
+
+
 
 /*
  *  Handle Functions
@@ -162,7 +83,7 @@ void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_info) {
 void startAuction() {
   //initialization
   auctionTimer.stop();
-  auctionTimer.setPeriod(ros::Duration(1.0));
+  auctionTimer.setPeriod(ros::Duration(3.0));
   centralModule.resetArrivals();
   centralModule.setEstado(WaitingBids);
 
@@ -187,7 +108,7 @@ void startAuction() {
   std_msgs::ColorRGBA color;
   color.g = 1.0f;
   color.a = 1.0;
-  mark_points("interest_points", ps, color);
+  marker_pub.publish(mark_points("interest_points", ps, color));
 
   draw_gvd(segment_auction, ret.mapa.info);
 
@@ -210,8 +131,9 @@ void timerRoutine(const ros::TimerEvent&) {
     centralModule.setEstado(WaitingAuction);
     objetive_pub.publish(centralModule.assignTasks());  // ejecucion subasta (asignacion de
                                                         // tareas) y publicacion de resultados
-    for(int i = 0; i<segment_assignment_pubs.size(); i++){
-      segment_assignment_pubs[i].publish(centralModule.assignSegment());
+    map<string,tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
+    for(auto it = assignment.begin(); it != assignment.end(); it++){
+      segment_assignment_pubs[it->first].publish(it->second);
     }
     ROS_INFO("CENTRAL MODULE :: auction end");
   } else {
@@ -266,7 +188,7 @@ void handleReport(const tscf_exploration::frontierReportConstPtr& msg, string na
 void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string name) {
   if (!FIN) {
     //centralModule.saveSegmentBid(*msg, name);
-
+    centralModule.saveSegmentBid(*msg, name);
     ROS_INFO("CENTRAL MODULE :: got segment_bid from %s", name.c_str());
   }
 }
@@ -336,7 +258,7 @@ int main(int argc, char* argv[]) {
       segment_bids[nombre] = n.subscribe<tscf_exploration::SegmentBid>(
           rep_topic, 1, boost::bind(&handleSegmentBid, _1, nombre));
 
-      segment_assignment_pubs.push_back(n.advertise<tscf_exploration::SegmentAssignment>("/" + nombre + "/segment_bid", 1));
+      segment_assignment_pubs[nombre] = n.advertise<tscf_exploration::SegmentAssignment>("/" + nombre + "/segment_assigment", 1);
     }
   }
 

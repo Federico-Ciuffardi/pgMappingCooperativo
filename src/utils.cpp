@@ -1,3 +1,6 @@
+#ifndef UTILS_CPP
+#define UTILS_CPP
+
 #include <math.h>
 #include <ros/ros.h>
 #include <stdio.h>
@@ -69,3 +72,4 @@ static int posicionRelativa(int indice, int pos, uint ancho) {
         }
         return neighbors;
 }*/
+#endif

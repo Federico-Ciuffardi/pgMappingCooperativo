@@ -16,8 +16,22 @@ geometry_msgs::PoseStamped Robot::getPosition() {
   return Robot::position;
 };
 
-pos Robot::getPos(){
-  return pos( -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin) );
+pos Robot::getGVDPos(){
+  /*int posicionActual =
+    Robot::indice_origen +
+    (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x) * 1) +
+    ((int)Robot::position.pose.position.y) * Robot::width);
+
+    cv::Point2f ps = map_points[posicionActual];
+    return pos(ps.x,ps.y);*/
+    
+  //return pos( (position.pose.position.x + x_origin) ,(position.pose.position.y + y_origin));
+  geometry_msgs::Point p3d = position.pose.position;
+  ROS_INFO("elp from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
+  pos p = p3d_to_pos(p3d,  indice_origen, width);
+  //pos p( -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin));
+  ROS_INFO("elp %d,%d",p.first,p.second);
+  return p;
 }
 
 void Robot::setNombre(std::string nom) {
@@ -90,11 +104,11 @@ std::string Robot::getRealInfoGain() {
   std::stringstream ret;
   // int error = 0;
   int error = cont_totales - (cont_libres + cont_ocupadas);
-  if (error <= 3) {
-    Robot::errorCont += 1;
-  } else {
+  //if (error <= 3) {
+  //  Robot::errorCont += 1;
+  //} else {
     Robot::setErrorCont(0);
-  }
+  //}
   float errave = Robot::addErrorAverage(error);
   ret << cont_libres << " " << cont_ocupadas << " " << cont_totales << " " << errave;
   return ret.str();
@@ -129,7 +143,6 @@ void Robot::saveGlobalMap(nav_msgs::OccupancyGrid msg) {
      * (x,y) que le corresponde en un mapa.*/
     for (int i = 0; i < Robot::width * Robot::height; i++) {
       int fila = i % Robot::width;
-      ;
       int columna = i / Robot::width;
       float a = ((Robot::x_origin + fila) + 0.5);
       float b = ((Robot::y_origin + columna) + 0.5);
@@ -283,7 +296,7 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos){
 
   //std::cout<<"Antes de agregar vertices"<<g.vertices.size()<<endl;
   for(int i = 0; i < g.vertices.size(); i++){
-    v_pos = p2d_to_p(g.vertices[i]);
+    v_pos = p2d_to_pos(g.vertices[i]);
     boost::tie(v, inserted) = gvd.add_v(v_pos);
     
     min_aux = dist(r_pos, v_pos);
@@ -300,8 +313,8 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos){
   //std::cout<<"Antes de agregar aristas: "<<g.edges.size()<<endl;
   //auto weights = get(edge_weight,gvd.g);
   for(int i = 0; i<g.edges.size(); i++){
-    pos from_p = p2d_to_p(g.edges[i].from);
-    pos to_p = p2d_to_p(g.edges[i].to);
+    pos from_p = p2d_to_pos(g.edges[i].from);
+    pos to_p = p2d_to_pos(g.edges[i].to);
     VecGVD::Vertex from_v = gvd.positions[from_p];
     VecGVD::Vertex to_v = gvd.positions[to_p];
     
@@ -326,20 +339,21 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos){
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg){
   tscf_exploration::SegmentBid segment_bid;
-  pos r_pos = this->getPos();
+  pos r_pos = getGVDPos();
   pos r_segment, c_pos;
-  VecGVD gvd;
+  
   int seg;
+  gvd = VecGVD(); //TODO care
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
   //std::cout<<"este es el seg: "<<seg<<endl;
-  r_segment = p2d_to_p(msg.vertex_segment[seg]);
+  r_segment = p2d_to_pos(msg.vertex_segment[seg]);
   //std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
-  priority_queue<float, vector<float>, greater<float>> segment_value_queue;
+  
   for(int i=0; i < msg.criticals.size(); i++){
     segment_bid.criticals.push_back(msg.criticals[i]);
     //segment_bid.values[i] = 0;
     float cost, in_seg = 0;
-    c_pos = p2d_to_p(msg.criticals[i]);
+    c_pos = p2d_to_pos(msg.criticals[i]);
     //std::cout<<"Antes de calclular el camino"<<endl;
     boost::tie(paths[c_pos], cost) = get_path(gvd, r_pos,c_pos);
     //std::cout<<"Despues de calclular el camino"<<endl;
@@ -440,6 +454,9 @@ std::map<int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano,
 /*Funcion que a partir de una lista de indices obtiene un goal_path*/
 tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino,
                                               nav_msgs::OccupancyGrid& p) {
+  ROS_INFO("way otro");
+  geometry_msgs::Point p3d = getPosition().pose.position;
+  ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
   tscf_exploration::goalList list;
   list.listaGoals.clear();
 
@@ -476,6 +493,7 @@ tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino,
            (global_map.data[*it_camino + 1 + width] == 100))))) {
       pos.x = ps.x - 1.0;
     }
+    ROS_INFO("way: %f,%f,%f",pos.x,pos.y,pos.z);
     list.listaGoals.push_back(pos);
     p.data[(*it_camino)] = 100;
   }
@@ -512,3 +530,41 @@ tscf_exploration::goalList Robot::getPathToObjetive(int centro,
   tscf_exploration::goalList pathlist = getGoalPath(caminos[camino_mas_cercano], p);
   return pathlist;
 };
+
+tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D segment) {
+  
+
+
+  list<VecGVD::Vertex> v_list = paths[p2d_to_pos(segment)];
+  ROS_INFO("way nuestro");
+  geometry_msgs::Point p3d = getPosition().pose.position;
+  ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
+  pos p = getGVDPos();
+  //ROS_INFO("way from pos %d,%d",p.first,p.second);
+
+
+  tscf_exploration::goalList g_list;
+  g_list.indice = 1;
+
+  v_list.pop_front();
+  for(auto it = v_list.begin(); it != v_list.end(); it++){
+    pos p = gvd.g[*it].p;
+    /*geometry_msgs::Point p3d;
+    p3d.y = -p.second - y_origin - 0.5;
+    p3d.x = -p.first - x_origin - 0.5;
+    p3d.z = 0.0;*/
+    /*geometry_msgs::Point p3d;
+    p3d.x = -p.second - y_origin - 0.5;
+    p3d.y = -p.first - x_origin - 0.5;
+    p3d.z = 0.0; */
+    // = -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin) );
+    cv::Point2f ps = map_points[pos_to_p1d(p,width)];
+    geometry_msgs::Point p3d;
+    p3d.y = ps.y;
+    p3d.x = ps.x;
+    p3d.z = 0.0;
+    g_list.listaGoals.push_back(p3d);
+    ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+  }
+  return g_list;
+}

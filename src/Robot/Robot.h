@@ -34,7 +34,7 @@ typedef std::map<int, std::list<int> > dict_clusters;
 class Robot {
  private:
   geometry_msgs::PoseStamped position;
-  std::string nombreRobot;
+
   nav_msgs::OccupancyGrid global_map;
   nav_msgs::OccupancyGrid control_map;
   std::map<int, cv::Point2f> map_points;
@@ -53,6 +53,7 @@ class Robot {
   int cant_errors;
   float dist_info_gain_obst;
   std::vector<int> last_info_gain;
+  VecGVD gvd;
 
   std::map<int, std::vector<int> > crearOleadas(nav_msgs::OccupancyGrid msg,
                                                 int fin,
@@ -63,10 +64,11 @@ class Robot {
                                                        nav_msgs::OccupancyGrid& p);
 
  public:
+  std::string nombreRobot;
   Robot();
   void setPosition(int x, int y);
   geometry_msgs::PoseStamped getPosition();
-  pos getPos();
+  pos getGVDPos();
   void setNombre(std::string nom);
   std::string getNombre();
   void setCentrosF(std::vector<int> cdf);
@@ -84,6 +86,9 @@ class Robot {
   tscf_exploration::goalList getPathToObjetive(int centro,
                                                std::vector<int> obstaculos,
                                                nav_msgs::OccupancyGrid& p);
+  
+  tscf_exploration::goalList getPathToSegment(tscf_exploration::Point2D segment);
+
   void ajustarParedes(int centro, nav_msgs::OccupancyGrid& p, std::vector<int> obstaculos);
   std::list<int> caminoAfrontera(std::vector<int> oleada,
                                  int obj,
