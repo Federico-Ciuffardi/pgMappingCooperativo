@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
-  goalPath_sub = n.subscribe("goalPath", 10, setPath);
+  goalPath_sub = n.subscribe("goalPath", /*1*/ 10, setPath);
   pose_sub = n.subscribe("pose", 1, poseCallback);
   map_merged_sub = n.subscribe("/map_merged", 1, saveMap);
   end_sub = n.subscribe("/end", 1, handleEnd);

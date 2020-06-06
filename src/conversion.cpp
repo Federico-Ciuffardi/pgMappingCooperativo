@@ -22,6 +22,13 @@ static pos p2d_to_pos(tscf_exploration::Point2D p2d){
   return p;
 }
 
+static vector<tscf_exploration::Point2D> pos_to_p2d(vector<pos> p){
+  vector<tscf_exploration::Point2D> res;
+  for(auto it = p.begin(); it != p.end(); ++it){
+    res.push_back(pos_to_p2d(*it));
+  }
+  return res;  
+} 
 
 typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
 
@@ -74,5 +81,12 @@ static pos p3d_to_pos(geometry_msgs::Point p, int indice_origen, int width){
   return p1d_to_pos(p3d_to_p1d(p,indice_origen,width), width); //no sure if is the same width
 }
 
+static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){
+    geometry_msgs::Point p3d;
+    p3d.y = ps.y;
+    p3d.x = ps.x;
+    p3d.z = 0.0;
+    return p3d;
+}
 
 #endif

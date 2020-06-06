@@ -17,10 +17,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 #include "../GVD/GVD.h"
 #include "../utils.cpp"
 #include "../conversion.cpp"
 #include "../rviz.cpp"
+#include "../lib/auction.h"
+
 
 typedef std::map<int, std::list<int> > dict_clusters;
 

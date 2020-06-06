@@ -7,6 +7,8 @@
  *  Variables
  */
 
+ros::NodeHandle* nh = NULL;
+
 // Topics
 /// Subscribers
 ros::Subscriber pose_sub;
@@ -21,12 +23,15 @@ ros::Subscriber _map_sub;
 ros::Subscriber coverage_sub;
 ros::Subscriber end_sub;
 
+ros::Subscriber frontier_bid_sub;
+
 /// Publishers
 ros::Publisher debug_pub;
 ros::Publisher end_pub;
 ros::Publisher bid_pub;
 
 ros::Publisher segment_bid_pub;
+ros::Publisher frontier_bid_pub;
 
 ros::Publisher request_objetive_pub;
 ros::Publisher goalPath_pub;
@@ -40,9 +45,16 @@ Robot robot;
 bool FIN = false;
 
 std::string end_msg("END");
+/*
+ *  Aux Functions
+ */
+
+string get_frontier_auction_topic(tscf_exploration::Point2D segment,int auction_id){
+  return "frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "|" + to_string(segment.y);
+}
 
 /*
- *  Functions
+ *  Main Functions
  */
 
 // Handlers
@@ -163,23 +175,47 @@ void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   }
 }
 
-//The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
-void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
-  //if (!FIN) {
-    ROS_INFO("%s :: Recibi mi segmento: (%d, %d)!", robot.getNombre().c_str(),msg->segment.x,msg->segment.y);
-    tscf_exploration::goalList path = robot.getPathToSegment(msg->segment);
-    if(robot.nombreRobot != "atrv2"){
-      //robot.getPathToObjetive(centro, msg->obstaculos, p);
-      if (path.listaGoals.size() >0) goalPath_pub.publish(path);
-    }
-  //}
+map<int,tscf_exploration::FrontierBid> frontierBids; 
+int robot_num = -1;
+
+void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
+
+  frontierBids[msg->robotId];
 }
 
+void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
+    
+  robot.assigned_segment = p2d_to_pos(msg->segment);
+
+  robot_num = msg->robots_num;
+  
+  if(true/*robot_num == 1*/){
+  
+    tscf_exploration::goalList path = robot.getPathToSegment(msg->frontiers[0]);  
+    if(robot.nombreRobot != "atrv2"){
+      //robot.getPathToObjetive(centro, msg->obstaculos, p);
+      if (path.listaGoals.size() >0) goalPath_pub.publish(path); 
+    } 
+  }else{
+    frontierBids.clear();
+
+    //start the frontier auction 
+    string topic = get_frontier_auction_topic(msg->segment,msg->id);
+    frontier_bid_sub = nh->subscribe(topic,robot_num , handleCoverage);
+    frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, 1);
+    //value the segments
+    //frontier_bid_pub.publish(my_bids);
+  }
+
+} 
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
-
+  
   ros::NodeHandle n;
+
+  nh = &n;
+
   ros::NodeHandle private_node_handle("~");
 
   std::string nom = ros::this_node::getNamespace();

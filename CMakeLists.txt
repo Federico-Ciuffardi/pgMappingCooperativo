@@ -78,6 +78,7 @@ add_message_files(
   SegmentAuction.msg
   SegmentBid.msg
   SegmentAssignment.msg
+  FrontierBid.msg
 )
 
 ## Generate services in the 'srv' folder

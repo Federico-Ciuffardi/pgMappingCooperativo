@@ -339,7 +339,10 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos){
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg){
   tscf_exploration::SegmentBid segment_bid;
-  pos r_pos = getGVDPos();
+  my_pos = getGVDPos();
+  
+  pos r_pos = my_pos;
+
   pos r_segment, c_pos;
   
   int seg;
@@ -347,6 +350,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
   //std::cout<<"este es el seg: "<<seg<<endl;
   r_segment = p2d_to_pos(msg.vertex_segment[seg]);
+  my_segment = r_segment;
   //std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
   
   for(int i=0; i < msg.criticals.size(); i++){
@@ -531,40 +535,68 @@ tscf_exploration::goalList Robot::getPathToObjetive(int centro,
   return pathlist;
 };
 
-tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D segment) {
+tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D frontier) {
   
+  pos f_pos = p2d_to_pos(frontier);
+  
+  std::cout<<"Estoy en "<<my_pos.first<<","<< my_pos.second<< " y voy a ir hasta la frontera"<<f_pos.first<<","<< f_pos.second<<endl;
 
-
-  list<VecGVD::Vertex> v_list = paths[p2d_to_pos(segment)];
-  ROS_INFO("way nuestro");
-  geometry_msgs::Point p3d = getPosition().pose.position;
-  ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
-  pos p = getGVDPos();
-  //ROS_INFO("way from pos %d,%d",p.first,p.second);
-
+  float f_r_dist = dist(f_pos,my_pos);
+  float f_c_dist = dist(f_pos,assigned_segment);
 
   tscf_exploration::goalList g_list;
   g_list.indice = 1;
+  //If i am  not on the segment
+  std::cout<<"Camino: ";
+  ROS_INFO("way nuestro");
+  geometry_msgs::Point p3d = getPosition().pose.position;
+  ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
+  if((my_segment != assigned_segment) || (f_r_dist > f_c_dist) ){
+    list<VecGVD::Vertex> v_list = paths[assigned_segment];
+    //pos p = getGVDPos();
+    //ROS_INFO("way from pos %d,%d",p.first,p.second);
 
-  v_list.pop_front();
-  for(auto it = v_list.begin(); it != v_list.end(); it++){
+    v_list.pop_front();
+    for(auto it = v_list.begin(); it != v_list.end(); it++){
+      pos p = gvd.g[*it].p;
+      /*geometry_msgs::Point p3d;
+      p3d.y = -p.second - y_origin - 0.5;
+      p3d.x = -p.first - x_origin - 0.5;
+      p3d.z = 0.0;*/
+      /*geometry_msgs::Point p3d;
+      p3d.x = -p.second - y_origin - 0.5;
+      p3d.y = -p.first - x_origin - 0.5;
+      p3d.z = 0.0; */
+      // = -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin) );
+      cv::Point2f ps = map_points[pos_to_p1d(p,width)];
+      //geometry_msgs::Point p3d;
+      //p3d.y = ps.y;
+      //p3d.x = ps.x;
+      //p3d.z = 0.0;
+      std::cout<<p.first<<","<< p.second<<" ";
+      p3d = p2f_to_p3d(ps);
+      g_list.listaGoals.push_back(p3d);
+      ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+      
+    }
+  }else{
+    list<VecGVD::Vertex> v_list = paths[assigned_segment];
+    v_list.pop_front();
+    auto it = v_list.begin();
     pos p = gvd.g[*it].p;
-    /*geometry_msgs::Point p3d;
-    p3d.y = -p.second - y_origin - 0.5;
-    p3d.x = -p.first - x_origin - 0.5;
-    p3d.z = 0.0;*/
-    /*geometry_msgs::Point p3d;
-    p3d.x = -p.second - y_origin - 0.5;
-    p3d.y = -p.first - x_origin - 0.5;
-    p3d.z = 0.0; */
-    // = -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin) );
     cv::Point2f ps = map_points[pos_to_p1d(p,width)];
-    geometry_msgs::Point p3d;
-    p3d.y = ps.y;
-    p3d.x = ps.x;
-    p3d.z = 0.0;
+    std::cout<<p.first<<","<< p.second<<" ";
+    p3d = p2f_to_p3d(ps);
     g_list.listaGoals.push_back(p3d);
     ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
   }
+  std::cout<<f_pos.first<<","<< f_pos.second<<endl;
+
+  cv::Point2f pf = map_points[pos_to_p1d(f_pos,width)];
+  p3d = p2f_to_p3d(pf);
+  ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+  g_list.listaGoals.push_back(p3d);
+  std::cout<<"TERMINEEEEEEEEEEEEE"<<endl;
+  //is it necessary to clean_robot_cache?
   return g_list;
 }

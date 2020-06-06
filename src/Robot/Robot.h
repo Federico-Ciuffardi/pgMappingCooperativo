@@ -17,6 +17,7 @@
 #include <tscf_exploration/SegmentAuction.h>
 #include <tscf_exploration/SegmentBid.h>
 #include <tscf_exploration/SegmentAssignment.h>
+#include <tscf_exploration/FrontierBid.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -54,6 +55,8 @@ class Robot {
   float dist_info_gain_obst;
   std::vector<int> last_info_gain;
   VecGVD gvd;
+  pos my_pos;
+  pos my_segment;
 
   std::map<int, std::vector<int> > crearOleadas(nav_msgs::OccupancyGrid msg,
                                                 int fin,
@@ -65,6 +68,7 @@ class Robot {
 
  public:
   std::string nombreRobot;
+  pos assigned_segment;
   Robot();
   void setPosition(int x, int y);
   geometry_msgs::PoseStamped getPosition();

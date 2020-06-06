@@ -63,6 +63,7 @@ atrv1.append(pose)
 waypoint = Waypoint()
 waypoint.add_stream('socket')
 waypoint.add_service('socket')
+#waypoint.properties(ControlType='Position')
 atrv1.append(waypoint)
 
 # # # ##################### ROBOT  2 ####################

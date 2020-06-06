@@ -405,7 +405,7 @@ map<string,tscf_exploration::SegmentAssignment> CentralModule::assignSegment(){
 
   //cout<<"arranca la sasignacion"<<endl;
   //ROS_INFO("Arranca la asignacion");
-  while(/*assigned_robots < total_robots&&*/  !bids_queue.empty()){
+  while(assigned_robots < total_robots&&  !bids_queue.empty()){
     bid b = bids_queue.top(); bids_queue.pop();
     float value = b.first;
     string r_name = b.second.first; 
@@ -437,11 +437,18 @@ map<string,tscf_exploration::SegmentAssignment> CentralModule::assignSegment(){
 
   //cout<<"termina la sasignacion"<<endl;
   map<string,tscf_exploration::SegmentAssignment> ret;
+
+  //std::map<pos,tscf_exploration::Point2D> frontier2d;
   for(auto it = robot_segment.begin(); it!=robot_segment.end();it++){
     string r_name = it->first;
     pos seg = it->second;
     tscf_exploration::SegmentAssignment sa;
     sa.segment = pos_to_p2d(seg);
+    sa.frontiers = pos_to_p2d(cis[seg].frontiers);
+    //data for frontier auction
+    sa.id = indice;      
+    sa.robots_num = segment_robots_num[seg];
+    
     ret[r_name] = sa;
   }
   
