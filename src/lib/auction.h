@@ -10,6 +10,14 @@ typedef pair<string,pos> assignment;
 typedef pair<float, assignment> bid;
 typedef priority_queue<bid, vector<bid>, greater<bid>> bids_priority_queue;
 
+static void add_bid(bids_priority_queue &bids_pq,string bidder,pos item,float bidding){
+  bid b(bidding,assignment(bidder,item));
+  bids_pq.push(b);
+}
+
+static void clear_bids(bids_priority_queue &bids_pq){
+  bids_pq = bids_priority_queue();
+}
 
 static map<string,pos> resolve_auction(bids_priority_queue bids_pq,int total_bidders,int total_items,std::map<pos,int>* item_capacity = NULL){
 

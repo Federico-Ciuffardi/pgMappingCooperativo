@@ -73,8 +73,6 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
   marker_pub.publish(mark_lines("gvd_edges", edges, blue));
 }
 
-
-
 /*
  *  Handle Functions
  */
@@ -116,7 +114,6 @@ void startAuction() {
   color.a = 1.0;
   marker_pub.publish(mark_points("interest_points", ps, color))
   */
-
 
   ROS_INFO("CENTRAL MODULE :: Segment Auction Start");
 
@@ -179,16 +176,6 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
   }
 }
 
-/* cuando: un robot tiene una oferta */
-/* que: esta se gurda */
-void handleReport(const tscf_exploration::frontierReportConstPtr& msg, string name) {
-  if (!FIN) {
-    //centralModule.saveBid(msg, name); OLD
-
-    ROS_INFO("CENTRAL MODULE :: got bid from %s", name.c_str());
-  }
-}
-
 void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string name) {
   if (!FIN) {
     //centralModule.saveSegmentBid(*msg, name);
@@ -196,7 +183,6 @@ void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string na
     ROS_INFO("CENTRAL MODULE :: got segment_bid from %s", name.c_str());
   }
 }
-
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "map_merger");
@@ -254,13 +240,13 @@ int main(int argc, char* argv[]) {
       nombre.erase(0, 1);
       int pos = nombre.find('/');
       nombre = nombre.substr(0, pos);
-      string rep_topic = "/" + nombre + "/bid";
-      bids[nombre] = n.subscribe<tscf_exploration::frontierReport>(
-          rep_topic, 1, boost::bind(&handleReport, _1, nombre));
+      //string rep_topic = "/" + nombre + "/bid";
+      //bids[nombre] = n.subscribe<tscf_exploration::frontierReport>(
+          //rep_topic, 1, boost::bind(&handleReport, _1, nombre));
       
-      rep_topic = "/" + nombre + "/segment_bid";
+      string topic = "/" + nombre + "/segment_bid";
       segment_bids[nombre] = n.subscribe<tscf_exploration::SegmentBid>(
-          rep_topic, 1, boost::bind(&handleSegmentBid, _1, nombre));
+          topic, 1, boost::bind(&handleSegmentBid, _1, nombre));
 
       segment_assignment_pubs[nombre] = n.advertise<tscf_exploration::SegmentAssignment>("/" + nombre + "/segment_assigment", 1);
     }
@@ -272,3 +258,13 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+/* cuando: un robot tiene una oferta */
+/* que: esta se gurda */
+/*void handleReport(const tscf_exploration::frontierReportConstPtr& msg, string name) {
+  if (!FIN) {
+    //centralModule.saveBid(msg, name); OLD
+
+    ROS_INFO("CENTRAL MODULE :: got bid from %s", name.c_str());
+  }
+}*/
