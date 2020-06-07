@@ -23,6 +23,23 @@ typedef pair<float, pos> dist_pos;
 typedef priority_queue<dist_pos, vector<dist_pos>, greater<dist_pos>> dist_pos_queue;
 
 /*
+ *  pos implementation
+ */
+
+pos operator+(const pos& p1, const pos& p2);
+
+pos operator-(const pos& p1, const pos& p2);
+
+pos operator-(const pos& p1);
+
+pos operator*(const int c, const pos& p1);
+
+pos operator/(const pos& p1, const float c);
+
+ostream& operator<<(ostream& out, const pos& p);
+
+
+/*
  *  critical info 
  */
 struct critical_info{

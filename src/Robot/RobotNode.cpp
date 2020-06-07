@@ -64,13 +64,13 @@ void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
 
 void handleControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
   // ROS_INFO("guardo mapa");
-  robot.saveControlMap(msg);
+  //robot.saveControlMap(msg);
 }
 
 /* cuando: recibo puntos de interes (objetivos) */
 /* que: Valorarlos y enviarlos a la central*/
 void handleObjetiveSolicitation(const tscf_exploration::takeobjetiveConstPtr& msg) {
-  if (!FIN) {
+  /*if (!FIN) {
     int indice = msg->indice;
     robot.saveGlobalMap(msg->mapa);
     robot.setCentrosF(msg->centrosf);
@@ -78,16 +78,20 @@ void handleObjetiveSolicitation(const tscf_exploration::takeobjetiveConstPtr& ms
     report.indice = indice;
     bid_pub.publish(report);
     ROS_INFO("%s :: make bid", robot.getNombre().c_str());
-  }
+  }*/
 }
 
 void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
-  ROS_INFO("Entro handlePathSucced");
-  if (!FIN) {
-    std_msgs::String msg_request;
+   
+  ROS_INFO("%s :: Entro handlePathSucced",robot.getNombre().c_str());
+  std_msgs::String msg_request;
+  msg_request.data = "signal";
+  request_objetive_pub.publish(msg_request);
+  /*if (!FIN) {
+    
     std::stringstream ss;
-    std::string ret = robot.getRealInfoGain();
-    ss << robot.getNombre() << msg->data.c_str() << " " << ret;
+    //std::string ret = robot.getRealInfoGain();
+    //ss << robot.getNombre() << msg->data.c_str() << " " << ret;
     if (robot.isFinByError()) {
       std_msgs::String msg_request2;
       std::stringstream ss7;
@@ -98,13 +102,13 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
       ROS_INFO("%s MUERO", robot.getNombre().c_str());
     }
     msg_request.data = ss.str();
-    request_objetive_pub.publish(msg_request);
+
     // ROS_INFO("Salgo handlePathSucced");
-  }
+  }*/
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
-  std::string str1(msg->data.c_str());
+  /*std::string str1(msg->data.c_str());
   FIN = (str1.compare(end_msg) == 0);
   if (FIN) {
     std_msgs::String msg_request2;
@@ -112,20 +116,20 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
     ss2 << "END";
     msg_request2.data = ss2.str();
     end_pub.publish(msg_request2);
-  }
+  }*/
 }
 
 void handleCoverage(const std_msgs::StringConstPtr& msg) {
-  std::string str1(msg->data.c_str());
+  /*std::string str1(msg->data.c_str());
   std_msgs::String msg_request2;
   std::stringstream ss2;
   ss2 << robot.getNombre() << " " << str1 << " " << robot.getErrorAverage();
   msg_request2.data = ss2.str();
-  coverage_report_pub.publish(msg_request2);
+  coverage_report_pub.publish(msg_request2);*/
 }
 
 void handleObjetive(const tscf_exploration::asignacionConstPtr& msg) {
-  if (!FIN) {
+  /*if (!FIN) {
 
       int centro = robot.getobjetive(msg);
       tscf_exploration::goalList path;
@@ -138,40 +142,20 @@ void handleObjetive(const tscf_exploration::asignacionConstPtr& msg) {
         ROS_INFO("%s :: NO TENGO OBJETIVO :C", robot.getNombre().c_str());
       }
       path.indice = msg->indice;  // numero de subasta
-    if(robot.nombreRobot == "atrv2"){
       goalPath_pub.publish(path);
-      
       ROS_INFO("%s :: Objective handled", robot.getNombre().c_str());
-    }
-  }
+
+  }*/
 }
 
 //The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   if (!FIN) {
-
     ROS_INFO("%s :: Me llego el mensaje con los segmentos", robot.getNombre().c_str());
-    if(robot.nombreRobot != "atrv2"){
-      tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
-      ROS_INFO("%s :: Voy a enviar los segment_bid", robot.getNombre().c_str());
-      
-      segment_bid_pub.publish(segment_bid);
-    }
+    tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
+    ROS_INFO("%s :: Voy a enviar los segment_bid", robot.getNombre().c_str());
     
-    /*int centro = robot.getobjetive(msg);
-    tscf_exploration::goalList path;
-    if (centro != -1) {
-      nav_msgs::OccupancyGrid p;
-      path = robot.getPathToObjetive(centro, msg->obstaculos, p);
-      robot_debug_pub.publish(p);
-      ROS_INFO("%s :: Publico Camino", robot.getNombre().c_str());
-    }else{
-      ROS_INFO("%s :: NO TENGO OBJETIVO :C", robot.getNombre().c_str());
-    }
-    path.indice = msg->indice;  // numero de subasta
-    goalPath_pub.publish(path);
-    ROS_INFO("%s :: Objective handled", robot.getNombre().c_str());
-  */
+    segment_bid_pub.publish(segment_bid);
   }
 }
 
@@ -179,8 +163,7 @@ map<int,tscf_exploration::FrontierBid> frontierBids;
 int robot_num = -1;
 
 void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
-
-  frontierBids[msg->robotId];
+  //frontierBids[msg->robotId];
 }
 
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
@@ -190,12 +173,8 @@ void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& 
   robot_num = msg->robots_num;
   
   if(true/*robot_num == 1*/){
-  
     tscf_exploration::goalList path = robot.getPathToSegment(msg->frontiers[0]);  
-    if(robot.nombreRobot != "atrv2"){
-      //robot.getPathToObjetive(centro, msg->obstaculos, p);
-      if (path.listaGoals.size() >0) goalPath_pub.publish(path); 
-    } 
+    if (path.listaGoals.size() >0) goalPath_pub.publish(path); 
   }else{
     frontierBids.clear();
 
@@ -225,6 +204,7 @@ int main(int argc, char* argv[]) {
 
   private_node_handle.getParam("init_pose_x", x_ahora);
   private_node_handle.getParam("init_pose_y", y_ahora);
+
   robot.setPosition(x_ahora, y_ahora);
   robot.setErrorAverage(0.0);
   robot.resetCountError();
@@ -255,6 +235,7 @@ int main(int argc, char* argv[]) {
   robot_debug_pub = n.advertise<nav_msgs::OccupancyGrid>("debugggg", 1);
   coverage_report_pub = n.advertise<std_msgs::String>("/coverage_report", 1);
 
+  ROS_INFO("%s :: inicializado :D", robot.getNombre().c_str());
   ros::spin();
 
   return 0;

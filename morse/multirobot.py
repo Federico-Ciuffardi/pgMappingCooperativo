@@ -97,6 +97,6 @@ atrv2.append(waypoint)
 ##################### ENVIRONMENT ####################
 home = os.getenv("HOME")
 env = Environment(home+'/catkin_ws/src/tscf_exploration/morse/scenarios/maze.blend', fastmode=True)
-env.set_time_scale(accelerate_by=5.0)
+env.set_time_scale(accelerate_by=7.0)
 env.place_camera([0, 0, 80])
 env.aim_camera([0, 0, 0])

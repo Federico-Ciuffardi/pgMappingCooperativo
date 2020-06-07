@@ -48,6 +48,14 @@ static geometry_msgs::Point p2d_to_p3d(tscf_exploration::Point2D p2d,float z, ma
   return p3d;
 }
 
+static tscf_exploration::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
+  tscf_exploration::Point2D p2d;
+  p2d.x = p3d.x;
+  p2d.y = p3d.y;
+  return p2d;
+}
+
+
 static geometry_msgs::Point pos_to_p3d(pos p, map_info_type map_info) {
   geometry_msgs::Point p3d;
   p3d.x = p.first * map_info.resolution + map_info.origin.position.x + 0.5;
@@ -79,6 +87,10 @@ static int p3d_to_p1d(geometry_msgs::Point p, int indice_origen, int width){
 
 static pos p3d_to_pos(geometry_msgs::Point p, int indice_origen, int width){
   return p1d_to_pos(p3d_to_p1d(p,indice_origen,width), width); //no sure if is the same width
+}
+
+static pos p3d_to_pos(geometry_msgs::Point p3d){
+  return pos(p3d.x,p3d.y);
 }
 
 static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){

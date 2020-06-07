@@ -95,12 +95,12 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
 
 boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuctionInfo() {
   //restart the previous aution
-  segment_bids = map<string,map<pos,float>>(); //TODO care
-  cis = criticals_info();//TODO care
+  segment_bids.clear(); //TODO care
+  cis.clear();//TODO care
 
   tscf_exploration::SegmentAuction segment_auction;
   nav_msgs::OccupancyGrid map = getMap();
-
+  segment_auction.offset = p3d_to_p2d(map.info.origin.position);
   //taking into account the vision range of robot and leaving only significants frontiers 
   aplicarKmeans(frontera);
 
@@ -823,8 +823,8 @@ std::vector<int> CentralModule::aplicarKmeans(std::set<int> frontera) {
         frontera_completa = true;
         for (it_puntos = centros_nuevo.rbegin(); it_puntos != centros_nuevo.rend(); it_puntos++) {
           ROS_DEBUG("centro ---> %d !!", (*it_puntos));
-          std::set<int> infoGain = CentralModule::getGainInfo((*it_puntos));
-          info_gain.insert(std::pair<int, std::set<int> >((*it_puntos), infoGain));
+          //std::set<int> infoGain = CentralModule::getGainInfo((*it_puntos));
+          //info_gain.insert(std::pair<int, std::set<int> >((*it_puntos), infoGain));
           centros_de_frontera.push_back((*it_puntos));
         }
       }

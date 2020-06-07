@@ -34,7 +34,7 @@ typedef std::map<int, std::list<int> > dict_clusters;
 
 class Robot {
  private:
-  geometry_msgs::PoseStamped position;
+  geometry_msgs::Point position;
 
   nav_msgs::OccupancyGrid global_map;
   nav_msgs::OccupancyGrid control_map;
@@ -71,7 +71,7 @@ class Robot {
   pos assigned_segment;
   Robot();
   void setPosition(int x, int y);
-  geometry_msgs::PoseStamped getPosition();
+  geometry_msgs::Point getPosition();
   pos getGVDPos();
   void setNombre(std::string nom);
   std::string getNombre();

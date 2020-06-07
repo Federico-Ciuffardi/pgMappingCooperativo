@@ -84,40 +84,41 @@ void startAuction() {
   //initialization
   auctionTimer.stop();
   auctionTimer.setPeriod(ros::Duration(3.0));
-  centralModule.resetArrivals();
   centralModule.setEstado(WaitingBids);
 
-  tscf_exploration::takeobjetive ret;
-
-  tscf_exploration::SegmentAuction segment_auction;
-
-  GVD gvd, gvd1;
-
+  map_info_type map_info = centralModule.getMap().info;
 
   // get aution info
-  boost::tie(segment_auction, gvd1) = centralModule.getSegmentAuctionInfo();
+  tscf_exploration::SegmentAuction segment_auction;
+  GVD gvd;
+  boost::tie(segment_auction, gvd) = centralModule.getSegmentAuctionInfo();
 
-  boost::tie(ret, gvd) = centralModule.getObjetiveMap();
+  // set markers for rviz gvd visualization
+  draw_gvd(segment_auction, map_info);
 
-  // set markers for rviz
+  // Send auction info: Graph and criticals info
+  segment_auction_pub.publish(segment_auction);
+
+  /*OLD
+  centralModule.resetArrivals();
+  tscf_exploration::takeobjetive ret;
+  boost::tie(ret, gvd) = centralModule.getObjetiveMap(); 
+  take_obj_pub.publish(ret);  // publica puntos a subastar
+
+  //visualizar los puntos de interes
   visualization_msgs::Marker::_points_type ps;
   for (auto it = ret.centrosf.begin(); it != ret.centrosf.end(); it++) {
     ps.push_back(
-        pos_to_p3d(pos(*it % ret.mapa.info.width, *it / ret.mapa.info.width), ret.mapa.info));
+        pos_to_p3d(pos(*it % map_info.width, *it / map_info.width), map_info));
   }
   std_msgs::ColorRGBA color;
   color.g = 1.0f;
   color.a = 1.0;
-  marker_pub.publish(mark_points("interest_points", ps, color));
+  marker_pub.publish(mark_points("interest_points", ps, color))
+  */
 
-  draw_gvd(segment_auction, ret.mapa.info);
 
-  // Send autin info: Graph and criticals info
-  segment_auction_pub.publish(segment_auction);
-
-  take_obj_pub.publish(ret);  // publica puntos a subastar
-
-  ROS_INFO("CENTRAL MODULE :: auction start");
+  ROS_INFO("CENTRAL MODULE :: Segment Auction Start");
 
   auctionTimer.start();
 }
@@ -128,16 +129,19 @@ void startAuction() {
 /* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */
 void timerRoutine(const ros::TimerEvent&) {
   if (centralModule.getEstado() == WaitingBids) {
-    centralModule.setEstado(WaitingAuction);
+    /*OLD
     objetive_pub.publish(centralModule.assignTasks());  // ejecucion subasta (asignacion de
                                                         // tareas) y publicacion de resultados
+    */
+    centralModule.setEstado(WaitingAuction);
+
     map<string,tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
     for(auto it = assignment.begin(); it != assignment.end(); it++){
       segment_assignment_pubs[it->first].publish(it->second);
     }
     ROS_INFO("CENTRAL MODULE :: auction end");
   } else {
-    ROS_DEBUG("Wrong triggered");
+    ROS_DEBUG("Warning: auction timeout on no auction");
   }
 }
 
@@ -179,7 +183,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
 /* que: esta se gurda */
 void handleReport(const tscf_exploration::frontierReportConstPtr& msg, string name) {
   if (!FIN) {
-    centralModule.saveBid(msg, name);
+    //centralModule.saveBid(msg, name); OLD
 
     ROS_INFO("CENTRAL MODULE :: got bid from %s", name.c_str());
   }

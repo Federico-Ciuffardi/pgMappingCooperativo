@@ -7,31 +7,33 @@ Robot::Robot() {
   Robot::dist_info_gain_obst = lado / sqrt(2);
 }
 
+
+
 void Robot::setPosition(int x, int y) {
-  Robot::position.pose.position.x = x;
-  Robot::position.pose.position.y = y;
+  Robot::position.x = x;
+  Robot::position.y = y;
 };
 
-geometry_msgs::PoseStamped Robot::getPosition() {
+geometry_msgs::Point Robot::getPosition() {
   return Robot::position;
 };
 
-pos Robot::getGVDPos(){
-  /*int posicionActual =
-    Robot::indice_origen +
-    (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x) * 1) +
-    ((int)Robot::position.pose.position.y) * Robot::width);
+pos offset;
 
-    cv::Point2f ps = map_points[posicionActual];
-    return pos(ps.x,ps.y);*/
-    
-  //return pos( (position.pose.position.x + x_origin) ,(position.pose.position.y + y_origin));
-  geometry_msgs::Point p3d = position.pose.position;
+pos Robot::getGVDPos(){
+  std::cout<<"Voy a checkear mi pos"<<endl;
+  geometry_msgs::Point p3d = getPosition();
+  std::cout<<"Por ahora bien"<<endl;
+
   ROS_INFO("elp from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
-  pos p = p3d_to_pos(p3d,  indice_origen, width);
-  //pos p( -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin));
-  ROS_INFO("elp %d,%d",p.first,p.second);
-  return p;
+  
+  pos adjustment(signo((int)Robot::position.x),0);
+
+  //cout<<indice_origen<<endl;
+  //cout<<width<<endl;
+  //pos p = p3d_to_pos(p3d, indice_origen, width);
+
+  return p3d_to_pos(p3d) - offset + adjustment;
 }
 
 void Robot::setNombre(std::string nom) {
@@ -127,8 +129,8 @@ void Robot::setCentrosF(std::vector<int> newFrontera) {
 };
 
 void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
-  Robot::position.pose.position.x = msg->pose.position.x;
-  Robot::position.pose.position.y = msg->pose.position.y;
+  Robot::position.x = msg->pose.position.x;
+  Robot::position.y = msg->pose.position.y;
 }
 
 void Robot::saveGlobalMap(nav_msgs::OccupancyGrid msg) {
@@ -251,8 +253,8 @@ tscf_exploration::frontierReport Robot::processMap() {
 
   int posicionActual =
       Robot::indice_origen +
-      (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x) * 1) +
-       ((int)Robot::position.pose.position.y) * Robot::width);
+      (((int)Robot::position.x + signo((int)Robot::position.x) * 1) +
+       ((int)Robot::position.y) * Robot::width);
 
   std::map<int, std::vector<int> > oleadas =
       Robot::crearOleadas(global_map, posicionActual, centros_de_frontera, p);
@@ -338,17 +340,21 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos){
 }
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg){
+  std::cout<<"ARRANCA getSegmentBid!!!!"<<endl;
+  std::cout<<"declaracion de segment bid en la prox lienea"<<endl;
   tscf_exploration::SegmentBid segment_bid;
+  std::cout<<"getGVDPOS en la prox lienea"<<endl;
+  offset = p2d_to_pos(msg.offset);
   my_pos = getGVDPos();
-  
+  std::cout<<"Consegui my pos: ";
   pos r_pos = my_pos;
 
   pos r_segment, c_pos;
   
   int seg;
-  gvd = VecGVD(); //TODO care
+  //gvd = VecGVD(); //TODO care
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
-  //std::cout<<"este es el seg: "<<seg<<endl;
+  std::cout<<"este es el seg: "<<seg<<endl;
   r_segment = p2d_to_pos(msg.vertex_segment[seg]);
   my_segment = r_segment;
   //std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
@@ -459,7 +465,7 @@ std::map<int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano,
 tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino,
                                               nav_msgs::OccupancyGrid& p) {
   ROS_INFO("way otro");
-  geometry_msgs::Point p3d = getPosition().pose.position;
+  geometry_msgs::Point p3d = getPosition();
   ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
   tscf_exploration::goalList list;
   list.listaGoals.clear();
@@ -513,8 +519,8 @@ tscf_exploration::goalList Robot::getPathToObjetive(int centro,
 
   int posicionActual =
       Robot::indice_origen +
-      (((int)Robot::position.pose.position.x + signo((int)Robot::position.pose.position.x) * 1) +
-       ((int)Robot::position.pose.position.y) * Robot::width);
+      (((int)Robot::position.x + signo((int)Robot::position.x) * 1) +
+       ((int)Robot::position.y) * Robot::width);
 
   std::list<int> list;
   list.push_back(centro);
@@ -535,6 +541,13 @@ tscf_exploration::goalList Robot::getPathToObjetive(int centro,
   return pathlist;
 };
 
+
+geometry_msgs::Point pos_to_real_p3p(pos p){
+  geometry_msgs::Point p3d = pos_to_p3d(p+offset);
+  p3d.x+=0.5;
+  return p3d;
+}
+
 tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D frontier) {
   
   pos f_pos = p2d_to_pos(frontier);
@@ -546,19 +559,25 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
 
   tscf_exploration::goalList g_list;
   g_list.indice = 1;
+
   //If i am  not on the segment
   std::cout<<"Camino: ";
   ROS_INFO("way nuestro");
-  geometry_msgs::Point p3d = getPosition().pose.position;
+  geometry_msgs::Point p3d = getPosition();
   ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
-  if((my_segment != assigned_segment) || (f_r_dist > f_c_dist) ){
-    list<VecGVD::Vertex> v_list = paths[assigned_segment];
+  if( (my_segment != assigned_segment) || (f_r_dist > f_c_dist) ){
+    
     //pos p = getGVDPos();
     //ROS_INFO("way from pos %d,%d",p.first,p.second);
 
-    v_list.pop_front();
+
+
+
+
+    list<VecGVD::Vertex> v_list = paths[assigned_segment];    
+    //v_list.pop_front();
     for(auto it = v_list.begin(); it != v_list.end(); it++){
-      pos p = gvd.g[*it].p;
+
       /*geometry_msgs::Point p3d;
       p3d.y = -p.second - y_origin - 0.5;
       p3d.x = -p.first - x_origin - 0.5;
@@ -567,36 +586,76 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
       p3d.x = -p.second - y_origin - 0.5;
       p3d.y = -p.first - x_origin - 0.5;
       p3d.z = 0.0; */
-      // = -(position.pose.position.y + y_origin), -(position.pose.position.x + x_origin) );
-      cv::Point2f ps = map_points[pos_to_p1d(p,width)];
+      // = -(position.y + y_origin), -(position.x + x_origin) );
+
       //geometry_msgs::Point p3d;
       //p3d.y = ps.y;
       //p3d.x = ps.x;
       //p3d.z = 0.0;
-      std::cout<<p.first<<","<< p.second<<" ";
-      p3d = p2f_to_p3d(ps);
-      g_list.listaGoals.push_back(p3d);
-      ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+
+      //cv::Point2f ps = map_points[pos_to_p1d(p,width)];
+      //std::cout<<p.first<<","<< p.second<<" ";
+      //p3d = p2f_to_p3d(ps);
+
+      //pos p = gvd.g[*it].p  + offset;
+
+      //geometry_msgs::Point p3d;
+      //p3d.x = p.first + 0.5;
+      //p3d.y = p.second + 0.5;
       
+      p3d = pos_to_real_p3p(gvd.g[*it].p);
+
+      g_list.listaGoals.push_back(p3d);
+
+      ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
     }
   }else{
-    list<VecGVD::Vertex> v_list = paths[assigned_segment];
-    v_list.pop_front();
-    auto it = v_list.begin();
-    pos p = gvd.g[*it].p;
+    //pos p = gvd.g[*it].p + offset;
+    //ROS_INFO("way %d,%d",p.first,p.second);
+    /*
     cv::Point2f ps = map_points[pos_to_p1d(p,width)];
     std::cout<<p.first<<","<< p.second<<" ";
     p3d = p2f_to_p3d(ps);
-    g_list.listaGoals.push_back(p3d);
-    ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
-  }
-  std::cout<<f_pos.first<<","<< f_pos.second<<endl;
+    */
 
-  cv::Point2f pf = map_points[pos_to_p1d(f_pos,width)];
-  p3d = p2f_to_p3d(pf);
+    /*for (int i = 0; i < Robot::width * Robot::height; i++) {
+      int x = i % Robot::width;
+      int y = i / Robot::width;
+      float a = ((Robot::x_origin + x) + 0.5);
+      float b = ((Robot::y_origin + y) + 0.5);
+      Robot::map_points[i] = cv::Point2f(a, b);
+    }*/
+
+    //geometry_msgs::Point p3d;
+    //p3d.x = p.first + 0.5;
+    //p3d.y = p.second + 0.5;
+
+    /*
+    list<VecGVD::Vertex> v_list = paths[assigned_segment];
+    v_list.pop_front();
+
+    auto it = v_list.begin();
+
+    p3d = pos_to_real_p3p(gvd.g[*it].p);
+
+    g_list.listaGoals.push_back(p3d);
+
+    ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+    */
+  }
+  //std::cout<<f_pos.first<<","<< f_pos.second<<endl;
+
+  //cv::Point2f pf = map_points[pos_to_p1d(f_pos,width)];
+  //p3d = p2f_to_p3d(pf);
+  
   ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+
+  p3d = pos_to_real_p3p(f_pos);
+
   g_list.listaGoals.push_back(p3d);
+
   std::cout<<"TERMINEEEEEEEEEEEEE"<<endl;
+
   //is it necessary to clean_robot_cache?
   return g_list;
 }
