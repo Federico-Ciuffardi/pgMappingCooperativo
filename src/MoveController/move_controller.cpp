@@ -15,9 +15,9 @@
 
 // Constantes
 
-const double TOLERANCE_GOAL = 1.5;//0.30;
-const double TOLERANCE_WAYPOINTS = 1.5;// 0.50;
-const double SPEED = 0.8; //0.5
+const double TOLERANCE_GOAL = 1.5;       // 0.30;
+const double TOLERANCE_WAYPOINTS = 1.5;  // 0.50;
+const double SPEED = 0.8;                // 0.5
 
 // const std::string ODOM_FRAME = "p3dx0_tf/odom";
 
@@ -190,24 +190,24 @@ int main(int argc, char** argv) {
       case 4: {  // AVANZANDO AL ULTIMO PUNTO
         float dist_to_target = getDistance(path_step - 1);
         ROS_INFO("Waiting for last point");
-        //string recv = "";
-        //stringstream ss;
-        //ss << (msg_id - 1) << " SUCCES";
-        //string msg = ss.str();
-        //recv = client.receive_msg();
-        //if (recv.find(msg)) {
+        // string recv = "";
+        // stringstream ss;
+        // ss << (msg_id - 1) << " SUCCES";
+        // string msg = ss.str();
+        // recv = client.receive_msg();
+        // if (recv.find(msg)) {
         if (dist_to_target <= TOLERANCE_WAYPOINTS) {
           ROS_INFO("Path end %s", name_space.c_str());
           estado = 0;
-          //std_msgs::String msg_succes;
-          //std::stringstream ss2;
-          //secondsPassed = (clock() - startTime);
-          //ss2 << " " << metros << " " << secondsPassed << " " << path.indice;
-          //msg_succes.data = ss2.str();
+          // std_msgs::String msg_succes;
+          // std::stringstream ss2;
+          // secondsPassed = (clock() - startTime);
+          // ss2 << " " << metros << " " << secondsPassed << " " << path.indice;
+          // msg_succes.data = ss2.str();
           std_msgs::String str;
           str.data = "signal";
-          path_result_pub.publish(str);//msg_succes);
-          path_info_pub.publish(str);//msg_succes);
+          path_result_pub.publish(str);  // msg_succes);
+          path_info_pub.publish(str);    // msg_succes);
         }
         break;
       }

@@ -22,8 +22,8 @@
 #include <ctime>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-#include "std_msgs/String.h"
 #include "lib/utils.h"
+#include "std_msgs/String.h"
 
 using namespace std;
 

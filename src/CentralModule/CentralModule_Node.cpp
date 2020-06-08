@@ -22,7 +22,7 @@ ros::Publisher objetive_pub;
 ros::Publisher obj_pub2;
 ros::Publisher marker_pub;
 ros::Publisher segment_auction_pub;
-map<string,ros::Publisher> segment_assignment_pubs;
+map<string, ros::Publisher> segment_assignment_pubs;
 // others
 ros::Timer segmentAuctionTimer;
 ros::Timer auctionTimer;
@@ -57,12 +57,12 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
   // set up vertices points
   visualization_msgs::Marker::_points_type points;
   for (int i = 0; i < sac.gvd.vertices.size(); i++) {
-    points.push_back(p2d_to_p3d(sac.gvd.vertices[i],-0.1, map_info));
+    points.push_back(p2d_to_p3d(sac.gvd.vertices[i], -0.1, map_info));
   }
 
   // edges
   visualization_msgs::Marker::_points_type edges;
-   for (int i = 0; i < sac.gvd.edges.size(); i++) {
+  for (int i = 0; i < sac.gvd.edges.size(); i++) {
     edges.push_back(p2d_to_p3d(sac.gvd.edges[i].from, map_info));
     edges.push_back(p2d_to_p3d(sac.gvd.edges[i].to, map_info));
   }
@@ -79,7 +79,7 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
 
 // Aux functions
 void startAuction() {
-  //initialization
+  // initialization
   auctionTimer.stop();
   auctionTimer.setPeriod(ros::Duration(3.0));
   centralModule.setEstado(WaitingBids);
@@ -100,7 +100,7 @@ void startAuction() {
   /*OLD
   centralModule.resetArrivals();
   tscf_exploration::takeobjetive ret;
-  boost::tie(ret, gvd) = centralModule.getObjetiveMap(); 
+  boost::tie(ret, gvd) = centralModule.getObjetiveMap();
   take_obj_pub.publish(ret);  // publica puntos a subastar
 
   //visualizar los puntos de interes
@@ -132,8 +132,8 @@ void timerRoutine(const ros::TimerEvent&) {
     */
     centralModule.setEstado(WaitingAuction);
 
-    map<string,tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
-    for(auto it = assignment.begin(); it != assignment.end(); it++){
+    map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
+    for (auto it = assignment.begin(); it != assignment.end(); it++) {
       segment_assignment_pubs[it->first].publish(it->second);
     }
     ROS_INFO("CENTRAL MODULE :: auction end");
@@ -178,7 +178,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
 
 void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string name) {
   if (!FIN) {
-    //centralModule.saveSegmentBid(*msg, name);
+    // centralModule.saveSegmentBid(*msg, name);
     centralModule.saveSegmentBid(*msg, name);
     ROS_INFO("CENTRAL MODULE :: got segment_bid from %s", name.c_str());
   }
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
 
   auctionTimer = n.createTimer(ros::Duration(3.0), timerRoutine, true);
 
-  //segmentAuctionTimer = n.createTimer(ros::Duration(3.0), timerRoutine, true);
+  // segmentAuctionTimer = n.createTimer(ros::Duration(3.0), timerRoutine, true);
 
   // Publishers
   take_obj_pub = n.advertise<tscf_exploration::takeobjetive>("/take_obj", 1);
@@ -198,7 +198,6 @@ int main(int argc, char* argv[]) {
   obj_pub2 = n.advertise<nav_msgs::OccupancyGrid>("/debbi", 1);
   marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
   segment_auction_pub = n.advertise<tscf_exploration::SegmentAuction>("/segment_auction", 1);
-  
 
   // Subscribed to
   map_merged_sub = n.subscribe<tscf_exploration::mapMergedInfo>("/map_merged", 1, handleNewMap);
@@ -240,15 +239,16 @@ int main(int argc, char* argv[]) {
       nombre.erase(0, 1);
       int pos = nombre.find('/');
       nombre = nombre.substr(0, pos);
-      //string rep_topic = "/" + nombre + "/bid";
-      //bids[nombre] = n.subscribe<tscf_exploration::frontierReport>(
-          //rep_topic, 1, boost::bind(&handleReport, _1, nombre));
-      
+      // string rep_topic = "/" + nombre + "/bid";
+      // bids[nombre] = n.subscribe<tscf_exploration::frontierReport>(
+      // rep_topic, 1, boost::bind(&handleReport, _1, nombre));
+
       string topic = "/" + nombre + "/segment_bid";
       segment_bids[nombre] = n.subscribe<tscf_exploration::SegmentBid>(
           topic, 1, boost::bind(&handleSegmentBid, _1, nombre));
 
-      segment_assignment_pubs[nombre] = n.advertise<tscf_exploration::SegmentAssignment>("/" + nombre + "/segment_assigment", 1);
+      segment_assignment_pubs[nombre] =
+          n.advertise<tscf_exploration::SegmentAssignment>("/" + nombre + "/segment_assigment", 1);
     }
   }
 

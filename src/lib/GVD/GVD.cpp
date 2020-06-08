@@ -59,7 +59,7 @@ pos operator/(const pos& p1, const float c) {
 
 ostream& operator<<(ostream& out, const pos& p) {
   // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
-  out<<"( "<< p.first <<" , " <<p.second<< " )";
+  out << "( " << p.first << " , " << p.second << " )";
   return out;
 }
 
@@ -114,19 +114,19 @@ T& cell(vector<vector<T>>& grid, pos p) {
   return grid[p.first][p.second];
 }
 
-void print(pos p){
+void print(pos p) {
   ofstream outfile;
   outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
                ios::out | std::ofstream::app);
-  outfile << p <<endl;
+  outfile << p << endl;
   outfile.close();
 }
 
-void print(string s){
+void print(string s) {
   ofstream outfile;
   outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
                ios::out | std::ofstream::app);
-  outfile << s <<endl;
+  outfile << s << endl;
   outfile.close();
 }
 
@@ -140,7 +140,7 @@ boost::tuple<GVD::Vertex, bool> GVD::add_v(pos p) {
   boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
   if (inserted) {
     u = add_vertex(g);
-    g[u] = gvd_vertex(p, false, pos(-1,-1));
+    g[u] = gvd_vertex(p, false, pos(-1, -1));
     pos_it->second = u;
   } else {
     u = pos_it->second;
@@ -149,11 +149,11 @@ boost::tuple<GVD::Vertex, bool> GVD::add_v(pos p) {
 }
 
 pair<GVD::Edge, bool> GVD::add_e(Vertex u, Vertex v, float w = -1) {
-  if(w == -1){
+  if (w == -1) {
     return add_edge(u, v, g);
   }
-  return add_edge(u,v,w,g);
-}  
+  return add_edge(u, v, w, g);
+}
 
 GVD::GVD(grid_gvd ggvd) {
   pair<int, int> size = get_grid_size(ggvd);
@@ -199,7 +199,7 @@ boost::tuple<VecGVD::Vertex, bool> VecGVD::add_v(pos p) {
   boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
   if (inserted) {
     u = add_vertex(g);
-    g[u] = gvd_vertex(p, false, pos(-1,-1));
+    g[u] = gvd_vertex(p, false, pos(-1, -1));
     pos_it->second = u;
   } else {
     u = pos_it->second;
@@ -212,14 +212,13 @@ pair<VecGVD::Edge, bool> VecGVD::add_e(Vertex u, Vertex v, float w = -1) {
     cout<<"warning edge is already on graph"<<endl;
     return edge(u,v,g);
   }else{*/
-    //cout<<g[u].p<<","<<g[v].p<<endl;
-    if(w == -1){
-      return add_edge(u, v, g);
-    }
-    return add_edge(u,v,w,g);
+  // cout<<g[u].p<<","<<g[v].p<<endl;
+  if (w == -1) {
+    return add_edge(u, v, g);
+  }
+  return add_edge(u, v, w, g);
   //}
-}  
-
+}
 
 /*
  *  main funcs
@@ -244,7 +243,8 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
       cell_type ctype = cell(ogrid, p);
 
       dist_cell dcell;
-      if (ctype == from_type || ctype == Unknown) { //TODO es asi porque sirve para una funcion posterior pero esta semanticamente mal
+      if (ctype == from_type || ctype == Unknown) {  // TODO es asi porque sirve para una funcion
+                                                     // posterior pero esta semanticamente mal
         dcell.distance = 0;
         if (ctype == from_type) {
           dcell.add_obs(pos(x, y));
@@ -273,7 +273,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
           bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
           if (is_traversable && n_dcell.distance == FLT_MAX) {
             float min_distance = FLT_MAX;
-            
+
             // look at neighbors of freecell to find cells whose distance has already been found
             for (int i = 0; i <= neighbor.size(); i++) {
               pos nnp = np + neighbor[i];
@@ -281,7 +281,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
                 cell_type nn_ctype = cell(ogrid, nnp);
                 dist_cell& nn_dcell = cell(dgrid, nnp);
                 if (nn_dcell.obs.size() > 0) {
-                  // find distance to neighbor's closest cell and update the number of obstacles at 
+                  // find distance to neighbor's closest cell and update the number of obstacles at
                   // that distance
                   float d = dist(np, nn_dcell.obs[0]);
                   if (d < min_distance) {
@@ -298,7 +298,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
             next_dqueue.push(dist_pos(min_distance, np));
 
             if (from_type == Critical && n_ctype != Frontier) {
-              continue;  
+              continue;
             }
             full_dqueue.push(dist_pos(min_distance, np));
           }
@@ -311,7 +311,8 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
   return boost::make_tuple(dgrid, full_dqueue);
 }
 
-/* given a graph for the neighbors of a pos return the number of conex components if pos would be removed */
+/* given a graph for the neighbors of a pos return the number of conex components if pos would be
+ * removed */
 int A(pos p, grid_gvd ggvd) {
   int res = 0;
   bool prev_np = 0;
@@ -339,7 +340,7 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
   for (int i = 0; i < size.first; i++) {
     grid_gvd.push_back(vector<bool>());
     for (int j = 0; j < size.second; j++) {
-      grid_gvd[i].push_back(dg[i][j].distance != 0);// is not a wall or unknown
+      grid_gvd[i].push_back(dg[i][j].distance != 0);  // is not a wall or unknown
     }
   }
 
@@ -411,49 +412,54 @@ void collapse_vertices(GVD& gvd, map<pos, bool> lmins) {
   }
 }
 
-void clean_up(GVD& gvd,dist_grid dgrid) {
+void clean_up(GVD& gvd, dist_grid dgrid) {
   GVD::VertexIterator v_it, v_it_end;
-  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; ) {
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
     GVD::VertexIterator v_it_aux = v_it;
     v_it++;
 
-    GVD::Vertex max_deg_v = *v_it_aux; 
+    GVD::Vertex max_deg_v = *v_it_aux;
     int max_deg = out_degree(*v_it_aux, gvd.g);
 
-    if(max_deg > 2){ // just for not recalculating out_degree(*v_it_aux, gvd.g) it does not have anything to do with the max deg itself
+    if (max_deg > 2) {  // just for not recalculating out_degree(*v_it_aux, gvd.g) it does not have
+                        // anything to do with the max deg itself
       GVD::AdjacencyIterator av_it, av_it_end;
-      for (boost::tie(av_it, av_it_end) = boost::adjacent_vertices(*v_it_aux, gvd.g); av_it != av_it_end; ++av_it) {
-        int current_degree = out_degree(*av_it,gvd.g);
-        if(current_degree>=max_deg){ // >= max clean up, > just when there is just one max_degree
+      for (boost::tie(av_it, av_it_end) = boost::adjacent_vertices(*v_it_aux, gvd.g);
+           av_it != av_it_end; ++av_it) {
+        int current_degree = out_degree(*av_it, gvd.g);
+        if (current_degree >=
+            max_deg) {  // >= max clean up, > just when there is just one max_degree
           max_deg_v = *av_it;
           max_deg = current_degree;
         }
       }
 
-      if(max_deg_v == *v_it_aux) continue;
+      if (max_deg_v == *v_it_aux)
+        continue;
 
-      for (tie(av_it, av_it_end) = adjacent_vertices(*v_it_aux, gvd.g); av_it != av_it_end; ) {
+      for (tie(av_it, av_it_end) = adjacent_vertices(*v_it_aux, gvd.g); av_it != av_it_end;) {
         GVD::AdjacencyIterator av_it_aux = av_it;
         ++av_it;
-        if(max_deg_v == *av_it_aux) continue;
-        if(edge(*av_it_aux, max_deg_v, gvd.g).second){
-          remove_edge(*av_it_aux,*v_it_aux,gvd.g);
+        if (max_deg_v == *av_it_aux)
+          continue;
+        if (edge(*av_it_aux, max_deg_v, gvd.g).second) {
+          remove_edge(*av_it_aux, *v_it_aux, gvd.g);
 
-          if( out_degree(*av_it_aux, gvd.g) == 1){
+          if (out_degree(*av_it_aux, gvd.g) == 1) {
             clear_vertex(*av_it_aux, gvd.g);
             break;
-          }else{
-            remove_edge(*v_it_aux,*av_it_aux,gvd.g);
+          } else {
+            remove_edge(*v_it_aux, *av_it_aux, gvd.g);
             tie(av_it, av_it_end) = adjacent_vertices(*v_it_aux, gvd.g);
           }
         }
       }
     }
   }
-  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; ) {
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
     GVD::VertexIterator v_it_aux = v_it;
     v_it++;
-    if( out_degree(*v_it_aux, gvd.g) == 0){
+    if (out_degree(*v_it_aux, gvd.g) == 0) {
       remove_vertex(*v_it_aux, gvd.g);
     }
   }
@@ -488,10 +494,10 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int critic
     pos critical_pos = cell(dgrid, frontier_dp.second).obs[0];
     GVD::Vertex cv = gvd.positions[critical_pos];
     if (!gvd.g[cv].is_critical) {
-      //print("Encontre un critico:");
-      //print(critical_pos);
-      //print("Y la frontera es:");
-      //print(frontier_dp.second);
+      // print("Encontre un critico:");
+      // print(critical_pos);
+      // print("Y la frontera es:");
+      // print(frontier_dp.second);
       gvd.g[cv].is_critical = true;
       critical_with_frontier[critical_pos] = frontier_dp;
       criticals_count--;
@@ -500,39 +506,39 @@ map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int critic
   return critical_with_frontier;
 }
 
-//Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
+// Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
 criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
   dist_grid dgrid;
   dist_pos_queue dqueue;
   criticals_info res;
-  boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical); //dqueue = frontier queue
+  boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);  // dqueue = frontier queue
   while (!dqueue.empty()) {
     dist_pos frontier_dp = dqueue.top();
     dqueue.pop();
-    vector<pos> &frontier_crits = cell(dgrid, frontier_dp.second).obs;
+    vector<pos>& frontier_crits = cell(dgrid, frontier_dp.second).obs;
     int c_size = frontier_crits.size();
-    for(int i = 0; i < c_size; i++){
+    for (int i = 0; i < c_size; i++) {
       pos critical_pos = frontier_crits[i];
       GVD::Vertex cv = gvd.positions[critical_pos];
       if (!gvd.g[cv].is_critical) {
         gvd.g[cv].is_critical = true;
-        //gvd.g[cv].segment = critical_pos;
+        // gvd.g[cv].segment = critical_pos;
         res[critical_pos].mind_f = frontier_dp.first;
         res[critical_pos].frontiers.push_back(frontier_dp.second);
-        //frontier_crits.clear();
+        // frontier_crits.clear();
         frontier_crits[0] = critical_pos;
         break;
       }
-      if(i == (c_size - 1)){
+      if (i == (c_size - 1)) {
         res[critical_pos].frontiers.push_back(frontier_dp.second);
-        //frontier_crits.clear();
+        // frontier_crits.clear();
         frontier_crits[0] = critical_pos;
       }
-    }    
+    }
   }
   GVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
-    gvd_vertex &v = gvd.g[*v_it];
+    gvd_vertex& v = gvd.g[*v_it];
     v.segment = cell(dgrid, v.p).obs[0];
   }
   return res;
@@ -542,18 +548,22 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   map<pos, bool> local_mins = get_local_mins(dg, gvd);
 
   // TODO clean_up and collapse_vertices can be merged into one function
-  clean_up(gvd,dg);
-  //collapse_vertices(gvd, local_mins);
-  //TODO borrar el criticals count no se usa
+  clean_up(gvd, dg);
+  // collapse_vertices(gvd, local_mins);
+  // TODO borrar el criticals count no se usa
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;
-  // map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd, criticals_count);
+  // map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd,
+  // criticals_count);
   criticals_info cis = unknown_dist_constraint2(ogrid, gvd);
-  //return critical_with_frontier;
+  // return critical_with_frontier;
   return cis;
 }
 
-void print_grid(grid_gvd ggvd, grid_type grid, map<pos, dist_pos> cf = map<pos, dist_pos>(), map<pos,bool> frontier_aux = map<pos,bool>()) {
+void print_grid(grid_gvd ggvd,
+                grid_type grid,
+                map<pos, dist_pos> cf = map<pos, dist_pos>(),
+                map<pos, bool> frontier_aux = map<pos, bool>()) {
   ofstream outfile;
   outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
                ios::out | std::ofstream::app);
@@ -562,7 +572,7 @@ void print_grid(grid_gvd ggvd, grid_type grid, map<pos, dist_pos> cf = map<pos, 
   outfile << "GVD grid :" << endl;
   for (int x = 0; x < grid_size_x; x++) {
     for (int y = 0; y < grid_size_y; y++) {
-      if(frontier_aux[pos(x,y)]){
+      if (frontier_aux[pos(x, y)]) {
         outfile << "x|";
         continue;
       }
@@ -577,7 +587,7 @@ void print_grid(grid_gvd ggvd, grid_type grid, map<pos, dist_pos> cf = map<pos, 
       } else if (grid[x][y] == Unknown) {
         outfile << "?|";
       } else {
-        if(grid[x][y] == Frontier){
+        if (grid[x][y] == Frontier) {
           outfile << "+|";
           continue;
         }
@@ -597,59 +607,54 @@ boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type ogrid) {
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied);
   grid_gvd ggvd = get_grid_gvd(dgrid, dqueue);
   GVD gvd(ggvd);
-  //map<pos,bool> frontier_aux;
+  // map<pos,bool> frontier_aux;
   criticals_info cis = get_critical_points(ogrid, dgrid, gvd);
-  //cis = get_critical_points(ogrid, dgrid, gvd);
-  //return boost::make_tuple(res, gvd)
-  //for (auto it = cf.begin(); it != cf.end(); ++it) {
-    //res.insert(it->second.second);
-    //frontier_aux[it->second.second] = true;
+  // cis = get_critical_points(ogrid, dgrid, gvd);
+  // return boost::make_tuple(res, gvd)
+  // for (auto it = cf.begin(); it != cf.end(); ++it) {
+  // res.insert(it->second.second);
+  // frontier_aux[it->second.second] = true;
   //}
-  //print(to_string(res.size()));
-  //print_grid(ggvd, ogrid, cf, frontier_aux);
-  //return boost::make_tuple(res, gvd);
+  // print(to_string(res.size()));
+  // print_grid(ggvd, ogrid, cf, frontier_aux);
+  // return boost::make_tuple(res, gvd);
   return boost::make_tuple(cis, gvd);
 }
 
-//A*
+// A*
 
 /// euclidean distance heuristic
 template <class Graph, class CostType, class LocMap>
-class distance_heuristic : public astar_heuristic<Graph, CostType>
-{
-public:
+class distance_heuristic : public astar_heuristic<Graph, CostType> {
+ public:
   typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
-  distance_heuristic(LocMap l, Vertex goal)
-    : m_location(l), m_goal(goal) {}
-  CostType operator()(Vertex u)
-  {
-    return dist(m_location[u].p,m_location[m_goal].p);
-  }
-private:
+  distance_heuristic(LocMap l, Vertex goal) : m_location(l), m_goal(goal) {}
+  CostType operator()(Vertex u) { return dist(m_location[u].p, m_location[m_goal].p); }
+
+ private:
   LocMap m_location;
   Vertex m_goal;
 };
 
-
-struct found_goal {}; // exception for termination
+struct found_goal {};  // exception for termination
 
 /// visitor that terminates when we find the goal
 template <class Vertex>
-class astar_goal_visitor : public boost::default_astar_visitor
-{
-public:
+class astar_goal_visitor : public boost::default_astar_visitor {
+ public:
   astar_goal_visitor(Vertex goal) : m_goal(goal) {}
   template <class Graph>
   void examine_vertex(Vertex u, Graph& g) {
-    if(u == m_goal)
+    if (u == m_goal)
       throw found_goal();
   }
-private:
+
+ private:
   Vertex m_goal;
 };
 
 /// get the shortestpath and the cost of reaching the goal
-boost::tuple<list<VecGVD::Vertex>,float> get_path(VecGVD gvd, pos from, pos to){
+boost::tuple<list<VecGVD::Vertex>, float> get_path(VecGVD gvd, pos from, pos to) {
   VecGVD::Graph g = gvd.g;
   VecGVD::Vertex start = gvd.positions[from];
   VecGVD::Vertex goal = gvd.positions[to];
@@ -661,30 +666,26 @@ boost::tuple<list<VecGVD::Vertex>,float> get_path(VecGVD gvd, pos from, pos to){
   vector<cost> d(num_vertices(g));
   list<vertex> shortest_path;
   try {
-    //call astar named parameter interface
-    astar_search_tree
-      (g, start,
-       distance_heuristic<mygraph_t, cost, VecGVD::Graph>
-        (gvd.g, goal),
-       predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g))).
-       distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g))).
-       visitor(astar_goal_visitor<vertex>(goal)));
-  } catch(found_goal fg) { // found a path to the goal
-    
-    for(vertex v = goal;; v = p[v]) {
+    // call astar named parameter interface
+    astar_search_tree(g, start, distance_heuristic<mygraph_t, cost, VecGVD::Graph>(gvd.g, goal),
+                      predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g)))
+                          .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g)))
+                          .visitor(astar_goal_visitor<vertex>(goal)));
+  } catch (found_goal fg) {  // found a path to the goal
+
+    for (vertex v = goal;; v = p[v]) {
       shortest_path.push_front(v);
-      if(p[v] == v)
+      if (p[v] == v)
         break;
     }
-    cout << "Shortest path from " << from << " to "
-         << to << ": ";
-         
+    cout << "Shortest path from " << from << " to " << to << ": ";
+
     list<vertex>::iterator spi = shortest_path.begin();
     cout << from;
-    for(++spi; spi != shortest_path.end(); ++spi)
+    for (++spi; spi != shortest_path.end(); ++spi)
       cout << " -> " << gvd.g[*spi].p;
-     
+
     cout << endl << "Total travel time: " << d[goal] << endl;
   }
-  return boost::make_tuple(shortest_path,d[goal]);
+  return boost::make_tuple(shortest_path, d[goal]);
 }

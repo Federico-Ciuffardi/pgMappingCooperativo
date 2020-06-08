@@ -49,8 +49,9 @@ std::string end_msg("END");
  *  Aux Functions
  */
 
-string get_frontier_auction_topic(tscf_exploration::Point2D segment,int auction_id){
-  return "frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "|" + to_string(segment.y);
+string get_frontier_auction_topic(tscf_exploration::Point2D segment, int auction_id) {
+  return "frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "|" +
+         to_string(segment.y);
 }
 
 /*
@@ -63,13 +64,12 @@ void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
 }
 
 void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
-   
-  ROS_INFO("%s :: Entro handlePathSucced",robot.getNombre().c_str());
+  ROS_INFO("%s :: Entro handlePathSucced", robot.getNombre().c_str());
   std_msgs::String msg_request;
   msg_request.data = "signal";
   request_objetive_pub.publish(msg_request);
   /*if (!FIN) {
-    
+
     std::stringstream ss;
     //std::string ret = robot.getRealInfoGain();
     //ss << robot.getNombre() << msg->data.c_str() << " " << ret;
@@ -88,48 +88,48 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
   }*/
 }
 
-//The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
+// The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   if (!FIN) {
     ROS_INFO("%s :: Me llego el mensaje con los segmentos", robot.getNombre().c_str());
     tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
     ROS_INFO("%s :: Voy a enviar los segment_bid", robot.getNombre().c_str());
-    
+
     segment_bid_pub.publish(segment_bid);
   }
 }
 
-map<int,tscf_exploration::FrontierBid> frontierBids; 
+map<int, tscf_exploration::FrontierBid> frontierBids;
 int robot_num = -1;
 
 void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
-  //frontierBids[msg->robotId];
+  // frontierBids[msg->robotId];
 }
 
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
-    
   robot.assigned_segment = p2d_to_pos(msg->segment);
 
   robot_num = msg->robots_num;
-  
-  if(true/*robot_num == 1*/){
-    tscf_exploration::goalList path = robot.getPathToSegment(msg->frontiers[0]);  
-    if (path.listaGoals.size() >0) goalPath_pub.publish(path); 
-  }else{
+
+  if (true /*robot_num == 1*/) {
+    tscf_exploration::goalList path = robot.getPathToSegment(msg->frontiers[0]);
+    if (path.listaGoals.size() > 0)
+      goalPath_pub.publish(path);
+  } else {
     frontierBids.clear();
 
-    //start the frontier auction 
-    string topic = get_frontier_auction_topic(msg->segment,msg->id);
-    //frontier_bid_sub = nh->subscribe(topic,robot_num , handleCoverage); TODO
+    // start the frontier auction
+    string topic = get_frontier_auction_topic(msg->segment, msg->id);
+    // frontier_bid_sub = nh->subscribe(topic,robot_num , handleCoverage); TODO
     frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, 1);
-    //value the segments
-    //frontier_bid_pub.publish(my_bids);
+    // value the segments
+    // frontier_bid_pub.publish(my_bids);
   }
-} 
+}
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
-  
+
   ros::NodeHandle n;
 
   nh = &n;
@@ -145,24 +145,25 @@ int main(int argc, char* argv[]) {
   private_node_handle.getParam("init_pose_y", y_ahora);
 
   robot.setPosition(x_ahora, y_ahora);
-  //robot.setErrorAverage(0.0);
-  //robot.resetCountError();
+  // robot.setErrorAverage(0.0);
+  // robot.resetCountError();
 
   // Subscribed to
   pose_sub = n.subscribe("pose", 1, handlePose);
-  //take_obj_sub = n.subscribe("/take_obj", 1, handleObjetiveSolicitation);
-  //Segment Auction sub
+  // take_obj_sub = n.subscribe("/take_obj", 1, handleObjetiveSolicitation);
+  // Segment Auction sub
   segment_auction_sub = n.subscribe("/segment_auction", 1, handleSegmentAuction);
-  segment_assignment_sub = n.subscribe("/" + nom + "/segment_assigment", 1, handleSegmentAssignment);
+  segment_assignment_sub =
+      n.subscribe("/" + nom + "/segment_assigment", 1, handleSegmentAssignment);
 
   path_result_sub = n.subscribe("path_result", 1, handlePathSucced);
-  //objetive_sub = n.subscribe("/objetive", 1, handleObjetive);
+  // objetive_sub = n.subscribe("/objetive", 1, handleObjetive);
   //_map_sub = n.subscribe("/" + nom + "/map", 1, handleControlMap);
-  //coverage_sub = n.subscribe("/coverage", 1, handleCoverage);
-  //end_sub = n.subscribe("/end", 1, handleEnd);
+  // coverage_sub = n.subscribe("/coverage", 1, handleCoverage);
+  // end_sub = n.subscribe("/end", 1, handleEnd);
 
   // Publishers
-  //debug_pub = n.advertise<nav_msgs::OccupancyGrid>("/debug", 1);
+  // debug_pub = n.advertise<nav_msgs::OccupancyGrid>("/debug", 1);
   bid_pub = n.advertise<tscf_exploration::frontierReport>("bid", 1);
 
   segment_bid_pub = n.advertise<tscf_exploration::SegmentBid>("segment_bid", 1);
