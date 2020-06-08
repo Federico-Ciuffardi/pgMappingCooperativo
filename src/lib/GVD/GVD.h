@@ -9,6 +9,15 @@
 using namespace std;
 
 /*
+ *  Misc
+ */
+
+template <typename T>
+pair<int, int> get_grid_size(vector<vector<T>> grid);
+
+template <typename T>
+bool on_grid(int x, int y, vector<vector<T>> grid);
+/*
  *  ocupancy grid
  */
 enum cell_type { Occupied, Unknown, Free, Critical, Frontier };
@@ -88,63 +97,82 @@ struct gvd_vertex {
   }
 };
 
-struct GVD {
-  /*typedef adjacency_list_traits< listS, listS, bidirectionalS >::vertex_descriptor vertex_descriptor;
-  typedef adjacency_list<listS, listS, bidirectionalS, property< vertex_index_t, int,
-            property< vertex_name_t, char,
-                property< vertex_distance_t, int,
-                    property< vertex_predecessor_t, vertex_descriptor,gvd_vertex > > > > ,property<edge_weight_t, float>>*/
+template<typename graph>
+struct genericGVD {
+  typedef graph Graph;
+  typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
+  typedef typename graph_traits<Graph>::edge_descriptor Edge;
 
-  typedef adjacency_list<listS, listS, bidirectionalS, gvd_vertex,property<edge_weight_t, float>>
-      Graph;  // maybe using list is not the most eficient way
+  typedef typename boost::unordered_map<pos, Vertex> NameVertexMap;
+  typedef typename NameVertexMap::iterator NameVertexMapIterator;
+  typedef typename graph_traits<Graph>::vertex_iterator VertexIterator;
+  typedef typename graph_traits<Graph>::adjacency_iterator AdjacencyIterator;
 
-  typedef graph_traits<Graph>::vertex_descriptor Vertex;
-  typedef graph_traits<Graph>::edge_descriptor Edge;
-
-  typedef boost::unordered_map<pos, Vertex> NameVertexMap;
-
-  typedef graph_traits<Graph>::vertex_iterator VertexIterator;
-  typedef graph_traits<Graph>::adjacency_iterator AdjacencyIterator;
-
-  typedef graph_traits<Graph>::edge_iterator EdgeIterator;
+  typedef typename graph_traits<Graph>::edge_iterator EdgeIterator;
   // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 
   Graph g;
   NameVertexMap positions;
-  GVD(){};
-  GVD(grid_gvd);
+  genericGVD(){};
+  genericGVD(grid_gvd ggvd){
+    pair<int, int> size = get_grid_size(ggvd);
 
-  boost::tuple<GVD::Vertex, bool> add_v(pos p);
+    // initialize grid_gvd
+    for (int x = 0; x < size.first; x++) {
+      for (int y = 0; y < size.second; y++) {
+        if (!ggvd[x][y])
+          continue;
 
-  pair<GVD::Edge, bool> add_e(Vertex u, Vertex v, float w);
+        // insert (x,y) to the graph
+        Vertex u;
+        bool inserted;
+        boost::tie(u, inserted) = add_v(pos(x, y));
+
+        // for each neighbor (nx,ny) of (i,j)
+        for (int i = -1; i <= 1; i++) {
+          int nx = x + i;
+          for (int j = -1; j <= 1; j++) {
+            int ny = y + j;
+            if ((i != 0 || j != 0) && on_grid(nx, ny, ggvd) && ggvd[nx][ny]) {
+              // add it to the graph
+              Vertex v;
+              bool inserted;
+              boost::tie(v, inserted) = add_v(pos(nx, ny));
+              // and also add an edge connecting them
+              Edge e;
+              add_e(u, v);
+            }
+          }
+        }
+      }
+    }
+  };
+
+  boost::tuple<Vertex, bool> add_v(pos p) {
+    NameVertexMapIterator pos_it;
+    bool inserted;
+    Vertex u;
+    boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
+    if (inserted) {
+      u = add_vertex(g);
+      g[u] = gvd_vertex(p, false, pos(-1, -1));
+      pos_it->second = u;
+    } else {
+      u = pos_it->second;
+    }
+    return boost::make_tuple(u, inserted);
+  }
+
+  pair<Edge, bool> add_e(Vertex u, Vertex v, float w = -1) {
+    if (w == -1) {
+      return add_edge(u, v, g);
+    }
+    return add_edge(u, v, w, g);
+  }
 };
 
-struct VecGVD {
-
-  typedef adjacency_list<vecS, vecS, bidirectionalS, gvd_vertex,property<edge_weight_t, float>>
-      Graph;  // maybe using list is not the most eficient way
-
-  typedef graph_traits<Graph>::vertex_descriptor Vertex;
-  typedef graph_traits<Graph>::edge_descriptor Edge;
-
-  typedef boost::unordered_map<pos, Vertex> NameVertexMap;
-
-  typedef graph_traits<Graph>::vertex_iterator VertexIterator;
-  typedef graph_traits<Graph>::adjacency_iterator AdjacencyIterator;
-
-  typedef graph_traits<Graph>::edge_iterator EdgeIterator;
-  // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
-
-  Graph g;
-  NameVertexMap positions;
-  VecGVD(){};
-  VecGVD(grid_gvd);
-
-  boost::tuple<VecGVD::Vertex, bool> add_v(pos p);
-
-  pair<VecGVD::Edge, bool> add_e(Vertex u, Vertex v, float w);
-};
-
+typedef genericGVD<adjacency_list<listS, listS, bidirectionalS, gvd_vertex,property<edge_weight_t, float>>> GVD;
+typedef genericGVD<adjacency_list<vecS, vecS, bidirectionalS, gvd_vertex,property<edge_weight_t, float>>> VecGVD;
 
 using namespace std;
 
