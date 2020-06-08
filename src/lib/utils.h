@@ -1,5 +1,5 @@
-#ifndef UTILS_CPP
-#define UTILS_CPP
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <math.h>
 #include <ros/ros.h>

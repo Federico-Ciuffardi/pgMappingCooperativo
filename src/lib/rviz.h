@@ -1,5 +1,8 @@
-#include "GVD/GVD.h"
-#include "conversion.cpp"
+#ifndef RVIZ_H
+#define RVIZ_H
+
+#include "../lib/GVD/GVD.h"
+#include "conversion.h"
 
 #include <visualization_msgs/Marker.h>
 #include <tscf_exploration/Point2D.h>
@@ -58,3 +61,5 @@ static visualization_msgs::Marker mark_lines(string ns, visualization_msgs::Mark
   return lines;
 }
 
+
+#endif

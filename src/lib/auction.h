@@ -2,7 +2,7 @@
 #define AUCTION_H
 
 #include <bits/stdc++.h>
-#include "../GVD/GVD.h"
+#include "../lib/GVD/GVD.h"
 
 using namespace std;
 

@@ -18,10 +18,10 @@
 #include <string>
 #include <vector>
 
-#include "../GVD/GVD.h"
-#include "../utils.cpp"
-#include "../conversion.cpp"
-#include "../rviz.cpp"
+#include "../lib/GVD/GVD.h"
+#include "../lib/utils.h"
+#include "../lib/conversion.h"
+#include "../lib/rviz.h"
 #include "../lib/auction.h"
 
 

@@ -1,12 +1,12 @@
-#ifndef CONVERSION_CPP
-#define CONVERSION_CPP
+#ifndef CONVERSION_H
+#define CONVERSION_H
 
-#include "GVD/GVD.h"
+#include "../lib/GVD/GVD.h"
 #include <tscf_exploration/Point2D.h>
 #include <tscf_exploration/SegmentAuction.h>
 #include <tscf_exploration/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
-#include "utils.cpp"
+#include "utils.h"
 
 static tscf_exploration::Point2D pos_to_p2d(pos p){
   tscf_exploration::Point2D p2d;

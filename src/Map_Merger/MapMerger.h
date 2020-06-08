@@ -14,7 +14,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
-#include "../utils.cpp"
+#include "../lib/utils.h"
 
 class MapMerger {
  private:

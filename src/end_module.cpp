@@ -23,7 +23,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include "std_msgs/String.h"
-#include "utils.cpp"
+#include "lib/utils.h"
 
 using namespace std;
 

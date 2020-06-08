@@ -1,4 +1,4 @@
-#include "../GVD/GVD.h"
+#include "../lib/GVD/GVD.h"
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <math.h>
@@ -27,8 +27,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "../utils.cpp"
-#include "../conversion.cpp"
+#include "../lib/utils.h"
+#include "../lib/conversion.h"
 
 typedef std::map<int, std::list<int> > dict_clusters;
 
