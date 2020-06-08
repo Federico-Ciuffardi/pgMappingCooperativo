@@ -11,7 +11,7 @@
   <!-- <node type="rqt_console" name="rqt_console" pkg="rqt_console"  /> -->
   <!-- <node pkg="tscf_exploration" type="printer" name="printer" /> -->
 
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find tscf_exploration)/urdf/pioneer3dx.xacro'" />
+  <param name="robot_description" command="$(find xacro)/xacro '$(find tscf_exploration)/urdf/pioneer3dx.xacro'" />
 
   <include file="$(find tscf_exploration)/launch/one_robot.launch" >
     <arg name="init_pose_x" value="-36.5" />
