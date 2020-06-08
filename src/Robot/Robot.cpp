@@ -133,9 +133,10 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   return segment_bid;
 }
 
-geometry_msgs::Point Robot::pos_to_real_p3p(pos p) {
+geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
   geometry_msgs::Point p3d = pos_to_p3d(p + offset);
   p3d.x += 0.5;
+  p3d.y += 0.5;
   return p3d;
 }
 
@@ -165,7 +166,7 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
     list<VecGVD::Vertex> v_list = paths[assigned_segment];
     // v_list.pop_front();
     for (auto it = v_list.begin(); it != v_list.end(); it++) {
-      p3d = pos_to_real_p3p(gvd.g[*it].p);
+      p3d = pos_to_real_p3d(gvd.g[*it].p);
 
       g_list.listaGoals.push_back(p3d);
 
@@ -177,14 +178,14 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
 
     auto it = v_list.begin();
 
-    p3d = pos_to_real_p3p(gvd.g[*it].p);
+    p3d = pos_to_real_p3d(gvd.g[*it].p);
 
     g_list.listaGoals.push_back(p3d);
 
     ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);*/
   }
 
-  p3d = pos_to_real_p3p(f_pos);
+  p3d = pos_to_real_p3d(f_pos);
 
   g_list.listaGoals.push_back(p3d);
 

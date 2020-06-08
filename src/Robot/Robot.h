@@ -58,7 +58,7 @@ class Robot {
   void savePose(const geometry_msgs::PoseStamped::ConstPtr& msg);
 
   pos getGVDPos();
-  geometry_msgs::Point pos_to_real_p3p(pos p);
+  geometry_msgs::Point pos_to_real_p3d(pos p);
 
   void setNombre(std::string nom);
   std::string getNombre();

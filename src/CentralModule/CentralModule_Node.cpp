@@ -154,11 +154,12 @@ void handleRequest(const std_msgs::StringConstPtr& msg) {
 /* que: actualizar mapa si no se estan esperando ofertas ni se termino
                 y si es el decimo mapa recibido inicia una subasta*/
 void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
-  if ((!FIN) && (centralModule.getEstado() != WaitingBids)) {
+  //if ((!FIN) && (centralModule.getEstado() != WaitingBids)) {
     /* update map */
     // ROS_INFO("CENTRAL MODULE :: update map");
-    centralModule.updateMap(msg);
-  }
+    //centralModule.updateMap(msg);
+  //}
+  centralModule.updateMap(msg);
   mapsHandled++;  // maps handled
   if (mapsHandled == 10) {
     startAuction();
