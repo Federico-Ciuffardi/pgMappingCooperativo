@@ -46,7 +46,7 @@ struct critical_info{
   float mind_f; //min distance to frontier
   vector<pos> frontiers;
 };
-typedef map<pos, critical_info> criticals_info;
+typedef boost::unordered_map<pos, critical_info> criticals_info;
 
 
 /*
@@ -101,7 +101,7 @@ struct GVD {
   typedef graph_traits<Graph>::vertex_descriptor Vertex;
   typedef graph_traits<Graph>::edge_descriptor Edge;
 
-  typedef std::map<pos, Vertex> NameVertexMap;
+  typedef boost::unordered_map<pos, Vertex> NameVertexMap;
 
   typedef graph_traits<Graph>::vertex_iterator VertexIterator;
   typedef graph_traits<Graph>::adjacency_iterator AdjacencyIterator;
@@ -127,7 +127,7 @@ struct VecGVD {
   typedef graph_traits<Graph>::vertex_descriptor Vertex;
   typedef graph_traits<Graph>::edge_descriptor Edge;
 
-  typedef std::map<pos, Vertex> NameVertexMap;
+  typedef boost::unordered_map<pos, Vertex> NameVertexMap;
 
   typedef graph_traits<Graph>::vertex_iterator VertexIterator;
   typedef graph_traits<Graph>::adjacency_iterator AdjacencyIterator;
@@ -155,8 +155,8 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
 
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 
-//map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);
-// map<pos,bool> get_local_mins(dist_grid dg, GVD gvd);
+//boost::unordered_map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);
+// boost::unordered_map<pos,bool> get_local_mins(dist_grid dg, GVD gvd);
 
 boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type g);
 

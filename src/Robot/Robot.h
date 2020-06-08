@@ -30,7 +30,7 @@
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 
-typedef std::map<int, std::list<int> > dict_clusters;
+typedef boost::unordered_map<int, std::list<int> > dict_clusters;
 
 class Robot {
  private:
@@ -42,7 +42,7 @@ class Robot {
 
   // Segmentation relatied
   geometry_msgs::Point position;
-  std::map<pos,std::list<VecGVD::Vertex>> paths;
+  boost::unordered_map<pos,std::list<VecGVD::Vertex>> paths;
   VecGVD gvd;
   pos my_pos;
   pos my_segment;
@@ -70,7 +70,7 @@ class Robot {
 
   //nav_msgs::OccupancyGrid global_map;
   //nav_msgs::OccupancyGrid control_map;
-  //std::map<int, cv::Point2f> map_points;
+  //std::boost::unordered_map<int, cv::Point2f> map_points;
   //std::list<int> centros_de_frontera;
 
   //uint width;
@@ -85,11 +85,11 @@ class Robot {
   //float dist_info_gain_obst;
   //std::vector<int> last_info_gain;
   //bool first;
-  /*std::map<int, std::vector<int> > crearOleadas(nav_msgs::OccupancyGrid msg,
+  /*std::boost::unordered_map<int, std::vector<int> > crearOleadas(nav_msgs::OccupancyGrid msg,
                                               int fin,
                                               std::list<int> centros_def,
                                               nav_msgs::OccupancyGrid& p);
-tscf_exploration::frontierReport consultarCostosInfo(std::map<int, std::vector<int> > oleadas,
+tscf_exploration::frontierReport consultarCostosInfo(std::boost::unordered_map<int, std::vector<int> > oleadas,
                                                       int posicionActual,
                                                       nav_msgs::OccupancyGrid& p);*/
 
@@ -99,8 +99,8 @@ tscf_exploration::frontierReport consultarCostosInfo(std::map<int, std::vector<i
                                  int start,
                                  nav_msgs::OccupancyGrid& p);
   tscf_exploration::goalList getGoalPath(std::list<int> list_camino, nav_msgs::OccupancyGrid& p);
-  std::map<int, std::list<int> > obtenerCaminos(int& camino_mas_cercano,
-                                                std::map<int, std::vector<int> > oleadas,
+  std::boost::unordered_map<int, std::list<int> > obtenerCaminos(int& camino_mas_cercano,
+                                                std::boost::unordered_map<int, std::vector<int> > oleadas,
                                                 int posicionActual,
                                                 std::list<int> centros_def,
                                                 nav_msgs::OccupancyGrid& p);

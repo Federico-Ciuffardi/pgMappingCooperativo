@@ -6,8 +6,8 @@
 
 // Topics
 /// Subscribers
-std::map<std::string, ros::Subscriber> map_sub;
-std::map<std::string, ros::Subscriber> pose_sub;
+boost::unordered_map<std::string, ros::Subscriber> map_sub;
+boost::unordered_map<std::string, ros::Subscriber> pose_sub;
 ros::Subscriber end_sub;
 
 /// Publishers
@@ -19,8 +19,8 @@ int number_robots;
 
 MapMerger map_merger;
 
-std::map<std::string, bool> map_initialization;
-std::map<std::string, nav_msgs::OccupancyGrid> maps;
+boost::unordered_map<std::string, bool> map_initialization;
+boost::unordered_map<std::string, nav_msgs::OccupancyGrid> maps;
 
 std::string end_msg("END");
 

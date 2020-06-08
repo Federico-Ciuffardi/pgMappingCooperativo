@@ -320,14 +320,14 @@ void Robot::saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
 //Funcion que me devuelve para cada centro de frontera las distancias entre
 //   dicho centro y todas las celdas, si estas distancias son menores o iguales
 //       a la distancia entre dicho centro y robot
-std::map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg,
+std::boost::unordered_map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg,
                                                      int fin,
                                                      std::list<int> centros_def,
                                                      nav_msgs::OccupancyGrid& p) {
   // ROS_INFO("Creo nueva oleada");
-  std::map<int, std::vector<int> > retorno;
-  std::set<int> nivel_actual;
-  std::set<int> nivel_siguiente;
+  std::boost::unordered_map<int, std::vector<int> > retorno;
+  std::boost::unordered_set<int> nivel_actual;
+  std::boost::unordered_set<int> nivel_siguiente;
   // ros::Rate loop_rate(0.1);
   std::list<int>::iterator it;
   for (it = centros_def.begin(); it != centros_def.end(); it++) {
@@ -340,7 +340,7 @@ std::map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg
       nivel_actual = nivel_siguiente;
       nivel_siguiente.clear();
 
-      std::set<int>::iterator it_nivel_actual;
+      std::boost::unordered_set<int>::iterator it_nivel_actual;
       for (it_nivel_actual = nivel_actual.begin(); it_nivel_actual != nivel_actual.end();
            ++it_nivel_actual) {
         for (int i = 0; i < 9; i++) {
@@ -352,7 +352,7 @@ std::map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg
           }
         }
       }
-      std::set<int>::iterator buscador;
+      std::boost::unordered_set<int>::iterator buscador;
 
       buscador = nivel_actual.find(fin);
       if (buscador != nivel_actual.end()) {
@@ -368,7 +368,7 @@ std::map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::OccupancyGrid msg
 }
 
 tscf_exploration::frontierReport Robot::consultarCostosInfo(
-    std::map<int, std::vector<int> > oleadas,
+    std::boost::unordered_map<int, std::vector<int> > oleadas,
     int posicionActual,
     nav_msgs::OccupancyGrid& p) {
   tscf_exploration::frontierReport ret;
@@ -401,7 +401,7 @@ tscf_exploration::frontierReport Robot::processMap() {
       (((int)Robot::position.x + signo((int)Robot::position.x) * 1) +
        ((int)Robot::position.y) * Robot::width);
 
-  std::map<int, std::vector<int> > oleadas =
+  std::boost::unordered_map<int, std::vector<int> > oleadas =
       Robot::crearOleadas(global_map, posicionActual, centros_de_frontera, p);
 
   tscf_exploration::frontierReport frontRep =
@@ -488,13 +488,13 @@ std::list<int> Robot::caminoAfrontera(std::vector<int> oleada,
 }
 //Funcion que calcula los caminos y obtiene el indice de el punto de frontera
 // mas cercano
-std::map<int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano,
-                                                     std::map<int, std::vector<int> > oleadas,
+std::boost::unordered_map<int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano,
+                                                     std::boost::unordered_map<int, std::vector<int> > oleadas,
                                                      int posicionActual,
                                                      std::list<int> centros_def,
                                                      nav_msgs::OccupancyGrid& p) {
   // ros::Rate loop_rate(0.1);
-  std::map<int, std::list<int> > caminos;
+  std::boost::unordered_map<int, std::list<int> > caminos;
   int costo_mas_cercano = 10000;
   std::list<int>::iterator it;
   for (it = centros_def.begin(); it != centros_def.end(); it++) {
@@ -574,11 +574,11 @@ tscf_exploration::goalList Robot::getPathToObjetive(int centro,
   std::list<int> list;
   list.push_back(centro);
   Robot::ajustarParedes(centro, p, obstaculos);
-  std::map<int, std::vector<int> > oleadas =
+  std::boost::unordered_map<int, std::vector<int> > oleadas =
       Robot::crearOleadas(global_map, posicionActual, list, p);
   int camino_mas_cercano = -1;
   // ROS_INFO("obtenerCaminos");
-  std::map<int, std::list<int> > caminos =
+  std::boost::unordered_map<int, std::list<int> > caminos =
       Robot::obtenerCaminos(camino_mas_cercano, oleadas, posicionActual, list, p);
 
   for (std::list<int>::iterator it = caminos[camino_mas_cercano].begin();

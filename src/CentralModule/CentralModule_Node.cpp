@@ -132,7 +132,7 @@ void timerRoutine(const ros::TimerEvent&) {
     */
     centralModule.setEstado(WaitingAuction);
 
-    map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
+    boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
     for (auto it = assignment.begin(); it != assignment.end(); it++) {
       segment_assignment_pubs[it->first].publish(it->second);
     }

@@ -99,7 +99,7 @@ void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   }
 }
 
-map<int, tscf_exploration::FrontierBid> frontierBids;
+boost::unordered_map<int, tscf_exploration::FrontierBid> frontierBids;
 int robot_num = -1;
 
 void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {

@@ -13,7 +13,8 @@
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-
+#include <boost/graph/astar_search.hpp>
+#include <boost/graph/adjacency_list.hpp>
 #include "../lib/utils.h"
 
 class MapMerger {
@@ -25,14 +26,14 @@ class MapMerger {
   uint width;
   uint height;
   int indice_origen;
-  std::set<int> frontera;
-  std::set<int> obstaculos;
+  boost::unordered_set<int> frontera;
+  boost::unordered_set<int> obstaculos;
 
   nav_msgs::OccupancyGrid map_merged;
-  std::map<int, cv::Point2f> map_points;
-  std::map<std::string, geometry_msgs::PoseStamped> positions;
-  std::map<std::string, bool> map_initialization;
-  std::map<std::string, nav_msgs::OccupancyGrid> maps_by_robots;
+  boost::unordered_map<int, cv::Point2f> map_points;
+  boost::unordered_map<std::string, geometry_msgs::PoseStamped> positions;
+  boost::unordered_map<std::string, bool> map_initialization;
+  boost::unordered_map<std::string, nav_msgs::OccupancyGrid> maps_by_robots;
 
   /*Funcion que establece si todos los mapas de los distintos robots son
    * desconocidos o concuerdan en la misma celda.*/
@@ -54,9 +55,9 @@ class MapMerger {
   int getRange();
   void setRange(int newRange);
   std::vector<int> getFrontera();
-  void setFrontera(std::set<int> newFrontera);
+  void setFrontera(boost::unordered_set<int> newFrontera);
   std::vector<int> getObstaculos();
-  void setObstaculos(std::set<int> newObstaculos);
+  void setObstaculos(boost::unordered_set<int> newObstaculos);
   nav_msgs::OccupancyGrid updateMap(const nav_msgs::OccupancyGridConstPtr& newMap,
                                     std::string name);
   void updatePose(const geometry_msgs::PoseStampedConstPtr& newPose, std::string name);

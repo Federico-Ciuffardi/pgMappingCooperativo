@@ -25,7 +25,7 @@
 #include "../lib/auction.h"
 
 
-typedef std::map<int, std::list<int> > dict_clusters;
+typedef boost::unordered_map<int, list<int> > dict_clusters;
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2 };
 
@@ -43,48 +43,48 @@ class CentralModule {
 
   /// Map related
   nav_msgs::OccupancyGrid map_merged;
-  std::map<int, cv::Point2f> map_points;
+  boost::unordered_map<int, cv::Point2f> map_points;
 
   /// frontier related
-  std::set<int> frontera;
-  std::vector<int> centros_de_frontera;
+  boost::unordered_set<int> frontera;
+  vector<int> centros_de_frontera;
 
   /// Segment auction related
   criticals_info cis;
   bids_priority_queue bids_pq;
-  map<pos,int> auction_segment_frontiers_num;
-  std::unordered_set<string> auction_robots;
+  boost::unordered_map<pos,int> auction_segment_frontiers_num;
+  boost::unordered_set<string> auction_robots;
 
   // Functions
   ///Kmeans
-  int dividirFront(std::set<int> f, dict_clusters& clusters);
-  std::pair<std::list<int>, std::vector<std::list<int> > > kmeans(int k,
-                                                                  std::list<int> puntos,
-                                                                  std::vector<cv::Point2f> centros,
+  int dividirFront(boost::unordered_set<int> f, dict_clusters& clusters);
+  pair<list<int>, vector<list<int> > > kmeans(int k,
+                                                                  list<int> puntos,
+                                                                  vector<cv::Point2f> centros,
                                                                   float dist_lim);
-  std::vector<std::list<int> > asignacionKmean(int k,
-                                               std::list<int> puntos,
-                                               std::vector<cv::Point2f> centros);
-  std::vector<cv::Point2f> actualizacionKmean(std::vector<std::list<int> > puntos_de_centros,
+  vector<list<int> > asignacionKmean(int k,
+                                               list<int> puntos,
+                                               vector<cv::Point2f> centros);
+  vector<cv::Point2f> actualizacionKmean(vector<list<int> > puntos_de_centros,
                                               int cant_centros);
-  bool finalizarPorErrorKmean(std::vector<cv::Point2f> centros_viejos,
-                              std::vector<cv::Point2f> centros_nuevos,
+  bool finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos,
+                              vector<cv::Point2f> centros_nuevos,
                               float dist_lim);
-  std::list<int> nearestPoint(std::vector<cv::Point2f> centros_nuevos, std::list<int> puntos);
+  list<int> nearestPoint(vector<cv::Point2f> centros_nuevos, list<int> puntos);
   bool esVecino(int celda, int vecino);
-  bool esVecinoDeSet(int celda, std::set<int> lista_de_celdas);
+  bool esVecinoDeSet(int celda, boost::unordered_set<int> lista_de_celdas);
   float distanciaArecta(int inicio, int fin, int punto);
-  std::vector<int> aplicarKmeans(std::set<int> frontera);
+  vector<int> aplicarKmeans(boost::unordered_set<int> frontera);
 
   /// Auction
 
  public:
   // getters and setters
-  std::set<int> getFrontera();
-  void setFrontera(std::set<int> newFrontera);
+  boost::unordered_set<int> getFrontera();
+  void setFrontera(boost::unordered_set<int> newFrontera);
 
-  std::vector<int> getCentrosF();
-  void setCentrosF(std::vector<int> newCentrosf);
+  vector<int> getCentrosF();
+  void setCentrosF(vector<int> newCentrosf);
 
   centralMouleState getEstado();
   void setEstado(centralMouleState newEstado);
@@ -101,35 +101,35 @@ class CentralModule {
 
   void reset_bid();
   boost::tuple<tscf_exploration::SegmentAuction, GVD> getSegmentAuctionInfo();
-  map<string,tscf_exploration::SegmentAssignment> assignSegment();
-  void saveSegmentBid( tscf_exploration::SegmentBid msg, std::string name);
+  boost::unordered_map<string,tscf_exploration::SegmentAssignment> assignSegment();
+  void saveSegmentBid( tscf_exploration::SegmentBid msg, string name);
 };
-  //map<string,map<pos,float>> segment_bids;
+  //boost::unordered_map<string,boost::unordered_map<pos,float>> segment_bids;
 
-  //void resetArray(std::map<std::string, bool> map);
+  //void resetArray(boost::unordered_map<string, bool> map);
   //tscf_exploration::asignacionCelda getMaxUtility();
   //float calcularUtilidad(int info_gain_celda, int cost_celda);
-  //bool checkMap(std::map<std::string, bool> mymap);
-  //void setDifference(std::set<int>& set1, std::set<int>& set2);
+  //bool checkMap(boost::unordered_map<string, bool> mymap);
+  //void setDifference(boost::unordered_set<int>& set1, boost::unordered_set<int>& set2);
   //void updateInfoGain(tscf_exploration::asignacionCelda info);
 
-  //std::set<int> getGainInfo(int celda);
+  //boost::unordered_set<int> getGainInfo(int celda);
 
   //boost::tuple<tscf_exploration::takeobjetive, GVD> getObjetiveMap();
 
-  //void saveBid(const tscf_exploration::frontierReportConstPtr& msg, std::string name);
+  //void saveBid(const tscf_exploration::frontierReportConstPtr& msg, string name);
   //void resetArrivals();
-  //std::vector<int> obstaculos
+  //vector<int> obstaculos
   
-  //std::map<std::string, bool> bids_arrivals;
-  //std::map<std::string, std::map<int, int> > cost_saved;
-  //std::map<std::string, std::map<int, std::set<int> > > info_gain_saved;
+  //boost::unordered_map<string, bool> bids_arrivals;
+  //boost::unordered_map<string, boost::unordered_map<int, int> > cost_saved;
+  //boost::unordered_map<string, boost::unordered_map<int, boost::unordered_set<int> > > info_gain_saved;
 
-  //std::map<int, std::set<int> > info_gain;
-  //std::map<std::string, bool> asignations;
+  //boost::unordered_map<int, boost::unordered_set<int> > info_gain;
+  //boost::unordered_map<string, bool> asignations;
     //float dist_info_gain_obst;
 
-   //std::vector<int> getObstaculos();
-  //void setObstaculos(std::vector<int> newObstaculos);
+   //vector<int> getObstaculos();
+  //void setObstaculos(vector<int> newObstaculos);
 
   //tscf_exploration::asignacion assignTasks();

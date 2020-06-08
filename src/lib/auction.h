@@ -19,10 +19,10 @@ static void clear_bids(bids_priority_queue &bids_pq){
   bids_pq = bids_priority_queue();
 }
 
-static map<string,pos> resolve_auction(bids_priority_queue bids_pq,int total_bidders,int total_items,std::map<pos,int>* item_capacity = NULL){
+static boost::unordered_map<string,pos> resolve_auction(bids_priority_queue bids_pq,int total_bidders,int total_items,boost::unordered_map<pos,int>* item_capacity = NULL){
 
-  std::map<string,pos> bidder_item;//std::unordered_map?
-  std::map<pos,int> item_bidders_num;//std::unordered_map?
+  boost::unordered_map<string,pos> bidder_item;//std::unordered_map?
+  boost::unordered_map<pos,int> item_bidders_num;//std::unordered_map?
 
   int assigned_bidders = 0;
   int item_with_extra_bidder = 0;

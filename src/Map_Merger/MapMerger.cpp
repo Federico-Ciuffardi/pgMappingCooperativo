@@ -9,7 +9,7 @@ MapMerger::MapMerger() {
  * desconocidos o concuerdan en la misma celda.*/
 bool MapMerger::sonIgualesCeldas(int ind) {
   bool ret = true;
-  std::map<std::string, nav_msgs::OccupancyGrid>::iterator iterator = maps_by_robots.begin();
+  boost::unordered_map<std::string, nav_msgs::OccupancyGrid>::iterator iterator = maps_by_robots.begin();
   while ((iterator != maps_by_robots.end()) && (-1 != iterator->second.data[ind])) {
     iterator++;
   }
@@ -65,7 +65,7 @@ void MapMerger::initMapMerger(const nav_msgs::OccupancyGridConstPtr& msg) {
 /*Funcion que dado un punto me dice si existe un robot a una distancia menor a
  * la que se le pasa.*/
 bool MapMerger::isAnyRobotCloser(float dist, int ind, std::string name) {
-  std::map<std::string, geometry_msgs::PoseStamped>::iterator it = MapMerger::positions.begin();
+  boost::unordered_map<std::string, geometry_msgs::PoseStamped>::iterator it = MapMerger::positions.begin();
   bool hay_mas_cerca = false;
 
   while ((!hay_mas_cerca) && (it != MapMerger::positions.end())) {
@@ -161,13 +161,13 @@ int MapMerger::updateFrontera(nav_msgs::OccupancyGrid map, std::string name) {
   int x_ahora = positions[name].pose.position.x;
   int y_ahora = positions[name].pose.position.y;
 
-  std::set<int> frontera_aux_nueva;
+  boost::unordered_set<int> frontera_aux_nueva;
   int posicionActual = MapMerger::indice_origen + (((int)x_ahora + signo((int)x_ahora) * 1) +
                                                    ((int)y_ahora) * MapMerger::width);
 
   // p.data[posicionActual] = 100;
 
-  std::set<int>::iterator f;
+  boost::unordered_set<int>::iterator f;
   for (f = MapMerger::frontera.begin(); f != MapMerger::frontera.end(); f++) {
     if (MapMerger::esFrontera((*f), map)) {
       frontera_aux_nueva.insert(*f);
@@ -208,27 +208,27 @@ void MapMerger::setRange(int newRange) {
 
 std::vector<int> MapMerger::getFrontera() {
   std::vector<int> ret;
-  std::set<int>::iterator f;
+  boost::unordered_set<int>::iterator f;
   for (f = MapMerger::frontera.begin(); f != MapMerger::frontera.end(); f++) {
     ret.push_back(*f);
   }
   return ret;
 };
 
-void MapMerger::setFrontera(std::set<int> newFrontera) {
+void MapMerger::setFrontera(boost::unordered_set<int> newFrontera) {
   MapMerger::frontera = newFrontera;
 };
 
 std::vector<int> MapMerger::getObstaculos() {
   std::vector<int> ret;
-  std::set<int>::iterator f;
+  boost::unordered_set<int>::iterator f;
   for (f = MapMerger::obstaculos.begin(); f != MapMerger::obstaculos.end(); f++) {
     ret.push_back(*f);
   }
   return ret;
 };
 
-void MapMerger::setObstaculos(std::set<int> newObstaculos) {
+void MapMerger::setObstaculos(boost::unordered_set<int> newObstaculos) {
   MapMerger::obstaculos = newObstaculos;
 };
 

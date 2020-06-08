@@ -363,8 +363,8 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue dqueue) {
 }
 
 // could be of less order, maybe using trees
-map<pos, bool> get_local_mins(dist_grid dg, GVD& gvd) {
-  map<pos, bool> lmins;
+boost::unordered_map<pos, bool> get_local_mins(dist_grid dg, GVD& gvd) {
+  boost::unordered_map<pos, bool> lmins;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     bool auxmin = true;
     pos current_pos = gvd.g[*vp.first].p;
@@ -388,7 +388,7 @@ bool same_direcction(pos p1, pos p2) {
   return normalized(p1) == -normalized(p2);
 }
 
-void collapse_vertices(GVD& gvd, map<pos, bool> lmins) {
+void collapse_vertices(GVD& gvd, boost::unordered_map<pos, bool> lmins) {
   for (auto vp = vertices(gvd.g); vp.first != vp.second;) {
     auto vp_aux = vp.first;
     ++vp.first;
@@ -483,10 +483,10 @@ int degree_constraint(grid_type& ogrid, GVD& gvd) {
   return criticals_count;
 }
 
-map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int criticals_count) {
+boost::unordered_map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int criticals_count) {
   dist_grid dgrid;
   dist_pos_queue dqueue;
-  map<pos, dist_pos> critical_with_frontier;
+  boost::unordered_map<pos, dist_pos> critical_with_frontier;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);
   while (criticals_count > 0 && !dqueue.empty()) {
     dist_pos frontier_dp = dqueue.top();
@@ -545,7 +545,7 @@ criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
 }
 
 criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
-  map<pos, bool> local_mins = get_local_mins(dg, gvd);
+  boost::unordered_map<pos, bool> local_mins = get_local_mins(dg, gvd);
 
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg);
@@ -553,17 +553,17 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   // TODO borrar el criticals count no se usa
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;
-  // map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd,
+  // boost::unordered_map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd,
   // criticals_count);
   criticals_info cis = unknown_dist_constraint2(ogrid, gvd);
   // return critical_with_frontier;
   return cis;
 }
 
-void print_grid(grid_gvd ggvd,
+/*void print_grid(grid_gvd ggvd,
                 grid_type grid,
-                map<pos, dist_pos> cf = map<pos, dist_pos>(),
-                map<pos, bool> frontier_aux = map<pos, bool>()) {
+                boost::unordered_map<pos, dist_pos> cf = boost::unordered_map<pos, dist_pos>(),
+                boost::unordered_map<pos, bool> frontier_aux = boost::unordered_map<pos, bool>()) {
   ofstream outfile;
   outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
                ios::out | std::ofstream::app);
@@ -598,16 +598,16 @@ void print_grid(grid_gvd ggvd,
   }
   outfile.close();
   // fclose(stdout);
-}
+}*/
 
 boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type ogrid) {
-  set<pos> res;
+  boost::unordered_set<pos> res;
   dist_grid dgrid;
   dist_pos_queue dqueue;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied);
   grid_gvd ggvd = get_grid_gvd(dgrid, dqueue);
   GVD gvd(ggvd);
-  // map<pos,bool> frontier_aux;
+  // boost::unordered_map<pos,bool> frontier_aux;
   criticals_info cis = get_critical_points(ogrid, dgrid, gvd);
   // cis = get_critical_points(ogrid, dgrid, gvd);
   // return boost::make_tuple(res, gvd)
