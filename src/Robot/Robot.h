@@ -63,6 +63,8 @@ class Robot {
   void setNombre(std::string nom);
   std::string getNombre();
 
+  bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
+
   tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
 
   tscf_exploration::goalList getPathToSegment(tscf_exploration::Point2D segment);

@@ -93,6 +93,13 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos) {
   return boost::make_tuple(segment, gvd);
 }
 
+// Return true if robot is in segment assigned_segment and false if it isnt
+bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos){
+  float f_r_dist = dist(f_pos, my_pos);
+  float f_c_dist = dist(f_pos, assigned_segment);
+  return (my_segment == assigned_segment) && (f_r_dist < f_c_dist)
+}
+
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
   std::cout << "ARRANCA getSegmentBid!!!!" << endl;
   std::cout << "declaracion de segment bid en la prox lienea" << endl;
@@ -103,7 +110,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   std::cout << "Consegui my pos: ";
   pos r_pos = my_pos;
 
-  pos r_segment, c_pos;
+  pos r_segment, c_pos, f_pos;
 
   int seg;
 
@@ -118,11 +125,15 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
     // segment_bid.values[i] = 0;
     float cost, in_seg = 0;
     c_pos = p2d_to_pos(msg.criticals[i]);
+    //here i should get the frontier
+    f_pos = p2d_to_pos(msg.minp_f[i]);
     // std::cout<<"Antes de calclular el camino"<<endl;
     boost::tie(paths[c_pos], cost) = get_path(gvd, r_pos, c_pos);
     // std::cout<<"Despues de calclular el camino"<<endl;
     // descount factor
-    if (r_segment == c_pos) {
+    //here i should check if i am on the segment
+    bool in_segment = is_in_segment(r_segment, r_pos, c_pos, f_pos);
+    if (in_segment) {
       in_seg = cost*2;
     }
     // crit a la frontera + (robot al critico)*c
@@ -140,14 +151,29 @@ geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
   return p3d;
 }
 
+// Adds extra points so the robot would walk a straight line from current_pos till f_pos(frontier)
+void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist){ 
+  int division_count = dist(f_pos, current_pos)/min_dist;
+  //the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1)) 
+  for(int i = 1; i < division_count; i++){
+    //current_pos.first = current_pos.first + i/division_count*(f_pos.first - current_pos.first);
+    //current_pos.second = current_pos.second + i/division_count*(f_pos.second - current_pos.second);
+    current_pos += (i/division_count)*(f_pos - current_pos); 
+    //add to path
+    geometry_msgs::Point p3d = pos_to_real_p3d(current_pos);
+    g_list.listaGoals.push_back(p3d);
+    ROS_INFO("way %f,%f,%f", p3d.x, p3d.y, p3d.z);
+  }
+}
+
 tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D frontier) {
   pos f_pos = p2d_to_pos(frontier);
 
   std::cout << "Estoy en " << my_pos.first << "," << my_pos.second
             << " y voy a ir hasta la frontera" << f_pos.first << "," << f_pos.second << endl;
 
-  float f_r_dist = dist(f_pos, my_pos);
-  float f_c_dist = dist(f_pos, assigned_segment);
+  //float f_r_dist = dist(f_pos, my_pos);
+  //float f_c_dist = dist(f_pos, assigned_segment);
 
   tscf_exploration::goalList g_list;
   g_list.indice = 1;  // TODO poner bien el indice
@@ -157,9 +183,9 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
   ROS_INFO("way nuestro");
   geometry_msgs::Point p3d = getPosition();
   ROS_INFO("way from p3d %f,%f,%f", p3d.x, p3d.y, p3d.z);
-
+  bool in_segment = is_in_segment(my_segment, my_pos, assigned_segment, f_pos, 1){
   // If i am  not on the segment
-  if ((my_segment != assigned_segment) || (f_r_dist > f_c_dist)) {
+  if (!in_segment) {
     // pos p = getGVDPos();
     // ROS_INFO("way from pos %d,%d",p.first,p.second);
 
@@ -172,7 +198,7 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
 
       ROS_INFO("way %f,%f,%f", p3d.x, p3d.y, p3d.z);
     }
-  } else {
+  }// else {
     /*list<VecGVD::Vertex> v_list = paths[assigned_segment];
     v_list.pop_front();
 
@@ -183,8 +209,9 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
     g_list.listaGoals.push_back(p3d);
 
     ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);*/
-  }
-
+  //}
+  add_intermidiate_points(f_pos, assigned_segment, g_list);
+  
   p3d = pos_to_real_p3d(f_pos);
 
   g_list.listaGoals.push_back(p3d);
