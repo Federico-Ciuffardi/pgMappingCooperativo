@@ -123,9 +123,9 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
     // std::cout<<"Despues de calclular el camino"<<endl;
     // descount factor
     if (r_segment == c_pos) {
-      in_seg = cost / 2;
+      in_seg = cost*2;
     }
-
+    // crit a la frontera + (robot al critico)*c
     segment_bid.values.push_back(msg.mind_f[i] + cost - in_seg);
   }
   // std::cout<<"Termino!"<<endl;
