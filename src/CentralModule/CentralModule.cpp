@@ -108,7 +108,7 @@ boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuc
     segment_auction.criticals.push_back(pos_to_p2d(it->first));
     ROS_INFO("critical: %d , %d", it->first.first, it->first.second);
     segment_auction.mind_f.push_back(it->second.mind_f);
-    segment_auction.minp_f.push_back(it->second.frontiers[0]);
+    segment_auction.minp_f.push_back(pos_to_p2d(it->second.frontiers[0]));
   }
 
   return boost::make_tuple(segment_auction, gvd);

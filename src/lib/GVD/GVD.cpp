@@ -459,7 +459,7 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
 
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg);
-  // collapse_vertices(gvd, local_mins);
+  //collapse_vertices(gvd, local_mins);
   // TODO borrar el criticals count no se usa
   int criticals_count = degree_constraint(ogrid, gvd);
   // cout << criticals_count << endl;

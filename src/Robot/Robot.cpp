@@ -37,14 +37,48 @@ void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
   position.y = msg->pose.position.y;
 }
 
-// Robot process graph, creates boost gvd also adds pos->gvd
-boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos) {
-  // std::cout<<"arranca el get gvd"<<endl;
-  VecGVD gvd;
-  pos min_pos, v_pos;
+//this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction dis) but we did it to finish
+void Robot::add_to_gvd(pos f_pos){
   float min = -1;
   float min_aux;
   VecGVD::Vertex v_min;
+  VecGVD::Vertex v;
+  bool inserted;
+  VecGVD::Edge e;
+  
+  ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
+
+  VecGVD::VertexIterator v_it, v_it_end;
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
+    pos v_pos = gvd.g[*v_it].p;
+    min_aux = dist(f_pos, v_pos);
+
+    if (min < 0 || min_aux < min) {
+      min = min_aux;
+      v_min = *v_it;
+    }
+  }
+
+  if (min != 0) {
+    ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
+    boost::tie(v, inserted) = gvd.add_v(f_pos);
+    ROS_INFO("romi vertice %d",inserted);
+    boost::tie(e, inserted) = gvd.add_e(v, v_min, min);
+    boost::tie(e, inserted) = gvd.add_e(v_min,v, min);
+    ROS_INFO("romi arista %d",inserted);
+    ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
+    ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+  }
+
+}
+
+// Robot process graph, creates boost gvd also adds pos->gvd
+boost::tuple<int, VecGVD> Robot::getGVD(tscf_exploration::Graph g, pos r_pos) {
+  // std::cout<<"arranca el get gvd"<<endl;
+  VecGVD gvd;
+  pos v_pos;
+  float min = -1;
+  float min_aux;
   VecGVD::Vertex v;
   bool inserted;
   graph_traits<VecGVD::Graph>::edge_descriptor e;
@@ -60,8 +94,6 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos) {
     // std::cout<<"min "<<min<<endl;
     if (min < 0 || min_aux < min) {
       min = min_aux;
-      min_pos = v_pos;
-      v_min = v;
       segment = i;
       // std::cout<<segment<<endl;
     }
@@ -78,26 +110,14 @@ boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos) {
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
   }
   // std::cout<<"Termine de agregar todas las aristas"<<endl;
-
-  // weights = get(edge_weight,gvd.g);
-  // Connect the robot with the gvd, if the robot is not in the graph
-  if (min != 0) {
-    // std::cout<<"Antes de agregar el nodo del robot al grafo"<<endl;
-    boost::tie(v, inserted) = gvd.add_v(r_pos);
-    // std::cout<<"Agregue el nodo del robot"<<endl;
-    boost::tie(e, inserted) = gvd.add_e(v, v_min, min);
-    /*if(inserted){
-      std::cout<<"Agregue el nodo del robot con exito!"<<endl;
-    }*/
-  }
   return boost::make_tuple(segment, gvd);
 }
 
 // Return true if robot is in segment assigned_segment and false if it isnt
-bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos){
+bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos){
   float f_r_dist = dist(f_pos, my_pos);
   float f_c_dist = dist(f_pos, assigned_segment);
-  return (my_segment == assigned_segment) && (f_r_dist < f_c_dist)
+  return (my_segment == assigned_segment) && (f_r_dist < f_c_dist);
 }
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
@@ -107,7 +127,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   std::cout << "getGVDPOS en la prox lienea" << endl;
   offset = p2d_to_pos(msg.offset);
   my_pos = getGVDPos();
-  std::cout << "Consegui my pos: ";
+  std::cout << "Consegui my pos: "<<endl;
   pos r_pos = my_pos;
 
   pos r_segment, c_pos, f_pos;
@@ -115,6 +135,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   int seg;
 
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
+  add_to_gvd(r_pos);
   std::cout << "este es el seg: " << seg << endl;
   r_segment = p2d_to_pos(msg.vertex_segment[seg]);
   my_segment = r_segment;
@@ -151,76 +172,64 @@ geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
   return p3d;
 }
 
+//First solution, didnot work properly
 // Adds extra points so the robot would walk a straight line from current_pos till f_pos(frontier)
-void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist){ 
+void Robot::add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist){ 
   int division_count = dist(f_pos, current_pos)/min_dist;
   //the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1)) 
   for(int i = 1; i < division_count; i++){
     //current_pos.first = current_pos.first + i/division_count*(f_pos.first - current_pos.first);
     //current_pos.second = current_pos.second + i/division_count*(f_pos.second - current_pos.second);
-    current_pos += (i/division_count)*(f_pos - current_pos); 
+    current_pos = current_pos + (i*(f_pos - current_pos))/division_count; 
     //add to path
     geometry_msgs::Point p3d = pos_to_real_p3d(current_pos);
     g_list.listaGoals.push_back(p3d);
-    ROS_INFO("way %f,%f,%f", p3d.x, p3d.y, p3d.z);
+    ROS_INFO("way intermedio %f,%f,%f", p3d.x, p3d.y, p3d.z);
   }
 }
 
+
 tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D frontier) {
+  
+  ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
   pos f_pos = p2d_to_pos(frontier);
 
-  std::cout << "Estoy en " << my_pos.first << "," << my_pos.second
-            << " y voy a ir hasta la frontera" << f_pos.first << "," << f_pos.second << endl;
+  ROS_INFO("romi voy a ingresar la forntera al gvd");
+  
+  add_to_gvd(f_pos);
+  
+  ROS_INFO("romi ingrese la frontera al gvd");
+  
+  ROS_INFO("romi voy a calcular el camino");
+  std::list<VecGVD::Vertex> path;
+  float cost; 
+  
+  boost::tie(path, cost) = get_path(gvd, my_pos, f_pos);
+  
+  ROS_INFO("romi termine de calcular el camino");
 
-  //float f_r_dist = dist(f_pos, my_pos);
-  //float f_c_dist = dist(f_pos, assigned_segment);
+  if(path.size() == 0){
+    ROS_INFO("romi el camino no tiene nodos");
+  }
 
   tscf_exploration::goalList g_list;
   g_list.indice = 1;  // TODO poner bien el indice
 
-  std::cout << "Camino: ";
+  list<VecGVD::Vertex> v_list = path;
+  geometry_msgs::Point p3d;
+  
+  ROS_INFO("romi iterar en los nodos para pasarlos a p3d");
 
-  ROS_INFO("way nuestro");
-  geometry_msgs::Point p3d = getPosition();
-  ROS_INFO("way from p3d %f,%f,%f", p3d.x, p3d.y, p3d.z);
-  bool in_segment = is_in_segment(my_segment, my_pos, assigned_segment, f_pos, 1){
-  // If i am  not on the segment
-  if (!in_segment) {
-    // pos p = getGVDPos();
-    // ROS_INFO("way from pos %d,%d",p.first,p.second);
-
-    list<VecGVD::Vertex> v_list = paths[assigned_segment];
-    // v_list.pop_front();
-    for (auto it = v_list.begin(); it != v_list.end(); it++) {
-      p3d = pos_to_real_p3d(gvd.g[*it].p);
-
-      g_list.listaGoals.push_back(p3d);
-
-      ROS_INFO("way %f,%f,%f", p3d.x, p3d.y, p3d.z);
-    }
-  }// else {
-    /*list<VecGVD::Vertex> v_list = paths[assigned_segment];
-    v_list.pop_front();
-
-    auto it = v_list.begin();
-
+  for (auto it = v_list.begin(); it != v_list.end(); it++) {
+    
     p3d = pos_to_real_p3d(gvd.g[*it].p);
 
     g_list.listaGoals.push_back(p3d);
 
-    ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);*/
-  //}
-  add_intermidiate_points(f_pos, assigned_segment, g_list);
-  
-  p3d = pos_to_real_p3d(f_pos);
+    ROS_INFO("romi way puntos en el camino %f,%f,%f", p3d.x, p3d.y, p3d.z);
+  }
 
-  g_list.listaGoals.push_back(p3d);
-
-  ROS_INFO("way %f,%f,%f", p3d.x, p3d.y, p3d.z);
-
-  std::cout << "TERMINEEEEEEEEEEEEE" << endl;
-
-  // is it necessary to clean_robot_cache?
+  ROS_INFO("TERMINEEEEEEEEEEEEE");
   return g_list;
 }
 

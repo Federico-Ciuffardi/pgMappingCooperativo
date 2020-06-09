@@ -64,6 +64,9 @@ class Robot {
   std::string getNombre();
 
   bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
+  void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist);
+  void add_to_gvd(pos f_pos);
+  boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
 
   tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
 

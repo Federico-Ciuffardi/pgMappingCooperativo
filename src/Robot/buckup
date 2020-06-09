@@ -1,0 +1,44 @@
+//std::cout << "Estoy en " <<endl; //my_pos.first << "," << my_pos.second
+           //<< " y voy a ir hasta la frontera" << f_pos.first << "," << f_pos.second << endl;
+
+  //float f_r_dist = dist(f_pos, my_pos);
+  //float f_c_dist = dist(f_pos, assigned_segment);
+
+  
+  //std::cout << "Camino: ";
+
+  //ROS_INFO("way nuestro");
+  // geometry_msgs::Point p3d = getPosition();
+  //ROS_INFO("way from p3d %f,%f,%f", p3d.x, p3d.y, p3d.z);
+  //bool in_segment = is_in_segment(my_segment, my_pos, assigned_segment, f_pos);
+  //ROS_INFO("Estoy en el seg %d", in_segment);
+  // If i am  not on the segment
+  
+  /*
+  
+  if (!in_segment) {
+    // pos p = getGVDPos();
+    // ROS_INFO("way from pos %d,%d",p.first,p.second);
+
+    
+  } else {
+    //list<VecGVD::Vertex> v_list = paths[assigned_segment];
+    //v_list.pop_front();
+
+    //auto it = v_list.begin();
+
+    //p3d = pos_to_real_p3d(gvd.g[*it].p);
+
+    //g_list.listaGoals.push_back(p3d);
+
+    //ROS_INFO("way %f,%f,%f",p3d.x,p3d.y,p3d.z);
+  }
+  
+  */
+  
+  /*p3d = pos_to_real_p3d(f_pos);
+
+  g_list.listaGoals.push_back(p3d);
+
+  ROS_INFO("way %f,%f,%f", p3d.x, p3d.y, p3d.z);
+  */
