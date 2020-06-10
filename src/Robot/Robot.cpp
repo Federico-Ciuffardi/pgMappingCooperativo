@@ -46,7 +46,7 @@ void Robot::add_to_gvd(pos f_pos){
   bool inserted;
   VecGVD::Edge e;
   
-  ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
+  //ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
 
   VecGVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
@@ -60,14 +60,14 @@ void Robot::add_to_gvd(pos f_pos){
   }
 
   if (min != 0) {
-    ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
+    //ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
     boost::tie(v, inserted) = gvd.add_v(f_pos);
-    ROS_INFO("romi vertice %d",inserted);
+    //ROS_INFO("romi vertice %d",inserted);
     boost::tie(e, inserted) = gvd.add_e(v, v_min, min);
     boost::tie(e, inserted) = gvd.add_e(v_min,v, min);
-    ROS_INFO("romi arista %d",inserted);
-    ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-    ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+    //ROS_INFO("romi arista %d",inserted);
+    //ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
+    //ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
   }
 
 }
@@ -121,13 +121,13 @@ bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos 
 }
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
-  std::cout << "ARRANCA getSegmentBid!!!!" << endl;
-  std::cout << "declaracion de segment bid en la prox lienea" << endl;
+  ROS_INFO("tiempos arranca el getSegmentBid---------------------");
+  //std::cout << "declaracion de segment bid en la prox lienea" << endl;
   tscf_exploration::SegmentBid segment_bid;
-  std::cout << "getGVDPOS en la prox lienea" << endl;
+  //std::cout << "getGVDPOS en la prox lienea" << endl;
   offset = p2d_to_pos(msg.offset);
   my_pos = getGVDPos();
-  std::cout << "Consegui my pos: "<<endl;
+  //std::cout << "Consegui my pos: "<<endl;
   pos r_pos = my_pos;
 
   pos r_segment, c_pos, f_pos;
@@ -136,32 +136,47 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
 
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
   add_to_gvd(r_pos);
-  std::cout << "este es el seg: " << seg << endl;
+  //std::cout << "este es el seg: " << seg << endl;
   r_segment = p2d_to_pos(msg.vertex_segment[seg]);
   my_segment = r_segment;
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
+  pos_set criticals;
+  for (int i = 0; i < msg.criticals.size(); i++) {
+    criticals.insert(p2d_to_pos(msg.criticals[i]));
+  }
+  boost::unordered_map<pos,float> paths_costs;
+
+  ROS_INFO("tiempos arranca el multipath");
+  boost::tie(paths, paths_costs) = get_multi_path(gvd,r_pos,criticals);
+  ROS_INFO("tiempos termina el multipath");
+
   for (int i = 0; i < msg.criticals.size(); i++) {
     segment_bid.criticals.push_back(msg.criticals[i]);
-    // segment_bid.values[i] = 0;
-    float cost, in_seg = 0;
+
+    float cost = paths_costs[p2d_to_pos(msg.criticals[i])] ;
+   
     c_pos = p2d_to_pos(msg.criticals[i]);
     //here i should get the frontier
     f_pos = p2d_to_pos(msg.minp_f[i]);
     // std::cout<<"Antes de calclular el camino"<<endl;
-    boost::tie(paths[c_pos], cost) = get_path(gvd, r_pos, c_pos);
+    //boost::tie(paths[c_pos], cost) = get_path(gvd, r_pos, c_pos);
     // std::cout<<"Despues de calclular el camino"<<endl;
     // descount factor
     //here i should check if i am on the segment
     bool in_segment = is_in_segment(r_segment, r_pos, c_pos, f_pos);
+
+    float in_seg = 0;
     if (in_segment) {
       in_seg = cost*2;
     }
     // crit a la frontera + (robot al critico)*c
     segment_bid.values.push_back(msg.mind_f[i] + cost - in_seg);
+    //segment_bid.values.push_back(cost);
   }
   // std::cout<<"Termino!"<<endl;
   // ROS_INFO("Termino!");
+  ROS_INFO("tiempos termina el getSegmentBid -----------------");
   return segment_bid;
 }
 
@@ -184,32 +199,31 @@ void Robot::add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration:
     //add to path
     geometry_msgs::Point p3d = pos_to_real_p3d(current_pos);
     g_list.listaGoals.push_back(p3d);
-    ROS_INFO("way intermedio %f,%f,%f", p3d.x, p3d.y, p3d.z);
+    //ROS_INFO("way intermedio %f,%f,%f", p3d.x, p3d.y, p3d.z);
   }
 }
 
 
 tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D frontier) {
   
-  ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
+  //ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
   pos f_pos = p2d_to_pos(frontier);
 
-  ROS_INFO("romi voy a ingresar la forntera al gvd");
-  
+  ROS_INFO("tiempos forntera al gvd");
   add_to_gvd(f_pos);
+  ROS_INFO("tiempos fin forntera al gvd");
+  //ROS_INFO("romi ingrese la frontera al gvd");
   
-  ROS_INFO("romi ingrese la frontera al gvd");
-  
-  ROS_INFO("romi voy a calcular el camino");
+  //ROS_INFO("tiempos voy a calcular el camino");
   std::list<VecGVD::Vertex> path;
   float cost; 
-  
-  boost::tie(path, cost) = get_path(gvd, my_pos, f_pos);
-  
-  ROS_INFO("romi termine de calcular el camino");
+
+  ROS_INFO("tiempos comienza de calcular el camino");
+  boost::tie(path, cost) = get_single_path(gvd, my_pos, f_pos);
+  ROS_INFO("tiempos termine de calcular el camino");
 
   if(path.size() == 0){
-    ROS_INFO("romi el camino no tiene nodos");
+    //ROS_INFO("romi el camino no tiene nodos");
   }
 
   tscf_exploration::goalList g_list;
@@ -218,7 +232,7 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
   list<VecGVD::Vertex> v_list = path;
   geometry_msgs::Point p3d;
   
-  ROS_INFO("romi iterar en los nodos para pasarlos a p3d");
+  //ROS_INFO("romi iterar en los nodos para pasarlos a p3d");
 
   for (auto it = v_list.begin(); it != v_list.end(); it++) {
     
@@ -226,10 +240,10 @@ tscf_exploration::goalList Robot::getPathToSegment(tscf_exploration::Point2D fro
 
     g_list.listaGoals.push_back(p3d);
 
-    ROS_INFO("romi way puntos en el camino %f,%f,%f", p3d.x, p3d.y, p3d.z);
+    //ROS_INFO("romi way puntos en el camino %f,%f,%f", p3d.x, p3d.y, p3d.z);
   }
 
-  ROS_INFO("TERMINEEEEEEEEEEEEE");
+  //ROS_INFO("TERMINEEEEEEEEEEEEE");
   return g_list;
 }
 

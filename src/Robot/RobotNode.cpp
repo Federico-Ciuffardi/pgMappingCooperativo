@@ -88,13 +88,25 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
   }*/
 }
 
+// intends to prevent handling multiple auction at one time
+// could fail if a new segment auction starts before the segment assignment message arrives
+// could be fixed by making it block all the way and making that all the robots receives an advice of the end of the 
+// bid
+//bool handlingSegmentAuction = false;
+
+
+int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
-  if (!FIN) {
+  if(last_segment_auction_id > msg->id){
+    return;
+  }
+  last_segment_auction_id = msg->id;
+  if (!FIN){ //&& msg->id>last_id) {
     ROS_INFO("%s :: Me llego el mensaje con los segmentos", robot.getNombre().c_str());
     tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
     ROS_INFO("%s :: Voy a enviar los segment_bid", robot.getNombre().c_str());
-
+    segment_bid.id = msg->id;
     segment_bid_pub.publish(segment_bid);
   }
 }
@@ -106,7 +118,12 @@ void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
   // frontierBids[msg->robotId];
 }
 
+int last_segment_assignment_id = -1;
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
+  if(last_segment_assignment_id > msg->id){
+    return;
+  }
+  last_segment_assignment_id = msg->id;
   robot.assigned_segment = p2d_to_pos(msg->segment);
 
   robot_num = msg->robots_num;

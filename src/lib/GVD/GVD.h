@@ -188,7 +188,11 @@ grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 
 boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type g);
 
-boost::tuple<list<VecGVD::Vertex>,float> get_path(VecGVD gvd, pos from, pos to);
+boost::tuple<list<VecGVD::Vertex>,float> get_single_path(VecGVD gvd, pos from, pos to);
+
+typedef boost::unordered_set<pos> pos_set;
+
+boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_map<pos,float>> get_multi_path(VecGVD gvd, pos start, pos_set goals);
 
 float dist(pos p1, pos p2);
 

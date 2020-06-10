@@ -3,7 +3,8 @@
 CentralModule::CentralModule() {
   estado = WaitingAuction;
   first = true;
-  indice = 0;
+  last_segment_assignment_id = 0;
+  segment_auction_id = 0;
   number_robots = 3;
   sensor_range = 6.0;
   // dist_info_gain_obst = 1.0 / sqrt(2);
@@ -110,7 +111,8 @@ boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuc
     segment_auction.mind_f.push_back(it->second.mind_f);
     segment_auction.minp_f.push_back(pos_to_p2d(it->second.frontiers[0]));
   }
-
+  segment_auction.id = segment_auction_id;
+  segment_auction_id++;
   return boost::make_tuple(segment_auction, gvd);
 }
 
@@ -154,7 +156,10 @@ void CentralModule::saveMap(const nav_msgs::OccupancyGrid map) {
   map_merged.data = map.data;
 }
 
-void CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name) {
+bool CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name) {
+  if(last_segment_assignment_id>sb.id){
+    return false;
+  }
   // segment_bids[name].clear();
   for (int i = 0; i < sb.criticals.size(); i++) {
     // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
@@ -165,6 +170,7 @@ void CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name)
     auction_segment_frontiers_num[segment] = cis[segment].frontiers.size();
     auction_robots.insert(name);
   }
+  return true;
 }
 
 boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule::assignSegment() {
@@ -185,12 +191,12 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
     sa.segment = pos_to_p2d(seg);
     sa.frontiers = pos_to_p2d(cis[seg].frontiers);
     // data for frontier auction
-    sa.id = indice;
+    sa.id = last_segment_assignment_id;
     sa.robots_num = auction_robots.size();
 
     ret[r_name] = sa;
   }
-
+  last_segment_assignment_id++;
   return ret;
 }
 

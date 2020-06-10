@@ -27,14 +27,15 @@
 
 typedef boost::unordered_map<int, list<int> > dict_clusters;
 
-enum centralMouleState { WaitingAuction = 1, WaitingBids = 2 };
+enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3 };
 
 class CentralModule {
  private:
   // vars
   /// state
   centralMouleState estado;
-  int indice;
+  int segment_auction_id;
+  int last_segment_assignment_id;
   bool first;
 
   /// Parameters
@@ -102,7 +103,7 @@ class CentralModule {
   void reset_bid();
   boost::tuple<tscf_exploration::SegmentAuction, GVD> getSegmentAuctionInfo();
   boost::unordered_map<string,tscf_exploration::SegmentAssignment> assignSegment();
-  void saveSegmentBid( tscf_exploration::SegmentBid msg, string name);
+  bool saveSegmentBid( tscf_exploration::SegmentBid msg, string name);
 };
   //boost::unordered_map<string,boost::unordered_map<pos,float>> segment_bids;
 

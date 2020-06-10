@@ -531,14 +531,14 @@ boost::tuple<criticals_info, GVD> get_points_of_interest(grid_type ogrid) {
   return boost::make_tuple(cis, gvd);
 }
 
-// A*
+// A* single
 
 /// euclidean distance heuristic
 template <class Graph, class CostType, class LocMap>
-class distance_heuristic : public astar_heuristic<Graph, CostType> {
+class single_astar_distance_heuristic : public astar_heuristic<Graph, CostType> {
  public:
   typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
-  distance_heuristic(LocMap l, Vertex goal) : m_location(l), m_goal(goal) {}
+  single_astar_distance_heuristic(LocMap l, Vertex goal) : m_location(l), m_goal(goal) {}
   CostType operator()(Vertex u) { return dist(m_location[u].p, m_location[m_goal].p); }
 
  private:
@@ -550,9 +550,9 @@ struct found_goal {};  // exception for termination
 
 /// visitor that terminates when we find the goal
 template <class Vertex>
-class astar_goal_visitor : public boost::default_astar_visitor {
+class single_astar_goal_visitor : public boost::default_astar_visitor {
  public:
-  astar_goal_visitor(Vertex goal) : m_goal(goal) {}
+  single_astar_goal_visitor(Vertex goal) : m_goal(goal) {}
   template <class Graph>
   void examine_vertex(Vertex u, Graph& g) {
     if (u == m_goal)
@@ -564,7 +564,7 @@ class astar_goal_visitor : public boost::default_astar_visitor {
 };
 
 /// get the shortestpath and the cost of reaching the goal
-boost::tuple<list<VecGVD::Vertex>, float> get_path(VecGVD gvd, pos from, pos to) {
+boost::tuple<list<VecGVD::Vertex>, float> get_single_path(VecGVD gvd, pos from, pos to) {
   VecGVD::Graph g = gvd.g;
   VecGVD::Vertex start = gvd.positions[from];
   VecGVD::Vertex goal = gvd.positions[to];
@@ -577,10 +577,10 @@ boost::tuple<list<VecGVD::Vertex>, float> get_path(VecGVD gvd, pos from, pos to)
   list<vertex> shortest_path;
   try {
     // call astar named parameter interface
-    astar_search_tree(g, start, distance_heuristic<mygraph_t, cost, VecGVD::Graph>(gvd.g, goal),
+    astar_search_tree(g, start, single_astar_distance_heuristic<mygraph_t, cost, VecGVD::Graph>(gvd.g, goal),
                       predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g)))
                           .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g)))
-                          .visitor(astar_goal_visitor<vertex>(goal)));
+                          .visitor(single_astar_goal_visitor<vertex>(goal)));
   } catch (found_goal fg) {  // found a path to the goal
 
     for (vertex v = goal;; v = p[v]) {
@@ -598,4 +598,107 @@ boost::tuple<list<VecGVD::Vertex>, float> get_path(VecGVD gvd, pos from, pos to)
     cout << endl << "Total travel time: " << d[goal] << endl;
   }
   return boost::make_tuple(shortest_path, d[goal]);
+}
+
+// Multi A*
+
+/// euclidean distance heuristic
+template <class Graph, class CostType>
+class multi_astar_distance_heuristic : public astar_heuristic<Graph, CostType> {
+ public:
+  typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
+  multi_astar_distance_heuristic(Graph g, pos_set goals) : m_graph(g), m_goals(goals) {}
+  CostType operator()(Vertex u) { 
+    cout<<"heuristica antes"<<m_goals.size()<<endl;
+    pos current_target = *(m_goals.begin());
+    CostType distance = dist(m_graph[u].p, current_target);
+    cout<<distance<<endl;
+    auto it = m_goals.find(m_graph[u].p);
+    if( it != m_goals.end() && m_goals.size()>1){
+       m_goals.erase(it);
+    }
+    pos new_target = *(m_goals.begin());
+    cout<<"heuristica desopues"<<m_goals.size()<<endl;
+    return dist(m_graph[u].p, new_target); 
+  }
+
+ private:
+  Graph m_graph;
+  pos_set m_goals;
+};
+
+struct found_goals {};  // exception for termination
+
+/// visitor that terminates when we find the goal
+template <class Vertex>
+class multi_astar_goal_visitor : public boost::default_astar_visitor {
+ public:
+  multi_astar_goal_visitor(pos_set goals) : m_goals(goals) {}
+  template <class Graph>
+  void examine_vertex(Vertex u, Graph g) {
+    cout<<"visitor antess"<<m_goals.size()<<endl;
+    auto it = m_goals.find(g[u].p);
+    if( it != m_goals.end()){
+      if( m_goals.size()>1){
+        m_goals.erase(it);
+      }else{
+        throw found_goals();
+      }
+       
+    }
+    cout<<"visitor despues"<<m_goals.size()<<endl;
+    if(m_goals.size() == 0){
+      throw found_goals();
+    }
+  }
+
+ private:
+  pos_set m_goals;
+};
+
+/// get the shortestpath and the cost of reaching the goal
+boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_map<pos,float>> get_multi_path(VecGVD gvd, pos start, pos_set goals) {
+  VecGVD::Graph g = gvd.g;
+
+  vector<VecGVD::Vertex> p(num_vertices(g));
+  vector<float> d(num_vertices(g));
+	boost::unordered_map<pos,list<VecGVD::Vertex>> shortest_paths;
+	boost::unordered_map<pos,float> shortest_paths_costs;
+  try {
+    // call astar named parameter interface
+    astar_search_tree(g, gvd.positions[start], multi_astar_distance_heuristic<VecGVD::Graph, float>(gvd.g, goals),
+                      predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g)))
+                          .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g)))
+                          .visitor(multi_astar_goal_visitor<VecGVD::Vertex>(goals)));
+  } catch (found_goals fg) {  // found a path to the goal
+    cout<<"comienzo del termino!"<<endl;
+    for(auto it = goals.begin(); it != goals.end(); it++){
+      list<VecGVD::Vertex> shortest_path;
+			pos goal = *it;    
+			VecGVD::Vertex goal_v = gvd.positions[goal];
+
+      for (VecGVD::Vertex v = goal_v;; v = p[v]) {
+        shortest_path.push_front(v);
+        if (p[v] == v) break;
+      }
+
+			shortest_paths[goal] = shortest_path;
+
+			shortest_paths_costs[goal] = d[goal_v];
+    }
+    
+    for(auto it = goals.begin(); it != goals.end(); it++){
+      pos goal = *it;  
+      cout << "Shortest path from " << start << " to " << goal << ": ";
+
+      list<VecGVD::Vertex>::iterator spi = shortest_paths[goal].begin();
+      cout << start;
+      for (++spi; spi != shortest_paths[goal].end(); ++spi)
+        cout << " -> " << gvd.g[*spi].p;
+
+      cout << endl << "Total travel time: " << d[gvd.positions[goal]] << endl;
+    }
+  }
+  cout<<"fin del termino!"<<endl;
+  return boost::make_tuple(shortest_paths, shortest_paths_costs);
 }

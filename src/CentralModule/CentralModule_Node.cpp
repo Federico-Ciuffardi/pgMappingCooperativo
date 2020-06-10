@@ -81,8 +81,8 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
 void startAuction() {
   // initialization
   auctionTimer.stop();
-  auctionTimer.setPeriod(ros::Duration(3.0));
-  centralModule.setEstado(WaitingBids);
+  auctionTimer.setPeriod(ros::Duration(4.0));
+  centralModule.setEstado(WaitingFirstBid);
 
   map_info_type map_info = centralModule.getMap().info;
 
@@ -117,11 +117,11 @@ void startAuction() {
 
   ROS_INFO("CENTRAL MODULE :: Segment Auction Start");
 
-  auctionTimer.start();
+
 }
 
 // Handler Functions
-
+//bool pending = false;
 /* cuando: auctionTimer timeout */
 /* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */
 void timerRoutine(const ros::TimerEvent&) {
@@ -140,16 +140,23 @@ void timerRoutine(const ros::TimerEvent&) {
   } else {
     ROS_DEBUG("Warning: auction timeout on no auction");
   }
+//  if(pending){
+//    pending = false;
+//    startAuction();
+//  }
 }
 
 /* cuando: un robot te pide un objetivo */
 /* que: inicia una subasta */
-void handleRequest(const std_msgs::StringConstPtr& msg) {
-  if (!FIN) {
-    startAuction();
-  }
-}
 
+void handleRequest(const std_msgs::StringConstPtr& msg) {
+  if (!FIN && (centralModule.getEstado() == WaitingAuction) ) {
+    startAuction();
+  }//else{
+  //  pending = true;
+  //}
+}
+bool first =true;
 /* cuando: llega un nuevo mapa */
 /* que: actualizar mapa si no se estan esperando ofertas ni se termino
                 y si es el decimo mapa recibido inicia una subasta*/
@@ -160,10 +167,14 @@ void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
     //centralModule.updateMap(msg);
   //}
   centralModule.updateMap(msg);
-  mapsHandled++;  // maps handled
-  if (mapsHandled == 10) {
+  if(first){
+    first = false;
     startAuction();
   }
+  //mapsHandled++;  // maps handled
+  //if (mapsHandled == 10) {
+  //  startAuction();
+  //}
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
@@ -180,8 +191,12 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
 void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string name) {
   if (!FIN) {
     // centralModule.saveSegmentBid(*msg, name);
-    centralModule.saveSegmentBid(*msg, name);
+    bool successful = centralModule.saveSegmentBid(*msg, name);
     ROS_INFO("CENTRAL MODULE :: got segment_bid from %s", name.c_str());
+    if(centralModule.getEstado() == WaitingFirstBid && successful){
+      centralModule.setEstado(WaitingBids);
+      auctionTimer.start();
+    }
   }
 }
 
