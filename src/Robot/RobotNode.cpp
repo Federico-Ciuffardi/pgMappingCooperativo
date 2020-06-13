@@ -53,7 +53,11 @@ string get_frontier_auction_topic(tscf_exploration::Point2D segment, int auction
   return "frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "|" +
          to_string(segment.y);
 }
-
+void publishPath(pos frontier){
+    tscf_exploration::goalList path = robot.getPathToSegment(frontier);
+    if (path.listaGoals.size() > 0)
+      goalPath_pub.publish(path);
+}
 /*
  *  Main Functions
  */
@@ -95,13 +99,16 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
 //bool handlingSegmentAuction = false;
 
 
-int last_segment_auction_id = -1;
+//int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
-  if(last_segment_auction_id > msg->id){
+  
+  robot.reset_bid();
+  
+  if(robot.last_segment_auction_id > msg->id){
     return;
   }
-  last_segment_auction_id = msg->id;
+  robot.last_segment_auction_id = msg->id;
   if (!FIN){ //&& msg->id>last_id) {
     ROS_INFO("%s :: Me llego el mensaje con los segmentos", robot.getNombre().c_str());
     tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
@@ -112,35 +119,43 @@ void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
 }
 
 boost::unordered_map<int, tscf_exploration::FrontierBid> frontierBids;
-int robot_num = -1;
+int robots_num = -1;
 
 void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
-  // frontierBids[msg->robotId];
+  if(auction_robots<=robots_num){
+    robot.saveFrontierBid(msg);
+    if(auction_robots == robots_num){
+      pos frontier = robot.assignFrontier();
+      publishPath(frontier);
+    }
+  }
+  return;
 }
 
-int last_segment_assignment_id = -1;
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
-  if(last_segment_assignment_id > msg->id){
+  if(robot.last_segment_assignment_id > msg->id){
     return;
   }
-  last_segment_assignment_id = msg->id;
+  robot.last_segment_assignment_id = msg->id;
   robot.assigned_segment = p2d_to_pos(msg->segment);
 
-  robot_num = msg->robots_num;
+  robots_num = msg->robots_num;
 
-  if (true /*robot_num == 1*/) {
-    tscf_exploration::goalList path = robot.getPathToSegment(msg->frontiers[0]);
-    if (path.listaGoals.size() > 0)
-      goalPath_pub.publish(path);
+  if (robots_num == 1) {
+    robot.set_my_paths_to_frontieres(msg->frontiers[0]);
+    publishPath(p2d_to_pos(msg->frontiers[0]));
   } else {
     frontierBids.clear();
-
+    tscf_exploration::FrontierBid frontiers_bid = robot.getFrontierBid(msg->frontiers);
     // start the frontier auction
     string topic = get_frontier_auction_topic(msg->segment, msg->id);
-    // frontier_bid_sub = nh->subscribe(topic,robot_num , handleCoverage); TODO
     frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, 1);
+    
+    frontier_bid_pub.publish(frontiers_bid);
+    
+    frontier_bid_sub = nh->subscribe(topic,robots_num , handleFrontierBid); TODO
     // value the segments
-    // frontier_bid_pub.publish(my_bids);
+
   }
 }
 

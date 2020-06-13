@@ -375,12 +375,12 @@ void clean_up(GVD& gvd, dist_grid dgrid) {
   }
 }
 
-int degree_constraint(grid_type& ogrid, GVD& gvd) {
+int degree_constraint(grid_type& ogrid, GVD& gvd, boost::unordered_map<pos, bool> lmins) {
   int criticals_count = 0;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     pos current_pos = gvd.g[*vp.first].p;
-    // bool is_min = lmins[current_pos];
-    if (out_degree(*vp.first, gvd.g) == 2) {
+    bool is_min = lmins[current_pos];
+    if (out_degree(*vp.first, gvd.g) == 2 && is_min) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         if (out_degree(*ad.first, gvd.g) >= 3) {
           ogrid[current_pos.first][current_pos.second] = Critical;
@@ -461,7 +461,8 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   clean_up(gvd, dg);
   //collapse_vertices(gvd, local_mins);
   // TODO borrar el criticals count no se usa
-  int criticals_count = degree_constraint(ogrid, gvd);
+  //Quick Fix, pass the local_mins to the degree constraint, this should be mark on the gvd so there is no need to passed the map of local mins
+  int criticals_count = degree_constraint(ogrid, gvd, locals_mins);
   // cout << criticals_count << endl;
   // boost::unordered_map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd,
   // criticals_count);

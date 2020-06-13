@@ -29,6 +29,7 @@
 #include <vector>
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
+#include "../lib/auction.h"
 
 typedef boost::unordered_map<int, std::list<int> > dict_clusters;
 
@@ -42,7 +43,10 @@ class Robot {
 
   // Segmentation relatied
   geometry_msgs::Point position;
-  boost::unordered_map<pos,std::list<VecGVD::Vertex>> paths;
+  boost::unordered_map<pos,list<VecGVD::Vertex>> paths;
+  boost::unordered_map<pos,float>> paths_costs;
+
+  //boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_map<pos,float>> multi_paths_with_cost;
   VecGVD gvd;
   pos my_pos;
   pos my_segment;
@@ -52,6 +56,9 @@ class Robot {
 
   std::string nombreRobot;
   pos assigned_segment;
+  int last_segment_assignment_id = -1;
+  bids_priority_queue bids_pq;
+  int auction_robots = 0;
 
   void setPosition(int x, int y);
   geometry_msgs::Point getPosition();
@@ -63,14 +70,21 @@ class Robot {
   void setNombre(std::string nom);
   std::string getNombre();
 
+  int getRobotId(){;
+
+  void set_my_paths_to_frontieres(tscf_exploration::Point2D[] points);
+
   bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
   void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist);
   void add_to_gvd(pos f_pos);
   boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
 
   tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
-
-  tscf_exploration::goalList getPathToSegment(tscf_exploration::Point2D segment);
+  tscf_exploration::FrontierBid getFrontierBid(tscf_exploration::Point2D[] frontiers);
+  bool saveFrontierBid(tscf_exploration::FrontierBid fb);
+  pos assignFrontier();
+  tscf_exploration::goalList getPathToSegment(pos p);
+  void reset_bid();
 };
 
   //nav_msgs::OccupancyGrid global_map;
