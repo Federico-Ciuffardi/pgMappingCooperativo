@@ -190,17 +190,22 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
   boost::unordered_map<string, tscf_exploration::SegmentAssignment> ret;
 
   // boost::unordered_map<pos,tscf_exploration::Point2D> frontier2d;
-  for (auto it = robot_segment.begin(); it != robot_segment.end(); it++) {
-    string r_name = it->first;
-    pos seg = it->second;
+  for (auto it = auction_robots.begin(); it != auction_robots.end(); it++) {
+    string r_name = *it;
     tscf_exploration::SegmentAssignment sa;
-    sa.segment = pos_to_p2d(seg);
-    sa.frontiers = pos_to_p2d(cis[seg].frontiers);
-    // data for frontier auction
     sa.id = last_segment_assignment_id;
-    sa.robots_num = robots_nums[seg];
-
-    ret[r_name] = sa;
+    if(robot_segment.find(r_name)!= robot_segment.end()){
+      pos seg = robot_segment[r_name];
+      sa.segment = pos_to_p2d(seg);
+      sa.frontiers = pos_to_p2d(cis[seg].frontiers);
+      // data for frontier auction
+      sa.robots_num = robots_nums[seg];
+      sa.assigned = 1;
+      ret[r_name] = sa;
+    }else{
+      sa.assigned = 0;
+    }
+    
   }
   last_segment_assignment_id++;
   return ret;

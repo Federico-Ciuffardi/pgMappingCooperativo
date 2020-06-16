@@ -279,7 +279,6 @@ void Robot::add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration:
   }
 }
 
-
 tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
   
   //ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");

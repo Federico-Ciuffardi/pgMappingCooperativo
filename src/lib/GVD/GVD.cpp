@@ -277,24 +277,26 @@ boost::unordered_map<pos, bool> get_local_mins(dist_grid dg, GVD& gvd) {
   boost::unordered_map<pos, bool> lmins;
   
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
-    bool auxmin = true;
+    bool is_min_e = true;
+    bool has_greater = false;
     pos current_pos = gvd.g[*vp.first].p;
     bool not_processed = lmins.find(current_pos) == lmins.end();
-    bool has_greater = false;
+    
     if (not_processed) {
+
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         pos adj_pos = gvd.g[*ad.first].p;
-        bool is_min = cell(dg, current_pos).distance <= cell(dg, adj_pos).distance;
+        bool auxmin = cell(dg, current_pos).distance <= cell(dg, adj_pos).distance;
         bool adj_greater = cell(dg, current_pos).distance < cell(dg, adj_pos).distance; 
 
         if (adj_greater) {
           has_greater = true;
           lmins[adj_pos] = false;
         }
-        auxmin = is_min && auxmin;
-        if(!auxmin) break;
+        is_min_e = is_min_e && auxmin;
+        if(!is_min_e) break;
       }
-      lmins[current_pos] = auxmin && has_greater;
+      lmins[current_pos] = is_min_e && has_greater;
     }
   }
   return lmins;
@@ -309,15 +311,19 @@ void collapse_vertices(GVD& gvd, boost::unordered_map<pos, bool> lmins) {
     auto vp_aux = vp.first;
     ++vp.first;
     pos current_pos = gvd.g[*vp_aux].p;
+
     bool is_min = lmins[current_pos];
     if (!is_min && out_degree(*vp_aux, gvd.g) == 2) {
       auto adj = adjacent_vertices(*vp_aux, gvd.g);
+      
       auto adj1 = gvd.g[*adj.first];
       pos adj1_aux = adj1.p - current_pos;
       auto adj_aux = adj;
+      
       ++adj.first;
       auto adj2 = gvd.g[*adj.first];
       pos adj2_aux = (adj2.p - current_pos);
+      
       if (same_direcction(adj1_aux, adj2_aux)) {
         gvd.add_e(*adj_aux.first, *adj.first);
         gvd.add_e(*adj.first, *adj_aux.first);
@@ -380,13 +386,12 @@ void clean_up(GVD& gvd, dist_grid dgrid) {
   }
 }
 
-int degree_constraint(grid_type& ogrid, GVD& gvd, boost::unordered_map<pos, bool> lmins) {
+int degree_constraint(grid_type& ogrid, GVD& gvd) {
   int criticals_count = 0;
   pos current_pos;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     current_pos = gvd.g[*vp.first].p;
-    bool is_min = lmins[current_pos];
-    if (out_degree(*vp.first, gvd.g) == 2 && is_min) {
+    if (out_degree(*vp.first, gvd.g) == 2) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         if (out_degree(*ad.first, gvd.g) >= 3) {
           ogrid[current_pos.first][current_pos.second] = Critical;
@@ -448,6 +453,7 @@ criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
     dqueue.pop();
     vector<pos>& frontier_crits = cell(dgrid, frontier_dp.second).obs;
     int c_size = frontier_crits.size();
+
     for (int i = 0; i < c_size; i++) {
       pos critical_pos = frontier_crits[i];
       GVD::Vertex cv = gvd.positions[critical_pos];
@@ -480,10 +486,11 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
 
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg);
-  collapse_vertices(gvd, local_mins);
+  GVD gvd_copy = gvd;
+  collapse_vertices(gvd_copy, local_mins);
   // TODO borrar el criticals count no se usa
   //Quick Fix, pass the local_mins to the degree constraint, this should be mark on the gvd so there is no need to passed the map of local mins
-  int criticals_count = degree_constraint(ogrid, gvd, local_mins);
+  int criticals_count = degree_constraint(ogrid, gvd_copy);
   // cout << criticals_count << endl;
   // boost::unordered_map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd,
   // criticals_count);
