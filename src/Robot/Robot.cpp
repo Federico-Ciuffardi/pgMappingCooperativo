@@ -4,6 +4,7 @@ Robot::Robot() {
   // first = true;
   sensor_range = 6.0;
   lado = 1;
+  auction_robots = 0;
   // dist_info_gain_obst = lado / sqrt(2);
 }
 
@@ -188,54 +189,59 @@ geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
 }
 
 //set on the robot variables paths and paths_costs to the frontiers on the array
-void Robot::set_my_paths_to_frontieres(tscf_exploration::Point2D[] points){
+void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points){
   pos_set f_set;
   for(int i=0; i<points.size(); i++){
-    pos f_pos = p2d_to_pos(frontier);
+    pos f_pos = p2d_to_pos(points[i]);
     add_to_gvd(f_pos);
     f_set.insert(f_pos);
   }
   //maybe i could recalculate for every frontier to be more exact
   if(assigned_segment == my_segment){
-    boost::tie(paths, paths_costs) = get_single_path(gvd, my_pos, f_set);
+    boost::tie(paths, paths_costs) = get_multi_path(gvd, my_pos, f_set);
+    ROS_INFO("romi calcule el camino a las fronteras");
   }else{
     boost::unordered_map<pos,list<VecGVD::Vertex>> f_paths;
-    boost::unordered_map<pos,float>> f_paths_costs;
-    boost::tie(f_paths, f_paths_costs) = get_single_path(gvd, my_pos, f_set);
+    boost::unordered_map<pos,float> f_paths_costs;
+    boost::tie(f_paths, f_paths_costs) = get_multi_path(gvd, assigned_segment, f_set);
     //duplicated information (robot->segment)
+    //where should i assigned the path, under key assigned_segment or under frontier?
     for(auto it = f_set.begin(); it != f_set.end(); ++it){
-      paths[*it].splice(path[assigned_segment].end(), f_paths[*it]);
-      paths_costs[*it] += f_paths_costs[*it];
+      //paths[assigned_segment].splice(paths[assigned_segment].end(), f_paths[*it]);
+      //f_paths[*it].pop_front();
+      f_paths[*it].splice(f_paths[*it].begin(), paths[assigned_segment]); 
+      //paths[*it] = paths[assigned_segment];
+      paths[*it] = f_paths[*it];
+      paths_costs[*it] = paths_costs[assigned_segment] + f_paths_costs[*it];
     }
   }
 }
 
 int Robot::getRobotId(){
   int id = 0;
-  for(int i = nombreRobot-1; i>= 0; i--){
-    if(!isdigit(nombreRobot[i])){
-      return stoi(nombreRobot.substr(i+1));
-    }
-  }
+  //for(int i = nombreRobot.size()-1; i>= 0; i--){
+    //if(!isdigit(nombreRobot[i])){
+  return stoi(nombreRobot.substr(4));
+    //}
+  //}
+  //return -1;
 }
 
-tscf_exploration::FrontierBid Robot::getFrontierBid(tscf_exploration::Point2D[] frontiers){
+tscf_exploration::FrontierBid Robot::getFrontierBid(vector<tscf_exploration::Point2D> frontiers){
   set_my_paths_to_frontiers(frontiers);
   tscf_exploration::FrontierBid msg;
-  for(auto it; it != paths.end(); ++it){
-    msg.frontiers = pos_to_p2d(it->first);
-    msg.values.push_back(paths_cost[it->first]); 
+  for(auto it = frontiers.begin(); it != frontiers.end(); ++it){
+    msg.frontiers.push_back(*it);
+    msg.values.push_back(paths_costs[p2d_to_pos(*it)]); 
   }
   msg.robotId = getRobotId();
-  msg.id = last_segment_assignment_id; 
+  msg.id = last_segment_assignment_id;
+  last_frontier_auction_id = last_segment_auction_id; 
   return msg;
 }
 
 
 bool Robot::saveFrontierBid(tscf_exploration::FrontierBid fb) {
-  if(last_segment_assignment_id>fb.id){
-    return false;
-  }
   // segment_bids[name].clear();
   for (int i = 0; i < fb.frontiers.size(); i++) {
     // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
@@ -244,17 +250,17 @@ bool Robot::saveFrontierBid(tscf_exploration::FrontierBid fb) {
     add_bid(bids_pq, name, f_pos, fb.values[i]);
     //auction_segment_frontiers_num[f_pos] = cis[segment].frontiers.size();
   }
-  auction_robots++;
+  auction_robots =auction_robots+1;
   return true;
 }
 
 pos Robot::assignFrontier() {
   int total_robots = auction_robots;
-  int total_frontiers = paths.sizes();
+  int total_frontiers = paths.size();
   string id = to_string(getRobotId());
   boost::unordered_map<string, pos> robot_frontiers =
   resolve_auction(bids_pq, total_robots,total_frontiers);
-  return robot_frontier[id];
+  return robot_frontiers[id];
 }
 
 //First solution, didnot work properly
@@ -317,12 +323,12 @@ tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
   return g_list;
 }
 
-void Robot::resetBid(){
+/*void Robot::reset_bid(){
   paths.clear();
   paths_costs.clear();
   clear_bids(bids_pq);
   auction_robots = 0;
-}
+}*/
 
 /*void Robot::setErrorCont(int i) {
   Robot::errorCont = i;

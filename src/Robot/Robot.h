@@ -44,7 +44,7 @@ class Robot {
   // Segmentation relatied
   geometry_msgs::Point position;
   boost::unordered_map<pos,list<VecGVD::Vertex>> paths;
-  boost::unordered_map<pos,float>> paths_costs;
+  boost::unordered_map<pos,float> paths_costs;
 
   //boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_map<pos,float>> multi_paths_with_cost;
   VecGVD gvd;
@@ -57,6 +57,8 @@ class Robot {
   std::string nombreRobot;
   pos assigned_segment;
   int last_segment_assignment_id = -1;
+  int last_segment_auction_id = -1;
+  int last_frontier_auction_id = -1;
   bids_priority_queue bids_pq;
   int auction_robots = 0;
 
@@ -70,9 +72,9 @@ class Robot {
   void setNombre(std::string nom);
   std::string getNombre();
 
-  int getRobotId(){;
+  int getRobotId();
 
-  void set_my_paths_to_frontieres(tscf_exploration::Point2D[] points);
+  void set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points);
 
   bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
   void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist);
@@ -80,7 +82,7 @@ class Robot {
   boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
 
   tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
-  tscf_exploration::FrontierBid getFrontierBid(tscf_exploration::Point2D[] frontiers);
+  tscf_exploration::FrontierBid getFrontierBid(vector<tscf_exploration::Point2D> frontiers);
   bool saveFrontierBid(tscf_exploration::FrontierBid fb);
   pos assignFrontier();
   tscf_exploration::goalList getPathToSegment(pos p);

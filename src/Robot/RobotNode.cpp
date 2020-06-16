@@ -50,7 +50,7 @@ std::string end_msg("END");
  */
 
 string get_frontier_auction_topic(tscf_exploration::Point2D segment, int auction_id) {
-  return "frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "|" +
+  return "/frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "_" +
          to_string(segment.y);
 }
 void publishPath(pos frontier){
@@ -96,18 +96,17 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
 // could fail if a new segment auction starts before the segment assignment message arrives
 // could be fixed by making it block all the way and making that all the robots receives an advice of the end of the 
 // bid
-//bool handlingSegmentAuction = false;
+bool handlingSegmentAuction = false;
 
 
 //int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   
-  robot.reset_bid();
-  
-  if(robot.last_segment_auction_id > msg->id){
-    return;
-  }
+  if(robot.last_segment_auction_id >= msg->id || handlingSegmentAuction) return;
+
+  //robot.reset_bid();
+
   robot.last_segment_auction_id = msg->id;
   if (!FIN){ //&& msg->id>last_id) {
     ROS_INFO("%s :: Me llego el mensaje con los segmentos", robot.getNombre().c_str());
@@ -122,9 +121,14 @@ boost::unordered_map<int, tscf_exploration::FrontierBid> frontierBids;
 int robots_num = -1;
 
 void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
-  if(auction_robots<=robots_num){
-    robot.saveFrontierBid(msg);
-    if(auction_robots == robots_num){
+  ROS_INFO("romi %s :: me llego un fronteras bid de %d", robot.getNombre().c_str(),msg->robotId); 
+  ROS_INFO("robot.auction_robots %d , robot_num %d", robot.auction_robots,robots_num); 
+  //if(robot.last_frontier_auction_id > msg->id) return;
+
+  //robot.last_frontier_auction_id = msg->id;
+  if(robot.auction_robots<=robots_num){
+    robot.saveFrontierBid(*msg);
+    if(robot.auction_robots == robots_num){
       pos frontier = robot.assignFrontier();
       publishPath(frontier);
     }
@@ -133,27 +137,35 @@ void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
 }
 
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
-  if(robot.last_segment_assignment_id > msg->id){
-    return;
-  }
+  if(robot.last_segment_assignment_id >= msg->id) return;
+
   robot.last_segment_assignment_id = msg->id;
   robot.assigned_segment = p2d_to_pos(msg->segment);
 
   robots_num = msg->robots_num;
 
   if (robots_num == 1) {
-    robot.set_my_paths_to_frontieres(msg->frontiers[0]);
+    vector<tscf_exploration::Point2D> frontier;
+    frontier.push_back(msg->frontiers[0]);
+    robot.set_my_paths_to_frontiers(frontier);
     publishPath(p2d_to_pos(msg->frontiers[0]));
   } else {
-    frontierBids.clear();
+    //frontierBids.clear();
+    clear_bids(robot.bids_pq);
+    robot.auction_robots = 0;
     tscf_exploration::FrontierBid frontiers_bid = robot.getFrontierBid(msg->frontiers);
+    ROS_INFO("romi ya sali de la funcion para armar las frontierbids");
     // start the frontier auction
     string topic = get_frontier_auction_topic(msg->segment, msg->id);
-    frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, 1);
-    
+    ROS_INFO("topico dinamico para el intercambio de fronteras: %s",topic.c_str());
+    ROS_INFO("romi me suscribi al topico de las frontierbids");
+    frontier_bid_sub = nh->subscribe(topic,robots_num , handleFrontierBid);
+    ROS_INFO("romi voy a publicar mis frontiers bids");
+    frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, robots_num,true);
     frontier_bid_pub.publish(frontiers_bid);
-    
-    frontier_bid_sub = nh->subscribe(topic,robots_num , handleFrontierBid); TODO
+    ROS_INFO("romi publique las frontiers bids");
+
+
     // value the segments
 
   }
@@ -161,10 +173,10 @@ void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& 
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
+  nh = new ros::NodeHandle();
+  ros::NodeHandle n = *nh;
 
-  ros::NodeHandle n;
-
-  nh = &n;
+  
 
   ros::NodeHandle private_node_handle("~");
 

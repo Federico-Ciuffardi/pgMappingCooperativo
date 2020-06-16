@@ -180,6 +180,12 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
   boost::unordered_map<string, pos> robot_segment =
       resolve_auction(bids_pq, total_robots, total_segments, &auction_segment_frontiers_num);
 
+  boost::unordered_map<pos, int> robots_nums;
+  for (auto it = robot_segment.begin(); it != robot_segment.end(); it++) {
+    pos seg = it->second;
+    robots_nums[seg]++;
+  }
+
   // cout<<"termina la sasignacion"<<endl;
   boost::unordered_map<string, tscf_exploration::SegmentAssignment> ret;
 
@@ -192,7 +198,7 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
     sa.frontiers = pos_to_p2d(cis[seg].frontiers);
     // data for frontier auction
     sa.id = last_segment_assignment_id;
-    sa.robots_num = auction_robots.size();
+    sa.robots_num = robots_nums[seg];
 
     ret[r_name] = sa;
   }
