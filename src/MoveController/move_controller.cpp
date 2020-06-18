@@ -15,8 +15,8 @@
 
 // Constantes
 
-const double TOLERANCE_GOAL = 1.5;       // 0.30;
-const double TOLERANCE_WAYPOINTS = 1.5;  // 0.50;
+const double TOLERANCE_GOAL = 0.75;       // 0.30;
+const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
 const double SPEED = 0.8;                // 0.5
 
 // const std::string ODOM_FRAME = "p3dx0_tf/odom";
@@ -189,14 +189,14 @@ int main(int argc, char** argv) {
       }
       case 4: {  // AVANZANDO AL ULTIMO PUNTO
         float dist_to_target = getDistance(path_step - 1);
-        ROS_INFO("Waiting for last point");
+        //ROS_INFO("Waiting for last point");
         // string recv = "";
         // stringstream ss;
         // ss << (msg_id - 1) << " SUCCES";
         // string msg = ss.str();
         // recv = client.receive_msg();
         // if (recv.find(msg)) {
-        if (dist_to_target <= TOLERANCE_WAYPOINTS) {
+        if (dist_to_target <= TOLERANCE_GOAL) {
           ROS_INFO("Path end %s", name_space.c_str());
           estado = 0;
           // std_msgs::String msg_succes;

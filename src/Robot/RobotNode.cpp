@@ -38,6 +38,7 @@ ros::Publisher goalPath_pub;
 ros::Publisher robot_debug_pub;
 ros::Publisher coverage_report_pub;
 ros::Publisher end_robots_pub;
+ros::Publisher marker_pub;
 
 // others
 Robot robot;
@@ -53,11 +54,36 @@ string get_frontier_auction_topic(tscf_exploration::Point2D segment, int auction
   return "/frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "_" +
          to_string(segment.y);
 }
+
 void publishPath(pos frontier){
-    tscf_exploration::goalList path = robot.getPathToSegment(frontier);
-    if (path.listaGoals.size() > 0)
-      goalPath_pub.publish(path);
+  tscf_exploration::goalList path = robot.getPathToSegment(frontier);
+
+  //publish objective
+  visualization_msgs::Marker::_points_type points;
+  geometry_msgs::Point p3d = pos_to_p3d(frontier + robot.offset , 0.2);
+  p3d.x += 0.5;
+  p3d.y += 0.5;
+
+  points.push_back(p3d);
+  std_msgs::ColorRGBA magenta;
+  magenta.r = 1.0f;
+  magenta.b = 1.0f;
+  magenta.a = 1.0f;
+  marker_pub.publish(mark_points(robot.getNombre() + "objective", points, magenta));
+
+  //publish path to objective
+  visualization_msgs::Marker::_points_type lines;
+
+  for(auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++){
+    lines.push_back(*it);
+  }
+  marker_pub.publish(mark_lines(robot.getNombre() + "path", lines, magenta,0.1,visualization_msgs::Marker::LINE_STRIP));
+
+  if (path.listaGoals.size() > 0){
+    goalPath_pub.publish(path);
+  }
 }
+
 /*
  *  Main Functions
  */
@@ -72,6 +98,8 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
   std_msgs::String msg_request;
   msg_request.data = "signal";
   request_objetive_pub.publish(msg_request);
+  marker_pub.publish(delete_marks(robot.getNombre() + "objective"));
+  marker_pub.publish(delete_marks(robot.getNombre() + "path"));
   /*if (!FIN) {
 
     std::stringstream ss;
@@ -96,15 +124,15 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
 // could fail if a new segment auction starts before the segment assignment message arrives
 // could be fixed by making it block all the way and making that all the robots receives an advice of the end of the 
 // bid
-//bool handlingAuction = false;
+bool handlingAuction = false;
 
 
 //int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   
-  if(robot.last_segment_auction_id >= msg->id /*|| handlingAuction*/) return;
-  //handlingAuction = true;
+  if(robot.last_segment_auction_id >= msg->id || handlingAuction) return;
+  //handlingAuction = true; prender el bloqueo
   //robot.reset_bid();
 
   robot.last_segment_auction_id = msg->id;
@@ -131,7 +159,7 @@ void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
     if(robot.auction_robots == robots_num){
       pos frontier = robot.assignFrontier();
       publishPath(frontier);
-      //handlingAuction = false;
+      handlingAuction = false;
     }
   }
   return;
@@ -139,10 +167,10 @@ void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
 
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
   if(robot.last_segment_assignment_id >= msg->id) return;
-  /*if(msg->assigned == 0){
-    //handlingAuction = false;
+  if(msg->assigned == 0){
+    handlingAuction = false;
     return;
-  }*/
+  }
   robot.last_segment_assignment_id = msg->id;
   robot.assigned_segment = p2d_to_pos(msg->segment);
 
@@ -212,6 +240,7 @@ int main(int argc, char* argv[]) {
   end_robots_pub = n.advertise<std_msgs::String>("/end_robots", 1);
   robot_debug_pub = n.advertise<nav_msgs::OccupancyGrid>("debugggg", 1);
   coverage_report_pub = n.advertise<std_msgs::String>("/coverage_report", 1);
+  marker_pub = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 
   ROS_INFO("%s :: inicializado :D", robot.getNombre().c_str());
   ros::spin();

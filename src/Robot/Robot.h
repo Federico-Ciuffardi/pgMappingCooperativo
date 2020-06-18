@@ -30,6 +30,7 @@
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/auction.h"
+#include "../lib/rviz.h"
 
 typedef boost::unordered_map<int, std::list<int> > dict_clusters;
 
@@ -39,7 +40,6 @@ class Robot {
   ///Properties
   float sensor_range;
   float lado;
-  pos offset;
 
   // Segmentation relatied
   geometry_msgs::Point position;
@@ -52,6 +52,7 @@ class Robot {
   pos my_segment;
 
  public:
+  pos offset;
   Robot();
 
   std::string nombreRobot;

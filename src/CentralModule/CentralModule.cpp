@@ -201,11 +201,11 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
       // data for frontier auction
       sa.robots_num = robots_nums[seg];
       sa.assigned = 1;
-      ret[r_name] = sa;
+     
     }else{
       sa.assigned = 0;
     }
-    
+     ret[r_name] = sa;
   }
   last_segment_assignment_id++;
   return ret;

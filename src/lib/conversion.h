@@ -72,6 +72,14 @@ static geometry_msgs::Point pos_to_p3d(pos p) {
   return p3d;
 }
 
+static geometry_msgs::Point pos_to_p3d(pos p,float z) {
+  geometry_msgs::Point p3d;
+  p3d.x = p.first;
+  p3d.y = p.second;
+  p3d.z = z;
+  return p3d;
+}
+
 //this should be fila * width + columna
 static int pos_to_p1d(pos p,int width){
   return p.first + p.second*width;

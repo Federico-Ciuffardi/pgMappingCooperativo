@@ -24,7 +24,6 @@ ros::Publisher marker_pub;
 ros::Publisher segment_auction_pub;
 map<string, ros::Publisher> segment_assignment_pubs;
 // others
-ros::Timer segmentAuctionTimer;
 ros::Timer auctionTimer;
 CentralModule centralModule;
 bool FIN = false;
@@ -79,17 +78,22 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
 
 // Aux functions
 void startAuction() {
+  ROS_INFO("Segment Auction Start");
+
   // initialization
+  ROS_INFO("1");
   auctionTimer.stop();
   auctionTimer.setPeriod(ros::Duration(4.0));
   centralModule.setEstado(WaitingFirstBid);
-
+  ROS_INFO("2");
   map_info_type map_info = centralModule.getMap().info;
-
+  ROS_INFO("3");
   // get aution info
   tscf_exploration::SegmentAuction segment_auction;
   GVD gvd;
+  ROS_INFO("Getting segment Auction");
   boost::tie(segment_auction, gvd) = centralModule.getSegmentAuctionInfo();
+  ROS_INFO("Got segment Auction");
 
   // set markers for rviz gvd visualization
   draw_gvd(segment_auction, map_info);
@@ -97,25 +101,7 @@ void startAuction() {
   // Send auction info: Graph and criticals info
   segment_auction_pub.publish(segment_auction);
 
-  /*OLD
-  centralModule.resetArrivals();
-  tscf_exploration::takeobjetive ret;
-  boost::tie(ret, gvd) = centralModule.getObjetiveMap();
-  take_obj_pub.publish(ret);  // publica puntos a subastar
-
-  //visualizar los puntos de interes
-  visualization_msgs::Marker::_points_type ps;
-  for (auto it = ret.centrosf.begin(); it != ret.centrosf.end(); it++) {
-    ps.push_back(
-        pos_to_p3d(pos(*it % map_info.width, *it / map_info.width), map_info));
-  }
-  std_msgs::ColorRGBA color;
-  color.g = 1.0f;
-  color.a = 1.0;
-  marker_pub.publish(mark_points("interest_points", ps, color))
-  */
-
-  ROS_INFO("CENTRAL MODULE :: Segment Auction Start");
+  ROS_INFO("Segment Auction End");
 
 
 }
@@ -126,55 +112,57 @@ void startAuction() {
 /* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */
 void timerRoutine(const ros::TimerEvent&) {
   if (centralModule.getEstado() == WaitingBids) {
-    /*OLD
-    objetive_pub.publish(centralModule.assignTasks());  // ejecucion subasta (asignacion de
-                                                        // tareas) y publicacion de resultados
-    */
-    centralModule.setEstado(WaitingAuction);
+    ROS_INFO("Auction Resolution Start");
+
+    // set up 
+    visualization_msgs::Marker::_points_type points;
+    map_info_type map_info = centralModule.getMap().info;
 
     boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
     for (auto it = assignment.begin(); it != assignment.end(); it++) {
+      tscf_exploration::SegmentAssignment sa = it->second;
+      string s = it->first;
+
       segment_assignment_pubs[it->first].publish(it->second);
+
+      for (auto it = sa.frontiers.begin(); it != sa.frontiers.end(); it++){
+        points.push_back(p2d_to_p3d(*it, 0.1, map_info));
+      } 
     }
-    ROS_INFO("CENTRAL MODULE :: auction end");
+
+    std_msgs::ColorRGBA green;
+    green.g = 1.0f;
+    green.a = 1.0f;
+    marker_pub.publish(mark_points("Frontiers", points, green));
+    ROS_INFO("Auction end");
   } else {
-    ROS_DEBUG("Warning: auction timeout on no auction");
+    startAuction();
+    ROS_WARN("WARNING: auction timeout with no bids, starting a new one...");
   }
-//  if(pending){
-//    pending = false;
-//    startAuction();
-//  }
+  centralModule.setEstado(WaitingAuction);
 }
 
 /* cuando: un robot te pide un objetivo */
 /* que: inicia una subasta */
-
 void handleRequest(const std_msgs::StringConstPtr& msg) {
   if (!FIN && (centralModule.getEstado() == WaitingAuction) ) {
+    ROS_INFO("Auction request successful");
     startAuction();
-  }//else{
-  //  pending = true;
-  //}
+  }else{
+    ROS_INFO("Auction request ignored, already one on course");
+  }
 }
+
 bool first =true;
 /* cuando: llega un nuevo mapa */
 /* que: actualizar mapa si no se estan esperando ofertas ni se termino
                 y si es el decimo mapa recibido inicia una subasta*/
 void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
-  //if ((!FIN) && (centralModule.getEstado() != WaitingBids)) {
-    /* update map */
-    // ROS_INFO("CENTRAL MODULE :: update map");
-    //centralModule.updateMap(msg);
-  //}
   centralModule.updateMap(msg);
   if(first){
     first = false;
     startAuction();
   }
-  //mapsHandled++;  // maps handled
-  //if (mapsHandled == 10) {
-  //  startAuction();
-  //}
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
@@ -192,10 +180,16 @@ void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string na
   if (!FIN) {
     // centralModule.saveSegmentBid(*msg, name);
     bool successful = centralModule.saveSegmentBid(*msg, name);
-    ROS_INFO("CENTRAL MODULE :: got segment_bid from %s", name.c_str());
-    if(centralModule.getEstado() == WaitingFirstBid && successful){
-      centralModule.setEstado(WaitingBids);
-      auctionTimer.start();
+    if(successful){     
+      if(centralModule.getEstado() == WaitingFirstBid){
+        ROS_INFO("Got segment_bid from %s, starting timer", name.c_str());
+        centralModule.setEstado(WaitingBids);
+        auctionTimer.start();
+      }else{
+        ROS_INFO("Got segment_bid from %s, timer already started", name.c_str());
+      }
+    }else{
+      ROS_INFO("Got OLD segment_bid from %s", name.c_str());
     }
   }
 }
@@ -205,8 +199,6 @@ int main(int argc, char* argv[]) {
   ros::NodeHandle n;
 
   auctionTimer = n.createTimer(ros::Duration(3.0), timerRoutine, true);
-
-  // segmentAuctionTimer = n.createTimer(ros::Duration(3.0), timerRoutine, true);
 
   // Publishers
   take_obj_pub = n.advertise<tscf_exploration::takeobjetive>("/take_obj", 1);
@@ -240,7 +232,7 @@ int main(int argc, char* argv[]) {
       /* ROS_INFO("CENTRAL MODULE :: %d", cont_atrv); */
       loop_rate.sleep();
     }
-    ROS_INFO(" CENTRAL MODULE :: esperando por %d robots ",
+    ROS_INFO("Waiting for %d robots ",
              centralModule.getNumRobots() - cont_atrv);
   }
 
@@ -268,7 +260,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  /* ROS_INFO("CENTRAL MODULE :: Numero %d", centralModule.getNumRobots()); */
+  ROS_INFO("Initialized", centralModule.getNumRobots()); 
 
   ros::spin();
 
