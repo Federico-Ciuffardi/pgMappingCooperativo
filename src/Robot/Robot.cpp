@@ -122,7 +122,7 @@ bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos 
 }
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
-  ROS_INFO("tiempos arranca el getSegmentBid---------------------");
+  //ROS_INFO("tiempos arranca el getSegmentBid---------------------");
   //std::cout << "declaracion de segment bid en la prox lienea" << endl;
   tscf_exploration::SegmentBid segment_bid;
   //std::cout << "getGVDPOS en la prox lienea" << endl;
@@ -148,9 +148,9 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   }
   //boost::unordered_map<pos,float> paths_costs;
 
-  ROS_INFO("tiempos arranca el multipath");
+  //ROS_INFO("tiempos arranca el multipath");
   boost::tie(paths, paths_costs) = get_multi_path(gvd,r_pos,criticals);
-  ROS_INFO("tiempos termina el multipath");
+  //ROS_INFO("tiempos termina el multipath");
 
   for (int i = 0; i < msg.criticals.size(); i++) {
     segment_bid.criticals.push_back(msg.criticals[i]);
@@ -177,7 +177,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   }
   // std::cout<<"Termino!"<<endl;
   // ROS_INFO("Termino!");
-  ROS_INFO("tiempos termina el getSegmentBid -----------------");
+  //ROS_INFO("tiempos termina el getSegmentBid -----------------");
   return segment_bid;
 }
 
@@ -197,9 +197,9 @@ void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points){
     f_set.insert(f_pos);
   }
   //maybe i could recalculate for every frontier to be more exact
-  if(assigned_segment == my_segment){
+  if(true){//assigned_segment == my_segment){
     boost::tie(paths, paths_costs) = get_multi_path(gvd, my_pos, f_set);
-    ROS_INFO("romi calcule el camino a las fronteras");
+    //ROS_INFO("romi calcule el camino a las fronteras");
   }else{
     boost::unordered_map<pos,list<VecGVD::Vertex>> f_paths;
     boost::unordered_map<pos,float> f_paths_costs;
@@ -298,7 +298,7 @@ tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
   //ROS_INFO("tiempos termine de calcular el camino");
 
   if(paths[frontier].size() == 0){
-    ROS_INFO("romi el camino no tiene nodos");
+    ROS_WARN("Empty path");
   }
 
   tscf_exploration::goalList g_list;

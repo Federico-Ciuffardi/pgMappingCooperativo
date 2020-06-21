@@ -37,6 +37,8 @@ geometry_msgs::PoseStamped position_old;
 nav_msgs::OccupancyGrid odometry_map;
 ros::Subscriber end_sub;
 
+ros::Timer idleTimer;
+
 bool wait_last_point = false;
 int path_step = 0;
 int msg_id = 0;
@@ -49,6 +51,20 @@ int pathflag = 0;
 std::string end_msg("END");
 float metros = 0.0;
 clock_t startTime;
+
+
+
+void idle_notification(){
+  std_msgs::String str;
+  str.data = "signal";
+  path_result_pub.publish(str);  // msg_succes);
+  path_info_pub.publish(str);    // msg_succes);
+  idleTimer.start();
+}
+
+void idleTimerRoutine(const ros::TimerEvent&){
+  idle_notification();
+} 
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
   std::string str1(msg->data.c_str());
@@ -120,12 +136,16 @@ int main(int argc, char** argv) {
   // Initializing ros
   ros::init(argc, argv, "simple_navigation_goals");
 
+
+
   bool primera = true;
   char buffer_ns[20];
   ros::NodeHandle n;
   name_space = n.getNamespace().substr(1, 5);
 
   ROS_DEBUG("Initializing node %s", name_space.c_str());
+
+  idleTimer = n.createTimer(ros::Duration(30.0), idleTimerRoutine, true,false);
 
   goalPath_sub = n.subscribe("goalPath", /*1*/ 10, setPath);
   pose_sub = n.subscribe("pose", 1, poseCallback);
@@ -170,6 +190,7 @@ int main(int argc, char** argv) {
         break;
       }
       case 2: {
+        idleTimer.stop();
         float dist_to_target = getDistance(path_step - 1);
         // if (dist_to_target == last_distancie){
         //	send_point(path.listaGoals[path_step - 1 ]);
@@ -197,17 +218,14 @@ int main(int argc, char** argv) {
         // recv = client.receive_msg();
         // if (recv.find(msg)) {
         if (dist_to_target <= TOLERANCE_GOAL) {
-          ROS_INFO("Path end %s", name_space.c_str());
+          //ROS_INFO("Path end %s", name_space.c_str());
           estado = 0;
           // std_msgs::String msg_succes;
           // std::stringstream ss2;
           // secondsPassed = (clock() - startTime);
           // ss2 << " " << metros << " " << secondsPassed << " " << path.indice;
           // msg_succes.data = ss2.str();
-          std_msgs::String str;
-          str.data = "signal";
-          path_result_pub.publish(str);  // msg_succes);
-          path_info_pub.publish(str);    // msg_succes);
+          idle_notification();
         }
         break;
       }
@@ -224,6 +242,7 @@ int main(int argc, char** argv) {
       path_step = 0;
       pathflag = 0;
       estado = 0;
+
       path = path_saved;
     }
   }

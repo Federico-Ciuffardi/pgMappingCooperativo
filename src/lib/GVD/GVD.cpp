@@ -334,7 +334,7 @@ void collapse_vertices(GVD& gvd, boost::unordered_map<pos, bool> lmins) {
   }
 }
 
-void clean_up(GVD& gvd, dist_grid dgrid) {
+void clean_up(GVD& gvd, dist_grid dgrid,int min_deg) {
   GVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
     GVD::VertexIterator v_it_aux = v_it;
@@ -343,7 +343,7 @@ void clean_up(GVD& gvd, dist_grid dgrid) {
     GVD::Vertex max_deg_v = *v_it_aux;
     int max_deg = out_degree(*v_it_aux, gvd.g);
 
-    if (max_deg > 2) {  // just for not recalculating out_degree(*v_it_aux, gvd.g) it does not have
+    if (max_deg >= min_deg) {  // just for not recalculating out_degree(*v_it_aux, gvd.g) it does not have
                         // anything to do with the max deg itself
       GVD::AdjacencyIterator av_it, av_it_end;
       for (boost::tie(av_it, av_it_end) = boost::adjacent_vertices(*v_it_aux, gvd.g);
@@ -386,12 +386,12 @@ void clean_up(GVD& gvd, dist_grid dgrid) {
   }
 }
 
-int degree_constraint(grid_type& ogrid, GVD& gvd) {
+int degree_constraint(grid_type& ogrid, GVD& gvd,  boost::unordered_map<pos, bool> local_mins) {
   int criticals_count = 0;
   pos current_pos;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     current_pos = gvd.g[*vp.first].p;
-    if (out_degree(*vp.first, gvd.g) == 2) {
+    if (out_degree(*vp.first, gvd.g) == 2 && local_mins[current_pos]) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         if (out_degree(*ad.first, gvd.g) >= 3) {
           ogrid[current_pos.first][current_pos.second] = Critical;
@@ -401,6 +401,7 @@ int degree_constraint(grid_type& ogrid, GVD& gvd) {
       }
     }
   }
+  // No real critical point found, create an artificial one representing the hole space as one segment 
   if(criticals_count == 0){
     int max = -1;
     pos max_pos;
@@ -419,7 +420,7 @@ int degree_constraint(grid_type& ogrid, GVD& gvd) {
   return criticals_count;
 }
 
-boost::unordered_map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int criticals_count) {
+/*boost::unordered_map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD& gvd, int criticals_count) {
   dist_grid dgrid;
   dist_pos_queue dqueue;
   boost::unordered_map<pos, dist_pos> critical_with_frontier;
@@ -440,7 +441,7 @@ boost::unordered_map<pos, dist_pos> unknown_dist_constraint(grid_type ogrid, GVD
     }
   }
   return critical_with_frontier;
-}
+}*/
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
 criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
@@ -449,25 +450,25 @@ criticals_info unknown_dist_constraint2(grid_type ogrid, GVD& gvd) {
   criticals_info res;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);  // dqueue = frontier queue
   while (!dqueue.empty()) {
-    dist_pos frontier_dp = dqueue.top();
-    dqueue.pop();
-    vector<pos>& frontier_crits = cell(dgrid, frontier_dp.second).obs;
-    int c_size = frontier_crits.size();
+    dist_pos frontier_dp = dqueue.top(); dqueue.pop();
+    pos frontier = frontier_dp.second;
 
-    for (int i = 0; i < c_size; i++) {
+    vector<pos>& frontier_crits = cell(dgrid, frontier).obs;
+
+    for (int i = 0; i < frontier_crits.size(); i++) {
       pos critical_pos = frontier_crits[i];
       GVD::Vertex cv = gvd.positions[critical_pos];
       if (!gvd.g[cv].is_critical) {
         gvd.g[cv].is_critical = true;
         // gvd.g[cv].segment = critical_pos;
         res[critical_pos].mind_f = frontier_dp.first;
-        res[critical_pos].frontiers.push_back(frontier_dp.second);
+        res[critical_pos].frontiers.push_back(frontier);
         // frontier_crits.clear();
         frontier_crits[0] = critical_pos;
         break;
       }
-      if (i == (c_size - 1)) {
-        res[critical_pos].frontiers.push_back(frontier_dp.second);
+      if (i == (frontier_crits.size() - 1)) {// i is the last one
+        res[critical_pos].frontiers.push_back(frontier);
         // frontier_crits.clear();
         frontier_crits[0] = critical_pos;
       }
@@ -485,12 +486,14 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
   boost::unordered_map<pos, bool> local_mins = get_local_mins(dg, gvd);
 
   // TODO clean_up and collapse_vertices can be merged into one function
-  clean_up(gvd, dg);
+  clean_up(gvd, dg,3);
+  clean_up(gvd, dg,2);
   GVD gvd_copy = gvd;
   collapse_vertices(gvd_copy, local_mins);
+
   // TODO borrar el criticals count no se usa
   //Quick Fix, pass the local_mins to the degree constraint, this should be mark on the gvd so there is no need to passed the map of local mins
-  int criticals_count = degree_constraint(ogrid, gvd_copy);
+  int criticals_count = degree_constraint(ogrid, gvd_copy,local_mins);
   // cout << criticals_count << endl;
   // boost::unordered_map<pos, dist_pos> critical_with_frontier = unknown_dist_constraint(ogrid, gvd,
   // criticals_count);
@@ -617,14 +620,14 @@ boost::tuple<list<VecGVD::Vertex>, float> get_single_path(VecGVD gvd, pos from, 
       if (p[v] == v)
         break;
     }
-    cout << "Shortest path from " << from << " to " << to << ": ";
+    //cout << "Shortest path from " << from << " to " << to << ": ";
 
     list<vertex>::iterator spi = shortest_path.begin();
-    cout << from;
-    for (++spi; spi != shortest_path.end(); ++spi)
-      cout << " -> " << gvd.g[*spi].p;
+    //cout << from;
+    //for (++spi; spi != shortest_path.end(); ++spi)
+    //  cout << " -> " << gvd.g[*spi].p;
 
-    cout << endl << "Total travel time: " << d[goal] << endl;
+    //cout << endl << "Total travel time: " << d[goal] << endl;
   }
   return boost::make_tuple(shortest_path, d[goal]);
 }
@@ -638,16 +641,16 @@ class multi_astar_distance_heuristic : public astar_heuristic<Graph, CostType> {
   typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
   multi_astar_distance_heuristic(Graph g, pos_set goals) : m_graph(g), m_goals(goals) {}
   CostType operator()(Vertex u) { 
-    cout<<"heuristica antes"<<m_goals.size()<<endl;
+    //cout<<"heuristica antes"<<m_goals.size()<<endl;
     pos current_target = *(m_goals.begin());
     CostType distance = dist(m_graph[u].p, current_target);
-    cout<<distance<<endl;
+    //cout<<distance<<endl;
     auto it = m_goals.find(m_graph[u].p);
     if( it != m_goals.end() && m_goals.size()>1){
        m_goals.erase(it);
     }
     pos new_target = *(m_goals.begin());
-    cout<<"heuristica desopues"<<m_goals.size()<<endl;
+    //cout<<"heuristica desopues"<<m_goals.size()<<endl;
     return dist(m_graph[u].p, new_target); 
   }
 
@@ -665,7 +668,7 @@ class multi_astar_goal_visitor : public boost::default_astar_visitor {
   multi_astar_goal_visitor(pos_set goals) : m_goals(goals) {}
   template <class Graph>
   void examine_vertex(Vertex u, Graph g) {
-    cout<<"visitor antess"<<m_goals.size()<<endl;
+    //cout<<"visitor antess"<<m_goals.size()<<endl;
     auto it = m_goals.find(g[u].p);
     if( it != m_goals.end()){
       if( m_goals.size()>1){
@@ -675,7 +678,7 @@ class multi_astar_goal_visitor : public boost::default_astar_visitor {
       }
        
     }
-    cout<<"visitor despues"<<m_goals.size()<<endl;
+    //cout<<"visitor despues"<<m_goals.size()<<endl;
     if(m_goals.size() == 0){
       throw found_goals();
     }
@@ -700,7 +703,7 @@ boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_m
                           .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g)))
                           .visitor(multi_astar_goal_visitor<VecGVD::Vertex>(goals)));
   } catch (found_goals fg) {  // found a path to the goal
-    cout<<"comienzo del termino!"<<endl;
+    //cout<<"comienzo del termino!"<<endl;
     for(auto it = goals.begin(); it != goals.end(); it++){
       list<VecGVD::Vertex> shortest_path;
 			pos goal = *it;    
@@ -718,16 +721,16 @@ boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_m
     
     for(auto it = goals.begin(); it != goals.end(); it++){
       pos goal = *it;  
-      cout << "Shortest path from " << start << " to " << goal << ": ";
+      //cout << "Shortest path from " << start << " to " << goal << ": ";
 
       list<VecGVD::Vertex>::iterator spi = shortest_paths[goal].begin();
-      cout << start;
+      /*cout << start;
       for (++spi; spi != shortest_paths[goal].end(); ++spi)
         cout << " -> " << gvd.g[*spi].p;
 
-      cout << endl << "Total travel time: " << d[gvd.positions[goal]] << endl;
+      cout << endl << "Total travel time: " << d[gvd.positions[goal]] << endl;*/
     }
   }
-  cout<<"fin del termino!"<<endl;
+  //cout<<"fin del termino!"<<endl;
   return boost::make_tuple(shortest_paths, shortest_paths_costs);
 }

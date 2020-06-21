@@ -24,11 +24,13 @@ ros::Publisher marker_pub;
 ros::Publisher segment_auction_pub;
 map<string, ros::Publisher> segment_assignment_pubs;
 // others
+ros::Duration timeout(0.1);//first timeout
+
 ros::Timer auctionTimer;
 CentralModule centralModule;
 bool FIN = false;
-
-int mapsHandled = 0;
+ros::Time last_auction_start;
+int succesfulBids = 0;
 
 string end_msg("END");
 
@@ -78,68 +80,77 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
 
 // Aux functions
 void startAuction() {
-  ROS_INFO("Segment Auction Start");
+  ROS_INFO("Segment Auction is starting...");
 
   // initialization
-  ROS_INFO("1");
   auctionTimer.stop();
-  auctionTimer.setPeriod(ros::Duration(4.0));
   centralModule.setEstado(WaitingFirstBid);
-  ROS_INFO("2");
+  
   map_info_type map_info = centralModule.getMap().info;
-  ROS_INFO("3");
+
   // get aution info
   tscf_exploration::SegmentAuction segment_auction;
   GVD gvd;
-  ROS_INFO("Getting segment Auction");
   boost::tie(segment_auction, gvd) = centralModule.getSegmentAuctionInfo();
-  ROS_INFO("Got segment Auction");
+ 
+  //timeout = pow((double)segment_auction.gvd.edges.size(),1.2)/600.0;
+
+  auctionTimer.setPeriod(timeout);
 
   // set markers for rviz gvd visualization
   draw_gvd(segment_auction, map_info);
 
   // Send auction info: Graph and criticals info
   segment_auction_pub.publish(segment_auction);
-
-  ROS_INFO("Segment Auction End");
-
-
+  ROS_INFO("Segment Auction started");
 }
+
+void resolveAuction(){
+  auctionTimer.stop();
+
+  ros::Duration resolution_time = ros::Duration(0.2)+(ros::Time::now() - last_auction_start);  
+  ROS_INFO("Auction Resolution Start, expected %f, real %f",timeout.toSec(),resolution_time.toSec());
+  timeout = max(resolution_time*1.5,timeout);
+  succesfulBids = 0;
+
+  // set up 
+  visualization_msgs::Marker::_points_type points;
+  map_info_type map_info = centralModule.getMap().info;
+
+  boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
+  for (auto it = assignment.begin(); it != assignment.end(); it++) {
+    tscf_exploration::SegmentAssignment sa = it->second;
+    string s = it->first;
+
+    segment_assignment_pubs[it->first].publish(it->second);
+
+    for (auto it = sa.frontiers.begin(); it != sa.frontiers.end(); it++){
+      points.push_back(p2d_to_p3d(*it, 0.1, map_info));
+    } 
+  }
+
+  std_msgs::ColorRGBA green;
+  green.g = 1.0f;
+  green.a = 1.0f;
+  marker_pub.publish(mark_points("Frontiers", points, green));
+  ROS_INFO("Auction resoved");
+  centralModule.setEstado(WaitingAuction);
+}
+
 
 // Handler Functions
 //bool pending = false;
 /* cuando: auctionTimer timeout */
 /* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */
+
+
+
 void timerRoutine(const ros::TimerEvent&) {
   if (centralModule.getEstado() == WaitingBids) {
-    ROS_INFO("Auction Resolution Start");
-
-    // set up 
-    visualization_msgs::Marker::_points_type points;
-    map_info_type map_info = centralModule.getMap().info;
-
-    boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
-    for (auto it = assignment.begin(); it != assignment.end(); it++) {
-      tscf_exploration::SegmentAssignment sa = it->second;
-      string s = it->first;
-
-      segment_assignment_pubs[it->first].publish(it->second);
-
-      for (auto it = sa.frontiers.begin(); it != sa.frontiers.end(); it++){
-        points.push_back(p2d_to_p3d(*it, 0.1, map_info));
-      } 
-    }
-
-    std_msgs::ColorRGBA green;
-    green.g = 1.0f;
-    green.a = 1.0f;
-    marker_pub.publish(mark_points("Frontiers", points, green));
-    ROS_INFO("Auction end");
+    resolveAuction();
   } else {
-    startAuction();
     ROS_WARN("WARNING: auction timeout with no bids, starting a new one...");
   }
-  centralModule.setEstado(WaitingAuction);
 }
 
 /* cuando: un robot te pide un objetivo */
@@ -149,7 +160,7 @@ void handleRequest(const std_msgs::StringConstPtr& msg) {
     ROS_INFO("Auction request successful");
     startAuction();
   }else{
-    ROS_INFO("Auction request ignored, already one on course");
+    ROS_INFO("Auction request from ignored, already one on course");
   }
 }
 
@@ -181,10 +192,16 @@ void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string na
     // centralModule.saveSegmentBid(*msg, name);
     bool successful = centralModule.saveSegmentBid(*msg, name);
     if(successful){     
+      succesfulBids++;
       if(centralModule.getEstado() == WaitingFirstBid){
         ROS_INFO("Got segment_bid from %s, starting timer", name.c_str());
         centralModule.setEstado(WaitingBids);
+        last_auction_start=ros::Time::now();
         auctionTimer.start();
+      }if(succesfulBids==segment_assignment_pubs.size()){
+
+        resolveAuction();
+        ROS_INFO("Got the last segment bid, stopping timer and starting resultion", name.c_str());
       }else{
         ROS_INFO("Got segment_bid from %s, timer already started", name.c_str());
       }

@@ -107,7 +107,7 @@ boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuc
 
   for (auto it = cis.begin(); it != cis.end(); it++) {
     segment_auction.criticals.push_back(pos_to_p2d(it->first));
-    ROS_INFO("critical: %d , %d", it->first.first, it->first.second);
+    //ROS_INFO("critical: %d , %d", it->first.first, it->first.second);
     segment_auction.mind_f.push_back(it->second.mind_f);
     segment_auction.minp_f.push_back(pos_to_p2d(it->second.frontiers[0]));
   }
@@ -201,11 +201,10 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
       // data for frontier auction
       sa.robots_num = robots_nums[seg];
       sa.assigned = 1;
-     
     }else{
       sa.assigned = 0;
     }
-     ret[r_name] = sa;
+    ret[r_name] = sa;
   }
   last_segment_assignment_id++;
   return ret;
