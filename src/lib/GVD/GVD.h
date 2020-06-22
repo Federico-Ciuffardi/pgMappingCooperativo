@@ -181,6 +181,8 @@ using namespace std;
  */
 boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cell_type from_type);
 
+//boost::unordered_map<pos,pos> find_paths_to_gvd(grid_type ogrid, VecGVD gvd, pos_set f_set, pos segment);
+
 grid_gvd get_grid_gvd(dist_grid dg, dist_pos_queue);
 
 //boost::unordered_map<pos, dist_pos> get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd);

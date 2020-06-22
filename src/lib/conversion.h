@@ -109,4 +109,38 @@ static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){
     return p3d;
 }
 
+/* De ocupancy grid a state grid*/
+static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector<int>()) {
+  uint mapWidth = og.info.width;
+  uint mapHeight = og.info.height;
+  grid_type res;
+  for (int x = 0; x < mapWidth; x++) {
+    res.push_back(row_type());
+    for (int y = 0; y < mapHeight; y++) {
+      cell_type ct = Unknown;
+      switch (og.data[y * mapWidth + x]) {
+        case 0:
+          ct = Free;
+          break;
+        case 100:
+          ct = Occupied;
+          break;
+        case -1:
+          ct = Unknown;
+          break;
+        default:
+          ct = (cell_type)-1;
+      }
+      res[x].push_back(ct);
+    }
+  }
+
+  for (auto it = frontera.begin(); it != frontera.end(); it++) {
+    int p1d = *it;
+    pos p = p1d_to_pos(p1d, mapWidth);
+    res[p.first][p.second] = Frontier;
+  }
+  return res;
+}
+
 #endif

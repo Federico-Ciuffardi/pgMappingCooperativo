@@ -33,7 +33,7 @@ void CentralModule::setCentrosF(vector<int> newCentrosF) {
   centros_de_frontera = newCentrosF;
 };
 
-/* De ocupancy grid a state grid*/
+/* De ocupancy grid a state grid
 grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
@@ -65,7 +65,7 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
     res[p.first][p.second] = Frontier;
   }
   return res;
-}
+}*/
 
 void CentralModule::reset_bid() {
   cis.clear();
@@ -201,10 +201,11 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
       // data for frontier auction
       sa.robots_num = robots_nums[seg];
       sa.assigned = 1;
+      ret[r_name] = sa;
     }else{
       sa.assigned = 0;
     }
-    ret[r_name] = sa;
+
   }
   last_segment_assignment_id++;
   return ret;

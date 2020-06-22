@@ -38,6 +38,10 @@ void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
   position.y = msg->pose.position.y;
 }
 
+void Robot::set_grid(){
+  grid = og2gt(map_merged.mapa);
+}
+
 //this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction dis) but we did it to finish
 void Robot::add_to_gvd(pos f_pos){
   float min = -1;
@@ -72,6 +76,38 @@ void Robot::add_to_gvd(pos f_pos){
   }
 
 }
+
+/*void Robot::add_to_gvd(pos_set f_set, pos segment){
+  boost::unordered_map<pos,pos> f_paths;
+  VecGVD::Vertex v_pred;
+  VecGVD::Vertex v;
+  bool inserted;
+  VecGVD::Edge e;
+  f_paths = find_paths_to_gvd(grid,gvd,f_set,segment);
+  for(auto it = f_set.begin(); it != f_set.end(); ++it){
+    pos p = (*it);
+    boost::tie(v, inserted) = gvd.add_v(p);
+    pos i;
+    for(i = f_paths[*it]; gvd.positions.find(i) == gvd.positions.end(); i = f_paths[i]){
+      //ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
+      boost::tie(v_pred, inserted) = gvd.add_v(i);
+      //ROS_INFO("romi vertice %d",inserted);
+      float d = dist(i, p);
+      boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
+      boost::tie(e, inserted) = gvd.add_e(v_pred,v, d);
+      v = v_pred;
+      p = i;
+      //ROS_INFO("romi arista %d",inserted);
+      //ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
+      //ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+    }
+    float d = dist(i, p);
+    v = gvd.positions[i];
+    boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
+    boost::tie(e, inserted) = gvd.add_e(v_pred,v, d); 
+  }
+}*/ 
+
 
 // Robot process graph, creates boost gvd also adds pos->gvd
 boost::tuple<int, VecGVD> Robot::getGVD(tscf_exploration::Graph g, pos r_pos) {
@@ -136,6 +172,10 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   int seg;
 
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
+  
+  //set_grid();
+  //pos_set r_set;
+  //r_set.insert(r_pos)
   add_to_gvd(r_pos);
   //std::cout << "este es el seg: " << seg << endl;
   r_segment = p2d_to_pos(msg.vertex_segment[seg]);
@@ -196,6 +236,8 @@ void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points){
     add_to_gvd(f_pos);
     f_set.insert(f_pos);
   }
+  
+  //add_to_gvd(f_set, assigned_segment);
   //maybe i could recalculate for every frontier to be more exact
   if(true){//assigned_segment == my_segment){
     boost::tie(paths, paths_costs) = get_multi_path(gvd, my_pos, f_set);

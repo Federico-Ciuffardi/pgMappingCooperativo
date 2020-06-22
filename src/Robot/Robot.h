@@ -18,6 +18,7 @@
 #include <tscf_exploration/SegmentBid.h>
 #include <tscf_exploration/SegmentAssignment.h>
 #include <tscf_exploration/FrontierBid.h>
+#include <tscf_exploration/mapMergedInfo.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -63,6 +64,10 @@ class Robot {
   bids_priority_queue bids_pq;
   int auction_robots = 0;
 
+  /// Map related
+  tscf_exploration::mapMergedInfo map_merged;
+  grid_type grid;
+
   void setPosition(int x, int y);
   geometry_msgs::Point getPosition();
   void savePose(const geometry_msgs::PoseStamped::ConstPtr& msg);
@@ -77,9 +82,14 @@ class Robot {
 
   void set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points);
 
+  void set_grid();
+
   bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
   void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist);
   void add_to_gvd(pos f_pos);
+
+  //void add_to_gvd(pos_set f_set, pos segment);
+
   boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
 
   tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);

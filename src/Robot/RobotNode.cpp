@@ -25,6 +25,8 @@ ros::Subscriber end_sub;
 
 ros::Subscriber frontier_bid_sub;
 
+ros::Subscriber map_merged_sub;
+
 /// Publishers
 ros::Publisher debug_pub;
 ros::Publisher end_pub;
@@ -54,7 +56,7 @@ std::string end_msg("END");
 
 bool first_frontier = true;
 pos last_frontier;
-
+pos current_frontier;
 /*
  *  Aux Functions
  */
@@ -65,8 +67,6 @@ string get_frontier_auction_topic(tscf_exploration::Point2D segment, int auction
 }
 
 void publishPath(pos frontier){
-  first_frontier = false;
-  last_frontier = frontier;
 
   tscf_exploration::goalList path = robot.getPathToSegment(frontier);
 
@@ -107,10 +107,19 @@ void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
 }
 
 void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
-  ROS_INFO("%s :: Arrived to the objective", robot.getNombre().c_str());
+  //if(first_frontier || current_frontier != last_frontier || msg->data == "done" ){
+  ROS_INFO("%s :: Arrived to the objective, requesting objective", robot.getNombre().c_str());
   std_msgs::String msg_request;
   msg_request.data = "signal";
   request_objetive_pub.publish(msg_request);
+  // set last frontier
+  //first_frontier = false;
+  //last_frontier = current_frontier;
+  //}else{
+    //ROS_INFO("%s :: Arrived to the objective AGAIN, NOT requesting objective", robot.getNombre().c_str());
+  //}
+
+  //clear las objective on rviz
   marker_pub.publish(delete_marks(robot.getNombre() + "objective"));
   marker_pub.publish(delete_marks(robot.getNombre() + "path"));
   /*if (!FIN) {
@@ -133,9 +142,6 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
   }*/
 }
 
-
-
-
 //int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
@@ -145,6 +151,7 @@ void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
   } 
   if(handlingAuction){
     ROS_INFO("%s :: Segment auction arriving but already processing one, discarding it", robot.getNombre().c_str());
+    return;
   }
 
   //handlingAuction = true; //prender el bloqueo
@@ -171,12 +178,10 @@ void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
     robot.saveFrontierBid(*msg);
     if(robot.auction_robots == robots_num){
       pos frontier = robot.assignFrontier();
-      if(first_frontier || frontier != last_frontier){
-        publishPath(frontier);
-        ROS_INFO("%s :: Frontier auction ended, moving to (%d,%d)", robot.getNombre().c_str(),frontier.first,frontier.second);
-      }else{
-        ROS_INFO("%s :: Frontier auction ended, ignored becouse ALREADY moving/ed to (%d,%d)", robot.getNombre().c_str(),frontier.first,frontier.second);
-      }
+      publishPath(frontier);
+      current_frontier = frontier;
+      ROS_INFO("%s :: Frontier auction ended, moving to (%d,%d)", robot.getNombre().c_str(),frontier.first,frontier.second);
+
       handlingAuction = false;
     }
   }
@@ -213,6 +218,10 @@ void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& 
   frontier_bid_pub.publish(frontiers_bid);
 }
 
+void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
+  robot.map_merged = (*msg);
+}
+
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
   nh = new ros::NodeHandle();
@@ -243,6 +252,9 @@ int main(int argc, char* argv[]) {
       n.subscribe("/" + nom + "/segment_assigment", 1, handleSegmentAssignment);
 
   path_result_sub = n.subscribe("path_result", 1, handlePathSucced);
+
+  map_merged_sub = n.subscribe<tscf_exploration::mapMergedInfo>("/map_merged", 1, handleNewMap);
+  
   // objetive_sub = n.subscribe("/objetive", 1, handleObjetive);
   //_map_sub = n.subscribe("/" + nom + "/map", 1, handleControlMap);
   // coverage_sub = n.subscribe("/coverage", 1, handleCoverage);

@@ -29,6 +29,7 @@ pose.add_stream("ros", method="morse.middleware.ros.pose.TFPublisher", frame_id=
 atrv0.append(pose)
 
 waypoint = Waypoint()
+waypoint.properties(ObstacleAvoidance=False)
 waypoint.add_stream('socket')
 waypoint.add_service('socket')
 atrv0.append(waypoint)
@@ -61,6 +62,7 @@ pose.frequency(60)
 atrv1.append(pose)
 
 waypoint = Waypoint()
+waypoint.properties(ObstacleAvoidance=False)
 waypoint.add_stream('socket')
 waypoint.add_service('socket')
 #waypoint.properties(ControlType='Position')
@@ -90,6 +92,7 @@ pose.add_stream("ros", method="morse.middleware.ros.pose.TFPublisher", frame_id=
 atrv2.append(pose)
 
 waypoint = Waypoint()
+waypoint.properties(ObstacleAvoidance=False)
 waypoint.add_stream('socket')
 waypoint.add_service('socket')
 atrv2.append(waypoint)
@@ -97,6 +100,6 @@ atrv2.append(waypoint)
 ##################### ENVIRONMENT ####################
 home = os.getenv("HOME")
 env = Environment(home+'/catkin_ws/src/tscf_exploration/morse/scenarios/maze.blend', fastmode=True)
-env.set_time_scale(accelerate_by=7.0)
+env.set_time_scale(accelerate_by=1.0)
 env.place_camera([0, 0, 80])
 env.aim_camera([0, 0, 0])

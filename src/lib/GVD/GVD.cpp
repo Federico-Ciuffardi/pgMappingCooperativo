@@ -221,6 +221,99 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
   return boost::make_tuple(dgrid, full_dqueue);
 }
 
+/*boost::unordered_map<pos,pos> find_paths_to_gvd(grid_type ogrid, VecGVD gvd, pos_set f_set, pos segment) {
+  // get grid size
+  pair<int, int> size = get_grid_size(ogrid);
+
+  // initialize the dgrid and the distance queues
+  dist_grid dgrid;
+  dist_pos_queue dqueue, full_dqueue;
+  for (int x = 0; x < size.first; x++) {
+    dgrid.push_back(dist_row());
+    for (int y = 0; y < size.second; y++) {
+      pos p = pos(x, y);
+      cell_type ctype = cell(ogrid, p);
+
+      dist_cell dcell;
+      //VecGVD::NameVertexMap positions = gvd.positions;
+      //VecGVD::Vertex v = positions[p];
+      if (f_set.find(p) != f_set.end() || ctype == Unknown) {  // TODO es asi porque sirve para una funcion
+                                                     // posterior pero esta semanticamente mal
+        dcell.distance = 0;
+        if (f_set.find(p) != f_set.end()) {
+          dcell.add_obs(pos(x, y));
+          dqueue.push(dist_pos(0, pos(x, y)));
+        }
+      } else {
+        dcell.distance = FLT_MAX;
+      }
+      dgrid[x].push_back(dcell);
+    }
+  }
+  boost::unordered_map<pos,boost::unordered_map<pos,pos>> v_predecessor;
+  dist_pos_queue next_dqueue;
+  while (!dqueue.empty()) {
+    while (!dqueue.empty()) {
+      // get the first cell to process
+      pos p = dqueue.top().second;
+      dqueue.pop();
+
+      // Look at neighbors to find a new free cell that needs its distance updated
+      for (int i = 0; i <= neighbor.size(); i++) {
+        pos np = p + neighbor[i];
+        if (on_grid(np, ogrid)) {
+          cell_type n_ctype = cell(ogrid, np);
+          dist_cell& n_dcell = cell(dgrid, np);
+          bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
+          if (is_traversable && n_dcell.distance == FLT_MAX) {
+            float min_distance = FLT_MAX;
+
+            // look at neighbors of freecell to find cells whose distance has already been found
+            for (int i = 0; i <= neighbor.size(); i++) {
+              pos nnp = np + neighbor[i];
+              if (on_grid(nnp, ogrid)) {
+                cell_type nn_ctype = cell(ogrid, nnp);
+                dist_cell& nn_dcell = cell(dgrid, nnp);
+                if (nn_dcell.obs.size() > 0) {
+                  // find distance to neighbor's closest cell and update the number of obstacles at
+                  // that distance
+                  for(auto it = nn_dcell.obs.begin(); it != nn_dcell.obs.end(); ++it){
+                    float d = dist(np, nnp) + nn_dcell.distance;
+                    if (d < min_distance) {
+                      min_distance = d;
+                      n_dcell.obs.clear();
+                      n_dcell.add_obs(nn_dcell.obs[0]);
+                      n_dcell.distance = min_distance;
+                      v_predecessor[np][n_dcell.obs[0]] = nnp;
+                    } else if (d == min_distance && !n_dcell.has_obs(nn_dcell.obs[0])) {
+                      n_dcell.add_obs(nn_dcell.obs[0]);
+                      v_predecessor[np][nn_dcell.obs[0]] = nnp;
+                    }
+                  }
+
+                }
+              }
+            }
+            next_dqueue.push(dist_pos(min_distance, np));
+
+            if(gvd.positions.find(np) != gvd.positions.end()){
+              for(auto it = n_dcell.obs.begin(); it != n_dcell.)
+              f_set.erase(np);
+            }
+            if(f_set.size() == 0){
+              return v_predecessor;
+            }
+          }
+        }
+      }
+    }
+    dqueue = next_dqueue;
+    next_dqueue = dist_pos_queue();
+  }
+  return v_predecessor
+}*/
+
+
 /* given a graph for the neighbors of a pos return the number of conex components if pos would be
  * removed */
 int A(pos p, grid_gvd ggvd) {

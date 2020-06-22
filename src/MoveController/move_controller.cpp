@@ -12,12 +12,13 @@
 #include "std_msgs/String.h"
 #include "tf/transform_datatypes.h"
 #include "tscf_exploration/goalList.h"
+#include "../lib/conversion.h"
 
 // Constantes
 
 const double TOLERANCE_GOAL = 0.75;       // 0.30;
 const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
-const double SPEED = 0.8;                // 0.5
+const double SPEED = 3;                // 0.5
 
 // const std::string ODOM_FRAME = "p3dx0_tf/odom";
 
@@ -52,18 +53,38 @@ std::string end_msg("END");
 float metros = 0.0;
 clock_t startTime;
 
+//aux funcs
+float getDistance(int target) {
+  float dx, dy;
+  dx = position.pose.position.x - path.listaGoals[target].x;
+  dy = position.pose.position.y - path.listaGoals[target].y;
+  return sqrt(pow(dx, 2) + pow(dy, 2));
+}
 
+float getDistance(geometry_msgs::Point p3d) {
+  float dx, dy;
+  dx = position.pose.position.x - p3d.x;
+  dy = position.pose.position.y - p3d.y;
+  return sqrt(pow(dx, 2) + pow(dy, 2));
+}
 
-void idle_notification(){
+float getNextDistance(int target) {
+  float dx, dy;
+  dx = path.listaGoals[target - 1].x - path.listaGoals[target].x;
+  dy = path.listaGoals[target - 1].y - path.listaGoals[target].y;
+  return sqrt(pow(dx, 2) + pow(dy, 2));
+}
+
+void notification(char* data){
   std_msgs::String str;
-  str.data = "signal";
+  str.data = data;
   path_result_pub.publish(str);  // msg_succes);
   path_info_pub.publish(str);    // msg_succes);
   idleTimer.start();
 }
 
 void idleTimerRoutine(const ros::TimerEvent&){
-  idle_notification();
+  notification("idle");
 } 
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
@@ -85,9 +106,26 @@ void poseCallback(const geometry_msgs::PoseStamped& msg) {
   position = msg;
 }
 
+
+tscf_exploration::goalList trim_path(tscf_exploration::goalList msg){
+  int path_start = 0;
+  for(int i = 0; i<msg.listaGoals.size();i++){
+    float dist_to_target = getDistance(msg.listaGoals[i]);
+    if (dist_to_target <= TOLERANCE_WAYPOINTS) {
+      path_start = i;
+      break;
+    }
+  }
+  msg.listaGoals = std::vector<geometry_msgs::Point, std::allocator<geometry_msgs::Point>>(
+    msg.listaGoals.begin()+path_start,
+    msg.listaGoals.end()
+  );
+  return msg;
+}
+
 void setPath(const tscf_exploration::goalList& msg) {
   if (msg.listaGoals.size() != 0) {
-    path_saved = msg;
+    path_saved = trim_path(msg);
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",
     // msg.listaGoals.size());
     pathflag = 1;
@@ -115,20 +153,18 @@ void saveMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
   odometry_map.header = msg->mapa.header;
   odometry_map.data = msg->mapa.data;
 }
-
-float getDistance(int target) {
-  float dx, dy;
-  dx = position.pose.position.x - path.listaGoals[target].x;
-  dy = position.pose.position.y - path.listaGoals[target].y;
-  return sqrt(pow(dx, 2) + pow(dy, 2));
+// -1 if is safe else the first obstacle index is returned
+int safePath(int from_index, int lookahead){
+  int safe = -1;
+  int indice_origen = p3d_to_p1d(odometry_map.info.origin.position,0,odometry_map.info.width);
+  for(int i = from_index; i< from_index + lookahead && i<path.listaGoals.size(); i++){
+    if(odometry_map.data[p3d_to_p1d(path.listaGoals[path_step-1],indice_origen,odometry_map.info.width)] == 100){
+      return i -1;
+    }
+  }
+  return safe;
 }
 
-float getNextDistance(int target) {
-  float dx, dy;
-  dx = path.listaGoals[target - 1].x - path.listaGoals[target].x;
-  dy = path.listaGoals[target - 1].y - path.listaGoals[target].y;
-  return sqrt(pow(dx, 2) + pow(dy, 2));
-}
 
 int main(int argc, char** argv) {
   // ROS_INFO("Initializing node");
@@ -190,12 +226,26 @@ int main(int argc, char** argv) {
         break;
       }
       case 2: {
+        int obstacle = safePath(path_step-1,3); 
+        if(obstacle != -1){
+          estado = 1;
+          ROS_INFO("Casi me parto D:<");
+          if( path_step - 1 > 0){
+            send_point(path.listaGoals[obstacle-1]);
+          }else{
+            send_point(position.pose.position);
+          }
+          break;
+        }
+
         idleTimer.stop();
+
         float dist_to_target = getDistance(path_step - 1);
         // if (dist_to_target == last_distancie){
         //	send_point(path.listaGoals[path_step - 1 ]);
         //	ROS_INFO("resendig target");
         //}
+
         if (dist_to_target <= TOLERANCE_WAYPOINTS) {
           // ROS_INFO("Arriving");
           if (path_step == path.listaGoals.size()) {  // if wait_last_point
@@ -225,7 +275,7 @@ int main(int argc, char** argv) {
           // secondsPassed = (clock() - startTime);
           // ss2 << " " << metros << " " << secondsPassed << " " << path.indice;
           // msg_succes.data = ss2.str();
-          idle_notification();
+          notification("done");
         }
         break;
       }
