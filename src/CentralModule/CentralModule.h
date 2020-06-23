@@ -24,6 +24,7 @@
 #include "../lib/rviz.h"
 #include "../lib/auction.h"
 
+#include "../GlobalParameters.h"
 
 typedef boost::unordered_map<int, list<int> > dict_clusters;
 
@@ -80,6 +81,7 @@ class CentralModule {
   /// Auction
 
  public:
+  boost::unordered_map<string,boost::unordered_map<pos,float>> segment_bids;
   // getters and setters
   boost::unordered_set<int> getFrontera();
   void setFrontera(boost::unordered_set<int> newFrontera);
@@ -105,7 +107,7 @@ class CentralModule {
   boost::unordered_map<string,tscf_exploration::SegmentAssignment> assignSegment();
   bool saveSegmentBid( tscf_exploration::SegmentBid msg, string name);
 };
-  //boost::unordered_map<string,boost::unordered_map<pos,float>> segment_bids;
+
 
   //void resetArray(boost::unordered_map<string, bool> map);
   //tscf_exploration::asignacionCelda getMaxUtility();

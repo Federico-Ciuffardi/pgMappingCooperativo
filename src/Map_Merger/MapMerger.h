@@ -16,6 +16,7 @@
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include "../lib/utils.h"
+#include "../GlobalParameters.h"
 
 class MapMerger {
  private:

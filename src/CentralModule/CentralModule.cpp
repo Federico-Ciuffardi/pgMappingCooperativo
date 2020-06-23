@@ -5,7 +5,7 @@ CentralModule::CentralModule() {
   first = true;
   last_segment_assignment_id = 0;
   segment_auction_id = 0;
-  number_robots = 3;
+  number_robots = STARTING_ROBOT_NUMBER;
   sensor_range = 6.0;
   // dist_info_gain_obst = 1.0 / sqrt(2);
 }
@@ -76,7 +76,7 @@ void CentralModule::reset_bid() {
 
 tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution
-  // segment_bids.clear();
+  segment_bids.clear();
   reset_bid();
 
   tscf_exploration::SegmentAuction segment_auction;
@@ -162,7 +162,7 @@ bool CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name)
   }
   // segment_bids[name].clear();
   for (int i = 0; i < sb.criticals.size(); i++) {
-    // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
+    segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
 
     pos segment = p2d_to_pos(sb.criticals[i]);
 

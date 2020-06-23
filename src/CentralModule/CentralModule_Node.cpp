@@ -1,5 +1,6 @@
 #include "CentralModule.h"
 
+
 using namespace std;
 
 /*
@@ -29,10 +30,12 @@ ros::Duration AuctionResolutionTimeout(0.1);//first AuctionResolutionTimeout
 int succesfulBids = 0;
 
 ros::Timer auctionStartDelayTimer;
-ros::Duration auctionStartDelayTimeout(1.5);//1
+ros::Duration auctionStartDelayTimeout(1.75);//1
 
 ros::Timer auctionStartTimer;
-ros::Duration auctionStartTimeout(4.0);//(5.0);
+ros::Duration auctionStartTimeout;//(5.0);
+ros::Duration minAuctionStartTimeout(4.0);
+
 int assigned_robots = 0;
 int requests = 0;
 
@@ -41,6 +44,7 @@ bool FIN = false;
 ros::Time last_auction_start;
 ros::Time last_gvd_start;
 ros::Time first_auction;
+ros::Duration gvd_time;
 
 string end_msg("END");
 
@@ -101,12 +105,7 @@ void startAuction() {
 
   last_gvd_start = ros::Time::now();
   segment_auction = centralModule.getSegmentAuctionInfo();
-  ros::Duration gvd_time =  (ros::Time::now() - last_gvd_start);
-  
-  auctionStartTimeout = ros::Duration((gvd_time.toSec()/8.0) + 2);
-  auctionStartTimer.setPeriod(auctionStartTimeout);
-
-  ROS_INFO("gvd time = %f , auctionStartTimeout = %f",gvd_time.toSec(),auctionStartTimeout.toSec());
+  gvd_time =  (ros::Time::now() - last_gvd_start);
 
   // set markers for rviz gvd visualization
   draw_gvd(segment_auction, map_info);
@@ -131,16 +130,44 @@ void resolveAuction(){
   boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
   assigned_robots = assignment.size();
 
+   float max_estimated_cost = 0;
+   float max_estimated_cost_under_gvd = 0;
+   float min_estimated_cost = FLT_MAX;
+
   for (auto it = assignment.begin(); it != assignment.end(); it++) {
     tscf_exploration::SegmentAssignment sa = it->second;
     string s = it->first;
-
+    
+    //publish
     segment_assignment_pubs[it->first].publish(it->second);
+
+    //obtain costs
+    float estimated_cost = centralModule.segment_bids[it->first][p2d_to_pos(it->second.segment)]/(3.0*0.85);
+    //ROS_INFO("estimated_cost = %f",estimated_cost);
+
+    max_estimated_cost = max(max_estimated_cost,estimated_cost);
+    if(max_estimated_cost < gvd_time.toSec()){
+      max_estimated_cost_under_gvd = max_estimated_cost;
+    }
+    min_estimated_cost = min(min_estimated_cost,estimated_cost);
+
 
     for (auto it = sa.frontiers.begin(); it != sa.frontiers.end(); it++){
       points.push_back(p2d_to_p3d(*it, 0.1, map_info));
     } 
   }
+
+  /*if (max_estimated_cost < gvd_time.toSec()+1){
+    auctionStartTimeout = max(minAuctionStartTimeout,gvd_time-ros::Duration(min_estimated_cost));
+  }else{
+    auctionStartTimeout = minAuctionStartTimeout-ros::Duration(min_estimated_cost);
+  }*/
+  auctionStartTimeout = max(minAuctionStartTimeout,ros::Duration(max_estimated_cost_under_gvd)-ros::Duration(min_estimated_cost));
+  //auctionStartTimeout = ros::Duration((gvd_time.toSec()/8.0) + 2);
+  auctionStartTimer.setPeriod(auctionStartTimeout);
+
+  ROS_INFO("max_estimated_cost = %f , gvd time = %f , auctionStartTimeout = %f",max_estimated_cost,gvd_time.toSec(),auctionStartTimeout.toSec());
+
 
   std_msgs::ColorRGBA green;
   green.g = 1.0f;
@@ -196,12 +223,12 @@ void handleRequest(const std_msgs::StringConstPtr& msg) {
   if (centralModule.getEstado() == WaitingAuction){
     requests++;
     if(requests >= assigned_robots){
-      ROS_INFO("Auction request successful, it is the last one starting the auction");
+      //ROS_INFO("Auction request successful, it is the last one starting the auction");
       auctionStartTimer.stop();
       auctionStartDelayTimer.start();//delay to wait for the map
       //startAuction();
     } else {
-      ROS_INFO("Auction request successful, starting timer, %d robots left",assigned_robots-requests);
+      //ROS_INFO("Auction request successful, starting timer, %d robots left",assigned_robots-requests);
 
       auctionStartTimer.start();
 
