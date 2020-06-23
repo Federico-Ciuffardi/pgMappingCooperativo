@@ -90,7 +90,7 @@ static pos p1d_to_pos(int p1d,int width){
 }
 
 static int p3d_to_p1d(geometry_msgs::Point p, int indice_origen, int width){
- return indice_origen + (((int)p.x + signo((int)p.x) * 1) + ((int)p.y) * width);
+ return indice_origen + (((int)p.x) + ((int)p.y) * width);
 }
 
 static pos p3d_to_pos(geometry_msgs::Point p, int indice_origen, int width){

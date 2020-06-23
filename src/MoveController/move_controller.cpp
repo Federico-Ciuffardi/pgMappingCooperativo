@@ -13,7 +13,10 @@
 #include "tf/transform_datatypes.h"
 #include "tscf_exploration/goalList.h"
 #include "../lib/conversion.h"
-
+#include "../lib/GVD/GVD.h"
+#include "sensor_msgs/LaserScan.h"
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
 // Constantes
 
 const double TOLERANCE_GOAL = 0.75;       // 0.30;
@@ -29,13 +32,14 @@ ros::Publisher path_result_pub;
 ros::Publisher path_info_pub;
 ros::Subscriber goalPath_sub;
 ros::Subscriber pose_sub;
-ros::Subscriber map_merged_sub;
+//ros::Subscriber map_sub;
+ros::Subscriber scan_sub;
 TCPClient client;
 tscf_exploration::goalList path;
 tscf_exploration::goalList path_saved;
 geometry_msgs::PoseStamped position;
 geometry_msgs::PoseStamped position_old;
-nav_msgs::OccupancyGrid odometry_map;
+//nav_msgs::OccupancyGrid odometry_map;
 ros::Subscriber end_sub;
 
 ros::Timer idleTimer;
@@ -52,6 +56,7 @@ int pathflag = 0;
 std::string end_msg("END");
 float metros = 0.0;
 clock_t startTime;
+sensor_msgs::LaserScan laserScan;
 
 //aux funcs
 float getDistance(int target) {
@@ -80,7 +85,7 @@ void notification(char* data){
   str.data = data;
   path_result_pub.publish(str);  // msg_succes);
   path_info_pub.publish(str);    // msg_succes);
-  idleTimer.start();
+  //idleTimer.start();
 }
 
 void idleTimerRoutine(const ros::TimerEvent&){
@@ -113,7 +118,6 @@ tscf_exploration::goalList trim_path(tscf_exploration::goalList msg){
     float dist_to_target = getDistance(msg.listaGoals[i]);
     if (dist_to_target <= TOLERANCE_WAYPOINTS) {
       path_start = i;
-      break;
     }
   }
   msg.listaGoals = std::vector<geometry_msgs::Point, std::allocator<geometry_msgs::Point>>(
@@ -147,24 +151,82 @@ void send_point(geometry_msgs::Point next_point) {
   msg_id++;
 }
 
-void saveMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
+/*void saveMap(const nav_msgs::OccupancyGridConstPtr& msg) {
   ROS_DEBUG(" MOVE CONTROLLER :: Guardo Mapa");
-  odometry_map.info = msg->mapa.info;
-  odometry_map.header = msg->mapa.header;
-  odometry_map.data = msg->mapa.data;
+  odometry_map.info = msg->info;
+  odometry_map.header = msg->header;
+  odometry_map.data = msg->data;
+}*/
+
+void saveScan(const sensor_msgs::LaserScanConstPtr& msg) {
+  ROS_DEBUG(" MOVE CONTROLLER :: Guardo Mapa");
+  laserScan = *msg;
 }
-// -1 if is safe else the first obstacle index is returned
+
+//int last_safe_index = -1;
+int last_unsafe_index = -1;
+/*// -1 if is safe else the first obstacle index is returned
 int safePath(int from_index, int lookahead){
   int safe = -1;
-  int indice_origen = p3d_to_p1d(odometry_map.info.origin.position,0,odometry_map.info.width);
+  geometry_msgs::Point origin_p3d  = odometry_map.info.origin.position;
+  origin_p3d.x = -origin_p3d.x-1;
+  origin_p3d.y = -origin_p3d.y;
+  int origin_p1d = p3d_to_p1d(origin_p3d,0,odometry_map.info.height);
+  //ROS_INFO("origin = %d",origin_p1d);
   for(int i = from_index; i< from_index + lookahead && i<path.listaGoals.size(); i++){
-    if(odometry_map.data[p3d_to_p1d(path.listaGoals[path_step-1],indice_origen,odometry_map.info.width)] == 100){
-      return i -1;
+    int final_p1d = p3d_to_p1d(path.listaGoals[i],origin_p1d,odometry_map.info.height); 
+    ROS_INFO("final_p1d = %d, is -> %d ",final_p1d,odometry_map.data[final_p1d]);
+    if(odometry_map.data[final_p1d] == 100){
+      return i;
     }
   }
   return safe;
+}*/
+
+double getAngle(geometry_msgs::Quaternion q){
+  tf::Quaternion quat_tf;
+
+  tf::quaternionMsgToTF(q , quat_tf);
+  tf::Matrix3x3 m(quat_tf);
+
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  return yaw;
 }
 
+double normalize(double angle){
+    angle = fmod(angle + M_PI,M_PI*2);
+    if (angle < 0)
+        angle += M_PI*2;
+    return angle - M_PI;
+}
+
+bool isSafe(int index){
+  geometry_msgs::Point current_pos = position.pose.position;
+  geometry_msgs::Point target_pos = path.listaGoals[index];
+  target_pos.x -= current_pos.x;
+  target_pos.y -= current_pos.y;
+
+  if(target_pos.x<0.5 && target_pos.y < 0.5 ){
+    return true;
+  }
+
+  double robot_angle = getAngle(position.pose.orientation);
+  double target_angle = atan2(target_pos.y,target_pos.x);
+  //ROS_INFO("angulo del robotitio %f, dir objetivo (%f, %f), angulo del objetivo %f",robot_angle,target_pos.x,target_pos.y ,target_angle);
+  double target_angle_adjusted= normalize(target_angle-robot_angle);
+
+  double increment = laserScan.angle_increment;
+  int laser_index = (target_angle_adjusted - laserScan.angle_min)/increment;
+  //ROS_INFO("angulo inicial = %f",laserScan.angle_min);
+
+  //ROS_INFO("%s :: pos objetivo (%f,%f), angulo del objetivo %f, angulo del robot %f",name_space.c_str(), target_pos.x,target_pos.y, target_angle,robot_angle);
+
+  double safe_distance =  1 + getDistance(index);
+  //ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f, umbral %f",name_space.c_str(), target_angle_adjusted, laser_index, laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
+  
+  return laserScan.ranges[laser_index] > safe_distance;
+}
 
 int main(int argc, char** argv) {
   // ROS_INFO("Initializing node");
@@ -181,11 +243,12 @@ int main(int argc, char** argv) {
 
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
-  idleTimer = n.createTimer(ros::Duration(30.0), idleTimerRoutine, true,false);
+  //idleTimer = n.createTimer(ros::Duration(30.0), idleTimerRoutine, true,false);
 
   goalPath_sub = n.subscribe("goalPath", /*1*/ 10, setPath);
   pose_sub = n.subscribe("pose", 1, poseCallback);
-  map_merged_sub = n.subscribe("/map_merged", 1, saveMap);
+  //map_sub = n.subscribe<nav_msgs::OccupancyGrid>("map", 1, saveMap);
+  scan_sub = n.subscribe<sensor_msgs::LaserScan>("scan", 1, saveScan);
   end_sub = n.subscribe("/end", 1, handleEnd);
   path_result_pub = n.advertise<std_msgs::String>("path_result", 10);
   path_info_pub = n.advertise<std_msgs::String>("path_info", 10);
@@ -204,19 +267,40 @@ int main(int argc, char** argv) {
   // while(path_result_pub.getNumSubscribers() == 0){};
   while (ros::ok()) {
     switch (estado) {
+      loop_rate.sleep();
       case 0: {
         // ROS_INFO("Nothing to do");
         if (path_step != path.listaGoals.size()) {
           // //ROS_INFO("MOVE CONTROLLER :: Esperando %s", name_space.c_str());
           estado = 1;
         }
-        loop_rate.sleep();
+
         break;
       }
       case 1: {  // AVANZANDO A UN PUNTO
         // ROS_INFO("Sending new objetive %f, %f, %f,",
         // path.listaGoals[path_step].x, path.listaGoals[path_step].y,
         // path.listaGoals[path_step].z);
+
+        
+          //int obstacle = safePath(path_step,2); 
+          
+        //if(obstacle != -1){ //if there is an obstacle on `obstacle`
+
+        if(!isSafe(path_step)){
+          if(last_unsafe_index != path_step){
+            last_unsafe_index = path_step;
+            ROS_INFO("obstacle");
+            notification("obstacle");
+
+            send_point(position.pose.position);
+          }
+          //loop_rate.sleep();
+          break;
+        }
+        //last_safe_index = path_step;
+        
+
         send_point(path.listaGoals[path_step]);
         path_step++;
         if (path_step != path.listaGoals.size()) {
@@ -226,19 +310,9 @@ int main(int argc, char** argv) {
         break;
       }
       case 2: {
-        int obstacle = safePath(path_step-1,3); 
-        if(obstacle != -1){
-          estado = 1;
-          ROS_INFO("Casi me parto D:<");
-          if( path_step - 1 > 0){
-            send_point(path.listaGoals[obstacle-1]);
-          }else{
-            send_point(position.pose.position);
-          }
-          break;
-        }
 
-        idleTimer.stop();
+
+        //idleTimer.stop();
 
         float dist_to_target = getDistance(path_step - 1);
         // if (dist_to_target == last_distancie){
@@ -292,7 +366,8 @@ int main(int argc, char** argv) {
       path_step = 0;
       pathflag = 0;
       estado = 0;
-
+      //last_safe_index = -1;
+      last_unsafe_index = -1;
       path = path_saved;
     }
   }

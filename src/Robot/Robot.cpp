@@ -77,36 +77,46 @@ void Robot::add_to_gvd(pos f_pos){
 
 }
 
-/*void Robot::add_to_gvd(pos_set f_set, pos segment){
-  boost::unordered_map<pos,pos> f_paths;
+void Robot::add_to_gvd(pos_set p_set){
+  boost::unordered_map<pos,boost::unordered_map<pos,pos>> v_paths;
+  boost::unordered_map<pos,pos> v_connection;
   VecGVD::Vertex v_pred;
   VecGVD::Vertex v;
   bool inserted;
   VecGVD::Edge e;
-  f_paths = find_paths_to_gvd(grid,gvd,f_set,segment);
-  for(auto it = f_set.begin(); it != f_set.end(); ++it){
-    pos p = (*it);
-    boost::tie(v, inserted) = gvd.add_v(p);
-    pos i;
-    for(i = f_paths[*it]; gvd.positions.find(i) == gvd.positions.end(); i = f_paths[i]){
-      //ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
-      boost::tie(v_pred, inserted) = gvd.add_v(i);
-      //ROS_INFO("romi vertice %d",inserted);
-      float d = dist(i, p);
+
+  for(auto it = p_set.begin(); it != p_set.end(); ++it){
+    ROS_INFO("romi voy a calcular el camino");
+    boost::tie(v_paths[*it], v_connection[*it]) = find_paths_to_gvd(grid, gvd, *it);
+    ROS_INFO("romi termine de calcular el camino");
+    if(v_connection[*it] == pos() || v_paths[*it].size() == 0){
+      ROS_INFO("romi ERROR");
+    }
+  }
+  for(auto it = p_set.begin(); it != p_set.end(); ++it){
+    pos v_pred_pos;
+    pos v_pos = v_connection[*it];
+    v = gvd.positions[v_pos];
+    boost::unordered_map<pos,pos> v_predecessor = v_paths[*it];
+    for(v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]){
+      ROS_INFO("romi voy a recorerer el camino");
+      boost::tie(v_pred, inserted) = gvd.add_v(v_pred_pos);
+      ROS_INFO("romi vertice %d",inserted);
+      float d = dist(v_pred_pos, v_pos);
       boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
       boost::tie(e, inserted) = gvd.add_e(v_pred,v, d);
       v = v_pred;
-      p = i;
+      v_pos = v_pred_pos;
+      if(v_pos == (*it)){
+        ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %d", gvd.positions[v_pos]);
+        break;
+      } 
       //ROS_INFO("romi arista %d",inserted);
       //ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
       //ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
     }
-    float d = dist(i, p);
-    v = gvd.positions[i];
-    boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
-    boost::tie(e, inserted) = gvd.add_e(v_pred,v, d); 
   }
-}*/ 
+}
 
 
 // Robot process graph, creates boost gvd also adds pos->gvd
@@ -173,10 +183,11 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
 
   boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
   
-  //set_grid();
-  //pos_set r_set;
-  //r_set.insert(r_pos)
-  add_to_gvd(r_pos);
+  set_grid();
+  pos_set r_set;
+  r_set.insert(r_pos);
+  //add_to_gvd(r_pos);
+  add_to_gvd(r_set);
   //std::cout << "este es el seg: " << seg << endl;
   r_segment = p2d_to_pos(msg.vertex_segment[seg]);
   my_segment = r_segment;
@@ -233,9 +244,11 @@ void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points){
   pos_set f_set;
   for(int i=0; i<points.size(); i++){
     pos f_pos = p2d_to_pos(points[i]);
-    add_to_gvd(f_pos);
+    //add_to_gvd(f_pos);
+    //add_to_gvd(f_pos);
     f_set.insert(f_pos);
   }
+  add_to_gvd(f_set);
   
   //add_to_gvd(f_set, assigned_segment);
   //maybe i could recalculate for every frontier to be more exact

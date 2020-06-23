@@ -88,7 +88,7 @@ class Robot {
   void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist);
   void add_to_gvd(pos f_pos);
 
-  //void add_to_gvd(pos_set f_set, pos segment);
+  void add_to_gvd(pos_set p_set);
 
   boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
 

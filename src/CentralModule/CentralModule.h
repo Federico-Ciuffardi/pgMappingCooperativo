@@ -101,7 +101,7 @@ class CentralModule {
   nav_msgs::OccupancyGrid getMap();
 
   void reset_bid();
-  boost::tuple<tscf_exploration::SegmentAuction, GVD> getSegmentAuctionInfo();
+  tscf_exploration::SegmentAuction getSegmentAuctionInfo();
   boost::unordered_map<string,tscf_exploration::SegmentAssignment> assignSegment();
   bool saveSegmentBid( tscf_exploration::SegmentBid msg, string name);
 };

@@ -74,7 +74,7 @@ void CentralModule::reset_bid() {
   auction_robots.clear();
 }
 
-boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuctionInfo() {
+tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution
   // segment_bids.clear();
   reset_bid();
@@ -113,7 +113,7 @@ boost::tuple<tscf_exploration::SegmentAuction, GVD> CentralModule::getSegmentAuc
   }
   segment_auction.id = segment_auction_id;
   segment_auction_id++;
-  return boost::make_tuple(segment_auction, gvd);
+  return segment_auction;
 }
 
 centralMouleState CentralModule::getEstado() {

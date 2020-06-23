@@ -221,7 +221,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
   return boost::make_tuple(dgrid, full_dqueue);
 }
 
-/*boost::unordered_map<pos,pos> find_paths_to_gvd(grid_type ogrid, VecGVD gvd, pos_set f_set, pos segment) {
+boost::tuple<boost::unordered_map<pos,pos>, pos> find_paths_to_gvd(grid_type ogrid, VecGVD gvd, pos p_pos) {
   // get grid size
   pair<int, int> size = get_grid_size(ogrid);
 
@@ -235,12 +235,10 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
       cell_type ctype = cell(ogrid, p);
 
       dist_cell dcell;
-      //VecGVD::NameVertexMap positions = gvd.positions;
-      //VecGVD::Vertex v = positions[p];
-      if (f_set.find(p) != f_set.end() || ctype == Unknown) {  // TODO es asi porque sirve para una funcion
+      if (p == p_pos || ctype == Unknown) {  // TODO es asi porque sirve para una funcion
                                                      // posterior pero esta semanticamente mal
         dcell.distance = 0;
-        if (f_set.find(p) != f_set.end()) {
+        if (p == p_pos) {
           dcell.add_obs(pos(x, y));
           dqueue.push(dist_pos(0, pos(x, y)));
         }
@@ -250,7 +248,7 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
       dgrid[x].push_back(dcell);
     }
   }
-  boost::unordered_map<pos,boost::unordered_map<pos,pos>> v_predecessor;
+  boost::unordered_map<pos,pos> v_predecessor;
   dist_pos_queue next_dqueue;
   while (!dqueue.empty()) {
     while (!dqueue.empty()) {
@@ -277,31 +275,24 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
                 if (nn_dcell.obs.size() > 0) {
                   // find distance to neighbor's closest cell and update the number of obstacles at
                   // that distance
-                  for(auto it = nn_dcell.obs.begin(); it != nn_dcell.obs.end(); ++it){
                     float d = dist(np, nnp) + nn_dcell.distance;
                     if (d < min_distance) {
                       min_distance = d;
                       n_dcell.obs.clear();
                       n_dcell.add_obs(nn_dcell.obs[0]);
                       n_dcell.distance = min_distance;
-                      v_predecessor[np][n_dcell.obs[0]] = nnp;
+                      v_predecessor[np] = nnp;
                     } else if (d == min_distance && !n_dcell.has_obs(nn_dcell.obs[0])) {
                       n_dcell.add_obs(nn_dcell.obs[0]);
-                      v_predecessor[np][nn_dcell.obs[0]] = nnp;
+                      v_predecessor[np] = nnp;
                     }
-                  }
-
                 }
               }
             }
             next_dqueue.push(dist_pos(min_distance, np));
 
             if(gvd.positions.find(np) != gvd.positions.end()){
-              for(auto it = n_dcell.obs.begin(); it != n_dcell.)
-              f_set.erase(np);
-            }
-            if(f_set.size() == 0){
-              return v_predecessor;
+              return boost::make_tuple(v_predecessor, np);
             }
           }
         }
@@ -310,8 +301,8 @@ boost::tuple<dist_grid, dist_pos_queue> calculate_distances(grid_type ogrid, cel
     dqueue = next_dqueue;
     next_dqueue = dist_pos_queue();
   }
-  return v_predecessor
-}*/
+  return boost::make_tuple(v_predecessor, pos());
+}
 
 
 /* given a graph for the neighbors of a pos return the number of conex components if pos would be
@@ -328,6 +319,7 @@ int A(pos p, grid_gvd ggvd) {
     } else {
       res += v1 && !v2;
     }
+    if(res>1) break;
   }
   return res;
 }
@@ -580,7 +572,7 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
 
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg,3);
-  clean_up(gvd, dg,2);
+  //clean_up(gvd, dg,2);
   GVD gvd_copy = gvd;
   collapse_vertices(gvd_copy, local_mins);
 
