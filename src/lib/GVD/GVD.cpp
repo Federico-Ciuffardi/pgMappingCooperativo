@@ -572,7 +572,7 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
 
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg,3);
-  //clean_up(gvd, dg,2);
+  clean_up(gvd, dg,2);
   GVD gvd_copy = gvd;
   collapse_vertices(gvd_copy, local_mins);
 

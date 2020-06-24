@@ -17,11 +17,13 @@
 #include "sensor_msgs/LaserScan.h"
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h>
+#include "../GlobalParameters.h"
+
 // Constantes
 
 const double TOLERANCE_GOAL = 0.75;       // 0.30;
 const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
-const double SPEED = 3;                // 0.5
+const double SPEED = ROBOT_SPEED;                // 0.5
 
 // const std::string ODOM_FRAME = "p3dx0_tf/odom";
 
@@ -57,6 +59,7 @@ std::string end_msg("END");
 float metros = 0.0;
 clock_t startTime;
 sensor_msgs::LaserScan laserScan;
+float angleToTarget;
 
 //aux funcs
 float getDistance(int target) {
@@ -201,7 +204,35 @@ double normalize(double angle){
     return angle - M_PI;
 }
 
-bool isSafe(int index){
+bool isSafe(float target_angle, float safe_distance = 2){
+
+  geometry_msgs::Point current_pos = position.pose.position;
+
+  double robot_angle = getAngle(position.pose.orientation);
+  //ROS_INFO("angulo del robotitio %f, dir objetivo (%f, %f), angulo del objetivo %f",robot_angle,target_pos.x,target_pos.y ,target_angle);
+  double target_angle_adjusted= normalize(target_angle-robot_angle);
+
+  double increment = laserScan.angle_increment;
+  int laser_index = (target_angle_adjusted - laserScan.angle_min)/increment;
+  //ROS_INFO("angulo inicial = %f",laserScan.angle_min);
+
+  //ROS_INFO("%s :: pos objetivo (%f,%f), angulo del objetivo %f, angulo del robot %f",name_space.c_str(), target_pos.x,target_pos.y, target_angle,robot_angle);
+
+
+  ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f, umbral %f",name_space.c_str(), target_angle_adjusted, laser_index, laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
+  
+  return laserScan.ranges[laser_index] > safe_distance;
+}
+
+float getTargetAngle(int index){
+  geometry_msgs::Point current_pos = position.pose.position;
+  geometry_msgs::Point target_pos = path.listaGoals[index];
+  target_pos.x -= current_pos.x;
+  target_pos.y -= current_pos.y;
+  return atan2(target_pos.y,target_pos.x);
+}
+
+/*bool isSafe(int index){
   geometry_msgs::Point current_pos = position.pose.position;
   geometry_msgs::Point target_pos = path.listaGoals[index];
   target_pos.x -= current_pos.x;
@@ -226,7 +257,7 @@ bool isSafe(int index){
   //ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f, umbral %f",name_space.c_str(), target_angle_adjusted, laser_index, laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
   
   return laserScan.ranges[laser_index] > safe_distance;
-}
+}*/
 
 int main(int argc, char** argv) {
   // ROS_INFO("Initializing node");
@@ -266,94 +297,6 @@ int main(int argc, char** argv) {
   int secondsPassed;
   // while(path_result_pub.getNumSubscribers() == 0){};
   while (ros::ok()) {
-    switch (estado) {
-      loop_rate.sleep();
-      case 0: {
-        // ROS_INFO("Nothing to do");
-        if (path_step != path.listaGoals.size()) {
-          // //ROS_INFO("MOVE CONTROLLER :: Esperando %s", name_space.c_str());
-          estado = 1;
-        }
-
-        break;
-      }
-      case 1: {  // AVANZANDO A UN PUNTO
-        // ROS_INFO("Sending new objetive %f, %f, %f,",
-        // path.listaGoals[path_step].x, path.listaGoals[path_step].y,
-        // path.listaGoals[path_step].z);
-
-        
-          //int obstacle = safePath(path_step,2); 
-          
-        //if(obstacle != -1){ //if there is an obstacle on `obstacle`
-
-        if(!isSafe(path_step)){
-          if(last_unsafe_index != path_step){
-            last_unsafe_index = path_step;
-            ROS_INFO("obstacle");
-            notification("obstacle");
-
-            send_point(position.pose.position);
-          }
-          //loop_rate.sleep();
-          break;
-        }
-        //last_safe_index = path_step;
-        
-
-        send_point(path.listaGoals[path_step]);
-        path_step++;
-        if (path_step != path.listaGoals.size()) {
-          metros = metros + getNextDistance(path_step);
-        }
-        estado = 2;
-        break;
-      }
-      case 2: {
-
-
-        //idleTimer.stop();
-
-        float dist_to_target = getDistance(path_step - 1);
-        // if (dist_to_target == last_distancie){
-        //	send_point(path.listaGoals[path_step - 1 ]);
-        //	ROS_INFO("resendig target");
-        //}
-
-        if (dist_to_target <= TOLERANCE_WAYPOINTS) {
-          // ROS_INFO("Arriving");
-          if (path_step == path.listaGoals.size()) {  // if wait_last_point
-            estado = 4;
-          } else {
-            estado = 1;
-          }
-        }
-        ////ROS_INFO("Distance ---> %f, X ---> %f, Y ---> %f", dist_to_target,
-        /// path.listaGoals[path_step].x, path.listaGoals[path_step].y);
-        break;
-      }
-      case 4: {  // AVANZANDO AL ULTIMO PUNTO
-        float dist_to_target = getDistance(path_step - 1);
-        //ROS_INFO("Waiting for last point");
-        // string recv = "";
-        // stringstream ss;
-        // ss << (msg_id - 1) << " SUCCES";
-        // string msg = ss.str();
-        // recv = client.receive_msg();
-        // if (recv.find(msg)) {
-        if (dist_to_target <= TOLERANCE_GOAL) {
-          //ROS_INFO("Path end %s", name_space.c_str());
-          estado = 0;
-          // std_msgs::String msg_succes;
-          // std::stringstream ss2;
-          // secondsPassed = (clock() - startTime);
-          // ss2 << " " << metros << " " << secondsPassed << " " << path.indice;
-          // msg_succes.data = ss2.str();
-          notification("done");
-        }
-        break;
-      }
-    }
     if (pathflag == 1) {
       std_msgs::String msg_info;
       std::stringstream ss9;
@@ -370,7 +313,68 @@ int main(int argc, char** argv) {
       last_unsafe_index = -1;
       path = path_saved;
     }
+
+    loop_rate.sleep();
+
+    switch (estado) {
+      case 0: {
+        if (path_step != path.listaGoals.size()) {
+          estado = 1;
+        }
+        break;
+      }
+      case 1: {  // AVANZANDO A UN PUNTO
+        send_point(path.listaGoals[path_step]);
+        angleToTarget = getTargetAngle(path_step);
+        path_step++;
+        if (path_step != path.listaGoals.size()) {
+          metros = metros + getNextDistance(path_step);
+        }
+        estado = 2;
+        break;
+      }
+    }
+
+    if(estado <2){ continue; }
+
+    if(!isSafe(angleToTarget)){
+      if(last_unsafe_index != path_step){
+        last_unsafe_index = path_step;
+        ROS_INFO("obstacle");
+        notification("obstacle");
+        send_point(position.pose.position);
+      }
+    }else{
+      if(last_unsafe_index == path_step){
+        send_point(path.listaGoals[path_step]);
+      }
+    }
+
+    switch (estado) {
+      case 2: {
+        float dist_to_target = getDistance(path_step - 1);
+        if (dist_to_target <= TOLERANCE_WAYPOINTS) {
+          // ROS_INFO("Arriving");
+          if (path_step == path.listaGoals.size()) {  // if wait_last_point
+            estado = 4;
+          } else {
+            estado = 1;
+          }
+        }
+        break;
+      }
+      case 4: {  // AVANZANDO AL ULTIMO PUNTO
+        float dist_to_target = getDistance(path_step - 1);
+        if (dist_to_target <= TOLERANCE_GOAL) {
+          estado = 0;
+          notification("done");
+        }
+        break;
+      }
+    }
+
   }
+
 
   return 0;
 }

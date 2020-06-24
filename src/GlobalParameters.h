@@ -1,8 +1,8 @@
 #ifndef GLOBAL_PARAMETERS_H
 #define GLOBAL_PARAMETERS_H
 
-#define STARTING_ROBOT_NUMBER 3;
+#define STARTING_ROBOT_NUMBER 3 
 
-#define ROBOT_SPEED = 3;
+#define ROBOT_SPEED 3
 
 #endif
