@@ -23,12 +23,12 @@
 #include "../lib/conversion.h"
 #include "../lib/rviz.h"
 #include "../lib/auction.h"
-
+#include "../lib/graph/gnuplot.h"
 #include "../GlobalParameters.h"
 
 typedef boost::unordered_map<int, list<int> > dict_clusters;
 
-enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3 };
+enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3,Resolving = 4 };
 
 class CentralModule {
  private:

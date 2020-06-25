@@ -90,7 +90,8 @@ class Robot {
 
   void add_to_gvd(pos_set p_set);
 
-  boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
+  //boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
+  VecGVD getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D> vertex_segment);
 
   tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
   tscf_exploration::FrontierBid getFrontierBid(vector<tscf_exploration::Point2D> frontiers);

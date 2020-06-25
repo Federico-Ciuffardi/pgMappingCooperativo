@@ -219,7 +219,7 @@ bool isSafe(float target_angle, float safe_distance = 2){
   //ROS_INFO("%s :: pos objetivo (%f,%f), angulo del objetivo %f, angulo del robot %f",name_space.c_str(), target_pos.x,target_pos.y, target_angle,robot_angle);
 
 
-  ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f, umbral %f",name_space.c_str(), target_angle_adjusted, laser_index, laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
+  //ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f, umbral %f",name_space.c_str(), target_angle_adjusted, laser_index, laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
   
   return laserScan.ranges[laser_index] > safe_distance;
 }

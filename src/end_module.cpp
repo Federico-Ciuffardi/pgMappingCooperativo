@@ -24,6 +24,7 @@
 #include <opencv2/highgui.hpp>
 #include "lib/utils.h"
 #include "std_msgs/String.h"
+#include "GlobalParameters.h"
 
 using namespace std;
 
@@ -35,12 +36,12 @@ ros::Publisher end_pub;
 ros::Publisher coverage;
 bool init = false;
 double secondsPassed = 0;
-float PORCENTAJE = 1.0;
+float PORCENTAJE = 0.95;//0.10;
 float next_coverage = 0.00;
 float coverage_granularity = 0.02;
-int TOTALCOVER = 81 * 81;
+int TOTALCOVER = 5832;//81 * 81;
 int robots_waiting = 0;
-int NUM_ROBOTS = 3;
+int NUM_ROBOTS = STARTING_ROBOT_NUMBER;
 
 void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
   int y_origin = msg->mapa.info.origin.position.x;
@@ -55,21 +56,22 @@ void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
     }
   }
 
-  std_msgs::String cover;
+  /*std_msgs::String cover;
   std::stringstream ssc;
   ssc << "COVERAGE: " << cont;
   cover.data = ssc.str();
   if (cont >= TOTALCOVER * next_coverage) {
     next_coverage = next_coverage + coverage_granularity;
     coverage.publish(cover);
-  }
-
+  }*/
+  ROS_INFO(" van %d celdas exploradas ", cont);
   // ROS_INFO("cubrimiento %d ", cont);
   if (cont >= (TOTALCOVER * PORCENTAJE)) {
     std_msgs::String end_msg;
     std::stringstream ss;
     ss << "END";
     end_msg.data = ss.str();
+    ROS_INFO(" VA A FINALIZAR MODULE !! %d ", cont);
     end_pub.publish(end_msg);
     ROS_INFO("FINALIZO MODULE !! %d ", cont);
     ros::Rate loop_rate(1);

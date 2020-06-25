@@ -106,10 +106,18 @@ tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   }
 
   for (auto it = cis.begin(); it != cis.end(); it++) {
-    segment_auction.criticals.push_back(pos_to_p2d(it->first));
-    //ROS_INFO("critical: %d , %d", it->first.first, it->first.second);
-    segment_auction.mind_f.push_back(it->second.mind_f);
-    segment_auction.minp_f.push_back(pos_to_p2d(it->second.frontiers[0]));
+    pos segment = it->first;
+    critical_info segment_info = it->second;
+
+    segment_auction.criticals.push_back(pos_to_p2d(segment));
+
+    //ROS_INFO("critical: %d , %d", segment.first, segment.second);
+    segment_auction.mind_f.push_back(segment_info.mind_f);
+    segment_auction.minp_f.push_back(pos_to_p2d(segment_info.frontiers[0]));
+    /*for(int i = 0; i < segment_info.frontiers.size(); i++){
+      segment_auction.frontier.push_back(pos_to_p2d(segment_info.frontiers[i]));
+      segment_auction.frontier_segment.push_back(pos_to_p2d(segment));
+    }*/
   }
   segment_auction.id = segment_auction_id;
   segment_auction_id++;
@@ -157,7 +165,7 @@ void CentralModule::saveMap(const nav_msgs::OccupancyGrid map) {
 }
 
 bool CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name) {
-  if(last_segment_assignment_id>sb.id){
+  if(last_segment_assignment_id!=sb.id){
     return false;
   }
   // segment_bids[name].clear();

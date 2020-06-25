@@ -222,6 +222,18 @@ void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
   robot.map_merged = (*msg);
 }
 
+void handleEnd(const std_msgs::StringConstPtr& msg) {
+  std::string str1(msg->data.c_str());
+  FIN = (str1.compare(end_msg) == 0);
+  if (FIN) {
+    std_msgs::String msg_request2;
+    std::stringstream ss2;
+    ss2 << "END";
+    msg_request2.data = ss2.str();
+    //end_pub.publish(msg_request2);
+  }
+}
+
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
   nh = new ros::NodeHandle();
@@ -258,7 +270,7 @@ int main(int argc, char* argv[]) {
   // objetive_sub = n.subscribe("/objetive", 1, handleObjetive);
   //_map_sub = n.subscribe("/" + nom + "/map", 1, handleControlMap);
   // coverage_sub = n.subscribe("/coverage", 1, handleCoverage);
-  // end_sub = n.subscribe("/end", 1, handleEnd);
+  end_sub = n.subscribe("/end", 1, handleEnd);
 
   // Publishers
   // debug_pub = n.advertise<nav_msgs::OccupancyGrid>("/debug", 1);
@@ -280,17 +292,7 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-/*void handleEnd(const std_msgs::StringConstPtr& msg) {
-  std::string str1(msg->data.c_str());
-  FIN = (str1.compare(end_msg) == 0);
-  if (FIN) {
-    std_msgs::String msg_request2;
-    std::stringstream ss2;
-    ss2 << "END";
-    msg_request2.data = ss2.str();
-    end_pub.publish(msg_request2);
-  }
-}*/
+
 
 /*void handleCoverage(const std_msgs::StringConstPtr& msg) {
   std::string str1(msg->data.c_str());

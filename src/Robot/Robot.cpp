@@ -101,6 +101,9 @@ void Robot::add_to_gvd(pos_set p_set){
     for(v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]){
       ROS_INFO("romi voy a recorerer el camino");
       boost::tie(v_pred, inserted) = gvd.add_v(v_pred_pos);
+      if(inserted){
+        gvd.g[v_pred].segment = gvd.g[v].segment;
+      }
       ROS_INFO("romi vertice %d",inserted);
       float d = dist(v_pred_pos, v_pos);
       boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
@@ -120,7 +123,7 @@ void Robot::add_to_gvd(pos_set p_set){
 
 
 // Robot process graph, creates boost gvd also adds pos->gvd
-boost::tuple<int, VecGVD> Robot::getGVD(tscf_exploration::Graph g, pos r_pos) {
+VecGVD Robot::getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D> vertex_segment) {
   // std::cout<<"arranca el get gvd"<<endl;
   VecGVD gvd;
   pos v_pos;
@@ -136,14 +139,15 @@ boost::tuple<int, VecGVD> Robot::getGVD(tscf_exploration::Graph g, pos r_pos) {
     v_pos = p2d_to_pos(g.vertices[i]);
     boost::tie(v, inserted) = gvd.add_v(v_pos);
 
-    min_aux = dist(r_pos, v_pos);
+    //min_aux = dist(r_pos, v_pos);
     // std::cout<<"min_aux "<<min_aux<<endl;
     // std::cout<<"min "<<min<<endl;
-    if (min < 0 || min_aux < min) {
+    /*if (min < 0 || min_aux < min) {
       min = min_aux;
       segment = i;
       // std::cout<<segment<<endl;
-    }
+    }*/
+    gvd.g[v].segment = p2d_to_pos(vertex_segment[i]);
   }
   // std::cout<<"Antes de agregar aristas: "<<g.edges.size()<<endl;
   // auto weights = get(edge_weight,gvd.g);
@@ -157,14 +161,14 @@ boost::tuple<int, VecGVD> Robot::getGVD(tscf_exploration::Graph g, pos r_pos) {
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
   }
   // std::cout<<"Termine de agregar todas las aristas"<<endl;
-  return boost::make_tuple(segment, gvd);
+  return gvd;
 }
 
 // Return true if robot is in segment assigned_segment and false if it isnt
 bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos){
   float f_r_dist = dist(f_pos, my_pos);
   float f_c_dist = dist(f_pos, assigned_segment);
-  return (my_segment == assigned_segment) && (f_r_dist < f_c_dist);
+  return (f_r_dist < f_c_dist);
 }
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
@@ -179,29 +183,40 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
 
   pos r_segment, c_pos, f_pos;
 
-  int seg;
-
-  boost::tie(seg, gvd) = getGVD(msg.gvd, r_pos);
-  
+  gvd = getGVD(msg.gvd, msg.vertex_segment);
   set_grid();
+
   pos_set r_set;
   r_set.insert(r_pos);
-  //add_to_gvd(r_pos);
   add_to_gvd(r_set);
   //std::cout << "este es el seg: " << seg << endl;
-  r_segment = p2d_to_pos(msg.vertex_segment[seg]);
+  r_segment = gvd.g[gvd.positions[r_pos]].segment;
   my_segment = r_segment;
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
-  pos_set criticals;
+  pos_set criticals_and_frontier;
   for (int i = 0; i < msg.criticals.size(); i++) {
-    criticals.insert(p2d_to_pos(msg.criticals[i]));
+    pos c_pos = p2d_to_pos(msg.criticals[i]);
+    if(r_segment == c_pos){
+      f_pos = p2d_to_pos(msg.minp_f[i]);
+      pos_set f_set;
+      f_set.insert(f_pos);
+      add_to_gvd(f_set);
+      criticals_and_frontier.insert(f_pos);
+    }
+    criticals_and_frontier.insert(c_pos);
   }
+
+
   //boost::unordered_map<pos,float> paths_costs;
 
   //ROS_INFO("tiempos arranca el multipath");
-  boost::tie(paths, paths_costs) = get_multi_path(gvd,r_pos,criticals);
+  boost::tie(paths, paths_costs) = get_multi_path(gvd,r_pos,criticals_and_frontier);
   //ROS_INFO("tiempos termina el multipath");
+
+  list<VecGVD::Vertex> path_to_frontier =  paths[f_pos];
+  bool in_segment = find(path_to_frontier.begin(),path_to_frontier.end(),gvd.positions[r_segment]) == path_to_frontier.end();
+
 
   for (int i = 0; i < msg.criticals.size(); i++) {
     segment_bid.criticals.push_back(msg.criticals[i]);
@@ -209,17 +224,9 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
     float cost = paths_costs[p2d_to_pos(msg.criticals[i])] ;
    
     c_pos = p2d_to_pos(msg.criticals[i]);
-    //here i should get the frontier
-    f_pos = p2d_to_pos(msg.minp_f[i]);
-    // std::cout<<"Antes de calclular el camino"<<endl;
-    //boost::tie(paths[c_pos], cost) = get_path(gvd, r_pos, c_pos);
-    // std::cout<<"Despues de calclular el camino"<<endl;
-    // descount factor
-    //here i should check if i am on the segment
-    bool in_segment = is_in_segment(r_segment, r_pos, c_pos, f_pos);
 
     float in_seg = 0;
-    if (in_segment) {
+    if (in_segment && (r_segment == c_pos)) {
       in_seg = cost*2;
     }
     // crit a la frontera + (robot al critico)*c

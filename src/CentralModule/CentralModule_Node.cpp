@@ -48,6 +48,8 @@ ros::Duration gvd_time_increment(0);
 
 string end_msg("END");
 
+string gvd_file_log, increment_gvd_file_log;
+
 /*
  *  Rviz mark functions
  */
@@ -94,9 +96,6 @@ static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_inf
 
 void startAuction() {
   
-  requests = 0;
-  centralModule.setEstado(WaitingFirstBid);
-
   //initialization
   map_info_type map_info = centralModule.getMap().info;
 
@@ -110,13 +109,40 @@ void startAuction() {
   gvd_time_increment = max(gvd_time_increment, gvd_time - last_gvd_time);
   // set markers for rviz gvd visualization
   draw_gvd(segment_auction, map_info);
+  //log gvd time
+  if(LOG){
+    ros::Duration current_time = ros::Time::now() - first_auction;
+    string data = to_string(current_time.toSec())+" "+to_string(gvd_time.toSec());
+    
+    if(gvd_file_log.empty()){
+      gvd_file_log = "tiemposGVD";
+      gvd_file_log = LOG_FILE_PATH + gvd_file_log + to_string(STARTING_ROBOT_NUMBER) + get_current_date_and_time();
+    }
+   
+    log_data(data, gvd_file_log);
+
+    ros::Duration increment = (gvd_time - last_gvd_time);
+    data = to_string(current_time.toSec())+"  "+to_string(increment.toSec());
+    
+    if(increment_gvd_file_log.empty()){
+      increment_gvd_file_log = "incrementoGVD";
+      increment_gvd_file_log = LOG_FILE_PATH + increment_gvd_file_log + to_string(STARTING_ROBOT_NUMBER) + get_current_date_and_time();
+    }
+    
+    log_data(data, increment_gvd_file_log);
+  }
 
   // Send auction info: Graph and criticals info
+  
+  requests = 0;
+  centralModule.setEstado(WaitingFirstBid);
+
   segment_auction_pub.publish(segment_auction);
   ROS_INFO("Segment Auction published");
 }
 
 void resolveAuction(){
+  centralModule.setEstado(Resolving);
   ros::Duration resolution_time = ros::Time::now() - last_auction_start;  
   ROS_INFO("Auction Resolution Start, expected %f, real %f",AuctionResolutionTimeout.toSec(),resolution_time.toSec());
   AuctionResolutionTimeout = max(ros::Duration(0.5)+resolution_time*2,AuctionResolutionTimeout);
@@ -131,7 +157,7 @@ void resolveAuction(){
   boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment = centralModule.assignSegment();
   assigned_robots = assignment.size();
 
-   //float max_estimated_time = 0;
+   float max_estimated_time = 0;
    //float max_estimated_time_under_gvd = 0;
    //float min_estimated_time = FLT_MAX;
 
@@ -146,7 +172,7 @@ void resolveAuction(){
     float estimated_time = (centralModule.segment_bids[it->first][p2d_to_pos(it->second.segment)])/(ROBOT_SPEED);
     //ROS_INFO("estimated_time = %f",estimated_time);
 
-    //max_estimated_time = max(max_estimated_time,estimated_time);
+    max_estimated_time = max(max_estimated_time,estimated_time);
     if(estimated_time > (gvd_time + gvd_time_increment + auctionStartDelayTimeout).toSec()){
       assigned_robots--;
       //max_estimated_time_under_gvd = max(max_estimated_time_under_gvd,estimated_time);
@@ -171,7 +197,7 @@ void resolveAuction(){
   //auctionStartTimeout = ros::Duration((gvd_time.toSec()/8.0) + 2);
   auctionStartTimer.setPeriod(auctionStartTimeout);
 
-  ROS_INFO("gvd time = %f , gvd estimated time = %f",(gvd_time + gvd_time_increment).toSec(),auctionStartTimeout.toSec());
+  ROS_INFO("gvd time = %f , gvd estimated time = %f, max estimated time %f",(gvd_time).toSec(),(gvd_time + gvd_time_increment + auctionStartDelayTimeout).toSec(),max_estimated_time);
 
 
   std_msgs::ColorRGBA green;
@@ -179,10 +205,10 @@ void resolveAuction(){
   green.a = 1.0f;
   marker_pub.publish(mark_points("Frontiers", points, green));
   ROS_INFO("Auction resoved, %d robots assigned",assigned_robots);
-  centralModule.setEstado(WaitingAuction);
 
   ros::Duration current_time = ros::Time::now() - first_auction;
   ROS_INFO("Elapsed time: %f",current_time.toSec());
+  centralModule.setEstado(WaitingAuction);
 }
 
 /*
@@ -225,7 +251,9 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 /* cuando: un robot te pide un objetivo */
 /* que: inicia una subasta */
 void handleRequest(const std_msgs::StringConstPtr& msg) {
-  if (centralModule.getEstado() == WaitingAuction){
+  if (centralModule.getEstado() != WaitingAuction){
+    ROS_INFO("Auction request from ignored, already one on course");
+  }else{
     requests++;
     if(requests >= assigned_robots){
       //ROS_INFO("Auction request successful, it is the last one starting the auction");
@@ -238,10 +266,7 @@ void handleRequest(const std_msgs::StringConstPtr& msg) {
       auctionStartTimer.start();
 
     }
-  }else{
-    ROS_INFO("Auction request from ignored, already one on course");
   }
-
 }
 
 bool first =true;
@@ -261,35 +286,63 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
   string str1(msg->data.c_str());
   FIN = (str1.compare(end_msg) == 0);
   if (FIN) {
+    //log data
+    if(LOG){
+      ros::Duration current_time = ros::Time::now() - first_auction;
+      string robot_count = to_string(STARTING_ROBOT_NUMBER);
+      string time = to_string(current_time.toSec());
+
+      string data = "Cantidad Robots: " + robot_count+ "\n";
+      data += "Tiempo de ejecucion: " + time;
+      string ejecucion_file_log = "tiemposEjecucion"; 
+      ejecucion_file_log = LOG_FILE_PATH + ejecucion_file_log;
+      log_data(data, ejecucion_file_log);
+      
+      ejecucion_file_log = "tiemposEjecucionG";
+      ejecucion_file_log = LOG_FILE_PATH + ejecucion_file_log;
+      string g_data = robot_count+"  "+time;
+      log_data(g_data, ejecucion_file_log);
+      log_data(time, (ejecucion_file_log + robot_count));
+      
+      gnuplot p;
+      p.graph_file(gvd_file_log, "Tiempo", "Tiempo de GVD");
+      p.graph_file(increment_gvd_file_log, "Tiempo", "Incremento de tiempo de GVD");
+      p.graph_file(ejecucion_file_log, "Numero de robots", "Tiempo de ejecucion");
+    }
+
+
     ROS_INFO("CENTRAL MODULE :: FIN");
     ros::Rate loop_rate(1);
     loop_rate.sleep();
     ros::shutdown();
+
   }
 }
 
 void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string name) {
-  if (!FIN) {
-    // centralModule.saveSegmentBid(*msg, name);
-    bool successful = centralModule.saveSegmentBid(*msg, name);
-    if(successful){     
-      succesfulBids++;
-      if(centralModule.getEstado() == WaitingFirstBid){
-        ROS_INFO("Got segment_bid from %s, starting timer", name.c_str());
-        centralModule.setEstado(WaitingBids);
-        last_auction_start=ros::Time::now();
-        auctionResolutionTimer.start();
+  //ROS_INFO("Got segment_bid %d",centralModule.getEstado());
+  if (centralModule.getEstado() != WaitingFirstBid && centralModule.getEstado() != WaitingBids){
+    return;
+  }
 
-      }if(succesfulBids >= centralModule.getNumRobots()){
-        auctionResolutionTimer.stop();
-        resolveAuction();
-        ROS_INFO("Got the last segment bid, stopping timer and starting resultion", name.c_str());
-      }else{
-        ROS_INFO("Got segment_bid from %s, timer already started", name.c_str());
-      }
+  bool successful = centralModule.saveSegmentBid(*msg, name);
+  if(successful){     
+    succesfulBids++;
+    if(centralModule.getEstado() == WaitingFirstBid){
+      ROS_INFO("Got segment_bid from %s, id %d, starting timer", name.c_str(),msg->id);
+      centralModule.setEstado(WaitingBids);
+      last_auction_start=ros::Time::now();
+      auctionResolutionTimer.start();
+
+    }if(succesfulBids == centralModule.getNumRobots()){
+      auctionResolutionTimer.stop();
+      resolveAuction();
+      ROS_INFO("Got the last segment bid from %s, id %d, stopping timer and starting resultion", name.c_str(),msg->id);
     }else{
-      ROS_INFO("Got OLD segment_bid from %s", name.c_str());
+      ROS_INFO("Got segment_bid from %s, timer already started, id %d", name.c_str(),msg->id);
     }
+  }else{
+    ROS_INFO("Got OLD segment_bid from %s", name.c_str());
   }
 }
 
