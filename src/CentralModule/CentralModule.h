@@ -81,6 +81,10 @@ class CentralModule {
   /// Auction
 
  public:
+
+  //log related
+  int cell_count = 0;
+
   boost::unordered_map<string,boost::unordered_map<pos,float>> segment_bids;
   // getters and setters
   boost::unordered_set<int> getFrontera();

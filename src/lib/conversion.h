@@ -110,10 +110,11 @@ static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){
 }
 
 /* De ocupancy grid a state grid*/
-static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector<int>()) {
+static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector<int>(), int* count = NULL) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
   grid_type res;
+  if(count) (*count) = 0;
   for (int x = 0; x < mapWidth; x++) {
     res.push_back(row_type());
     for (int y = 0; y < mapHeight; y++) {
@@ -121,9 +122,11 @@ static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
       switch (og.data[y * mapWidth + x]) {
         case 0:
           ct = Free;
+          if(count) (*count)++;
           break;
         case 100:
           ct = Occupied;
+          if(count) (*count)++;
           break;
         case -1:
           ct = Unknown;

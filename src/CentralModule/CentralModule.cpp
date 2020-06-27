@@ -85,7 +85,7 @@ tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // taking into account the vision range of robot and leaving only significants frontiers
   aplicarKmeans(frontera);
 
-  grid_type gt = og2gt(map, getCentrosF());
+  grid_type gt = og2gt(map, getCentrosF(), &cell_count);
 
   // criticals_info cis_aux;
   GVD gvd;
@@ -209,11 +209,12 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
       // data for frontier auction
       sa.robots_num = robots_nums[seg];
       sa.assigned = 1;
-      ret[r_name] = sa;
+      
     }else{
+      
       sa.assigned = 0;
     }
-
+    ret[r_name] = sa;
   }
   last_segment_assignment_id++;
   return ret;

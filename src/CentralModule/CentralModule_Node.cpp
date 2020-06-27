@@ -45,10 +45,11 @@ ros::Time last_gvd_start;
 ros::Time first_auction;
 ros::Duration gvd_time;
 ros::Duration gvd_time_increment(0);
+set<string> biddingRobots;
 
 string end_msg("END");
 
-string gvd_file_log, increment_gvd_file_log;
+string gvd_file_log, increment_gvd_file_log, coverage_file_log;
 
 /*
  *  Rviz mark functions
@@ -112,8 +113,16 @@ void startAuction() {
   //log gvd time
   if(LOG){
     ros::Duration current_time = ros::Time::now() - first_auction;
-    string data = to_string(current_time.toSec())+" "+to_string(gvd_time.toSec());
+    //string data = to_string(current_time.toSec())+" "+to_string(gvd_time.toSec());
+    string time = to_string(current_time.toSec());
+    string coverage_per = to_string((centralModule.cell_count/MAP_SIZE)*100);
     
+    if(coverage_file_log.empty()){
+      coverage_file_log = "covarage";
+      coverage_file_log = LOG_FILE_PATH + coverage_file_log + to_string(STARTING_ROBOT_NUMBER) + get_current_date_and_time(); 
+    }
+
+    string data = coverage_per+" "+to_string(gvd_time.toSec()); 
     if(gvd_file_log.empty()){
       gvd_file_log = "tiemposGVD";
       gvd_file_log = LOG_FILE_PATH + gvd_file_log + to_string(STARTING_ROBOT_NUMBER) + get_current_date_and_time();
@@ -122,8 +131,8 @@ void startAuction() {
     log_data(data, gvd_file_log);
 
     ros::Duration increment = (gvd_time - last_gvd_time);
-    data = to_string(current_time.toSec())+"  "+to_string(increment.toSec());
-    
+    //data = to_string(current_time.toSec())+"  "+to_string(increment.toSec());
+    data = coverage_per+"  "+to_string(increment.toSec());
     if(increment_gvd_file_log.empty()){
       increment_gvd_file_log = "incrementoGVD";
       increment_gvd_file_log = LOG_FILE_PATH + increment_gvd_file_log + to_string(STARTING_ROBOT_NUMBER) + get_current_date_and_time();
@@ -184,6 +193,7 @@ void resolveAuction(){
     for (auto it = sa.frontiers.begin(); it != sa.frontiers.end(); it++){
       points.push_back(p2d_to_p3d(*it, 0.1, map_info));
     } 
+    biddingRobots.clear();
   }
 
   /*if (max_estimated_time < gvd_time.toSec()+1){
@@ -311,7 +321,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
     }
 
 
-    ROS_INFO("CENTRAL MODULE :: FIN");
+    ROS_INFO("Stopping CENTRAL MODULE");
     ros::Rate loop_rate(1);
     loop_rate.sleep();
     ros::shutdown();
@@ -326,23 +336,25 @@ void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string na
   }
 
   bool successful = centralModule.saveSegmentBid(*msg, name);
-  if(successful){     
+  if(!successful || biddingRobots.find(name) != biddingRobots.end()){
+    ROS_INFO("Got OLD segment_bid from %s", name.c_str());
+  }else{
+    biddingRobots.insert(name);
     succesfulBids++;
+
     if(centralModule.getEstado() == WaitingFirstBid){
       ROS_INFO("Got segment_bid from %s, id %d, starting timer", name.c_str(),msg->id);
       centralModule.setEstado(WaitingBids);
       last_auction_start=ros::Time::now();
       auctionResolutionTimer.start();
 
-    }if(succesfulBids == centralModule.getNumRobots()){
+    }else if(succesfulBids == centralModule.getNumRobots()){
       auctionResolutionTimer.stop();
       resolveAuction();
       ROS_INFO("Got the last segment bid from %s, id %d, stopping timer and starting resultion", name.c_str(),msg->id);
     }else{
       ROS_INFO("Got segment_bid from %s, timer already started, id %d", name.c_str(),msg->id);
     }
-  }else{
-    ROS_INFO("Got OLD segment_bid from %s", name.c_str());
   }
 }
 

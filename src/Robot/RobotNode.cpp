@@ -195,6 +195,9 @@ void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& 
   if(msg->assigned == 0){
     ROS_INFO("%s :: Rejected for the auction %d", robot.getNombre().c_str(), msg->id);
     handlingAuction = false;
+    tscf_exploration::goalList path;
+    path.listaGoals.push_back(robot.getPosition());
+    goalPath_pub.publish(path);
     return;
   }
   ROS_INFO("%s :: A segment assingment arived", robot.getNombre().c_str());

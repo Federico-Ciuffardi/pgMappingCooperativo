@@ -37,7 +37,7 @@
     <arg name="ns_name"   value="atrv2" />
   </include>
 
-<!--
+
  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
     <arg name="init_pose_x" value="-36.5" />
     <arg name="init_pose_y" value="15.5" />
@@ -53,7 +53,7 @@
     <arg name="init_pose_yaw" value="0.0" />
     <arg name="ns_name"   value="atrv4" />
   </include> 
-
+<!--
 -->
 
 <node pkg="tscf_exploration" type="tscf_exploration_map_merger" name="tscf_exploration_map_merger" required="true" />

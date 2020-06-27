@@ -36,7 +36,7 @@ ros::Publisher end_pub;
 ros::Publisher coverage;
 bool init = false;
 double secondsPassed = 0;
-float PORCENTAJE = 0.95;//0.10;
+float PORCENTAJE = 0.99;//0.10;
 float next_coverage = 0.00;
 float coverage_granularity = 0.02;
 int TOTALCOVER = 5832;//81 * 81;
@@ -71,12 +71,8 @@ void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
     std::stringstream ss;
     ss << "END";
     end_msg.data = ss.str();
-    ROS_INFO(" VA A FINALIZAR MODULE !! %d ", cont);
+    ROS_INFO(" Stopping at %f ", cont/(float(TOTALCOVER)));
     end_pub.publish(end_msg);
-    ROS_INFO("FINALIZO MODULE !! %d ", cont);
-    ros::Rate loop_rate(1);
-    loop_rate.sleep();
-    ros::shutdown();
   }
 }
 

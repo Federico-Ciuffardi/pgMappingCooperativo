@@ -204,7 +204,7 @@ double normalize(double angle){
     return angle - M_PI;
 }
 
-bool isSafe(float target_angle, float safe_distance = 2){
+bool isSafe(float target_angle, float safe_distance = 2.5){
 
   geometry_msgs::Point current_pos = position.pose.position;
 

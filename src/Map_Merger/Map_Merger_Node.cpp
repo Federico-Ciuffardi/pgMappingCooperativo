@@ -55,7 +55,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
   std::string str1(msg->data.c_str());
   FIN = (str1.compare(end_msg) == 0);
   if (FIN) {
-    ROS_INFO("MAP MERGER :: FIN");
+    ROS_INFO("Stopping MAP MERGER");
   }
 }
 
