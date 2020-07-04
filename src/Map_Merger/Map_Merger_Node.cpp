@@ -14,7 +14,7 @@ ros::Publisher map_merged_pub;
 ros::Publisher map_controller_pub;
 
 // others
-int number_robots = STARTING_ROBOT_NUMBER;
+int number_robots;
 
 MapMerger map_merger;
 
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "map_merger");
   ros::NodeHandle n;
 
-  //n.param<int>("number_robots", number_robots, 3);
+  n.param<int>("/starting_robot_number", number_robots, STARTING_ROBOT_NUMBER);
 
   // Publishers
   map_merged_pub = n.advertise<tscf_exploration::mapMergedInfo>("/map_merged", 1);

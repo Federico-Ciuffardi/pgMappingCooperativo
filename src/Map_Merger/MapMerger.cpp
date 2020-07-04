@@ -9,7 +9,8 @@ MapMerger::MapMerger() {
  * desconocidos o concuerdan en la misma celda.*/
 bool MapMerger::sonIgualesCeldas(int ind) {
   bool ret = true;
-  boost::unordered_map<std::string, nav_msgs::OccupancyGrid>::iterator iterator = maps_by_robots.begin();
+  boost::unordered_map<std::string, nav_msgs::OccupancyGrid>::iterator iterator =
+      maps_by_robots.begin();
   while ((iterator != maps_by_robots.end()) && (-1 != iterator->second.data[ind])) {
     iterator++;
   }
@@ -65,7 +66,8 @@ void MapMerger::initMapMerger(const nav_msgs::OccupancyGridConstPtr& msg) {
 /*Funcion que dado un punto me dice si existe un robot a una distancia menor a
  * la que se le pasa.*/
 bool MapMerger::isAnyRobotCloser(float dist, int ind, std::string name) {
-  boost::unordered_map<std::string, geometry_msgs::PoseStamped>::iterator it = MapMerger::positions.begin();
+  boost::unordered_map<std::string, geometry_msgs::PoseStamped>::iterator it =
+      MapMerger::positions.begin();
   bool hay_mas_cerca = false;
 
   while ((!hay_mas_cerca) && (it != MapMerger::positions.end())) {

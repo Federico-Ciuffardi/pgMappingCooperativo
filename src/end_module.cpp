@@ -1,3 +1,4 @@
+#include <bits/stdc++.h>
 #include <math.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <ros/ros.h>
@@ -22,9 +23,9 @@
 #include <ctime>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include "GlobalParameters.h"
 #include "lib/utils.h"
 #include "std_msgs/String.h"
-#include "GlobalParameters.h"
 
 using namespace std;
 
@@ -36,12 +37,12 @@ ros::Publisher end_pub;
 ros::Publisher coverage;
 bool init = false;
 double secondsPassed = 0;
-float PORCENTAJE = 0.99;//0.10;
+float PORCENTAJE = 1;  // 0.10;
 float next_coverage = 0.00;
 float coverage_granularity = 0.02;
-int TOTALCOVER = 5832;//81 * 81;
+int TOTALCOVER;  // 81 * 81;
 int robots_waiting = 0;
-int NUM_ROBOTS = STARTING_ROBOT_NUMBER;
+int NUM_ROBOTS;
 
 void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
   int y_origin = msg->mapa.info.origin.position.x;
@@ -64,14 +65,14 @@ void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
     next_coverage = next_coverage + coverage_granularity;
     coverage.publish(cover);
   }*/
-  ROS_INFO(" van %d celdas exploradas ", cont);
+  // ROS_INFO(" van %d celdas exploradas ", cont);
   // ROS_INFO("cubrimiento %d ", cont);
   if (cont >= (TOTALCOVER * PORCENTAJE)) {
     std_msgs::String end_msg;
     std::stringstream ss;
     ss << "END";
     end_msg.data = ss.str();
-    ROS_INFO(" Stopping at %f ", cont/(float(TOTALCOVER)));
+    ROS_INFO(" Stopping at %f ", cont / (float(TOTALCOVER)));
     end_pub.publish(end_msg);
   }
 }
@@ -96,10 +97,20 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
 
   ros::NodeHandle n;
-  // // Recibir mapa
+
+  n.param<int>("/starting_robot_number", NUM_ROBOTS, STARTING_ROBOT_NUMBER);
+  string map_name;
+  n.param<string>("/map_name", map_name, "");
+  if (map_name == "office") {
+    TOTALCOVER = 5832;
+  } else if (map_name == "labyrinth") {
+    TOTALCOVER = 81 * 81;
+  }
+  ROS_INFO("Map size = %d ", TOTALCOVER);
+  // Recibir mapa
   map_sub = n.subscribe("/map_merged", 1, handleMap);
   end_robot_sub = n.subscribe("/end_robots", 1, handleRobotEnd);
-  // // Retroalimentacion de el navegador
+  // Retroalimentacion de el navegador
 
   end_pub = n.advertise<std_msgs::String>("/end", 1);
   coverage = n.advertise<std_msgs::String>("/coverage", 1);

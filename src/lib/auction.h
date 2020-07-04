@@ -21,6 +21,8 @@ static void clear_bids(bids_priority_queue &bids_pq){
 
 static boost::unordered_map<string,pos> resolve_auction(bids_priority_queue bids_pq,int total_bidders,int total_items,boost::unordered_map<pos,int>* item_capacity = NULL){
 
+  bids_priority_queue original_bids_pq = bids_pq; 
+
   boost::unordered_map<string,pos> bidder_item;//std::unordered_map?
   boost::unordered_map<pos,int> item_bidders_num;//std::unordered_map?
 
@@ -59,6 +61,33 @@ static boost::unordered_map<string,pos> resolve_auction(bids_priority_queue bids
     }else{
       continue;
     }
+  }
+
+  if(item_capacity && assigned_bidders < total_bidders){
+    int total_item_capacity = 0;
+    int depleated_items = 0; 
+    for(auto it = (*item_capacity).begin(); it!= (*item_capacity).end(); it++){
+      if(it->second > 0){
+        total_item_capacity += it->second;
+      }else{
+        depleated_items++;
+      }
+    }
+    if(total_item_capacity>0){
+      bids_pq = bids_priority_queue();
+      while(!original_bids_pq.empty()){
+        bid b = original_bids_pq.top(); original_bids_pq.pop();
+        string r_name = b.second.first; 
+        if(bidder_item.find(r_name) == bidder_item.end()){
+          bids_pq.push(b);
+        }
+      }
+      boost::unordered_map<string,pos> sub_bidder_item = resolve_auction(bids_pq,total_bidders-assigned_bidders,total_items-depleated_items,item_capacity);
+      for(auto it = sub_bidder_item.begin(); it != sub_bidder_item.end(); it++){
+        bidder_item[it->first] = it->second;
+      }
+    }
+
   }
 
   return bidder_item;

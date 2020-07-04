@@ -1,0 +1,7 @@
+set term pngcairo size 1024,768
+set output "office_GVD_graph.png"
+set xlabel "Cubrimiento del mapa (%)"
+set ylabel "Tiempo (s)"
+set xrange [0:]
+
+plot "office_tiemposGVD5.dat" u 1:2 title "Construccion de GVD" w lines lc rgb 'purple',"office_incrementoGVD5.dat" u 1:2 title "Incremento de GVD" w lines lc rgb 'blue'

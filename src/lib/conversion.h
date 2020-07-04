@@ -115,6 +115,7 @@ static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
   uint mapHeight = og.info.height;
   grid_type res;
   if(count) (*count) = 0;
+  cout<<"og2gt general"<<endl; 
   for (int x = 0; x < mapWidth; x++) {
     res.push_back(row_type());
     for (int y = 0; y < mapHeight; y++) {
@@ -137,11 +138,15 @@ static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
       res[x].push_back(ct);
     }
   }
-
+  cout<<"og2gt Frontier"<<endl;
   for (auto it = frontera.begin(); it != frontera.end(); it++) {
     int p1d = *it;
-    pos p = p1d_to_pos(p1d, mapWidth);
-    res[p.first][p.second] = Frontier;
+    if(p1d>=mapWidth*mapHeight){
+      cout<<"Warning: Frontier out of range"<<endl; //almost sure its a kmeans error happens some times in the office map
+    }else{
+      pos p = p1d_to_pos(p1d, mapWidth);
+      res[p.first][p.second] = Frontier;
+    }
   }
   return res;
 }

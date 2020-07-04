@@ -44,11 +44,13 @@ ros::Publisher marker_pub;
 
 // others
 Robot robot;
+tscf_exploration::goalList path;
+pos f;
 
 // intends to prevent handling multiple auction at one time
 // could fail if a new segment auction starts before the segment assignment message arrives
-// could be fixed by making it block all the way and making that all the robots receives an advice of the end of the 
-// bid
+// could be fixed by making it block all the way and making that all the robots receives an advice
+// of the end of the bid
 bool handlingAuction = false;
 
 bool FIN = false;
@@ -66,13 +68,13 @@ string get_frontier_auction_topic(tscf_exploration::Point2D segment, int auction
          to_string(segment.y);
 }
 
-void publishPath(pos frontier){
+void publishPath(pos frontier) {
+  f = frontier;
+  path = robot.getPathToSegment(frontier);
 
-  tscf_exploration::goalList path = robot.getPathToSegment(frontier);
-
-  //draw objective
+  // draw objective
   visualization_msgs::Marker::_points_type points;
-  geometry_msgs::Point p3d = pos_to_p3d(frontier + robot.offset , 0.2);
+  geometry_msgs::Point p3d = pos_to_p3d(frontier + robot.offset, 0.2);
   p3d.x += 0.5;
   p3d.y += 0.5;
 
@@ -83,16 +85,17 @@ void publishPath(pos frontier){
   magenta.a = 1.0f;
   marker_pub.publish(mark_points(robot.getNombre() + "objective", points, magenta));
 
-  //draw path to objective
+  // draw path to objective
   visualization_msgs::Marker::_points_type lines;
 
-  for(auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++){
+  for (auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++) {
     lines.push_back(*it);
   }
-  marker_pub.publish(mark_lines(robot.getNombre() + "path", lines, magenta,0.1,visualization_msgs::Marker::LINE_STRIP));
+  marker_pub.publish(mark_lines(robot.getNombre() + "path", lines, magenta, 0.1,
+                                visualization_msgs::Marker::LINE_STRIP));
 
   // send objective to move controller
-  if (path.listaGoals.size() > 0){
+  if (path.listaGoals.size() > 0) {
     goalPath_pub.publish(path);
   }
 }
@@ -107,21 +110,49 @@ void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
 }
 
 void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
-  //if(first_frontier || current_frontier != last_frontier || msg->data == "done" ){
-  ROS_INFO("%s :: Arrived to the objective, requesting objective", robot.getNombre().c_str());
+  // if(first_frontier || current_frontier != last_frontier || msg->data == "done" ){
   std_msgs::String msg_request;
   msg_request.data = "signal";
   request_objetive_pub.publish(msg_request);
   // set last frontier
-  //first_frontier = false;
-  //last_frontier = current_frontier;
+  // first_frontier = false;
+  // last_frontier = current_frontier;
   //}else{
-    //ROS_INFO("%s :: Arrived to the objective AGAIN, NOT requesting objective", robot.getNombre().c_str());
+  // ROS_INFO("%s :: Arrived to the objective AGAIN, NOT requesting objective",
+  // robot.getNombre().c_str());
   //}
+  ROS_INFO("%s", msg->data);
+  // clear las objective on rviz
+  if (msg->data == "OBSTACLE") {
+    ROS_INFO("%s :: Found an obstacle on my path, requesting objective", robot.getNombre().c_str());
 
-  //clear las objective on rviz
-  marker_pub.publish(delete_marks(robot.getNombre() + "objective"));
-  marker_pub.publish(delete_marks(robot.getNombre() + "path"));
+    std_msgs::ColorRGBA grey;
+    grey.r = 0.6f;
+    grey.g = 0.6f;
+    grey.b = 0.6f;
+    grey.a = 1.0f;
+
+    visualization_msgs::Marker::_points_type points;
+    geometry_msgs::Point p3d = pos_to_p3d(f + robot.offset, 0.2);
+    p3d.x += 0.5;
+    p3d.y += 0.5;
+
+    points.push_back(p3d);
+    marker_pub.publish(mark_points(robot.getNombre() + "objective", points, grey));
+
+    // draw path to objective
+    visualization_msgs::Marker::_points_type lines;
+
+    for (auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++) {
+      lines.push_back(*it);
+    }
+    marker_pub.publish(mark_lines(robot.getNombre() + "path", lines, grey, 0.1,
+                                  visualization_msgs::Marker::LINE_STRIP));
+  } else {
+    ROS_INFO("%s :: Arrived to the objective, requesting objective", robot.getNombre().c_str());
+    marker_pub.publish(delete_marks(robot.getNombre() + "objective"));
+    marker_pub.publish(delete_marks(robot.getNombre() + "path"));
+  }
   /*if (!FIN) {
 
     std::stringstream ss;
@@ -142,22 +173,24 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
   }*/
 }
 
-//int last_segment_auction_id = -1;
+// int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const tscf_exploration::SegmentAuctionConstPtr& msg) {
-  if(robot.last_segment_auction_id >= msg->id){
-    ROS_INFO("%s :: An old segment auction arrived: last_id >= id, %d >= %d", robot.getNombre().c_str(),robot.last_segment_auction_id , msg->id);
+  if (robot.last_segment_auction_id >= msg->id) {
+    ROS_INFO("%s :: An old segment auction arrived: last_id >= id, %d >= %d",
+             robot.getNombre().c_str(), robot.last_segment_auction_id, msg->id);
     return;
-  } 
-  if(handlingAuction){
-    ROS_INFO("%s :: Segment auction arriving but already processing one, discarding it", robot.getNombre().c_str());
+  }
+  if (handlingAuction) {
+    ROS_INFO("%s :: Segment auction arriving but already processing one, discarding it",
+             robot.getNombre().c_str());
     return;
   }
 
-  //handlingAuction = true; //prender el bloqueo
+  // handlingAuction = true; //prender el bloqueo
 
   robot.last_segment_auction_id = msg->id;
-  if (!FIN){ //&& msg->id>last_id) {
+  if (!FIN) {  //&& msg->id>last_id) {
     ROS_INFO("%s :: A segment message arrived", robot.getNombre().c_str());
     tscf_exploration::SegmentBid segment_bid = robot.getSegmentBid(*msg);
     ROS_INFO("%s :: Sending my bids", robot.getNombre().c_str());
@@ -170,17 +203,18 @@ boost::unordered_map<int, tscf_exploration::FrontierBid> frontierBids;
 int robots_num = -1;
 
 void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
-  //ROS_INFO("%s :: a frontier bid of %d arrived", robot.getNombre().c_str(),msg->robotId); 
-  //if(robot.last_frontier_auction_id > msg->id) return;
+  // ROS_INFO("%s :: a frontier bid of %d arrived", robot.getNombre().c_str(),msg->robotId);
+  // if(robot.last_frontier_auction_id > msg->id) return;
 
-  //robot.last_frontier_auction_id = msg->id;
-  if(robot.auction_robots<=robots_num){
+  // robot.last_frontier_auction_id = msg->id;
+  if (robot.auction_robots <= robots_num) {
     robot.saveFrontierBid(*msg);
-    if(robot.auction_robots == robots_num){
+    if (robot.auction_robots == robots_num) {
       pos frontier = robot.assignFrontier();
       publishPath(frontier);
       current_frontier = frontier;
-      ROS_INFO("%s :: Frontier auction ended, moving to (%d,%d)", robot.getNombre().c_str(),frontier.first,frontier.second);
+      ROS_INFO("%s :: Frontier auction ended, moving to (%d,%d)", robot.getNombre().c_str(),
+               frontier.first, frontier.second);
 
       handlingAuction = false;
     }
@@ -188,11 +222,12 @@ void handleFrontierBid(const tscf_exploration::FrontierBidConstPtr& msg) {
 }
 
 void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& msg) {
-  if(robot.last_segment_assignment_id >= msg->id){
-    ROS_INFO("%s :: An old frontier assingment arrived: last_id >= id, %d >= %d", robot.getNombre().c_str(),robot.last_segment_assignment_id, msg->id);
+  if (robot.last_segment_assignment_id >= msg->id) {
+    ROS_INFO("%s :: An old frontier assingment arrived: last_id >= id, %d >= %d",
+             robot.getNombre().c_str(), robot.last_segment_assignment_id, msg->id);
     return;
-  } 
-  if(msg->assigned == 0){
+  }
+  if (msg->assigned == 0) {
     ROS_INFO("%s :: Rejected for the auction %d", robot.getNombre().c_str(), msg->id);
     handlingAuction = false;
     tscf_exploration::goalList path;
@@ -206,17 +241,17 @@ void handleSegmentAssignment(const tscf_exploration::SegmentAssignmentConstPtr& 
 
   robots_num = msg->robots_num;
 
-  //frontierBids.clear();
+  // frontierBids.clear();
   clear_bids(robot.bids_pq);
   robot.auction_robots = 0;
   tscf_exploration::FrontierBid frontiers_bid = robot.getFrontierBid(msg->frontiers);
-  //ROS_INFO("romi ya sali de la funcion para armar las frontierbids");
+  // ROS_INFO("romi ya sali de la funcion para armar las frontierbids");
   // start the frontier auction
   string topic = get_frontier_auction_topic(msg->segment, msg->id);
-  //ROS_INFO("topico dinamico para el intercambio de fronteras: %s",topic.c_str());
-  //ROS_INFO("romi me suscribi al topico de las frontierbids");
-  frontier_bid_sub = nh->subscribe(topic,robots_num , handleFrontierBid);
-  frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, robots_num,true);
+  // ROS_INFO("topico dinamico para el intercambio de fronteras: %s",topic.c_str());
+  // ROS_INFO("romi me suscribi al topico de las frontierbids");
+  frontier_bid_sub = nh->subscribe(topic, robots_num, handleFrontierBid);
+  frontier_bid_pub = nh->advertise<tscf_exploration::FrontierBid>(topic, robots_num, true);
   ROS_INFO("%s :: Starting a frontier auction", robot.getNombre().c_str());
   frontier_bid_pub.publish(frontiers_bid);
 }
@@ -233,7 +268,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
     std::stringstream ss2;
     ss2 << "END";
     msg_request2.data = ss2.str();
-    //end_pub.publish(msg_request2);
+    // end_pub.publish(msg_request2);
   }
 }
 
@@ -241,8 +276,6 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "fp_explorer");
   nh = new ros::NodeHandle();
   ros::NodeHandle n = *nh;
-
-  
 
   ros::NodeHandle private_node_handle("~");
 
@@ -269,7 +302,7 @@ int main(int argc, char* argv[]) {
   path_result_sub = n.subscribe("path_result", 1, handlePathSucced);
 
   map_merged_sub = n.subscribe<tscf_exploration::mapMergedInfo>("/map_merged", 1, handleNewMap);
-  
+
   // objetive_sub = n.subscribe("/objetive", 1, handleObjetive);
   //_map_sub = n.subscribe("/" + nom + "/map", 1, handleControlMap);
   // coverage_sub = n.subscribe("/coverage", 1, handleCoverage);
@@ -294,8 +327,6 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-
-
 
 /*void handleCoverage(const std_msgs::StringConstPtr& msg) {
   std::string str1(msg->data.c_str());

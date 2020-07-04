@@ -1,0 +1,12 @@
+set term png
+set output "name_file_data.png"
+set xlabel "x_label"
+set ylabel "y_label"
+set yrange [0:]
+set xrange [0:]
+set style line 10 linetype 2 lc rgb 'blue' pointtype 7
+set print "StatDat.dat"
+stats 'name_file_data.dat'
+print STATS_mean , STATS_stddev
+set print
+plot "StatDat.dat" u 1:2 notitle with lp ls 10

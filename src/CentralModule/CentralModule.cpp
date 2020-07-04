@@ -5,7 +5,6 @@ CentralModule::CentralModule() {
   first = true;
   last_segment_assignment_id = 0;
   segment_auction_id = 0;
-  number_robots = STARTING_ROBOT_NUMBER;
   sensor_range = 6.0;
   // dist_info_gain_obst = 1.0 / sqrt(2);
 }
@@ -76,21 +75,26 @@ void CentralModule::reset_bid() {
 
 tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution
+  cout << "debug :: clear data from previous auction" << endl;
   segment_bids.clear();
   reset_bid();
 
+  cout << "debug :: get offset" << endl;
   tscf_exploration::SegmentAuction segment_auction;
   nav_msgs::OccupancyGrid map = getMap();
   segment_auction.offset = p3d_to_p2d(map.info.origin.position);
   // taking into account the vision range of robot and leaving only significants frontiers
+  cout << "debug :: apply kmeans" << endl;
   aplicarKmeans(frontera);
 
   grid_type gt = og2gt(map, getCentrosF(), &cell_count);
 
   // criticals_info cis_aux;
+  cout << "debug :: gvd and cis" << endl;
   GVD gvd;
   boost::tie(cis, gvd) = get_points_of_interest(gt);
 
+  cout << "debug :: gvd to rosmsg" << endl;
   GVD::VertexIterator v_it, v_it_end;
   for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++) {
     segment_auction.gvd.vertices.push_back(pos_to_p2d(gvd.g[*v_it].p));
@@ -105,15 +109,20 @@ tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
     segment_auction.gvd.edges.push_back(e);
   }
 
+  cout << "debug :: cis to rosmsg" << endl;
   for (auto it = cis.begin(); it != cis.end(); it++) {
     pos segment = it->first;
     critical_info segment_info = it->second;
-
+  
     segment_auction.criticals.push_back(pos_to_p2d(segment));
-
-    //ROS_INFO("critical: %d , %d", segment.first, segment.second);
+    
+    for(auto it_f = segment_info.frontiers.begin(); it_f != segment_info.frontiers.end(); ++it_f){
+      segment_auction.frontiers.push_back(pos_to_p2d(*it_f));
+      segment_auction.frontiers_segment.push_back(pos_to_p2d(segment));
+    }
+    // ROS_INFO("critical: %d , %d", segment.first, segment.second);
     segment_auction.mind_f.push_back(segment_info.mind_f);
-    segment_auction.minp_f.push_back(pos_to_p2d(segment_info.frontiers[0]));
+    //segment_auction.minp_f.push_back(pos_to_p2d(segment_info.frontiers[0]));
     /*for(int i = 0; i < segment_info.frontiers.size(); i++){
       segment_auction.frontier.push_back(pos_to_p2d(segment_info.frontiers[i]));
       segment_auction.frontier_segment.push_back(pos_to_p2d(segment));
@@ -165,7 +174,7 @@ void CentralModule::saveMap(const nav_msgs::OccupancyGrid map) {
 }
 
 bool CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name) {
-  if(last_segment_assignment_id!=sb.id){
+  if (last_segment_assignment_id != sb.id) {
     return false;
   }
   // segment_bids[name].clear();
@@ -202,16 +211,15 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
     string r_name = *it;
     tscf_exploration::SegmentAssignment sa;
     sa.id = last_segment_assignment_id;
-    if(robot_segment.find(r_name)!= robot_segment.end()){
+    if (robot_segment.find(r_name) != robot_segment.end()) {
       pos seg = robot_segment[r_name];
       sa.segment = pos_to_p2d(seg);
       sa.frontiers = pos_to_p2d(cis[seg].frontiers);
       // data for frontier auction
       sa.robots_num = robots_nums[seg];
       sa.assigned = 1;
-      
-    }else{
-      
+
+    } else {
       sa.assigned = 0;
     }
     ret[r_name] = sa;
@@ -271,8 +279,8 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
 
 /*Funcion que realiza la asignacion del metodo k means*/
 vector<list<int> > CentralModule::asignacionKmean(int k,
-                                                            list<int> puntos,
-                                                            vector<cv::Point2f> centros) {
+                                                  list<int> puntos,
+                                                  vector<cv::Point2f> centros) {
   list<int>::iterator it_puntos;
   vector<list<int> > puntos_de_centros(k);
 
@@ -296,9 +304,8 @@ vector<list<int> > CentralModule::asignacionKmean(int k,
 
 /*Funcion que realiza la actualizacion de la posicion de los centrso en k
  * means*/
-vector<cv::Point2f> CentralModule::actualizacionKmean(
-    vector<list<int> > puntos_de_centros,
-    int cant_centros) {
+vector<cv::Point2f> CentralModule::actualizacionKmean(vector<list<int> > puntos_de_centros,
+                                                      int cant_centros) {
   list<int>::iterator it_puntos;
   vector<cv::Point2f> centros_nuevos(cant_centros);
   int cont = 0;
@@ -342,8 +349,7 @@ bool CentralModule::finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos,
 
 /*Funcion que me lleva los centros obtenidos por kmeans a los puntos de mi
  * frontera mas cercanos*/
-list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos,
-                                           list<int> puntos) {
+list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos, list<int> puntos) {
   list<int> points;
 
   for (int j = 0; j < centros_nuevos.size(); j++) {
@@ -364,11 +370,10 @@ list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos,
 }
 
 /*Funcion que aplica kmean para un grupo de puntos*/
-pair<list<int>, vector<list<int> > > CentralModule::kmeans(
-    int k,
-    list<int> puntos,
-    vector<cv::Point2f> centros,
-    float dist_lim) {
+pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k,
+                                                           list<int> puntos,
+                                                           vector<cv::Point2f> centros,
+                                                           float dist_lim) {
   vector<cv::Point2f> centros_viejos;
   vector<cv::Point2f> centros_nuevos = centros;
   vector<list<int> > puntos_de_centros;
@@ -392,8 +397,8 @@ pair<list<int>, vector<list<int> > > CentralModule::kmeans(
   } while ((i <= 100) && (!finalizarPorErrorKmean(centros_viejos, centros_nuevos, dist_lim)));
   ROS_DEBUG(" Ciclos realizados %d", i);
 
-  pair<list<int>, vector<list<int> > > retorno(
-      nearestPoint(centros_nuevos, puntos), puntos_de_centros);
+  pair<list<int>, vector<list<int> > > retorno(nearestPoint(centros_nuevos, puntos),
+                                               puntos_de_centros);
 
   return retorno;
 }
@@ -462,8 +467,7 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
         it++;
       }
       // Aplico kmeans
-      pair<list<int>, vector<list<int> > > retornoKmean =
-          kmeans(k, clusters[i], centros, 0.1);
+      pair<list<int>, vector<list<int> > > retornoKmean = kmeans(k, clusters[i], centros, 0.1);
       // Obtengo los nuevos centros y puntos de centos.
       centros_nuevo = retornoKmean.first;
       puntos_de_centros = retornoKmean.second;
@@ -485,7 +489,7 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
       } else {
         frontera_completa = true;
         for (it_puntos = centros_nuevo.rbegin(); it_puntos != centros_nuevo.rend(); it_puntos++) {
-          ROS_DEBUG("centro ---> %d !!", (*it_puntos));
+          // cout<<"centro --->"<<*it_puntos<<endl;
           // boost::unordered_set<int> infoGain = getGainInfo((*it_puntos));
           // info_gain.insert(pair<int, boost::unordered_set<int> >((*it_puntos), infoGain));
           centros_de_frontera.push_back((*it_puntos));
@@ -656,7 +660,8 @@ void CentralModule::setObstaculos(vector<int> newObstaculos) {
 }*/
 
 /*void CentralModule::saveBid(const tscf_exploration::frontierReportConstPtr& msg, string name)
-{ if (CentralModule::estado == 2) { boost::unordered_map<int, boost::unordered_set<int> >::iterator itm;
+{ if (CentralModule::estado == 2) { boost::unordered_map<int, boost::unordered_set<int> >::iterator
+itm;
     // ROS_INFO(" CENTRAL MODULE :: Guardo Informe del robot %s con nombre %s y
     // cantidad de %d centros", msg->idRobot.c_str(),
     // name.c_str(),msg->cant_centros);
@@ -696,8 +701,8 @@ void CentralModule::setObstaculos(vector<int> newObstaculos) {
 }*/
 /*
 // a set 1 le resto set 2
-void CentralModule::setDifference(boost::unordered_set<int>& set1, boost::unordered_set<int>& set2) {
-  for (boost::unordered_set<int>::iterator it = set2.begin(); it != set2.end(); it++) {
+void CentralModule::setDifference(boost::unordered_set<int>& set1, boost::unordered_set<int>& set2)
+{ for (boost::unordered_set<int>::iterator it = set2.begin(); it != set2.end(); it++) {
     boost::unordered_set<int>::iterator lugar = set1.find(*it);
     if (lugar != set1.end()) {
       set1.erase(lugar);
@@ -708,19 +713,17 @@ void CentralModule::setDifference(boost::unordered_set<int>& set1, boost::unorde
 /*void CentralModule::updateInfoGain(tscf_exploration::asignacionCelda info) {
   boost::unordered_set<int> s = CentralModule::info_gain_saved[info.idRobot][info.objetivo];
 
-  for (boost::unordered_map<string, boost::unordered_map<int, boost::unordered_set<int> > >::iterator it =
-           CentralModule::info_gain_saved.begin();
-       it != CentralModule::info_gain_saved.end(); it++) {
-    it->second.erase(info.objetivo);
-    for (boost::unordered_map<int, boost::unordered_set<int> >::iterator it3 = it->second.begin(); it3 != it->second.end();
-         it3++) {
-      if (distacia2Puntos(map_points[it3->first], map_points[info.objetivo]) < 12) {
+  for (boost::unordered_map<string, boost::unordered_map<int, boost::unordered_set<int> >
+>::iterator it = CentralModule::info_gain_saved.begin(); it != CentralModule::info_gain_saved.end();
+it++) { it->second.erase(info.objetivo); for (boost::unordered_map<int, boost::unordered_set<int>
+>::iterator it3 = it->second.begin(); it3 != it->second.end(); it3++) { if
+(distacia2Puntos(map_points[it3->first], map_points[info.objetivo]) < 12) {
         setDifference(it3->second, s);
       }
     }
   }
-  for (boost::unordered_map<string, boost::unordered_map<int, int> >::iterator it2 = CentralModule::cost_saved.begin();
-       it2 != CentralModule::cost_saved.end(); it2++) {
+  for (boost::unordered_map<string, boost::unordered_map<int, int> >::iterator it2 =
+CentralModule::cost_saved.begin(); it2 != CentralModule::cost_saved.end(); it2++) {
     it2->second.erase(info.objetivo);
   }
 }
@@ -800,9 +803,8 @@ tscf_exploration::asignacion CentralModule::assignTasks() {
 /*Funcion que obtiene la informacion ganada en una celda.*/
 /*boost::unordered_set<int> CentralModule::getGainInfo(int celda) {
   // ros::Rate loop_rate(0.5);
-  boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> > > obstaculos;
-  boost::unordered_set<int> nivel_actual;
-  boost::unordered_set<int> nivel_siguiente;
+  boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> > >
+obstaculos; boost::unordered_set<int> nivel_actual; boost::unordered_set<int> nivel_siguiente;
   boost::unordered_set<int> visitadas;
   vector<int> info_gain;
   nivel_siguiente.insert(celda);
@@ -822,11 +824,9 @@ tscf_exploration::asignacion CentralModule::assignTasks() {
           if (map_merged.data[pos_vecino] == 100) {
             // agregar a mapa de obstaculos
             int key = -1;
-            boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> > >::iterator it =
-                obstaculos.begin();
-            while ((key == -1) && it != obstaculos.end()) {
-              if (CentralModule::esVecinoDeSet(pos_vecino, it->second.first)) {
-                key = it->first;
+            boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> >
+>::iterator it = obstaculos.begin(); while ((key == -1) && it != obstaculos.end()) { if
+(CentralModule::esVecinoDeSet(pos_vecino, it->second.first)) { key = it->first;
               }
               it++;
             }
@@ -839,11 +839,9 @@ tscf_exploration::asignacion CentralModule::assignTasks() {
             }
           } else {
             int key = -1;
-            boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> > >::iterator it =
-                obstaculos.begin();
-            while ((key == -1) && it != obstaculos.end()) {
-              if (CentralModule::esVecinoDeSet(pos_vecino, it->second.second)) {
-                key = it->first;
+            boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> >
+>::iterator it = obstaculos.begin(); while ((key == -1) && it != obstaculos.end()) { if
+(CentralModule::esVecinoDeSet(pos_vecino, it->second.second)) { key = it->first;
               }
               it++;
             }
@@ -865,11 +863,9 @@ tscf_exploration::asignacion CentralModule::assignTasks() {
                 obstaculos[key].second.insert(pos_vecino);
               }
             } else {
-              boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> > >::iterator it =
-                  obstaculos.begin();
-              while ((key == -1) && it != obstaculos.end()) {
-                if (CentralModule::esVecinoDeSet(pos_vecino, it->second.first)) {
-                  key = it->first;
+              boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> >
+>::iterator it = obstaculos.begin(); while ((key == -1) && it != obstaculos.end()) { if
+(CentralModule::esVecinoDeSet(pos_vecino, it->second.first)) { key = it->first;
                 }
                 it++;
               }

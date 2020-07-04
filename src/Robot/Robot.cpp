@@ -20,7 +20,8 @@ geometry_msgs::Point Robot::getPosition() {
 pos Robot::getGVDPos() {
   geometry_msgs::Point p3d = getPosition();
 
-  pos adjustment(signo((int)position.x), 0);
+  // pos adjustment(signo((int)position.x), 0);
+  pos adjustment(0, 0);
 
   return p3d_to_pos(p3d) - offset + adjustment;
 }
@@ -38,20 +39,21 @@ void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
   position.y = msg->pose.position.y;
 }
 
-void Robot::set_grid(){
+void Robot::set_grid() {
   grid = og2gt(map_merged.mapa);
 }
 
-//this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction dis) but we did it to finish
-void Robot::add_to_gvd(pos f_pos){
+// this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction
+// dis) but we did it to finish
+void Robot::add_to_gvd(pos f_pos) {
   float min = -1;
   float min_aux;
   VecGVD::Vertex v_min;
   VecGVD::Vertex v;
   bool inserted;
   VecGVD::Edge e;
-  
-  //ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
+
+  // ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
 
   VecGVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
@@ -65,62 +67,63 @@ void Robot::add_to_gvd(pos f_pos){
   }
 
   if (min != 0) {
-    //ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
+    // ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
     boost::tie(v, inserted) = gvd.add_v(f_pos);
-    //ROS_INFO("romi vertice %d",inserted);
+    // ROS_INFO("romi vertice %d",inserted);
     boost::tie(e, inserted) = gvd.add_e(v, v_min, min);
-    boost::tie(e, inserted) = gvd.add_e(v_min,v, min);
-    //ROS_INFO("romi arista %d",inserted);
-    //ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-    //ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+    boost::tie(e, inserted) = gvd.add_e(v_min, v, min);
+    // ROS_INFO("romi arista %d",inserted);
+    // ROS_INFO("romi arista es: %d,%d - %d,%d
+    // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
+    // ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
   }
-
 }
 
-void Robot::add_to_gvd(pos_set p_set){
-  boost::unordered_map<pos,boost::unordered_map<pos,pos>> v_paths;
-  boost::unordered_map<pos,pos> v_connection;
+void Robot::add_to_gvd(pos_set p_set) {
+  boost::unordered_map<pos, boost::unordered_map<pos, pos>> v_paths;
+  boost::unordered_map<pos, pos> v_connection;
   VecGVD::Vertex v_pred;
   VecGVD::Vertex v;
   bool inserted;
   VecGVD::Edge e;
 
-  for(auto it = p_set.begin(); it != p_set.end(); ++it){
+  for (auto it = p_set.begin(); it != p_set.end(); ++it) {
     ROS_INFO("romi voy a calcular el camino");
     boost::tie(v_paths[*it], v_connection[*it]) = find_paths_to_gvd(grid, gvd, *it);
     ROS_INFO("romi termine de calcular el camino");
-    if(v_connection[*it] == pos() || v_paths[*it].size() == 0){
+    if (v_connection[*it] == pos() || v_paths[*it].size() == 0) {
       ROS_INFO("romi ERROR");
     }
   }
-  for(auto it = p_set.begin(); it != p_set.end(); ++it){
+  for (auto it = p_set.begin(); it != p_set.end(); ++it) {
     pos v_pred_pos;
     pos v_pos = v_connection[*it];
     v = gvd.positions[v_pos];
-    boost::unordered_map<pos,pos> v_predecessor = v_paths[*it];
-    for(v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]){
+    boost::unordered_map<pos, pos> v_predecessor = v_paths[*it];
+    for (v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]) {
       ROS_INFO("romi voy a recorerer el camino");
       boost::tie(v_pred, inserted) = gvd.add_v(v_pred_pos);
-      if(inserted){
+      if (inserted) {
         gvd.g[v_pred].segment = gvd.g[v].segment;
       }
-      ROS_INFO("romi vertice %d",inserted);
+      ROS_INFO("romi vertice %d", inserted);
       float d = dist(v_pred_pos, v_pos);
       boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
-      boost::tie(e, inserted) = gvd.add_e(v_pred,v, d);
+      boost::tie(e, inserted) = gvd.add_e(v_pred, v, d);
       v = v_pred;
       v_pos = v_pred_pos;
-      if(v_pos == (*it)){
-        ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %d", gvd.positions[v_pos]);
+      if (v_pos == (*it)) {
+        ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %d",
+                 gvd.positions[v_pos]);
         break;
-      } 
-      //ROS_INFO("romi arista %d",inserted);
-      //ROS_INFO("romi arista es: %d,%d - %d,%d ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-      //ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+      }
+      // ROS_INFO("romi arista %d",inserted);
+      // ROS_INFO("romi arista es: %d,%d - %d,%d
+      // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
+      // ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
     }
   }
 }
-
 
 // Robot process graph, creates boost gvd also adds pos->gvd
 VecGVD Robot::getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D> vertex_segment) {
@@ -139,7 +142,7 @@ VecGVD Robot::getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D
     v_pos = p2d_to_pos(g.vertices[i]);
     boost::tie(v, inserted) = gvd.add_v(v_pos);
 
-    //min_aux = dist(r_pos, v_pos);
+    // min_aux = dist(r_pos, v_pos);
     // std::cout<<"min_aux "<<min_aux<<endl;
     // std::cout<<"min "<<min<<endl;
     /*if (min < 0 || min_aux < min) {
@@ -165,20 +168,20 @@ VecGVD Robot::getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D
 }
 
 // Return true if robot is in segment assigned_segment and false if it isnt
-bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos){
+bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos) {
   float f_r_dist = dist(f_pos, my_pos);
   float f_c_dist = dist(f_pos, assigned_segment);
   return (f_r_dist < f_c_dist);
 }
 
 tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
-  //ROS_INFO("tiempos arranca el getSegmentBid---------------------");
-  //std::cout << "declaracion de segment bid en la prox lienea" << endl;
+  // ROS_INFO("tiempos arranca el getSegmentBid---------------------");
+  // std::cout << "declaracion de segment bid en la prox lienea" << endl;
   tscf_exploration::SegmentBid segment_bid;
-  //std::cout << "getGVDPOS en la prox lienea" << endl;
+  // std::cout << "getGVDPOS en la prox lienea" << endl;
   offset = p2d_to_pos(msg.offset);
   my_pos = getGVDPos();
-  //std::cout << "Consegui my pos: "<<endl;
+  // std::cout << "Consegui my pos: "<<endl;
   pos r_pos = my_pos;
 
   pos r_segment, c_pos, f_pos;
@@ -189,53 +192,86 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   pos_set r_set;
   r_set.insert(r_pos);
   add_to_gvd(r_set);
-  //std::cout << "este es el seg: " << seg << endl;
+  // std::cout << "este es el seg: " << seg << endl;
   r_segment = gvd.g[gvd.positions[r_pos]].segment;
   my_segment = r_segment;
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
-  pos_set criticals_and_frontier;
-  for (int i = 0; i < msg.criticals.size(); i++) {
+  pos my_segment_frontier;
+  pos_set criticals_and_frontiers;
+  pos_set frontiers;
+  int my_segment_frontier_index;
+  for (int i = 0, j = 0; i < msg.criticals.size(); i++) {
     pos c_pos = p2d_to_pos(msg.criticals[i]);
-    if(r_segment == c_pos){
-      f_pos = p2d_to_pos(msg.minp_f[i]);
-      pos_set f_set;
-      f_set.insert(f_pos);
-      add_to_gvd(f_set);
-      criticals_and_frontier.insert(f_pos);
+    criticals_and_frontiers.insert(c_pos);
+    bool first = true;
+
+    for(j; (j<msg.frontiers_segment.size()) && (msg.criticals[i] == msg.frontiers_segment[j]); j++){
+      //if is the closest frontier o a frontier of my segment
+      pos f_segment = p2d_to_pos(msg.frontiers_segment[j]);
+      f_pos = p2d_to_pos(msg.frontiers[j]);
+
+      if(first || r_segment == f_segment){
+        //if is in my segment and also the closest one to the critical
+        if(first && r_segment == f_segment){
+          my_segment_frontier = f_pos;
+          my_segment_frontier_index = j;  
+        }
+
+        first = false;
+        //add the frontier to the set        
+        criticals_and_frontiers.insert(f_pos);
+        frontiers.insert(f_pos);
+      }
+
     }
-    criticals_and_frontier.insert(c_pos);
   }
+  //add the frontiers to the gvd
+  add_to_gvd(frontiers);
 
 
-  //boost::unordered_map<pos,float> paths_costs;
+  // boost::unordered_map<pos,float> paths_costs;
 
-  //ROS_INFO("tiempos arranca el multipath");
-  boost::tie(paths, paths_costs) = get_multi_path(gvd,r_pos,criticals_and_frontier);
-  //ROS_INFO("tiempos termina el multipath");
+  // ROS_INFO("tiempos arranca el multipath");
+  boost::tie(paths, paths_costs) = get_multi_path(gvd, r_pos, criticals_and_frontiers);
+  // ROS_INFO("tiempos termina el multipath");
 
-  list<VecGVD::Vertex> path_to_frontier =  paths[f_pos];
-  bool in_segment = find(path_to_frontier.begin(),path_to_frontier.end(),gvd.positions[r_segment]) == path_to_frontier.end();
-
+  list<VecGVD::Vertex> path_to_frontier = paths[my_segment_frontier];
+  bool in_segment = find(path_to_frontier.begin(), path_to_frontier.end(),
+                         gvd.positions[r_segment]) == path_to_frontier.end();
+  //if robot in segment
+  float cost_my_segment_frontier;
+  if(in_segment){
+    
+    cost_my_segment_frontier = -1;
+    for(int i = my_segment_frontier_index; (i<msg.frontiers_segment.size()) && (r_segment == p2d_to_pos(msg.frontiers_segment[i])); i++){
+      f_pos = p2d_to_pos(msg.frontiers[i]);
+      float f_r_dist = paths_costs[f_pos];
+      //get the closes frontier to the robot
+      if((cost_my_segment_frontier == -1) || (f_r_dist < cost_my_segment_frontier)){
+        cost_my_segment_frontier = f_r_dist;
+      }
+    }
+  }
 
   for (int i = 0; i < msg.criticals.size(); i++) {
     segment_bid.criticals.push_back(msg.criticals[i]);
-
-    float cost = paths_costs[p2d_to_pos(msg.criticals[i])] ;
-   
     c_pos = p2d_to_pos(msg.criticals[i]);
+    float cost = msg.mind_f[i] + paths_costs[c_pos];
+    //float cost = paths_costs[p2d_to_pos(msg.minp_f[i])];
 
     float in_seg = 0;
     if (in_segment && (r_segment == c_pos)) {
-      in_seg = cost*2;
+      in_seg = paths_costs[c_pos];
+      cost = cost_my_segment_frontier;
     }
     // crit a la frontera + (robot al critico)*c
-    segment_bid.values.push_back(msg.mind_f[i] + cost - in_seg);
-    //segment_bid.values.push_back(cost);
+    segment_bid.values.push_back( cost - in_seg);
+    // segment_bid.values.push_back(cost);
   }
   // std::cout<<"Termino!"<<endl;
   // ROS_INFO("Termino!");
-  //ROS_INFO("tiempos termina el getSegmentBid -----------------");
+  // ROS_INFO("tiempos termina el getSegmentBid -----------------");
   return segment_bid;
 }
 
@@ -246,73 +282,72 @@ geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
   return p3d;
 }
 
-//set on the robot variables paths and paths_costs to the frontiers on the array
-void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points){
+// set on the robot variables paths and paths_costs to the frontiers on the array
+void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points) {
   pos_set f_set;
-  for(int i=0; i<points.size(); i++){
+  for (int i = 0; i < points.size(); i++) {
     pos f_pos = p2d_to_pos(points[i]);
-    //add_to_gvd(f_pos);
-    //add_to_gvd(f_pos);
+    // add_to_gvd(f_pos);
+    // add_to_gvd(f_pos);
     f_set.insert(f_pos);
   }
   add_to_gvd(f_set);
-  
-  //add_to_gvd(f_set, assigned_segment);
-  //maybe i could recalculate for every frontier to be more exact
-  if(true){//assigned_segment == my_segment){
+
+  // add_to_gvd(f_set, assigned_segment);
+  // maybe i could recalculate for every frontier to be more exact
+  if (true) {  // assigned_segment == my_segment){
     boost::tie(paths, paths_costs) = get_multi_path(gvd, my_pos, f_set);
-    //ROS_INFO("romi calcule el camino a las fronteras");
-  }else{
-    boost::unordered_map<pos,list<VecGVD::Vertex>> f_paths;
-    boost::unordered_map<pos,float> f_paths_costs;
+    // ROS_INFO("romi calcule el camino a las fronteras");
+  } else {
+    boost::unordered_map<pos, list<VecGVD::Vertex>> f_paths;
+    boost::unordered_map<pos, float> f_paths_costs;
     boost::tie(f_paths, f_paths_costs) = get_multi_path(gvd, assigned_segment, f_set);
-    //duplicated information (robot->segment)
-    //where should i assigned the path, under key assigned_segment or under frontier?
-    for(auto it = f_set.begin(); it != f_set.end(); ++it){
-      //paths[assigned_segment].splice(paths[assigned_segment].end(), f_paths[*it]);
-      //f_paths[*it].pop_front();
-      f_paths[*it].splice(f_paths[*it].begin(), paths[assigned_segment]); 
-      //paths[*it] = paths[assigned_segment];
+    // duplicated information (robot->segment)
+    // where should i assigned the path, under key assigned_segment or under frontier?
+    for (auto it = f_set.begin(); it != f_set.end(); ++it) {
+      // paths[assigned_segment].splice(paths[assigned_segment].end(), f_paths[*it]);
+      // f_paths[*it].pop_front();
+      f_paths[*it].splice(f_paths[*it].begin(), paths[assigned_segment]);
+      // paths[*it] = paths[assigned_segment];
       paths[*it] = f_paths[*it];
       paths_costs[*it] = paths_costs[assigned_segment] + f_paths_costs[*it];
     }
   }
 }
 
-int Robot::getRobotId(){
+int Robot::getRobotId() {
   int id = 0;
-  //for(int i = nombreRobot.size()-1; i>= 0; i--){
-    //if(!isdigit(nombreRobot[i])){
+  // for(int i = nombreRobot.size()-1; i>= 0; i--){
+  // if(!isdigit(nombreRobot[i])){
   return stoi(nombreRobot.substr(4));
-    //}
   //}
-  //return -1;
+  //}
+  // return -1;
 }
 
-tscf_exploration::FrontierBid Robot::getFrontierBid(vector<tscf_exploration::Point2D> frontiers){
+tscf_exploration::FrontierBid Robot::getFrontierBid(vector<tscf_exploration::Point2D> frontiers) {
   set_my_paths_to_frontiers(frontiers);
   tscf_exploration::FrontierBid msg;
-  for(auto it = frontiers.begin(); it != frontiers.end(); ++it){
+  for (auto it = frontiers.begin(); it != frontiers.end(); ++it) {
     msg.frontiers.push_back(*it);
-    msg.values.push_back(paths_costs[p2d_to_pos(*it)]); 
+    msg.values.push_back(paths_costs[p2d_to_pos(*it)]);
   }
   msg.robotId = getRobotId();
   msg.id = last_segment_assignment_id;
-  last_frontier_auction_id = last_segment_auction_id; 
+  last_frontier_auction_id = last_segment_auction_id;
   return msg;
 }
-
 
 bool Robot::saveFrontierBid(tscf_exploration::FrontierBid fb) {
   // segment_bids[name].clear();
   for (int i = 0; i < fb.frontiers.size(); i++) {
     // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
     pos f_pos = p2d_to_pos(fb.frontiers[i]);
-    string name =  to_string(fb.robotId);
+    string name = to_string(fb.robotId);
     add_bid(bids_pq, name, f_pos, fb.values[i]);
-    //auction_segment_frontiers_num[f_pos] = cis[segment].frontiers.size();
+    // auction_segment_frontiers_num[f_pos] = cis[segment].frontiers.size();
   }
-  auction_robots =auction_robots+1;
+  auction_robots = auction_robots + 1;
   return true;
 }
 
@@ -321,45 +356,48 @@ pos Robot::assignFrontier() {
   int total_frontiers = paths.size();
   string id = to_string(getRobotId());
   boost::unordered_map<string, pos> robot_frontiers =
-  resolve_auction(bids_pq, total_robots,total_frontiers);
+      resolve_auction(bids_pq, total_robots, total_frontiers);
   return robot_frontiers[id];
 }
 
-//First solution, didnot work properly
+// First solution, didnot work properly
 // Adds extra points so the robot would walk a straight line from current_pos till f_pos(frontier)
-void Robot::add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist){ 
-  int division_count = dist(f_pos, current_pos)/min_dist;
-  //the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1)) 
-  for(int i = 1; i < division_count; i++){
-    //current_pos.first = current_pos.first + i/division_count*(f_pos.first - current_pos.first);
-    //current_pos.second = current_pos.second + i/division_count*(f_pos.second - current_pos.second);
-    current_pos = current_pos + (i*(f_pos - current_pos))/division_count; 
-    //add to path
+void Robot::add_intermidiate_points(pos f_pos,
+                                    pos current_pos,
+                                    tscf_exploration::goalList& g_list,
+                                    float min_dist) {
+  int division_count = dist(f_pos, current_pos) / min_dist;
+  // the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1))
+  for (int i = 1; i < division_count; i++) {
+    // current_pos.first = current_pos.first + i/division_count*(f_pos.first - current_pos.first);
+    // current_pos.second = current_pos.second + i/division_count*(f_pos.second -
+    // current_pos.second);
+    current_pos = current_pos + (i * (f_pos - current_pos)) / division_count;
+    // add to path
     geometry_msgs::Point p3d = pos_to_real_p3d(current_pos);
     g_list.listaGoals.push_back(p3d);
-    //ROS_INFO("way intermedio %f,%f,%f", p3d.x, p3d.y, p3d.z);
+    // ROS_INFO("way intermedio %f,%f,%f", p3d.x, p3d.y, p3d.z);
   }
 }
 
 tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
-  
-  //ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
-  //pos f_pos = p2d_to_pos(frontier);
+  // ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
+  // pos f_pos = p2d_to_pos(frontier);
 
-  //ROS_INFO("tiempos forntera al gvd");
-  //add_to_gvd(f_pos);
-  //ROS_INFO("tiempos fin forntera al gvd");
-  //ROS_INFO("romi ingrese la frontera al gvd");
-  
-  //ROS_INFO("tiempos voy a calcular el camino");
-  //std::list<VecGVD::Vertex> path;
-  //float cost; 
+  // ROS_INFO("tiempos forntera al gvd");
+  // add_to_gvd(f_pos);
+  // ROS_INFO("tiempos fin forntera al gvd");
+  // ROS_INFO("romi ingrese la frontera al gvd");
 
-  //ROS_INFO("tiempos comienza de calcular el camino");
-  //boost::tie(path, cost) = get_single_path(gvd, my_pos, f_pos);
-  //ROS_INFO("tiempos termine de calcular el camino");
+  // ROS_INFO("tiempos voy a calcular el camino");
+  // std::list<VecGVD::Vertex> path;
+  // float cost;
 
-  if(paths[frontier].size() == 0){
+  // ROS_INFO("tiempos comienza de calcular el camino");
+  // boost::tie(path, cost) = get_single_path(gvd, my_pos, f_pos);
+  // ROS_INFO("tiempos termine de calcular el camino");
+
+  if (paths[frontier].size() == 0) {
     ROS_WARN("Empty path");
   }
 
@@ -368,19 +406,18 @@ tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
 
   list<VecGVD::Vertex> v_list = paths[frontier];
   geometry_msgs::Point p3d;
-  
-  //ROS_INFO("romi iterar en los nodos para pasarlos a p3d");
+
+  // ROS_INFO("romi iterar en los nodos para pasarlos a p3d");
 
   for (auto it = v_list.begin(); it != v_list.end(); it++) {
-    
     p3d = pos_to_real_p3d(gvd.g[*it].p);
 
     g_list.listaGoals.push_back(p3d);
 
-    //ROS_INFO("romi way puntos en el camino %f,%f,%f", p3d.x, p3d.y, p3d.z);
+    // ROS_INFO("romi way puntos en el camino %f,%f,%f", p3d.x, p3d.y, p3d.z);
   }
 
-  //ROS_INFO("TERMINEEEEEEEEEEEEE");
+  // ROS_INFO("TERMINEEEEEEEEEEEEE");
   return g_list;
 }
 
@@ -684,10 +721,8 @@ std::list<int> Robot::caminoAfrontera(std::vector<int> oleada,
 //Funcion que calcula los caminos y obtiene el indice de el punto de frontera
 // mas cercano
 std::boost::unordered_map<int, std::list<int> > Robot::obtenerCaminos(int& camino_mas_cercano,
-                                                     std::boost::unordered_map<int, std::vector<int> > oleadas,
-                                                     int posicionActual,
-                                                     std::list<int> centros_def,
-                                                     nav_msgs::OccupancyGrid& p) {
+                                                     std::boost::unordered_map<int, std::vector<int>
+> oleadas, int posicionActual, std::list<int> centros_def, nav_msgs::OccupancyGrid& p) {
   // ros::Rate loop_rate(0.1);
   std::boost::unordered_map<int, std::list<int> > caminos;
   int costo_mas_cercano = 10000;

@@ -1,58 +1,68 @@
-<launch>
-  
-  <param name="use_sim_time" value="true"/>
+<launch>  
+  <arg name="starting_robot_number" />
+  <param name="starting_robot_number" type="int" value="$(arg starting_robot_number)" />
 
+  <arg name="map_name" />
+  <param name="map_name" type="string" value="$(arg map_name)" />  
+
+  <param name="use_sim_time" value="true"/>
   <arg name="paused" default="false"/>
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
 
-  <!-- <node type="rviz" name="rviz" pkg="rviz"  /> -->
-  <!-- <node type="rqt_console" name="rqt_console" pkg="rqt_console"  /> -->
-  <!-- <node pkg="tscf_exploration" type="printer" name="printer" /> -->
-
   <param name="robot_description" command="$(find xacro)/xacro '$(find tscf_exploration)/urdf/pioneer3dx.xacro'" />
 
-  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
-    <arg name="init_pose_x" value="-36.5" />
-    <arg name="init_pose_y" value="36.5" />
-    <arg name="init_pose_z" value="0.0" />
-    <arg name="init_pose_yaw" value="0.0" />
-    <arg name="ns_name"   value="atrv0" />
-  </include>
+  <group if="$(eval arg('starting_robot_number')  >= 1 )">
+    <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+      <arg name="init_pose_x" value="-36.5" />
+      <arg name="init_pose_y" value="36.5" />
+      <arg name="init_pose_z" value="0.0" />
+      <arg name="init_pose_yaw" value="0.0" />
+      <arg name="ns_name"   value="atrv0" />
+    </include>
+  </group>
 
-  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
-    <arg name="init_pose_x" value="-36.5" />
-    <arg name="init_pose_y" value="29.5" />
-    <arg name="init_pose_z" value="0.0" />
-    <arg name="init_pose_yaw" value="0.0" />
-    <arg name="ns_name"   value="atrv1" />
-  </include>
+  <group if="$(eval arg('starting_robot_number') >= 2 )">
+    <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+      <arg name="init_pose_x" value="-36.5" />
+      <arg name="init_pose_y" value="29.5" />
+      <arg name="init_pose_z" value="0.0" />
+      <arg name="init_pose_yaw" value="0.0" />
+      <arg name="ns_name"   value="atrv1" />
+    </include>
+  </group>
 
-  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
-    <arg name="init_pose_x" value="-36.5" />
-    <arg name="init_pose_y" value="22.5" />
-    <arg name="init_pose_z" value="0.0" />
-    <arg name="init_pose_yaw" value="0.0" />
-    <arg name="ns_name"   value="atrv2" />
-  </include>
+  <group if="$(eval arg('starting_robot_number') >= 3 )">
+    <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+      <arg name="init_pose_x" value="-36.5" />
+      <arg name="init_pose_y" value="22.5" />
+      <arg name="init_pose_z" value="0.0" />
+      <arg name="init_pose_yaw" value="0.0" />
+      <arg name="ns_name"   value="atrv2" />
+    </include>
+  </group>
 
+  <group if="$(eval arg('starting_robot_number') >= 4)">
+    <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+        <arg name="init_pose_x" value="-36.5" />
+        <arg name="init_pose_y" value="15.5" />
+        <arg name="init_pose_z" value="0.0" />
+        <arg name="init_pose_yaw" value="0.0" />
+        <arg name="ns_name"   value="atrv3" />
+      </include>
+  </group>
 
- <include file="$(find tscf_exploration)/launch/one_robot.launch" >
-    <arg name="init_pose_x" value="-36.5" />
-    <arg name="init_pose_y" value="15.5" />
-    <arg name="init_pose_z" value="0.0" />
-    <arg name="init_pose_yaw" value="0.0" />
-    <arg name="ns_name"   value="atrv3" />
-  </include>
-
-  <include file="$(find tscf_exploration)/launch/one_robot.launch" >
-    <arg name="init_pose_x" value="-36.5" />
-    <arg name="init_pose_y" value="8.5" />
-    <arg name="init_pose_z" value="0.0" />
-    <arg name="init_pose_yaw" value="0.0" />
-    <arg name="ns_name"   value="atrv4" />
-  </include> 
+  <group if="$(eval arg('starting_robot_number') >= 5)">
+    <include file="$(find tscf_exploration)/launch/one_robot.launch" >
+      <arg name="init_pose_x" value="-36.5" />
+      <arg name="init_pose_y" value="8.5" />
+      <arg name="init_pose_z" value="0.0" />
+      <arg name="init_pose_yaw" value="0.0" />
+      <arg name="ns_name"   value="atrv4" />
+    </include> 
+  </group>
+ 
 <!--
 -->
 
