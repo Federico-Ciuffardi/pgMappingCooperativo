@@ -113,16 +113,16 @@ tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   for (auto it = cis.begin(); it != cis.end(); it++) {
     pos segment = it->first;
     critical_info segment_info = it->second;
-  
+
     segment_auction.criticals.push_back(pos_to_p2d(segment));
-    
-    for(auto it_f = segment_info.frontiers.begin(); it_f != segment_info.frontiers.end(); ++it_f){
+
+    for (auto it_f = segment_info.frontiers.begin(); it_f != segment_info.frontiers.end(); ++it_f) {
       segment_auction.frontiers.push_back(pos_to_p2d(*it_f));
       segment_auction.frontiers_segment.push_back(pos_to_p2d(segment));
     }
     // ROS_INFO("critical: %d , %d", segment.first, segment.second);
     segment_auction.mind_f.push_back(segment_info.mind_f);
-    //segment_auction.minp_f.push_back(pos_to_p2d(segment_info.frontiers[0]));
+    // segment_auction.minp_f.push_back(pos_to_p2d(segment_info.frontiers[0]));
     /*for(int i = 0; i < segment_info.frontiers.size(); i++){
       segment_auction.frontier.push_back(pos_to_p2d(segment_info.frontiers[i]));
       segment_auction.frontier_segment.push_back(pos_to_p2d(segment));

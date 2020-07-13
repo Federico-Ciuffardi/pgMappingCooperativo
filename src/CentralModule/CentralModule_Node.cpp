@@ -207,11 +207,11 @@ void resolveAuction() {
     string robot = it->first;
     float estimated_time =
         (centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED);
-    if (estimated_time > min_estimated_time + (gvd_time + gvd_time_increment + auctionStartDelayTimeout).toSec()) {
+    if (estimated_time >
+        min_estimated_time + (gvd_time + gvd_time_increment + auctionStartDelayTimeout).toSec()) {
       assigned_robots--;
     }
   }
-
 
   auctionStartTimeout = (gvd_time + gvd_time_increment + auctionStartDelayTimeout);
   auctionStartTimer.setPeriod(auctionStartTimeout);

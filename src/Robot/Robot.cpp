@@ -206,29 +206,28 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
     criticals_and_frontiers.insert(c_pos);
     bool first = true;
 
-    for(j; (j<msg.frontiers_segment.size()) && (msg.criticals[i] == msg.frontiers_segment[j]); j++){
-      //if is the closest frontier o a frontier of my segment
+    for (j; (j < msg.frontiers_segment.size()) && (msg.criticals[i] == msg.frontiers_segment[j]);
+         j++) {
+      // if is the closest frontier o a frontier of my segment
       pos f_segment = p2d_to_pos(msg.frontiers_segment[j]);
       f_pos = p2d_to_pos(msg.frontiers[j]);
 
-      if(first || r_segment == f_segment){
-        //if is in my segment and also the closest one to the critical
-        if(first && r_segment == f_segment){
+      if (first || r_segment == f_segment) {
+        // if is in my segment and also the closest one to the critical
+        if (first && r_segment == f_segment) {
           my_segment_frontier = f_pos;
-          my_segment_frontier_index = j;  
+          my_segment_frontier_index = j;
         }
 
         first = false;
-        //add the frontier to the set        
+        // add the frontier to the set
         criticals_and_frontiers.insert(f_pos);
         frontiers.insert(f_pos);
       }
-
     }
   }
-  //add the frontiers to the gvd
+  // add the frontiers to the gvd
   add_to_gvd(frontiers);
-
 
   // boost::unordered_map<pos,float> paths_costs;
 
@@ -239,16 +238,17 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
   list<VecGVD::Vertex> path_to_frontier = paths[my_segment_frontier];
   bool in_segment = find(path_to_frontier.begin(), path_to_frontier.end(),
                          gvd.positions[r_segment]) == path_to_frontier.end();
-  //if robot in segment
+  // if robot in segment
   float cost_my_segment_frontier;
-  if(in_segment){
-    
+  if (in_segment) {
     cost_my_segment_frontier = -1;
-    for(int i = my_segment_frontier_index; (i<msg.frontiers_segment.size()) && (r_segment == p2d_to_pos(msg.frontiers_segment[i])); i++){
+    for (int i = my_segment_frontier_index;
+         (i < msg.frontiers_segment.size()) && (r_segment == p2d_to_pos(msg.frontiers_segment[i]));
+         i++) {
       f_pos = p2d_to_pos(msg.frontiers[i]);
       float f_r_dist = paths_costs[f_pos];
-      //get the closes frontier to the robot
-      if((cost_my_segment_frontier == -1) || (f_r_dist < cost_my_segment_frontier)){
+      // get the closes frontier to the robot
+      if ((cost_my_segment_frontier == -1) || (f_r_dist < cost_my_segment_frontier)) {
         cost_my_segment_frontier = f_r_dist;
       }
     }
@@ -258,7 +258,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
     segment_bid.criticals.push_back(msg.criticals[i]);
     c_pos = p2d_to_pos(msg.criticals[i]);
     float cost = msg.mind_f[i] + paths_costs[c_pos];
-    //float cost = paths_costs[p2d_to_pos(msg.minp_f[i])];
+    // float cost = paths_costs[p2d_to_pos(msg.minp_f[i])];
 
     float in_seg = 0;
     if (in_segment && (r_segment == c_pos)) {
@@ -266,7 +266,7 @@ tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAucti
       cost = cost_my_segment_frontier;
     }
     // crit a la frontera + (robot al critico)*c
-    segment_bid.values.push_back( cost - in_seg);
+    segment_bid.values.push_back(cost - in_seg);
     // segment_bid.values.push_back(cost);
   }
   // std::cout<<"Termino!"<<endl;

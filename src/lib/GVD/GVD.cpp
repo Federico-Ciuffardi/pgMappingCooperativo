@@ -430,9 +430,8 @@ void clean_up(GVD& gvd, dist_grid dgrid, int min_deg) {
     GVD::Vertex max_deg_v = *v_it_aux;
     int max_deg = out_degree(*v_it_aux, gvd.g);
 
-    if (max_deg >=
-        min_deg) {  // just for not recalculating out_degree(*v_it_aux, gvd.g) it does not have
-                    // anything to do with the max deg itself
+    if (max_deg >= min_deg) {  // just for not recalculating out_degree(*v_it_aux, gvd.g) it does
+                               // not have anything to do with the max deg itself
       GVD::AdjacencyIterator av_it, av_it_end;
       for (boost::tie(av_it, av_it_end) = boost::adjacent_vertices(*v_it_aux, gvd.g);
            av_it != av_it_end; ++av_it) {
