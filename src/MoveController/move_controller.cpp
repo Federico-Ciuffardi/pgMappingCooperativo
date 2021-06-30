@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h>
-#include <tscf_exploration/mapMergedInfo.h>
+#include <pgmappingcooperativo/mapMergedInfo.h>
 #include <ctime>
 #include <sstream>
 #include <string>
@@ -16,7 +16,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/String.h"
 #include "tf/transform_datatypes.h"
-#include "tscf_exploration/goalList.h"
+#include "pgmappingcooperativo/goalList.h"
 
 // Constantes
 
@@ -36,8 +36,8 @@ ros::Subscriber pose_sub;
 // ros::Subscriber map_sub;
 ros::Subscriber scan_sub;
 TCPClient client;
-tscf_exploration::goalList path;
-tscf_exploration::goalList path_saved;
+pgmappingcooperativo::goalList path;
+pgmappingcooperativo::goalList path_saved;
 geometry_msgs::PoseStamped position;
 geometry_msgs::PoseStamped position_old;
 // nav_msgs::OccupancyGrid odometry_map;
@@ -109,7 +109,7 @@ void poseCallback(const geometry_msgs::PoseStamped& msg) {
   position = msg;
 }
 
-tscf_exploration::goalList trim_path(tscf_exploration::goalList msg) {
+pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
   int path_start = 0;
   for (int i = 0; i < msg.listaGoals.size(); i++) {
     float dist_to_target = getDistance(msg.listaGoals[i]);
@@ -122,7 +122,7 @@ tscf_exploration::goalList trim_path(tscf_exploration::goalList msg) {
   return msg;
 }
 
-void setPath(const tscf_exploration::goalList& msg) {
+void setPath(const pgmappingcooperativo::goalList& msg) {
   if (msg.listaGoals.size() != 0) {
     path_saved = trim_path(msg);
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",

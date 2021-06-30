@@ -34,9 +34,9 @@ std::string Robot::getNombre() {
   return nombreRobot;
 };
 
-void Robot::savePose(const geometry_msgs::PoseStamped::ConstPtr& msg) {
-  position.x = msg->pose.position.x;
-  position.y = msg->pose.position.y;
+void Robot::savePose(const geometry_msgs::Pose msg) {
+  position.x = msg.position.x;
+  position.y = msg.position.y;
 }
 
 void Robot::set_grid() {
@@ -126,7 +126,7 @@ void Robot::add_to_gvd(pos_set p_set) {
 }
 
 // Robot process graph, creates boost gvd also adds pos->gvd
-VecGVD Robot::getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D> vertex_segment) {
+VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment) {
   // std::cout<<"arranca el get gvd"<<endl;
   VecGVD gvd;
   pos v_pos;
@@ -174,10 +174,10 @@ bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos 
   return (f_r_dist < f_c_dist);
 }
 
-tscf_exploration::SegmentBid Robot::getSegmentBid(tscf_exploration::SegmentAuction msg) {
+pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::SegmentAuction msg) {
   // ROS_INFO("tiempos arranca el getSegmentBid---------------------");
   // std::cout << "declaracion de segment bid en la prox lienea" << endl;
-  tscf_exploration::SegmentBid segment_bid;
+  pgmappingcooperativo::SegmentBid segment_bid;
   // std::cout << "getGVDPOS en la prox lienea" << endl;
   offset = p2d_to_pos(msg.offset);
   my_pos = getGVDPos();
@@ -283,7 +283,7 @@ geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
 }
 
 // set on the robot variables paths and paths_costs to the frontiers on the array
-void Robot::set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points) {
+void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> points) {
   pos_set f_set;
   for (int i = 0; i < points.size(); i++) {
     pos f_pos = p2d_to_pos(points[i]);
@@ -325,9 +325,9 @@ int Robot::getRobotId() {
   // return -1;
 }
 
-tscf_exploration::FrontierBid Robot::getFrontierBid(vector<tscf_exploration::Point2D> frontiers) {
+pgmappingcooperativo::FrontierBid Robot::getFrontierBid(vector<pgmappingcooperativo::Point2D> frontiers) {
   set_my_paths_to_frontiers(frontiers);
-  tscf_exploration::FrontierBid msg;
+  pgmappingcooperativo::FrontierBid msg;
   for (auto it = frontiers.begin(); it != frontiers.end(); ++it) {
     msg.frontiers.push_back(*it);
     msg.values.push_back(paths_costs[p2d_to_pos(*it)]);
@@ -338,7 +338,7 @@ tscf_exploration::FrontierBid Robot::getFrontierBid(vector<tscf_exploration::Poi
   return msg;
 }
 
-bool Robot::saveFrontierBid(tscf_exploration::FrontierBid fb) {
+bool Robot::saveFrontierBid(pgmappingcooperativo::FrontierBid fb) {
   // segment_bids[name].clear();
   for (int i = 0; i < fb.frontiers.size(); i++) {
     // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
@@ -364,7 +364,7 @@ pos Robot::assignFrontier() {
 // Adds extra points so the robot would walk a straight line from current_pos till f_pos(frontier)
 void Robot::add_intermidiate_points(pos f_pos,
                                     pos current_pos,
-                                    tscf_exploration::goalList& g_list,
+                                    pgmappingcooperativo::goalList& g_list,
                                     float min_dist) {
   int division_count = dist(f_pos, current_pos) / min_dist;
   // the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1))
@@ -380,7 +380,7 @@ void Robot::add_intermidiate_points(pos f_pos,
   }
 }
 
-tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
+pgmappingcooperativo::goalList Robot::getPathToSegment(pos frontier) {
   // ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
   // pos f_pos = p2d_to_pos(frontier);
 
@@ -401,7 +401,7 @@ tscf_exploration::goalList Robot::getPathToSegment(pos frontier) {
     ROS_WARN("Empty path");
   }
 
-  tscf_exploration::goalList g_list;
+  pgmappingcooperativo::goalList g_list;
   g_list.indice = 1;  // TODO poner bien el indice
 
   list<VecGVD::Vertex> v_list = paths[frontier];
@@ -599,18 +599,18 @@ std::boost::unordered_map<int, std::vector<int> > Robot::crearOleadas(nav_msgs::
   return retorno;
 }
 
-tscf_exploration::frontierReport Robot::consultarCostosInfo(
+pgmappingcooperativo::frontierReport Robot::consultarCostosInfo(
     std::boost::unordered_map<int, std::vector<int> > oleadas,
     int posicionActual,
     nav_msgs::OccupancyGrid& p) {
-  tscf_exploration::frontierReport ret;
+  pgmappingcooperativo::frontierReport ret;
   ret.idRobot = nombreRobot;
   ret.infoCentros.clear();
   std::list<int>::iterator it;
   // ROS_INFO("Tengo costo - info");
   for (it = centros_de_frontera.begin(); it != centros_de_frontera.end(); it++) {
     p.data[*it] = 100;
-    tscf_exploration::infoCentro inf;
+    pgmappingcooperativo::infoCentro inf;
     inf.centro = (*it);
     inf.cost = oleadas[*it][posicionActual];
     // ROS_INFO("InfoCentro  ---> %d , %d",inf.centro, inf.cost );
@@ -620,7 +620,7 @@ tscf_exploration::frontierReport Robot::consultarCostosInfo(
   return ret;
 }
 
-tscf_exploration::frontierReport Robot::processMap() {
+pgmappingcooperativo::frontierReport Robot::processMap() {
   // Lista de puntos de frontera
 
   nav_msgs::OccupancyGrid p;
@@ -636,7 +636,7 @@ tscf_exploration::frontierReport Robot::processMap() {
   std::boost::unordered_map<int, std::vector<int> > oleadas =
       Robot::crearOleadas(global_map, posicionActual, centros_de_frontera, p);
 
-  tscf_exploration::frontierReport frontRep =
+  pgmappingcooperativo::frontierReport frontRep =
       Robot::consultarCostosInfo(oleadas, posicionActual, p);
 
   // Robot::printFrontierReport(frontRep);
@@ -645,7 +645,7 @@ tscf_exploration::frontierReport Robot::processMap() {
 }*/
 
 /* devuelve el objetivo con tu id o sea tu objetivo
-int Robot::getobjetive(const tscf_exploration::asignacionConstPtr& msg) {
+int Robot::getobjetive(const pgmappingcooperativo::asignacionConstPtr& msg) {
   int cant = 0;
   int centro = -1;
   bool encontre = false;
@@ -740,12 +740,12 @@ std::boost::unordered_map<int, std::list<int> > Robot::obtenerCaminos(int& camin
 }*/
 
 /*Funcion que a partir de una lista de indices obtiene un goal_path
-tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino,
+pgmappingcooperativo::goalList Robot::getGoalPath(std::list<int> list_camino,
                                               nav_msgs::OccupancyGrid& p) {
   ROS_INFO("way otro");
   geometry_msgs::Point p3d = getPosition();
   ROS_INFO("way from p3d %f,%f,%f",p3d.x,p3d.y,p3d.z);
-  tscf_exploration::goalList list;
+  pgmappingcooperativo::goalList list;
   list.listaGoals.clear();
 
   std::list<int>::iterator it_camino;
@@ -789,7 +789,7 @@ tscf_exploration::goalList Robot::getGoalPath(std::list<int> list_camino,
 }
 
 /*centro es el objetivo
-tscf_exploration::goalList Robot::getPathToObjetive(int centro,
+pgmappingcooperativo::goalList Robot::getPathToObjetive(int centro,
                                                     std::vector<int> obstaculos,
                                                     nav_msgs::OccupancyGrid& p) {
   p.info = global_map.info;
@@ -816,6 +816,6 @@ tscf_exploration::goalList Robot::getPathToObjetive(int centro,
     p.data[(*it)] = 100;
   }
   // ROS_INFO("getGoalPath");
-  tscf_exploration::goalList pathlist = getGoalPath(caminos[camino_mas_cercano], p);
+  pgmappingcooperativo::goalList pathlist = getGoalPath(caminos[camino_mas_cercano], p);
   return pathlist;
 };*/

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="ns" default="p3dx"/>
+  <arg name="x" default="0" />
+  <arg name="y" default="0" />
+  <arg name="z" default="0" />
+
+  <include file="$(find p3dx_gazebo)/launch/p3dx.launch" >
+        <arg name="x"  value="$(arg x)" />
+        <arg name="y"  value="$(arg y)" />
+        <arg name="z"  value="$(arg z)" />
+        <arg name="ns" value="$(arg ns)" />
+  </include>
+
+  <group ns="$(arg ns)">
+    <node pkg="navigation_test" type="navigation_test_node" name="move_controller" required="true" />
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <rosparam file="$(find navigation_test)/yaml/costmap_common_params.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find navigation_test)/yaml/costmap_common_params.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find navigation_test)/yaml/$(arg ns)_costmap_common_params.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find navigation_test)/yaml/$(arg ns)_costmap_common_params.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find navigation_test)/yaml/local_costmap_params.yaml" command="load" />
+      <rosparam file="$(find navigation_test)/yaml/global_costmap_params.yaml" command="load" /> 
+      <rosparam file="$(find navigation_test)/yaml/base_local_planner_params.yaml" command="load" />
+
+       <!-- Set robot specific information -->
+
+      <param name="global_costmap/global_frame" value="$(arg ns)/odom"/>
+      <param name="global_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
+
+      <param name="local_costmap/global_frame" value="$(arg ns)/odom"/>
+      <param name="local_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
+      <!-- the param overrides below were not working so they were set on the $(arg ns)_costmap_common_params.yaml -->
+      <!-- <param name="local_costmap/obstacle_layer/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/> -->
+      <!-- <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/> -->
+    </node>
+  </group>
+
+</launch>

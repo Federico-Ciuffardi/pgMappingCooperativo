@@ -3,14 +3,14 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <stdio.h>
-#include <tscf_exploration/asignacion.h>
-#include <tscf_exploration/asignacionCelda.h>
-#include <tscf_exploration/frontierReport.h>
-#include <tscf_exploration/infoCentro.h>
-#include <tscf_exploration/mapMergedInfo.h>
-#include <tscf_exploration/takeobjetive.h>
-#include <tscf_exploration/SegmentAuction.h>
-#include <tscf_exploration/SegmentAssignment.h>
+#include <pgmappingcooperativo/asignacion.h>
+#include <pgmappingcooperativo/asignacionCelda.h>
+#include <pgmappingcooperativo/frontierReport.h>
+#include <pgmappingcooperativo/infoCentro.h>
+#include <pgmappingcooperativo/mapMergedInfo.h>
+#include <pgmappingcooperativo/takeobjetive.h>
+#include <pgmappingcooperativo/SegmentAuction.h>
+#include <pgmappingcooperativo/SegmentAssignment.h>
 
 #include <iostream>
 #include <list>
@@ -102,29 +102,29 @@ class CentralModule {
   // others
   CentralModule();
 
-  void updateMap(const tscf_exploration::mapMergedInfoConstPtr&);
+  void updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr&);
   void saveMap(const nav_msgs::OccupancyGrid map);
   nav_msgs::OccupancyGrid getMap();
 
   void reset_bid();
-  tscf_exploration::SegmentAuction getSegmentAuctionInfo();
-  boost::unordered_map<string,tscf_exploration::SegmentAssignment> assignSegment();
-  bool saveSegmentBid( tscf_exploration::SegmentBid msg, string name);
+  pgmappingcooperativo::SegmentAuction getSegmentAuctionInfo();
+  boost::unordered_map<string,pgmappingcooperativo::SegmentAssignment> assignSegment();
+  bool saveSegmentBid( pgmappingcooperativo::SegmentBid msg, string name);
 };
 
 
   //void resetArray(boost::unordered_map<string, bool> map);
-  //tscf_exploration::asignacionCelda getMaxUtility();
+  //pgmappingcooperativo::asignacionCelda getMaxUtility();
   //float calcularUtilidad(int info_gain_celda, int cost_celda);
   //bool checkMap(boost::unordered_map<string, bool> mymap);
   //void setDifference(boost::unordered_set<int>& set1, boost::unordered_set<int>& set2);
-  //void updateInfoGain(tscf_exploration::asignacionCelda info);
+  //void updateInfoGain(pgmappingcooperativo::asignacionCelda info);
 
   //boost::unordered_set<int> getGainInfo(int celda);
 
-  //boost::tuple<tscf_exploration::takeobjetive, GVD> getObjetiveMap();
+  //boost::tuple<pgmappingcooperativo::takeobjetive, GVD> getObjetiveMap();
 
-  //void saveBid(const tscf_exploration::frontierReportConstPtr& msg, string name);
+  //void saveBid(const pgmappingcooperativo::frontierReportConstPtr& msg, string name);
   //void resetArrivals();
   //vector<int> obstaculos
   
@@ -139,4 +139,4 @@ class CentralModule {
    //vector<int> getObstaculos();
   //void setObstaculos(vector<int> newObstaculos);
 
-  //tscf_exploration::asignacion assignTasks();
+  //pgmappingcooperativo::asignacion assignTasks();

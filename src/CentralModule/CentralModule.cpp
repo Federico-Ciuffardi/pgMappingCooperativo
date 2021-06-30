@@ -9,7 +9,7 @@ CentralModule::CentralModule() {
   // dist_info_gain_obst = 1.0 / sqrt(2);
 }
 
-void CentralModule::updateMap(const tscf_exploration::mapMergedInfoConstPtr& newMap) {
+void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
   saveMap(newMap->mapa);
   // setObstaculos(newMap->obstaculos);
   boost::unordered_set<int> set(newMap->frontera.begin(), newMap->frontera.end());
@@ -73,14 +73,14 @@ void CentralModule::reset_bid() {
   auction_robots.clear();
 }
 
-tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
+pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution
   cout << "debug :: clear data from previous auction" << endl;
   segment_bids.clear();
   reset_bid();
 
   cout << "debug :: get offset" << endl;
-  tscf_exploration::SegmentAuction segment_auction;
+  pgmappingcooperativo::SegmentAuction segment_auction;
   nav_msgs::OccupancyGrid map = getMap();
   segment_auction.offset = p3d_to_p2d(map.info.origin.position);
   // taking into account the vision range of robot and leaving only significants frontiers
@@ -103,7 +103,7 @@ tscf_exploration::SegmentAuction CentralModule::getSegmentAuctionInfo() {
 
   GVD::EdgeIterator e_it, e_it_end;
   for (boost::tie(e_it, e_it_end) = boost::edges(gvd.g); e_it != e_it_end; e_it++) {
-    tscf_exploration::Edge e;
+    pgmappingcooperativo::Edge e;
     e.from = pos_to_p2d(gvd.g[(*e_it).m_source].p);
     e.to = pos_to_p2d(gvd.g[(*e_it).m_target].p);
     segment_auction.gvd.edges.push_back(e);
@@ -173,7 +173,7 @@ void CentralModule::saveMap(const nav_msgs::OccupancyGrid map) {
   map_merged.data = map.data;
 }
 
-bool CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name) {
+bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid sb, string name) {
   if (last_segment_assignment_id != sb.id) {
     return false;
   }
@@ -190,7 +190,7 @@ bool CentralModule::saveSegmentBid(tscf_exploration::SegmentBid sb, string name)
   return true;
 }
 
-boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule::assignSegment() {
+boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralModule::assignSegment() {
   int total_robots = auction_robots.size();
   int total_segments = cis.size();
 
@@ -204,12 +204,12 @@ boost::unordered_map<string, tscf_exploration::SegmentAssignment> CentralModule:
   }
 
   // cout<<"termina la sasignacion"<<endl;
-  boost::unordered_map<string, tscf_exploration::SegmentAssignment> ret;
+  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> ret;
 
-  // boost::unordered_map<pos,tscf_exploration::Point2D> frontier2d;
+  // boost::unordered_map<pos,pgmappingcooperativo::Point2D> frontier2d;
   for (auto it = auction_robots.begin(); it != auction_robots.end(); it++) {
     string r_name = *it;
-    tscf_exploration::SegmentAssignment sa;
+    pgmappingcooperativo::SegmentAssignment sa;
     sa.id = last_segment_assignment_id;
     if (robot_segment.find(r_name) != robot_segment.end()) {
       pos seg = robot_segment[r_name];
@@ -499,413 +499,3 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
   }
   return centros_de_frontera;
 }
-
-/*
-boost::unordered_map<string,tscf_exploration::SegmentAssignment> CentralModule::assignSegment(){
-  /*typedef pair<string,pos> assignment;
-  typedef pair<float, assignment> bid;
-  priority_queue<bid, vector<bid>, greater<bid>> bids_queue;
-
-  boost::unordered_map<string,pos> robot_segment;//unordered_map?
-  boost::unordered_map<pos,int> auction_segment_frontiers_num;//unordered_map?
-  boost::unordered_map<pos,int> segment_robots_num;//unordered_map?
-
-  for(auto itr = segment_bids.begin(); itr!=segment_bids.end(); itr++){
-    string r_name = itr->first;
-    boost::unordered_map<pos,float> rBids = itr->second;
-    for(auto itb = rBids.begin(); itb != rBids.end(); itb++){
-      float value = itb->second;
-      pos segment = itb->first;
-      bids_queue.push(bid(value,assignment(r_name,segment)));
-      auction_segment_frontiers_num[segment] = cis[segment].frontiers.size();
-    }
-  }
-
-  int total_robots = segment_bids.size();
-  int total_segments = cis.size();
-
-  int assigned_robots = 0;
-  int segment_with_extra_robot = 0;
-
-  int robots_per_segment = total_robots / total_segments;
-  int reminder_robots = total_robots % total_segments;
-
-  int max_robot_per_segment;
-  if(reminder_robots == 0){
-    max_robot_per_segment = robots_per_segment;
-  }else{
-    max_robot_per_segment = robots_per_segment + 1;
-  }
-
-  //cout<<"arranca la sasignacion"<<endl;
-  //ROS_INFO("Arranca la asignacion");
-  while(assigned_robots < total_robots&&  !bids_queue.empty()){
-    bid b = bids_queue.top(); bids_queue.pop();
-    float value = b.first;
-    string r_name = b.second.first;
-    pos segment = b.second.second;
-    ROS_INFO("assignSegment: robot = %s | value = %f | segment =
-%d,%d",r_name.c_str(),value,segment.first,segment.second); ROS_INFO("assignSegment: %d && %d &&
-%d",robot_segment.find(r_name) == robot_segment.end() ,segment_robots_num[segment] <
-max_robot_per_segment,auction_segment_frontiers_num[segment] > 0);
-
-    //robot no asignado, segmento no supera el maximo admitido de robots y quedan fronteras
-disponibles if(robot_segment.find(r_name) == robot_segment.end() && segment_robots_num[segment] <
-max_robot_per_segment && auction_segment_frontiers_num[segment] > 0){ robot_segment[r_name]
-=segment; assigned_robots++; segment_robots_num[segment]++;
-      auction_segment_frontiers_num[segment]--;
-
-      if(segment_robots_num[segment]==robots_per_segment+1){
-        segment_with_extra_robot++;
-        if(segment_with_extra_robot == reminder_robots){
-          max_robot_per_segment = robots_per_segment;
-        }
-      }
-      //cout<<r_name<<endl;
-      //ROS_INFO("%s-> (%d, %d)",r_name.c_str(),segment.first,segment.second);
-      //ROS_INFO("segment_robots_num (%d, %d) =
-%d",segment.first,segment.second,segment_robots_num[segment]);
-      //ROS_INFO("auction_segment_frontiers_num (%d, %d) =
-%d",segment.first,segment.second,auction_segment_frontiers_num[segment]); }else{ continue;
-    }
-  }
-
-  int total_robots = auction_robots.size();
-  int total_segments = cis.size();
-
-  boost::unordered_map<string,pos> robot_segment =
-resolve_auction(bids_pq,total_robots,total_segments,&auction_segment_frontiers_num) ;
-
-  //cout<<"termina la sasignacion"<<endl;
-  boost::unordered_map<string,tscf_exploration::SegmentAssignment> ret;
-
-  //boost::unordered_map<pos,tscf_exploration::Point2D> frontier2d;
-  for(auto it = robot_segment.begin(); it!=robot_segment.end();it++){
-    string r_name = it->first;
-    pos seg = it->second;
-    tscf_exploration::SegmentAssignment sa;
-    sa.segment = pos_to_p2d(seg);
-    sa.frontiers = pos_to_p2d(cis[seg].frontiers);
-    //data for frontier auction
-    sa.id = indice;
-    sa.robots_num = auction_robots.size();
-
-    ret[r_name] = sa;
-  }
-
-  return ret;
-}
-*/
-
-/*void CentralModule::resetArray(boost::unordered_map<string, bool> map) {
-  for (boost::unordered_map<string, bool>::iterator it = map.begin(); it != map.end(); it++) {
-    map[it->first] = false;
-  }
-}*/
-
-/*void CentralModule::resetArrivals() {
-  CentralModule::resetArray(CentralModule::bids_arrivals);
-}
-
-vector<int> CentralModule::getObstaculos() {
-  return obstaculos;
-};
-
-void CentralModule::setObstaculos(vector<int> newObstaculos) {
-  CentralModule::obstaculos = newObstaculos;
-};
-*/
-
-/*boost::tuple<tscf_exploration::takeobjetive, GVD> CentralModule::getObjetiveMap() {
-  tscf_exploration::takeobjetive ret;
-
-  ret.mapa = CentralModule::getMap();
-  //taking into account the vision range of robot and leaving only significants frontiers
-  CentralModule::aplicarKmeans(CentralModule::frontera);
-
-  grid_type gt = og2gt(ret.mapa, CentralModule::getCentrosF());
-
-  criticals_info cis;
-  GVD gvd;
-  boost::tie(cis, gvd) = get_points_of_interest(gt);
-
-
-  boost::unordered_set<pos> poi;
-  vector<int> objs;
-  for(auto it = cis.begin(); it != cis.end(); it++){
-    poi.insert(it->second.frontiers[0]);
-  }
-
-  if(poi.size() >= 0){
-    info_gain.clear();
-    centros_de_frontera.clear();
-    for(auto it = poi.begin(); it != poi.end(); it++){
-      int odpos = it->second*ret.mapa.info.width + it->first;
-      objs.push_back(odpos);
-      boost::unordered_set<int> infoGain = CentralModule::getGainInfo(odpos);
-      info_gain.insert(pair<int, boost::unordered_set<int> >(odpos, infoGain));
-      centros_de_frontera.push_back(odpos);
-    }
-
-    setCentrosF(objs);
-  }
-
-  ret.centrosf = CentralModule::getCentrosF();
-  ret.sizecf = CentralModule::getCentrosF().size();
-
-  ret.indice = CentralModule::indice;
-  CentralModule::indice++;
-
-  return boost::make_tuple(ret, gvd);
-}*/
-
-/*void CentralModule::saveBid(const tscf_exploration::frontierReportConstPtr& msg, string name)
-{ if (CentralModule::estado == 2) { boost::unordered_map<int, boost::unordered_set<int> >::iterator
-itm;
-    // ROS_INFO(" CENTRAL MODULE :: Guardo Informe del robot %s con nombre %s y
-    // cantidad de %d centros", msg->idRobot.c_str(),
-    // name.c_str(),msg->cant_centros);
-    for (int i = 0; i < msg->cant_centros; i++) {
-      CentralModule::cost_saved[msg->idRobot][msg->infoCentros[i].centro] =
-          msg->infoCentros[i].cost;
-      for (itm = info_gain.begin(); itm != info_gain.end(); ++itm)
-        if (itm->first != -1) {
-          CentralModule::info_gain_saved[msg->idRobot][itm->first] = itm->second;
-        }
-      // ROS_INFO(" -------------------- centro %d ->, costo %d",
-      // msg->infoCentros[i].centro, msg->infoCentros[i].cost);
-    }
-    CentralModule::bids_arrivals[name] = true;
-    CentralModule::asignations[name] = false;
-  }
-}*/
-
-/*float CentralModule::calcularUtilidad(int info_gain_celda, int cost_celda) {
-  float flo = ((float)info_gain_celda) / ((float)cost_celda);
-  // float flo = (float)(2000.0 - (float)cost_celda);
-  return flo;
-}*/
-
-/*bool CentralModule::checkMap(boost::unordered_map<string, bool> mymap) {
-  bool ret = true;
-  boost::unordered_map<string, bool>::iterator it = mymap.begin();
-  // ROS_INFO(" CENTRAL MODULE :: Check map ");
-  while ((ret) && (it != mymap.end())) {
-    ret = ret && it->second;
-    // ROS_INFO(" CENTRAL MODULE :: ------%s esta %d", it->first.c_str(),
-    // it->second);
-    ++it;
-  }
-  // ROS_INFO(" CENTRAL MODULE :: Check map fin");
-  return ret;
-}*/
-/*
-// a set 1 le resto set 2
-void CentralModule::setDifference(boost::unordered_set<int>& set1, boost::unordered_set<int>& set2)
-{ for (boost::unordered_set<int>::iterator it = set2.begin(); it != set2.end(); it++) {
-    boost::unordered_set<int>::iterator lugar = set1.find(*it);
-    if (lugar != set1.end()) {
-      set1.erase(lugar);
-    }
-  }
-}*/
-
-/*void CentralModule::updateInfoGain(tscf_exploration::asignacionCelda info) {
-  boost::unordered_set<int> s = CentralModule::info_gain_saved[info.idRobot][info.objetivo];
-
-  for (boost::unordered_map<string, boost::unordered_map<int, boost::unordered_set<int> >
->::iterator it = CentralModule::info_gain_saved.begin(); it != CentralModule::info_gain_saved.end();
-it++) { it->second.erase(info.objetivo); for (boost::unordered_map<int, boost::unordered_set<int>
->::iterator it3 = it->second.begin(); it3 != it->second.end(); it3++) { if
-(distacia2Puntos(map_points[it3->first], map_points[info.objetivo]) < 12) {
-        setDifference(it3->second, s);
-      }
-    }
-  }
-  for (boost::unordered_map<string, boost::unordered_map<int, int> >::iterator it2 =
-CentralModule::cost_saved.begin(); it2 != CentralModule::cost_saved.end(); it2++) {
-    it2->second.erase(info.objetivo);
-  }
-}
-
-tscf_exploration::asignacionCelda CentralModule::getMaxUtility() {
-  tscf_exploration::asignacionCelda info;
-  info.idRobot = "";
-  info.objetivo = -1;
-  float best_utility = -1000;
-  int best_info_gain_celda;
-  int best_cost_celda = 1000;
-  int cont = 0;
-  boost::unordered_map<string, boost::unordered_map<int, boost::unordered_set<int> > >::iterator it;
-  for (it = CentralModule::info_gain_saved.begin(); it != CentralModule::info_gain_saved.end();
-       it++) {
-    boost::unordered_map<int, boost::unordered_set<int> >::iterator it_set;
-    for (it_set = it->second.begin(); it_set != it->second.end(); it_set++) {
-      int info_gain_celda = it_set->second.size();
-      int cost_celda = CentralModule::cost_saved[it->first][it_set->first];
-      int dos = it_set->first;
-      // ROS_INFO("CENTRAL MODULE :: robot %s, InfoG %d, Costo %d, Best info %f,
-      // best costo %d, candidato %d, actual %d", (it->first).c_str(),
-      // info_gain_celda,cost_celda, best_utility, best_cost_celda, dos,
-      // info.objetivo );
-      cont++;
-      float utility_aux = calcularUtilidad(info_gain_celda, cost_celda);
-      if (((utility_aux > best_utility) && (!it->first.compare("") == 0) &&
-           (!CentralModule::asignations[info.idRobot])) ||
-          ((utility_aux == best_utility) && (best_cost_celda > cost_celda) &&
-           (!it->first.compare("") == 0) && (!CentralModule::asignations[info.idRobot]))) {
-        best_utility = utility_aux;
-        best_info_gain_celda = info_gain_celda;
-        best_cost_celda = cost_celda;
-        info.info_gain = info_gain_celda;
-        info.costo = cost_celda;
-        info.idRobot = it->first;
-        info.objetivo = it_set->first;
-        info.gain_cels = vector<int>(it_set->second.begin(), it_set->second.end());
-      }
-    }
-  }
-  if (info.objetivo != -1) {
-    // ROS_INFO("CENTRAL MODULE :: Candidato Asignado  %s va a %d con COSTO: %d,
-    // INFO_G: %d, UTILIDAD %f", (info.idRobot ).c_str(), info.objetivo,
-    // best_cost_celda,best_info_gain_celda, best_utility);
-  }
-  return info;
-}
-
-tscf_exploration::asignacion CentralModule::assignTasks() {
-  int gain = 0;
-  int cont = 0;
-  vector<tscf_exploration::asignacionCelda> asignacion_todos;
-  asignacion_todos.clear();
-  CentralModule::resetArray(CentralModule::asignations);
-
-  while ((!checkMap(CentralModule::asignations)) && (gain != -1)) {
-    tscf_exploration::asignacionCelda info = getMaxUtility();
-    if ((info.objetivo != -1) && (!CentralModule::asignations[info.idRobot])) {
-      CentralModule::asignations[info.idRobot] = true;
-      updateInfoGain(info);
-      info_gain_saved[info.idRobot].clear();
-      asignacion_todos.push_back(info);
-      cont++;
-    }
-    gain = info.objetivo;
-  }
-  tscf_exploration::asignacion asign;
-  asign.asignaciones = asignacion_todos;
-  asign.cantidad = cont;
-  CentralModule::asignations.clear();
-  asign.obstaculos = CentralModule::getObstaculos();
-  asign.indice = CentralModule::indice - 1;
-  return asign;
-}*/
-
-/*Funcion que obtiene la informacion ganada en una celda.*/
-/*boost::unordered_set<int> CentralModule::getGainInfo(int celda) {
-  // ros::Rate loop_rate(0.5);
-  boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> > >
-obstaculos; boost::unordered_set<int> nivel_actual; boost::unordered_set<int> nivel_siguiente;
-  boost::unordered_set<int> visitadas;
-  vector<int> info_gain;
-  nivel_siguiente.insert(celda);
-  int fre = 0;
-  while (!nivel_siguiente.empty()) {
-    nivel_actual.clear();
-    nivel_actual = nivel_siguiente;
-    nivel_siguiente.clear();
-
-    boost::unordered_set<int>::iterator it_nivel_actual;
-    for (it_nivel_actual = nivel_actual.begin(); it_nivel_actual != nivel_actual.end();
-         ++it_nivel_actual) {
-      for (int i = 0; i < 9; i++) {
-        int pos_vecino = posicionRelativa(*it_nivel_actual, i, map_merged.info.width);
-        if (visitadas.find(pos_vecino) == visitadas.end()) {
-          visitadas.insert(pos_vecino);
-          if (map_merged.data[pos_vecino] == 100) {
-            // agregar a mapa de obstaculos
-            int key = -1;
-            boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> >
->::iterator it = obstaculos.begin(); while ((key == -1) && it != obstaculos.end()) { if
-(CentralModule::esVecinoDeSet(pos_vecino, it->second.first)) { key = it->first;
-              }
-              it++;
-            }
-            if (key == -1) {
-              pair<boost::unordered_set<int>, boost::unordered_set<int> > nuevo;
-              nuevo.first.insert(pos_vecino);
-              obstaculos[pos_vecino] = nuevo;
-            } else {
-              obstaculos[key].first.insert(pos_vecino);
-            }
-          } else {
-            int key = -1;
-            boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> >
->::iterator it = obstaculos.begin(); while ((key == -1) && it != obstaculos.end()) { if
-(CentralModule::esVecinoDeSet(pos_vecino, it->second.second)) { key = it->first;
-              }
-              it++;
-            }
-            if (key != -1) {
-              boost::unordered_set<int>::iterator it_obst = obstaculos[key].first.begin();
-              bool puedo = true;
-              while (puedo && (it_obst != obstaculos[key].first.end())) {
-                puedo = ((map_merged.data[pos_vecino] == -1) &&
-                         (distacia2Puntos(map_points[pos_vecino], map_points[celda]) <=
-                          sensor_range)) &&
-                        (CentralModule::distanciaArecta(celda, pos_vecino, *it_obst) >
-                         dist_info_gain_obst);
-                it_obst++;
-              }
-              if (puedo) {
-                info_gain.push_back(pos_vecino);
-                nivel_siguiente.insert(pos_vecino);
-              } else {
-                obstaculos[key].second.insert(pos_vecino);
-              }
-            } else {
-              boost::unordered_map<int, pair<boost::unordered_set<int>, boost::unordered_set<int> >
->::iterator it = obstaculos.begin(); while ((key == -1) && it != obstaculos.end()) { if
-(CentralModule::esVecinoDeSet(pos_vecino, it->second.first)) { key = it->first;
-                }
-                it++;
-              }
-              if (key != -1) {
-                boost::unordered_set<int>::iterator it_obst = obstaculos[key].first.begin();
-                bool puedo = true;
-                while (puedo && (it_obst != obstaculos[key].first.end())) {
-                  puedo = ((map_merged.data[pos_vecino] == -1) &&
-                           (distacia2Puntos(map_points[pos_vecino], map_points[celda]) <=
-                            sensor_range)) &&
-                          (CentralModule::distanciaArecta(celda, pos_vecino, *it_obst) >
-                           dist_info_gain_obst);
-                  it_obst++;
-                }
-                if (puedo) {
-                  info_gain.push_back(pos_vecino);
-                  nivel_siguiente.insert(pos_vecino);
-                } else {
-                  obstaculos[key].second.insert(pos_vecino);
-                }
-              } else {
-                if ((map_merged.data[pos_vecino] == -1) &&
-                    (distacia2Puntos(map_points[pos_vecino], map_points[celda]) <= sensor_range)) {
-                  info_gain.push_back(pos_vecino);
-                  nivel_siguiente.insert(pos_vecino);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  boost::unordered_set<int> rrreee(info_gain.begin(), info_gain.end());
-  return rrreee;
-}
-/*string bttooi(bool b) {
-  if (b) {
-    return "true";
-  } else {
-    return "false";
-  }
-}*/

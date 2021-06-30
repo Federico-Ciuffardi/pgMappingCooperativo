@@ -5,7 +5,7 @@
 
 #define ROBOT_SPEED 3
 
-#define LOG_FILE_PATH "/home/fede/catkin_ws/src/tscf_exploration/logFiles/"
+#define LOG_FILE_PATH "/home/fede/catkin_ws/src/pgmappingcooperativo/logFiles/"
 
 // 1 log times 2 log all
 #define LOG 2

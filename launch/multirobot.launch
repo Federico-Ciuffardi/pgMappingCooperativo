@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<launch>  
+  <!-- set the args and params -->
+  <arg name="starting_robot_number" default="3" />
+  <param name="starting_robot_number" type="int" value="$(arg starting_robot_number)" />
+
+  <arg name="map_name" default="office" />
+  <param name="map_name" type="string" value="$(arg map_name)" />  
+
+  <param name ="/use_sim_time" value="true"/>
+
+  <!-- start gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find pgmappingcooperativo)/worlds/$(arg map_name).world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/> 
+    <arg name="recording" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <!-- Initialize robots -->
+  <group if="$(eval arg('starting_robot_number')  >= 1 )">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="atrv0" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="36.5" />
+      <arg name="z"  value="0.0" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 2 )">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="atrv1" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="29.5" />
+      <arg name="z"  value="0.0" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 3 )">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="atrv2" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="22.5" />
+      <arg name="z"  value="0.0" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 4)">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+        <arg name="ns" value="atrv3" />
+        <arg name="x"  value="-36.5" />
+        <arg name="y"  value="15.5" />
+        <arg name="z"  value="0.0" />
+      </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 5)">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="atrv4" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="8.5" />
+      <arg name="z"  value="0.0" />
+    </include> 
+  </group>
+ 
+  <!-- Initialize centralized nodes -->
+  <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_map_merger" name="pgmappingcooperativo_map_merger" required="true" />
+  <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_central_module" name="pgmappingcooperativo_central_module"  required="true"/>
+  <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_end_module" name="pgmappingcooperativo_end_module" required="true" />
+
+</launch>

@@ -5,9 +5,9 @@
 #include "conversion.h"
 
 #include <visualization_msgs/Marker.h>
-#include <tscf_exploration/Point2D.h>
-#include <tscf_exploration/SegmentAuction.h>
-#include <tscf_exploration/SegmentBid.h>
+#include <pgmappingcooperativo/Point2D.h>
+#include <pgmappingcooperativo/SegmentAuction.h>
+#include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
 
 

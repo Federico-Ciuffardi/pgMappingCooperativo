@@ -7,18 +7,18 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <stdio.h>
-#include <tscf_exploration/asignacion.h>
-#include <tscf_exploration/asignacionCelda.h>
-#include <tscf_exploration/frontierReport.h>
-#include <tscf_exploration/goalList.h>
-#include <tscf_exploration/infoCentro.h>
-#include <tscf_exploration/resumenInstancia.h>
-#include <tscf_exploration/takeobjetive.h>
-#include <tscf_exploration/SegmentAuction.h>
-#include <tscf_exploration/SegmentBid.h>
-#include <tscf_exploration/SegmentAssignment.h>
-#include <tscf_exploration/FrontierBid.h>
-#include <tscf_exploration/mapMergedInfo.h>
+#include <pgmappingcooperativo/asignacion.h>
+#include <pgmappingcooperativo/asignacionCelda.h>
+#include <pgmappingcooperativo/frontierReport.h>
+#include <pgmappingcooperativo/goalList.h>
+#include <pgmappingcooperativo/infoCentro.h>
+#include <pgmappingcooperativo/resumenInstancia.h>
+#include <pgmappingcooperativo/takeobjetive.h>
+#include <pgmappingcooperativo/SegmentAuction.h>
+#include <pgmappingcooperativo/SegmentBid.h>
+#include <pgmappingcooperativo/SegmentAssignment.h>
+#include <pgmappingcooperativo/FrontierBid.h>
+#include <pgmappingcooperativo/mapMergedInfo.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -65,12 +65,12 @@ class Robot {
   int auction_robots = 0;
 
   /// Map related
-  tscf_exploration::mapMergedInfo map_merged;
+  pgmappingcooperativo::mapMergedInfo map_merged;
   grid_type grid;
 
   void setPosition(int x, int y);
   geometry_msgs::Point getPosition();
-  void savePose(const geometry_msgs::PoseStamped::ConstPtr& msg);
+  void savePose(const geometry_msgs::Pose msg);
 
   pos getGVDPos();
   geometry_msgs::Point pos_to_real_p3d(pos p);
@@ -80,24 +80,24 @@ class Robot {
 
   int getRobotId();
 
-  void set_my_paths_to_frontiers(vector<tscf_exploration::Point2D> points);
+  void set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> points);
 
   void set_grid();
 
   bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
-  void add_intermidiate_points(pos f_pos, pos current_pos,tscf_exploration::goalList & g_list, float min_dist);
+  void add_intermidiate_points(pos f_pos, pos current_pos,pgmappingcooperativo::goalList & g_list, float min_dist);
   void add_to_gvd(pos f_pos);
 
   void add_to_gvd(pos_set p_set);
 
-  //boost::tuple<int, VecGVD> getGVD(tscf_exploration::Graph g, pos r_pos);
-  VecGVD getGVD(tscf_exploration::Graph g, vector<tscf_exploration::Point2D> vertex_segment);
+  //boost::tuple<int, VecGVD> getGVD(pgmappingcooperativo::Graph g, pos r_pos);
+  VecGVD getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment);
 
-  tscf_exploration::SegmentBid getSegmentBid(tscf_exploration::SegmentAuction msg);
-  tscf_exploration::FrontierBid getFrontierBid(vector<tscf_exploration::Point2D> frontiers);
-  bool saveFrontierBid(tscf_exploration::FrontierBid fb);
+  pgmappingcooperativo::SegmentBid getSegmentBid(pgmappingcooperativo::SegmentAuction msg);
+  pgmappingcooperativo::FrontierBid getFrontierBid(vector<pgmappingcooperativo::Point2D> frontiers);
+  bool saveFrontierBid(pgmappingcooperativo::FrontierBid fb);
   pos assignFrontier();
-  tscf_exploration::goalList getPathToSegment(pos p);
+  pgmappingcooperativo::goalList getPathToSegment(pos p);
   void reset_bid();
 };
 
@@ -122,7 +122,7 @@ class Robot {
                                               int fin,
                                               std::list<int> centros_def,
                                               nav_msgs::OccupancyGrid& p);
-tscf_exploration::frontierReport consultarCostosInfo(std::boost::unordered_map<int, std::vector<int> > oleadas,
+pgmappingcooperativo::frontierReport consultarCostosInfo(std::boost::unordered_map<int, std::vector<int> > oleadas,
                                                       int posicionActual,
                                                       nav_msgs::OccupancyGrid& p);*/
 
@@ -131,7 +131,7 @@ tscf_exploration::frontierReport consultarCostosInfo(std::boost::unordered_map<i
                                  int obj,
                                  int start,
                                  nav_msgs::OccupancyGrid& p);
-  tscf_exploration::goalList getGoalPath(std::list<int> list_camino, nav_msgs::OccupancyGrid& p);
+  pgmappingcooperativo::goalList getGoalPath(std::list<int> list_camino, nav_msgs::OccupancyGrid& p);
   std::boost::unordered_map<int, std::list<int> > obtenerCaminos(int& camino_mas_cercano,
                                                 std::boost::unordered_map<int, std::vector<int> > oleadas,
                                                 int posicionActual,
@@ -148,14 +148,14 @@ tscf_exploration::frontierReport consultarCostosInfo(std::boost::unordered_map<i
   bool isFinByError();*/
 
 
-  /*tscf_exploration::goalList getPathToObjetive(int centro,
+  /*pgmappingcooperativo::goalList getPathToObjetive(int centro,
                                                std::vector<int> obstaculos,
                                                nav_msgs::OccupancyGrid& p);*/
     //void saveGlobalMap(nav_msgs::OccupancyGrid msg);
   //nav_msgs::OccupancyGrid getGlobalMap();
   //nav_msgs::OccupancyGrid getControlMap();
   //void saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
-  //tscf_exploration::frontierReport processMap();
-  //int getobjetive(const tscf_exploration::asignacionConstPtr& msg);
+  //pgmappingcooperativo::frontierReport processMap();
+  //int getobjetive(const pgmappingcooperativo::asignacionConstPtr& msg);
    //void setCentrosF(std::vector<int> cdf);
   //std::list<int> getCentrosF();

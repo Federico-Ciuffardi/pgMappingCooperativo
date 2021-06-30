@@ -32,7 +32,7 @@ bool FIN = false;
 // Handlers
 void handleNewMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name) {
   if (!FIN) {
-    tscf_exploration::mapMergedInfo info;
+    pgmappingcooperativo::mapMergedInfo info;
     info.mapa = map_merger.updateMap(msg, name);
     info.sizef = map_merger.updateFrontera(map_merger.getMap(), name);
     info.frontera = map_merger.getFrontera();
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
   n.param<int>("/starting_robot_number", number_robots, STARTING_ROBOT_NUMBER);
 
   // Publishers
-  map_merged_pub = n.advertise<tscf_exploration::mapMergedInfo>("/map_merged", 1);
+  map_merged_pub = n.advertise<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1);
   map_controller_pub = n.advertise<nav_msgs::OccupancyGrid>("/map_controller", 1);
   end_sub = n.subscribe("/end", 1, handleEnd);
 

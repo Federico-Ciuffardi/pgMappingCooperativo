@@ -2,28 +2,28 @@
 #define CONVERSION_H
 
 #include "../lib/GVD/GVD.h"
-#include <tscf_exploration/Point2D.h>
-#include <tscf_exploration/SegmentAuction.h>
-#include <tscf_exploration/SegmentBid.h>
+#include <pgmappingcooperativo/Point2D.h>
+#include <pgmappingcooperativo/SegmentAuction.h>
+#include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include "utils.h"
 
-static tscf_exploration::Point2D pos_to_p2d(pos p){
-  tscf_exploration::Point2D p2d;
+static pgmappingcooperativo::Point2D pos_to_p2d(pos p){
+  pgmappingcooperativo::Point2D p2d;
   p2d.x = p.first;
   p2d.y = p.second; 
   return p2d;
 }
 
-static pos p2d_to_pos(tscf_exploration::Point2D p2d){
+static pos p2d_to_pos(pgmappingcooperativo::Point2D p2d){
   pos p;
   p.first = p2d.x; 
   p.second = p2d.y; 
   return p;
 }
 
-static vector<tscf_exploration::Point2D> pos_to_p2d(vector<pos> p){
-  vector<tscf_exploration::Point2D> res;
+static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<pos> p){
+  vector<pgmappingcooperativo::Point2D> res;
   for(auto it = p.begin(); it != p.end(); ++it){
     res.push_back(pos_to_p2d(*it));
   }
@@ -34,7 +34,7 @@ typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
 
 /* Converts from `pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
    adjusting the latter with the `map_info` so it lands on it's correspoing world position */
-static geometry_msgs::Point p2d_to_p3d(tscf_exploration::Point2D p2d, map_info_type map_info) {
+static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, map_info_type map_info) {
   geometry_msgs::Point p3d;
   p3d.x = p2d.x * map_info.resolution + map_info.origin.position.x + 0.5;
   p3d.y = p2d.y * map_info.resolution + map_info.origin.position.y + 0.5;
@@ -42,14 +42,14 @@ static geometry_msgs::Point p2d_to_p3d(tscf_exploration::Point2D p2d, map_info_t
   return p3d;
 }
 
-static geometry_msgs::Point p2d_to_p3d(tscf_exploration::Point2D p2d,float z, map_info_type map_info){
+static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d,float z, map_info_type map_info){
   geometry_msgs::Point p3d = p2d_to_p3d(p2d, map_info); 
   p3d.z = z;
   return p3d;
 }
 
-static tscf_exploration::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
-  tscf_exploration::Point2D p2d;
+static pgmappingcooperativo::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
+  pgmappingcooperativo::Point2D p2d;
   p2d.x = p3d.x;
   p2d.y = p3d.y;
   return p2d;

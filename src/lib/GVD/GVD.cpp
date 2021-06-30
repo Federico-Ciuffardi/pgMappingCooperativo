@@ -116,7 +116,7 @@ T& cell(vector<vector<T>>& grid, pos p) {
 
 void print(pos p) {
   ofstream outfile;
-  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
+  outfile.open("/home/fede/catkin_ws/src/pgmappingcooperativo/src/GVD/map.txt",
                ios::out | std::ofstream::app);
   outfile << p << endl;
   outfile.close();
@@ -124,7 +124,7 @@ void print(pos p) {
 
 void print(string s) {
   ofstream outfile;
-  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
+  outfile.open("/home/fede/catkin_ws/src/pgmappingcooperativo/src/GVD/map.txt",
                ios::out | std::ofstream::app);
   outfile << s << endl;
   outfile.close();
@@ -604,7 +604,7 @@ criticals_info get_critical_points(grid_type ogrid, dist_grid dg, GVD& gvd) {
                 boost::unordered_map<pos, dist_pos> cf = boost::unordered_map<pos, dist_pos>(),
                 boost::unordered_map<pos, bool> frontier_aux = boost::unordered_map<pos, bool>()) {
   ofstream outfile;
-  outfile.open("/home/fede/catkin_ws/src/tscf_exploration/src/GVD/map.txt",
+  outfile.open("/home/fede/catkin_ws/src/pgmappingcooperativo/src/GVD/map.txt",
                ios::out | std::ofstream::app);
   int grid_size_x = grid.size();
   int grid_size_y = grid[0].size();

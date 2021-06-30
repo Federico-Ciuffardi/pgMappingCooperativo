@@ -13,12 +13,12 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/MapMetaData.h>
 #include <std_msgs/String.h>
-#include <tscf_exploration/asignacion.h>
-#include <tscf_exploration/asignacionCelda.h>
-#include <tscf_exploration/frontierReport.h>
-#include <tscf_exploration/goalList.h>
-#include <tscf_exploration/infoCentro.h>
-#include <tscf_exploration/mapMergedInfo.h>
+#include <pgmappingcooperativo/asignacion.h>
+#include <pgmappingcooperativo/asignacionCelda.h>
+#include <pgmappingcooperativo/frontierReport.h>
+#include <pgmappingcooperativo/goalList.h>
+#include <pgmappingcooperativo/infoCentro.h>
+#include <pgmappingcooperativo/mapMergedInfo.h>
 #include <cstdlib>
 #include <ctime>
 #include <opencv2/core.hpp>
@@ -44,7 +44,7 @@ int TOTALCOVER;  // 81 * 81;
 int robots_waiting = 0;
 int NUM_ROBOTS;
 
-void handleMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
+void handleMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
   int y_origin = msg->mapa.info.origin.position.x;
   int x_origin = msg->mapa.info.origin.position.y;
   uint width = msg->mapa.info.width;

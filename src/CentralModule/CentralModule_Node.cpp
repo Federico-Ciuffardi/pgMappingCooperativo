@@ -56,7 +56,7 @@ string gvd_file_log, increment_gvd_file_log, coverage_file_log;
  */
 
 /* Publishes marks corresponding to the gvd to be visualized on rviz */
-static void draw_gvd(tscf_exploration::SegmentAuction sac, map_info_type map_info) {
+static void draw_gvd(pgmappingcooperativo::SegmentAuction sac, map_info_type map_info) {
   // Colors
   std_msgs::ColorRGBA blue;
   blue.b = 1.0f;
@@ -100,7 +100,7 @@ void startAuction() {
   map_info_type map_info = centralModule.getMap().info;
 
   // get aution info
-  tscf_exploration::SegmentAuction segment_auction;
+  pgmappingcooperativo::SegmentAuction segment_auction;
 
   last_gvd_start = ros::Time::now();
   ROS_INFO("Computing the segment auction to publish");
@@ -174,7 +174,7 @@ void resolveAuction() {
   visualization_msgs::Marker::_points_type points;
   map_info_type map_info = centralModule.getMap().info;
 
-  boost::unordered_map<string, tscf_exploration::SegmentAssignment> assignment =
+  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> assignment =
       centralModule.assignSegment();
   assigned_robots = assignment.size();
 
@@ -184,7 +184,7 @@ void resolveAuction() {
   centralModule.setEstado(WaitingAuction);
 
   for (auto it = assignment.begin(); it != assignment.end(); it++) {
-    tscf_exploration::SegmentAssignment sa = it->second;
+    pgmappingcooperativo::SegmentAssignment sa = it->second;
     string robot = it->first;
 
     // publish
@@ -203,7 +203,7 @@ void resolveAuction() {
   }
 
   for (auto it = assignment.begin(); it != assignment.end(); it++) {
-    tscf_exploration::SegmentAssignment sa = it->second;
+    pgmappingcooperativo::SegmentAssignment sa = it->second;
     string robot = it->first;
     float estimated_time =
         (centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED);
@@ -287,7 +287,7 @@ bool first = true;
 /* cuando: llega un nuevo mapa */
 /* que: actualizar mapa si no se estan esperando ofertas ni se termino
                 y si es el decimo mapa recibido inicia una subasta*/
-void handleNewMap(const tscf_exploration::mapMergedInfoConstPtr& msg) {
+void handleNewMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
   centralModule.updateMap(msg);
   if (first) {
     first_auction = ros::Time::now();
@@ -334,7 +334,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
   }
 }
 
-void handleSegmentBid(const tscf_exploration::SegmentBidConstPtr& msg, string name) {
+void handleSegmentBid(const pgmappingcooperativo::SegmentBidConstPtr& msg, string name) {
   // ROS_INFO("Got segment_bid %d",centralModule.getEstado());
   if (centralModule.getEstado() != WaitingFirstBid && centralModule.getEstado() != WaitingBids) {
     return;
@@ -380,14 +380,14 @@ int main(int argc, char* argv[]) {
   auctionStartDelayTimer =
       n.createTimer(auctionStartDelayTimeout, auctionStartDelayTimerRoutine, true, false);
   // Publishers
-  take_obj_pub = n.advertise<tscf_exploration::takeobjetive>("/take_obj", 1);
-  objetive_pub = n.advertise<tscf_exploration::asignacion>("/objetive", 1);
+  take_obj_pub = n.advertise<pgmappingcooperativo::takeobjetive>("/take_obj", 1);
+  objetive_pub = n.advertise<pgmappingcooperativo::asignacion>("/objetive", 1);
   obj_pub2 = n.advertise<nav_msgs::OccupancyGrid>("/debbi", 1);
   marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
-  segment_auction_pub = n.advertise<tscf_exploration::SegmentAuction>("/segment_auction", 1);
+  segment_auction_pub = n.advertise<pgmappingcooperativo::SegmentAuction>("/segment_auction", 1);
 
   // Subscribed to
-  map_merged_sub = n.subscribe<tscf_exploration::mapMergedInfo>("/map_merged", 1, handleNewMap);
+  map_merged_sub = n.subscribe<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1, handleNewMap);
   end_sub = n.subscribe("/end", 1, handleEnd);
   request_objetive_sub = n.subscribe<std_msgs::String>("/request_objetive", 1, &handleRequest);
 
@@ -424,15 +424,15 @@ int main(int argc, char* argv[]) {
       int pos = nombre.find('/');
       nombre = nombre.substr(0, pos);
       // string rep_topic = "/" + nombre + "/bid";
-      // bids[nombre] = n.subscribe<tscf_exploration::frontierReport>(
+      // bids[nombre] = n.subscribe<pgmappingcooperativo::frontierReport>(
       // rep_topic, 1, boost::bind(&handleReport, _1, nombre));
 
       string topic = "/" + nombre + "/segment_bid";
-      segment_bids[nombre] = n.subscribe<tscf_exploration::SegmentBid>(
+      segment_bids[nombre] = n.subscribe<pgmappingcooperativo::SegmentBid>(
           topic, 1, boost::bind(&handleSegmentBid, _1, nombre));
 
       segment_assignment_pubs[nombre] =
-          n.advertise<tscf_exploration::SegmentAssignment>("/" + nombre + "/segment_assigment", 1);
+          n.advertise<pgmappingcooperativo::SegmentAssignment>("/" + nombre + "/segment_assigment", 1);
     }
   }
 
@@ -442,13 +442,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-
-/* cuando: un robot tiene una oferta */
-/* que: esta se gurda */
-/*void handleReport(const tscf_exploration::frontierReportConstPtr& msg, string name) {
-  if (!FIN) {
-    //centralModule.saveBid(msg, name); OLD
-
-    ROS_INFO("CENTRAL MODULE :: got bid from %s", name.c_str());
-  }
-}*/

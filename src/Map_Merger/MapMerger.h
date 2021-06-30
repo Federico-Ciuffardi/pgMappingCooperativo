@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tscf_exploration/mapMergedInfo.h>
+#include <pgmappingcooperativo/mapMergedInfo.h>
 #include <unistd.h>
 #include <iostream>
 #include <opencv2/core.hpp>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(tscf_exploration)
+project(pgmappingcooperativo)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -138,7 +138,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES tscf_exploration
+#  LIBRARIES pgmappingcooperativo
 #  CATKIN_DEPENDS geometry_msgs image_geometry image_transport message_generation move_base_msgs p3dx_description roscpp rospy sensor_msgs std_msgs std_msgs
 # DEPENDS system_lib
 )
@@ -156,7 +156,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/tscf_exploration.cpp
+#   src/${PROJECT_NAME}/pgmappingcooperativo.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -168,7 +168,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/tscf_exploration_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/pgmappingcooperativo_node.cpp)
 add_executable(${PROJECT_NAME}_map_merger src/Map_Merger/Map_Merger_Node.cpp src/Map_Merger/MapMerger.cpp)
 add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModule_Node.cpp src/CentralModule/CentralModule.cpp src/lib/GVD/GVD.cpp)
 add_executable(${PROJECT_NAME}_move_controller src/MoveController/move_controller.cpp src/MoveController/TCPClient.cpp)
@@ -209,12 +209,12 @@ target_link_libraries(${PROJECT_NAME}_end_module
 #target_link_libraries(${PROJECT_NAME}_monitor
 # ${catkin_LIBRARIES}
 #)
-add_dependencies(${PROJECT_NAME}_map_merger tscf_exploration_generate_messages_cpp)
-add_dependencies(${PROJECT_NAME}_central_module tscf_exploration_generate_messages_cpp)
-add_dependencies(${PROJECT_NAME}_move_controller tscf_exploration_generate_messages_cpp)
-add_dependencies(${PROJECT_NAME}_robot tscf_exploration_generate_messages_cpp)
-add_dependencies(${PROJECT_NAME}_end_module tscf_exploration_generate_messages_cpp)
-#add_dependencies(${PROJECT_NAME}_monitor tscf_exploration_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_map_merger pgmappingcooperativo_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_central_module pgmappingcooperativo_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_move_controller pgmappingcooperativo_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_robot pgmappingcooperativo_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_end_module pgmappingcooperativo_generate_messages_cpp)
+#add_dependencies(${PROJECT_NAME}_monitor pgmappingcooperativo_generate_messages_cpp)
 
 #############
 ## Install ##
@@ -256,7 +256,7 @@ add_dependencies(${PROJECT_NAME}_end_module tscf_exploration_generate_messages_c
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_tscf_exploration.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_pgmappingcooperativo.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
