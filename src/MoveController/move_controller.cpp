@@ -90,17 +90,17 @@ void notification(char* data) {
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
-  std::string str1(msg->data.c_str());
-  FIN = (str1.compare(end_msg) == 0);
-  if (FIN) {
-    std_msgs::String msg_info;
-    std::stringstream ss9;
-    int sed = (clock() - startTime);
-    ss9 << "SUCCES: " << metros << " " << sed << " " << path.indice;
-    msg_info.data = ss9.str();
-    path_info_pub.publish(msg_info);
+  /* std::string str1(msg->data.c_str()); */
+  /* FIN = (str1.compare(end_msg) == 0); */
+  /* if (FIN) { */
+    /* std_msgs::String msg_info; */
+    /* std::stringstream ss9; */
+    /* int sed = (clock() - startTime); */
+    /* ss9 << "SUCCES: " << metros << " " << sed << " " << path.indice; */
+    /* msg_info.data = ss9.str(); */
+    /* path_info_pub.publish(msg_info); */
     // ROS_INFO("%s :: RECORRIO %f METROS", name_space.c_str(), metros);
-  }
+  /* } */
 }
 
 void poseCallback(const geometry_msgs::PoseStamped& msg) {
@@ -122,8 +122,10 @@ pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
 }
 
 void setPath(const pgmappingcooperativo::goalList& msg) {
+  cout<<"Path arrived"<<endl;
   if (msg.listaGoals.size() != 0) {
     path_saved = trim_path(msg);
+    cout<<"Path trimmed"<<endl;
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",
     // msg.listaGoals.size());
     pathflag = 1;
@@ -131,11 +133,14 @@ void setPath(const pgmappingcooperativo::goalList& msg) {
 }
 
 void send_point(geometry_msgs::Point next_point) {
+  cout<<"mandando punto: "<<next_point.x<<","<<next_point.y<<endl;
   // ROS_INFO("Creating path step to (%d,%d)",next_point.x,next_point.y);
   // ROS_INFO("Sending path step ---> X = %f , Y = %f , Z = %f", next_point.x,
   // next_point.y, next_point.z );
   waypoint_pub.publish(next_point);
   msg_id++;
+  cout<<"Point sent"<<endl;
+
 }
 
 /*void saveMap(const nav_msgs::OccupancyGridConstPtr& msg) {
@@ -253,13 +258,14 @@ int main(int argc, char** argv) {
   // ROS_INFO("Initializing node");
   startTime = clock();
   // Initializing ros
-  ros::init(argc, argv, "simple_navigation_goals");
+  ros::init(argc, argv, "move_controller");
 
   bool primera = true;
   char buffer_ns[20];
   ros::NodeHandle n;
   name_space = n.getNamespace().substr(1, 5);
 
+  ROS_DEBUG("Initializing node %s", name_space.c_str());
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
   goalPath_sub = n.subscribe("goalPath", /*1*/ 10, setPath);
@@ -275,20 +281,20 @@ int main(int argc, char** argv) {
   spinner.start();
 
   // Initializing morse comunication
-  ROS_INFO("Starting TCP conection");
-  ROS_INFO("End TCP conection");
+  /* ROS_INFO("Starting TCP conection"); */
+  /* ROS_INFO("End TCP conection"); */
   float last_distancie = 0;
   ros::Rate loop_rate(10);
   int secondsPassed;
   // while(path_result_pub.getNumSubscribers() == 0){};
   while (ros::ok()) {
     if (pathflag == 1) {
-      std_msgs::String msg_info;
-      std::stringstream ss9;
-      int sed = (clock() - startTime);
-      ss9 << "SUCCES: " << metros << " " << sed << " " << path.indice;
-      msg_info.data = ss9.str();
-      path_info_pub.publish(msg_info);
+      /* std_msgs::String msg_info; */
+      /* std::stringstream ss9; */
+      /* int sed = (clock() - startTime); */
+      /* ss9 << "SUCCES: " << metros << " " << sed << " " << path.indice; */
+      /* msg_info.data = ss9.str(); */
+      /* path_info_pub.publish(msg_info); */
       start = true;
       cont = 0;
       path_step = 0;
@@ -301,6 +307,7 @@ int main(int argc, char** argv) {
 
     loop_rate.sleep();
 
+    cout<<"state: "<<estado<<endl;
     switch (estado) {
       case 0: {
         if (path_step != path.listaGoals.size()) {
@@ -311,10 +318,12 @@ int main(int argc, char** argv) {
       case 1: {  // AVANZANDO A UN PUNTO
         send_point(path.listaGoals[path_step]);
         angleToTarget = getTargetAngle(path_step);
+        cout<<"got angle"<<endl;
         path_step++;
         if (path_step != path.listaGoals.size()) {
           metros = metros + getNextDistance(path_step);
         }
+        cout<<"distance updated"<<endl;
         estado = 2;
         break;
       }
@@ -324,24 +333,26 @@ int main(int argc, char** argv) {
       continue;
     }
 
-    if (!isSafe(angleToTarget)) {
-      if (last_unsafe_index != path_step) {
-        last_unsafe_index = path_step;
-        ROS_INFO("OBSTACLE");
-        notification((char*)"OBSTACLE");
-        send_point(position.pose.position);
-      }
-    } else {
-      if (last_unsafe_index == path_step) {
-        send_point(path.listaGoals[path_step]);
-      }
-    }
+    /* if (!isSafe(angleToTarget)) { */
+    /*   if (last_unsafe_index != path_step) { */
+    /*     last_unsafe_index = path_step; */
+    /*     ROS_INFO("OBSTACLE"); */
+    /*     notification((char*)"OBSTACLE"); */
+    /*     send_point(position.pose.position); */
+    /*   } */
+    /* } else { */
+    /*   if (last_unsafe_index == path_step) { */
+    /*     send_point(path.listaGoals[path_step]); */
+    /*   } */
+    /* } */
+    /* cout<<"safety check done"<<endl; */
+
 
     switch (estado) {
       case 2: {
         float dist_to_target = getDistance(path_step - 1);
         if (dist_to_target <= TOLERANCE_WAYPOINTS) {
-          // ROS_INFO("Arriving");
+          cout<<"Arriving"<<endl;
           if (path_step == path.listaGoals.size()) {  // if wait_last_point
             estado = 4;
           } else {

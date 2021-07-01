@@ -292,9 +292,9 @@ bool first = true;
 void handleNewMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
   centralModule.updateMap(msg);
   maps++;
-  if (first && maps > 5) {
+  if (first && maps > 15) {
     first_auction = ros::Time::now();
-    first = true;
+    first = false;
     startAuction();
   }
 }

@@ -101,22 +101,27 @@ void Robot::add_to_gvd(pos_set p_set) {
     v = gvd.positions[v_pos];
     boost::unordered_map<pos, pos> v_predecessor = v_paths[*it];
     for (v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]) {
-      ROS_INFO("romi voy a recorerer el camino");
+      /* ROS_INFO("romi voy a recorerer el camino"); */
+      /* cout<<"voy a recorerer el camino"<<endl; */
       boost::tie(v_pred, inserted) = gvd.add_v(v_pred_pos);
       if (inserted) {
         gvd.g[v_pred].segment = gvd.g[v].segment;
       }
-      ROS_INFO("romi vertice %d", inserted);
+      /* ROS_INFO("romi vertice %d", inserted); */
+      /* cout<<"romi insertado vertice "<<inserted <<endl; */
       float d = dist(v_pred_pos, v_pos);
       boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
       boost::tie(e, inserted) = gvd.add_e(v_pred, v, d);
       v = v_pred;
       v_pos = v_pred_pos;
       if (v_pos == (*it)) {
-        ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %lu",
-                 gvd.positions[v_pos]);
+        cout<<"romi UNION AL GVD, inserte el punto(frontera o robot) vetex: "<<gvd.positions[v_pos] <<endl;
+        /* ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %lu", */
+        /*          gvd.positions[v_pos]); */
         break;
       }
+      /* cout<<"romi sali de insertar "<<inserted <<endl; */
+      /* cout<<"romi insertado vertice "<<inserted <<endl; */
       // ROS_INFO("romi arista %d",inserted);
       // ROS_INFO("romi arista es: %d,%d - %d,%d
       // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
@@ -319,7 +324,7 @@ int Robot::getRobotId() {
   int id = 0;
   // for(int i = nombreRobot.size()-1; i>= 0; i--){
   // if(!isdigit(nombreRobot[i])){
-  return stoi(nombreRobot.substr(4));
+  return stoi(nombreRobot.substr(5));
   //}
   //}
   // return -1;

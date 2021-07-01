@@ -181,6 +181,7 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
 // int last_segment_auction_id = -1;
 // The robot receives the gvd and criticals_info and pubilshes criticals with the Cis.
 void handleSegmentAuction(const pgmappingcooperativo::SegmentAuctionConstPtr& msg) {
+  cout<<"Segment auction arrived| ID: "<<msg->id<<endl;
   if (robot.last_segment_auction_id >= msg->id) {
     ROS_INFO("%s :: An old segment auction arrived: last_id >= id, %d >= %d",
              robot.getNombre().c_str(), robot.last_segment_auction_id, msg->id);
@@ -244,13 +245,15 @@ void handleSegmentAssignment(const pgmappingcooperativo::SegmentAssignmentConstP
   robot.last_segment_assignment_id = msg->id;
   robot.assigned_segment = p2d_to_pos(msg->segment);
 
+  cout<<"Segment assigned: "<<robot.assigned_segment<<endl;
+
   robots_num = msg->robots_num;
 
   // frontierBids.clear();
   clear_bids(robot.bids_pq);
   robot.auction_robots = 0;
   pgmappingcooperativo::FrontierBid frontiers_bid = robot.getFrontierBid(msg->frontiers);
-  // ROS_INFO("romi ya sali de la funcion para armar las frontierbids");
+  ROS_INFO("romi ya sali de la funcion para armar las frontierbids");
   // start the frontier auction
   string topic = get_frontier_auction_topic(msg->segment, msg->id);
   // ROS_INFO("topico dinamico para el intercambio de fronteras: %s",topic.c_str());
