@@ -21,7 +21,7 @@ static visualization_msgs::Marker mark_points(string ns,
   points.ns = ns;
   points.id = 0;
   // header
-  points.header.frame_id = "/world";
+  points.header.frame_id = "map";
   points.header.stamp = ros::Time::now();
   // pose
   points.pose.orientation.w = 1.0;
@@ -46,7 +46,7 @@ static visualization_msgs::Marker mark_lines(string ns, visualization_msgs::Mark
   lines.ns = ns;
   lines.id = 0;
   // header
-  lines.header.frame_id = "/world";
+  lines.header.frame_id = "map";
   lines.header.stamp = ros::Time::now();
   // pose
   lines.pose.orientation.w = 1.0;
@@ -75,7 +75,7 @@ static visualization_msgs::Marker delete_marks(string ns) {
   lines.ns = ns;
   lines.id = 0;
   // header
-  lines.header.frame_id = "/world";
+  lines.header.frame_id = "/map";
   lines.header.stamp = ros::Time::now();
   lines.action = visualization_msgs::Marker::DELETE;
   return lines;

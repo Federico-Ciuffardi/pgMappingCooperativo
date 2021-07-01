@@ -33,7 +33,7 @@ static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<pos> p){
 typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
 
 /* Converts from `pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
-   adjusting the latter with the `map_info` so it lands on it's correspoing world position */
+   adjusting the latter with the `map_info` so it lands on it's correspoing map position */
 static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, map_info_type map_info) {
   geometry_msgs::Point p3d;
   p3d.x = p2d.x * map_info.resolution + map_info.origin.position.x + 0.5;

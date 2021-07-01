@@ -73,21 +73,21 @@ int main(int argc, char* argv[]) {
   ros::Rate loop_rate(5);
   map_merger = MapMerger();
 
-  int cont_atrv = 0;
+  int cont_p3dx_ = 0;
   ros::master::V_TopicInfo topic_infos;
 
-  while (cont_atrv < number_robots) {
-    cont_atrv = 0;
+  while (cont_p3dx_ < number_robots) {
+    cont_p3dx_ = 0;
     ros::master::getTopics(topic_infos);
     for (ros::master::V_TopicInfo::const_iterator it_topic = topic_infos.begin();
          it_topic != topic_infos.end(); ++it_topic) {
       const ros::master::TopicInfo& published_topic = *it_topic;
       if (published_topic.name.find("/pose") != std::string::npos) {
-        cont_atrv++;
+        cont_p3dx_++;
       }
       loop_rate.sleep();
     }
-    ROS_INFO(" MAP MERGER esperando por %d robots ", number_robots - cont_atrv);
+    ROS_INFO(" MAP MERGER esperando por %d robots ", number_robots - cont_p3dx_);
   }
 
   ros::master::getTopics(topic_infos);

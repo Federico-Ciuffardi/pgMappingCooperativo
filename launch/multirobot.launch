@@ -23,7 +23,7 @@
   <!-- Initialize robots -->
   <group if="$(eval arg('starting_robot_number')  >= 1 )">
     <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
-      <arg name="ns" value="atrv0" />
+      <arg name="ns" value="p3dx_0" />
       <arg name="x"  value="-36.5" />
       <arg name="y"  value="36.5" />
       <arg name="z"  value="0.0" />
@@ -32,7 +32,7 @@
 
   <group if="$(eval arg('starting_robot_number') >= 2 )">
     <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
-      <arg name="ns" value="atrv1" />
+      <arg name="ns" value="p3dx_1" />
       <arg name="x"  value="-36.5" />
       <arg name="y"  value="29.5" />
       <arg name="z"  value="0.0" />
@@ -41,7 +41,7 @@
 
   <group if="$(eval arg('starting_robot_number') >= 3 )">
     <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
-      <arg name="ns" value="atrv2" />
+      <arg name="ns" value="p3dx_2" />
       <arg name="x"  value="-36.5" />
       <arg name="y"  value="22.5" />
       <arg name="z"  value="0.0" />
@@ -50,7 +50,7 @@
 
   <group if="$(eval arg('starting_robot_number') >= 4)">
     <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
-        <arg name="ns" value="atrv3" />
+        <arg name="ns" value="p3dx_3" />
         <arg name="x"  value="-36.5" />
         <arg name="y"  value="15.5" />
         <arg name="z"  value="0.0" />
@@ -59,7 +59,7 @@
 
   <group if="$(eval arg('starting_robot_number') >= 5)">
     <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
-      <arg name="ns" value="atrv4" />
+      <arg name="ns" value="p3dx_4" />
       <arg name="x"  value="-36.5" />
       <arg name="y"  value="8.5" />
       <arg name="z"  value="0.0" />

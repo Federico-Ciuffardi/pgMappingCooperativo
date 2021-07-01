@@ -8,7 +8,6 @@
 #include "../GlobalParameters.h"
 #include "../lib/GVD/GVD.h"
 #include "../lib/conversion.h"
-#include "TCPClient.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
@@ -24,18 +23,18 @@ const double TOLERANCE_GOAL = 0.75;       // 0.30;
 const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
 const double SPEED = ROBOT_SPEED;         // 0.5
 
-// const std::string ODOM_FRAME = "p3dx0_tf/odom";
+// const std::string ODOM_FRAME = "p3dx_0_tf/odom";
 
 using namespace std;
 
 // VARIABLES
 ros::Publisher path_result_pub;
 ros::Publisher path_info_pub;
+ros::Publisher waypoint_pub;
 ros::Subscriber goalPath_sub;
 ros::Subscriber pose_sub;
 // ros::Subscriber map_sub;
 ros::Subscriber scan_sub;
-TCPClient client;
 pgmappingcooperativo::goalList path;
 pgmappingcooperativo::goalList path_saved;
 geometry_msgs::PoseStamped position;
@@ -133,16 +132,9 @@ void setPath(const pgmappingcooperativo::goalList& msg) {
 
 void send_point(geometry_msgs::Point next_point) {
   // ROS_INFO("Creating path step to (%d,%d)",next_point.x,next_point.y);
-  stringstream ss;
-  ss << msg_id << " " << name_space << ".waypoint "
-     << "goto "
-     << "[" << next_point.x << ", " << next_point.y << ", " << next_point.z << ", "
-     << TOLERANCE_GOAL << ", " << SPEED << "]"
-     << "\n";
-  string msg = ss.str();
   // ROS_INFO("Sending path step ---> X = %f , Y = %f , Z = %f", next_point.x,
   // next_point.y, next_point.z );
-  client.send_msg(msg);
+  waypoint_pub.publish(next_point);
   msg_id++;
 }
 
@@ -277,14 +269,13 @@ int main(int argc, char** argv) {
   end_sub = n.subscribe("/end", 1, handleEnd);
   path_result_pub = n.advertise<std_msgs::String>("path_result", 10);
   path_info_pub = n.advertise<std_msgs::String>("path_info", 10);
+  waypoint_pub = n.advertise<geometry_msgs::Point>("waypoint", 1);
 
   ros::AsyncSpinner spinner(2);
   spinner.start();
 
   // Initializing morse comunication
   ROS_INFO("Starting TCP conection");
-  client = TCPClient();
-  client.setup("localhost", 4000);
   ROS_INFO("End TCP conection");
   float last_distancie = 0;
   ros::Rate loop_rate(10);

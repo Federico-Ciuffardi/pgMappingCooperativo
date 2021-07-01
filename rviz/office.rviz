@@ -63,7 +63,7 @@ Visualization Manager:
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
-      Topic: /atrv0/pose
+      Topic: /p3dx_0/pose
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -89,7 +89,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.5
       Style: Flat Squares
-      Topic: /atrv0/laser/scan
+      Topic: /p3dx_0/laser/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -107,7 +107,7 @@ Visualization Manager:
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
-      Topic: /atrv1/pose
+      Topic: /p3dx_1/pose
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -133,7 +133,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.5
       Style: Flat Squares
-      Topic: /atrv1/laser/scan
+      Topic: /p3dx_1/laser/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -151,7 +151,7 @@ Visualization Manager:
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
-      Topic: /atrv2/pose
+      Topic: /p3dx_2/pose
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -177,7 +177,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.5
       Style: Flat Squares
-      Topic: /atrv2/laser/scan
+      Topic: /p3dx_2/laser/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -195,7 +195,7 @@ Visualization Manager:
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
-      Topic: /atrv3/pose
+      Topic: /p3dx_3/pose
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -221,7 +221,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.5
       Style: Flat Squares
-      Topic: /atrv3/laser/scan
+      Topic: /p3dx_3/laser/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -239,7 +239,7 @@ Visualization Manager:
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
-      Topic: /atrv4/pose
+      Topic: /p3dx_4/pose
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -265,7 +265,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.5
       Style: Flat Squares
-      Topic: /atrv4/laser/scan
+      Topic: /p3dx_4/laser/scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -316,7 +316,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 146.97412109375
+      Distance: 113.81675720214844
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -332,9 +332,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8153976202011108
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
-      Yaw: 1.890397548675537
+      Yaw: 3.14039945602417
     Saved: ~
 Window Geometry:
   Displays:

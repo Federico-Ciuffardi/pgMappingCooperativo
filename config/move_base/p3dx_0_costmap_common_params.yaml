@@ -1,0 +1,11 @@
+observation_sources: laser_scan_sensor
+
+laser_scan_sensor: {
+  sensor_frame: p3dx_0/lms100,
+  topic: /p3dx_0/laser/scan,
+  data_type: LaserScan,
+  marking: true,
+  clearing: true,
+  observation_persistence: 0.0,
+  inf_is_valid: true
+}

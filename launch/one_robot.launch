@@ -13,6 +13,7 @@
   </include>
 
   <group ns="$(arg ns)">
+    <!-- gmapping -->
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
       <remap from="scan" to="/$(arg ns)/laser/scan"/>
       <param name="base_frame" value="$(arg ns)/base_link"/>
@@ -36,9 +37,34 @@
       <param name="delta" value="1"/>
       <param name="transform_publish_period" value="0"/>
     </node>
+    <!-- waypoint_navigation -->
+    <node pkg="waypoint_navigation" type="waypoint_navigation_node" name="move_controller" required="true" />
 
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" required="true">
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/$(arg ns)_costmap_common_params.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/$(arg ns)_costmap_common_params.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/local_costmap_params.yaml" command="load" />
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/global_costmap_params.yaml" command="load" /> 
+      <rosparam file="$(find pgmappingcooperativo)/config/move_base/base_local_planner_params.yaml" command="load" />
+
+       <!-- Set robot specific information -->
+
+      <param name="global_costmap/global_frame" value="$(arg ns)/odom"/>
+      <param name="global_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
+
+      <param name="local_costmap/global_frame" value="$(arg ns)/odom"/>
+      <param name="local_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
+      <!-- the param overrides below were not working so they were set on the $(arg ns)_costmap_common_params.yaml -->
+      <!-- <param name="local_costmap/obstacle_layer/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/> -->
+      <!-- <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/> -->
+    </node>
+
+    <!-- move_controller -->
     <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_move_controller" name="$(arg ns)_move_controller" required="true" />
 
+    <!-- robot controller -->
     <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_robot" name="$(arg ns)_robot" required="true">
       <param name="init_pose_x" value="$(arg x)"/>
       <param name="init_pose_y" value="$(arg y)"/>

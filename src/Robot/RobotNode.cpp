@@ -289,8 +289,8 @@ int main(int argc, char* argv[]) {
   int x_ahora = -1;
   int y_ahora = -1;
 
-  private_node_handle.getParam("x", x_ahora);
-  private_node_handle.getParam("y", y_ahora);
+  private_node_handle.getParam("init_pose_x", x_ahora);
+  private_node_handle.getParam("init_pose_y", y_ahora);
 
   robot.setPosition(x_ahora, y_ahora);
   // robot.setErrorAverage(0.0);

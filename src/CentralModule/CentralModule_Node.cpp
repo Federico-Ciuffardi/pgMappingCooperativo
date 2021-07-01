@@ -157,6 +157,7 @@ void startAuction() {
 
   segment_auction_pub.publish(segment_auction);
   ROS_INFO("Segment Auction published");
+  /* ROS_INFO("Segment Auction disabled"); */
 }
 
 void resolveAuction() {
@@ -283,15 +284,17 @@ void handleRequest(const std_msgs::StringConstPtr& msg) {
   }
 }
 
+int maps = 0;
 bool first = true;
 /* cuando: llega un nuevo mapa */
 /* que: actualizar mapa si no se estan esperando ofertas ni se termino
                 y si es el decimo mapa recibido inicia una subasta*/
 void handleNewMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
   centralModule.updateMap(msg);
-  if (first) {
+  maps++;
+  if (first && maps > 5) {
     first_auction = ros::Time::now();
-    first = false;
+    first = true;
     startAuction();
   }
 }
@@ -364,7 +367,7 @@ void handleSegmentBid(const pgmappingcooperativo::SegmentBidConstPtr& msg, strin
 }
 
 int main(int argc, char* argv[]) {
-  ros::init(argc, argv, "map_merger");
+  ros::init(argc, argv, "central_module");
   ros::NodeHandle n;
   centralModule = CentralModule();
 
@@ -383,7 +386,7 @@ int main(int argc, char* argv[]) {
   take_obj_pub = n.advertise<pgmappingcooperativo::takeobjetive>("/take_obj", 1);
   objetive_pub = n.advertise<pgmappingcooperativo::asignacion>("/objetive", 1);
   obj_pub2 = n.advertise<nav_msgs::OccupancyGrid>("/debbi", 1);
-  marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+  marker_pub = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
   segment_auction_pub = n.advertise<pgmappingcooperativo::SegmentAuction>("/segment_auction", 1);
 
   // Subscribed to
@@ -394,22 +397,22 @@ int main(int argc, char* argv[]) {
   ros::Rate loop_rate(1);
 
   /// Wait for the robots to be ready
-  int cont_atrv = 0;
+  int cont_p3dx_ = 0;
   ros::master::V_TopicInfo topic_infos;
 
-  while (cont_atrv < centralModule.getNumRobots()) {
-    cont_atrv = 0;
+  while (cont_p3dx_ < centralModule.getNumRobots()) {
+    cont_p3dx_ = 0;
     ros::master::getTopics(topic_infos);
     for (ros::master::V_TopicInfo::const_iterator it_topic = topic_infos.begin();
          it_topic != topic_infos.end(); ++it_topic) {
       const ros::master::TopicInfo& published_topic = *it_topic;
       if (published_topic.name.find("/pose") != string::npos) {
-        cont_atrv++;
+        cont_p3dx_++;
       }
-      /* ROS_INFO("CENTRAL MODULE :: %d", cont_atrv); */
-      loop_rate.sleep();
+      /* ROS_INFO("CENTRAL MODULE :: %d", cont_p3dx_); */
     }
-    ROS_INFO("Waiting for %d robots ", centralModule.getNumRobots() - cont_atrv);
+    ROS_INFO("Waiting for %d robots ", centralModule.getNumRobots() - cont_p3dx_);
+    loop_rate.sleep();
   }
 
   /// subscribe to robot specific topics
@@ -436,7 +439,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  ROS_INFO("Initialized", centralModule.getNumRobots());
+  ROS_INFO("Initialized %d", centralModule.getNumRobots());
 
   ros::spin();
 

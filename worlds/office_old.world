@@ -40,10 +40,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>651 890000000</sim_time>
-      <real_time>42 732263630</real_time>
-      <wall_time>1624941487 107929755</wall_time>
-      <iterations>42613</iterations>
+      <sim_time>871 161000000</sim_time>
+      <real_time>42 709536621</real_time>
+      <wall_time>1625094878 742707793</wall_time>
+      <iterations>42560</iterations>
       <model name='ground_plane'>
         <pose>0 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -55,10 +55,10 @@
         </link>
       </model>
       <model name='willowgarage'>
-        <pose>-81.6385 -65.8808 0 0 -0 0</pose>
+        <pose>-61.6219 -65.36 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='walls'>
-          <pose>-81.6385 -65.8808 0 0 -0 0</pose>
+          <pose>-61.6219 -65.36 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -146,11 +146,11 @@
           <cast_shadows>0</cast_shadows>
           <material>
             <shader type='vertex'>
-              <normal_map>__default__</normal_map>
+              <normal_map>_default_</normal_map>
             </shader>
             <script>
               <name>ModelPreview_1::walls::visual_MATERIAL_</name>
-              <uri>__default__</uri>
+              <uri>_default_</uri>
             </script>
             <ambient>0 0 0 1</ambient>
             <diffuse>0 0 0 1</diffuse>
@@ -224,7 +224,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-140.583 19.2083 113.313 0 0.985796 -0.191984</pose>
+        <pose>-96.827 11.4647 347.099 -0 1.3618 -0.019988</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
