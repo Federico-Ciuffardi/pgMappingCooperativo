@@ -24,7 +24,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: laser_2
+    SyncSource: laser_0
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -98,12 +98,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: local_map_0
       Topic: /p3dx_0/move_base/local_costmap/costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -250,12 +250,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: local_map_1
       Topic: /p3dx_1/move_base/local_costmap/costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -402,12 +402,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: local_map_2
       Topic: /p3dx_2/move_base/local_costmap/costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -554,12 +554,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: local_map_3
       Topic: /p3dx_3/move_base/local_costmap/costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -811,27 +811,14 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
-        Frontiers: true
-        gvd_critical_vertices: true
-        gvd_edges: true
-        gvd_vertices: true
-        p3dx_0objective: true
-        p3dx_0path: true
-        p3dx_1objective: true
-        p3dx_1path: true
-        p3dx_2objective: true
-        p3dx_2path: true
-        p3dx_3objective: true
-        p3dx_3path: true
-        p3dx_4objective: true
-        p3dx_4path: true
+        {}
       Queue Size: 100
-      Value: true
-    - Alpha: 1
+      Value: false
+    - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
@@ -869,7 +856,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 100.1400146484375
+      Distance: 89.08326721191406
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -877,9 +864,9 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -35.536216735839844
-        Y: 28.288488388061523
-        Z: -33.059234619140625
+        X: -1.0083978176116943
+        Y: 19.601259231567383
+        Z: -31.642457962036133
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
