@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
       nombre = nombre.substr(0, pos);
       pose_sub[nombre] = n.subscribe<geometry_msgs::PoseStamped>(
           published_topic.name, 1, boost::bind(&handlePose, _1, nombre));
-      std::string map_topic = "/" + nombre + "/map";
-      /* std::string map_topic = "/" + nombre + "/move_base/global_costmap/costmap"; */
+      /* std::string map_topic = "/" + nombre + "/map"; */
+      std::string map_topic = "/" + nombre + "/move_base/global_costmap/costmap";
       map_initialization[nombre] = false;
       map_sub[nombre] = n.subscribe<nav_msgs::OccupancyGrid>(
           map_topic, 1, boost::bind(&handleNewMap, _1, nombre));
