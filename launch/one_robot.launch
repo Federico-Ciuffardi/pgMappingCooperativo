@@ -5,6 +5,8 @@
   <arg name="y" default="0" />
   <arg name="z" default="0" />
 
+  <param name ="/use_sim_time" value="true"/>
+
   <include file="$(find p3dx_gazebo)/launch/p3dx.launch" >
         <arg name="x"  value="$(arg x)" />
         <arg name="y"  value="$(arg y)" />

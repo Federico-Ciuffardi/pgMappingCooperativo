@@ -4,6 +4,9 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "nav_msgs/Odometry.h"
 #include "Robot.h"
+/* #include <tf/transform_broadcaster.h> */
+/* #include <tf2_geometry_msgs/tf2_geometry_msgs.h> */
+/* #include <math.h> */
 
 /*
  *  Variables
@@ -112,7 +115,20 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   geometry_msgs::PoseStamped ps;
   ps.header = odom->header;
   ps.pose = odom->pose.pose;
+
+
+  /* tf::TransformBroadcaster tBcast; */
+  /* tf::Transform transform; */
+  /* transform.setOrigin( tf::Vector3(odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z) ); */
+  /* tf::Quaternion q(odom->pose.pose.orientation.x,odom->pose.pose.orientation.y,odom->pose.pose.orientation.z,odom->pose.pose.orientation.w); */
+  /* transform.setRotation(q); */
+  /* /1* ROS_INFO_STREAM("tf "<< ros::Time::now()<<": "<<robot.getNombre()+"/odom"<< "->" << robot.getNombre()+"/base_link"); *1/ */
+  /* tBcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), robot.getNombre()+"/odom_p3d", robot.getNombre()+"/base_link")); */
+
+
   pose_pub.publish(ps);
+
+
 }
 void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
   // if(first_frontier || current_frontier != last_frontier || msg->data == "done" ){
@@ -265,7 +281,6 @@ void handleSegmentAssignment(const pgmappingcooperativo::SegmentAssignmentConstP
 }
 
 void handleNewMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
-  ROS_INFO("robot NEW map");
   robot.map_merged = (*msg);
 }
 

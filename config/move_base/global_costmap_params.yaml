@@ -1,6 +1,7 @@
 global_costmap:
   # global_frame: "/map"
   # robot_base_frame: base_link
+  always_send_full_costmap: true
   track_unknown_space: true
   inflation_radius: 0.4
   update_frequency: 2.0
