@@ -290,9 +290,10 @@ bool first = true;
 /* que: actualizar mapa si no se estan esperando ofertas ni se termino
                 y si es el decimo mapa recibido inicia una subasta*/
 void handleNewMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
+  ROS_INFO("cm NEW map");
   centralModule.updateMap(msg);
   maps++;
-  if (first && maps > 15) {
+  if (first){
     first_auction = ros::Time::now();
     first = false;
     startAuction();

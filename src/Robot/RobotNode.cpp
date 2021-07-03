@@ -265,6 +265,7 @@ void handleSegmentAssignment(const pgmappingcooperativo::SegmentAssignmentConstP
 }
 
 void handleNewMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
+  ROS_INFO("robot NEW map");
   robot.map_merged = (*msg);
 }
 
