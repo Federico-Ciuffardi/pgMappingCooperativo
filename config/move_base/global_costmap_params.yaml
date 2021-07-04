@@ -6,8 +6,11 @@ global_costmap:
   inflation_radius: 0.0
   update_frequency: 1.0
   publish_frequency: 1.0
-  static_map: true 
+  static_map: false 
   rolling_window: false 
-  width: 100.0
-  height: 100.0
+  width: 128.0
+  height: 128.0
+  origin_x: -60.0
+  origin_y: -60.0
   resolution: 1
+  combination_method: 1

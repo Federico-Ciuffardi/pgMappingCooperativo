@@ -1,6 +1,8 @@
 controller_frequency: 5
+recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
-TrajectoryPlannerROS:
+base_local_planner: "eband_local_planner/EBandPlannerROS" 
+EBandPlannerROS:
   max_vel_x: 0.45
   min_vel_x: 0.1
   max_vel_y: 0.45
@@ -15,8 +17,12 @@ TrajectoryPlannerROS:
   holonomic_robot: false 
 
   yaw_goal_tolerance: 360
-  xy_goal_tolerance: 0.15
+  xy_goal_tolerance: 0.5
 
+  meter_scoring: true
+
+  pdist_scale: 0
+  gdist_scale: 5
   # goal_distance_bias: 0.8
   # path_distance_bias: 0.10
   # heading_lookahead: 0.325
