@@ -9,5 +9,5 @@ echo ""
 
 # segunda vuelta
 
-$HOME/catkin_ws/src/pgmappingcooperativo/test_once.sh "office" "2"
+$HOME/catkin_ws/src/pgmappingcooperativo/test_once.sh "office" "5"
 
