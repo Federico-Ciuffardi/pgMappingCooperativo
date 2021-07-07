@@ -40,30 +40,6 @@ ostream& operator<<(ostream& out, const Pos& p) {
   return out;
 }
 
-/* Euclidean distance between two points.*/
-float dist(Pos p1, Pos p2) {
-  return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
-}
-
-/* Module of the vector */
-float lenght(Pos p) {
-  return dist(Pos(0, 0), p);
-}
-
-/* Module of the vector, (round by c++, from float to int) */
-Pos normalized(Pos p) {
-  return p / lenght(p);
-}
-
-/*
- *  Aux funcs
- */
-
-/* Euclidean distance between two points.*/
-float dist(float ax, float ay, float bx, float by) {
-  return sqrt(pow(ax - bx, 2) + pow(ay - by, 2));
-}
-
 /*
  *  main funcs
  */
@@ -127,7 +103,7 @@ boost::tuple<DistGrid, DistPosQueue> calculate_distances(StateGrid ogrid, CellSt
                 if (nnDCell.obs.size() > 0) {
                   // find distance to neighbor's closest cell and update the number of obstacles at
                   // that distance
-                  float d = dist(np, nnDCell.obs[0]);
+                  float d = np.distance_to(nnDCell.obs[0]);
                   if (d < min_distance) {
                     min_distance = d;
                     n_dcell.obs.clear();
@@ -211,7 +187,7 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
                 if (nn_dcell.obs.size() > 0) {
                   // find distance to neighbor's closest cell and update the number of obstacles at
                   // that distance
-                  float d = dist(np, nnp) + nn_dcell.distance;
+                  float d = np.distance_to(nnp) + nn_dcell.distance;
                   if (d < min_distance) {
                     min_distance = d;
                     n_dcell.obs.clear();
@@ -325,7 +301,7 @@ boost::unordered_map<Pos, bool> get_local_mins(DistGrid dg, GVD& gvd) {
 }
 
 bool same_direcction(Pos p1, Pos p2) {
-  return normalized(p1) == -normalized(p2);
+  return p1.normalize() == -p2.normalize();
 }
 
 void collapse_vertices(GVD& gvd, boost::unordered_map<Pos, bool> lmins) {
@@ -607,7 +583,7 @@ class single_astar_distance_heuristic : public astar_heuristic<Graph, CostType> 
  public:
   typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
   single_astar_distance_heuristic(LocMap l, Vertex goal) : m_location(l), m_goal(goal) {}
-  CostType operator()(Vertex u) { return dist(m_location[u].p, m_location[m_goal].p); }
+  CostType operator()(Vertex u) { return m_location[u].p.distance_to(m_location[m_goal].p); }
 
  private:
   LocMap m_location;
@@ -676,11 +652,11 @@ template <class Graph, class CostType>
 class multi_astar_distance_heuristic : public astar_heuristic<Graph, CostType> {
  public:
   typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
-  multi_astar_distance_heuristic(Graph g, pos_set goals) : m_graph(g), m_goals(goals) {}
+  multi_astar_distance_heuristic(Graph g, PosSet goals) : m_graph(g), m_goals(goals) {}
   CostType operator()(Vertex u) {
     // cout<<"heuristica antes"<<m_goals.size()<<endl;
     Pos current_target = *(m_goals.begin());
-    CostType distance = dist(m_graph[u].p, current_target);
+    CostType distance = m_graph[u].p.distance_to(current_target);
     // cout<<distance<<endl;
     auto it = m_goals.find(m_graph[u].p);
     if (it != m_goals.end() && m_goals.size() > 1) {
@@ -688,12 +664,12 @@ class multi_astar_distance_heuristic : public astar_heuristic<Graph, CostType> {
     }
     Pos new_target = *(m_goals.begin());
     // cout<<"heuristica desopues"<<m_goals.size()<<endl;
-    return dist(m_graph[u].p, new_target);
+    return m_graph[u].p.distance_to(new_target);
   }
 
  private:
   Graph m_graph;
-  pos_set m_goals;
+  PosSet m_goals;
 };
 
 struct found_goals {};  // exception for termination
@@ -702,7 +678,7 @@ struct found_goals {};  // exception for termination
 template <class Vertex>
 class multi_astar_goal_visitor : public boost::default_astar_visitor {
  public:
-  multi_astar_goal_visitor(pos_set goals) : m_goals(goals) {}
+  multi_astar_goal_visitor(PosSet goals) : m_goals(goals) {}
   template <class Graph>
   void examine_vertex(Vertex u, Graph g) {
     // cout<<"visitor antess"<<m_goals.size()<<endl;
@@ -721,12 +697,12 @@ class multi_astar_goal_visitor : public boost::default_astar_visitor {
   }
 
  private:
-  pos_set m_goals;
+  PosSet m_goals;
 };
 
 /// get the shortestpath and the cost of reaching the goal
 boost::tuple<boost::unordered_map<Pos, list<VecGVD::Vertex>>, boost::unordered_map<Pos, float>>
-get_multi_path(VecGVD gvd, Pos start, pos_set goals) {
+get_multi_path(VecGVD gvd, Pos start, PosSet goals) {
   VecGVD::Graph g = gvd.g;
 
   vector<VecGVD::Vertex> p(num_vertices(g));

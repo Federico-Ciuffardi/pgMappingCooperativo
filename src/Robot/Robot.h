@@ -88,7 +88,7 @@ class Robot {
   void add_intermidiate_points(Pos f_pos, Pos current_pos,pgmappingcooperativo::goalList & g_list, float min_dist);
   void add_to_gvd(Pos f_pos);
 
-  void add_to_gvd(pos_set p_set);
+  void add_to_gvd(PosSet p_set);
 
   //boost::tuple<int, VecGVD> getGVD(pgmappingcooperativo::Graph g, Pos r_pos);
   VecGVD getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment);

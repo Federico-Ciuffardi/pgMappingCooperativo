@@ -158,10 +158,6 @@ boost::tuple<criticals_info, GVD> get_points_of_interest(StateGrid g);
 
 boost::tuple<list<VecGVD::Vertex>,float> get_single_path(VecGVD gvd, Pos from, Pos to);
 
-typedef boost::unordered_set<Pos> pos_set;
-
-boost::tuple<boost::unordered_map<Pos,list<VecGVD::Vertex>> , boost::unordered_map<Pos,float>> get_multi_path(VecGVD gvd, Pos start, pos_set goals);
-
-float dist(Pos p1, Pos p2);
+boost::tuple<boost::unordered_map<Pos,list<VecGVD::Vertex>> , boost::unordered_map<Pos,float>> get_multi_path(VecGVD gvd, Pos start, PosSet goals);
 
 #endif

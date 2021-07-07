@@ -58,7 +58,7 @@ void Robot::add_to_gvd(Pos f_pos) {
   VecGVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     Pos v_pos = gvd.g[*v_it].p;
-    min_aux = dist(f_pos, v_pos);
+    min_aux = f_pos.distance_to(v_pos);
 
     if (min < 0 || min_aux < min) {
       min = min_aux;
@@ -79,7 +79,7 @@ void Robot::add_to_gvd(Pos f_pos) {
   }
 }
 
-void Robot::add_to_gvd(pos_set p_set) {
+void Robot::add_to_gvd(PosSet p_set) {
   boost::unordered_map<Pos, boost::unordered_map<Pos, Pos>> v_paths;
   boost::unordered_map<Pos, Pos> v_connection;
   VecGVD::Vertex v_pred;
@@ -109,7 +109,7 @@ void Robot::add_to_gvd(pos_set p_set) {
       }
       /* ROS_INFO("romi vertice %d", inserted); */
       /* cout<<"romi insertado vertice "<<inserted <<endl; */
-      float d = dist(v_pred_pos, v_pos);
+      float d = v_pred_pos.distance_to( v_pos);
       boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
       boost::tie(e, inserted) = gvd.add_e(v_pred, v, d);
       v = v_pred;
@@ -165,7 +165,7 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
     VecGVD::Vertex from_v = gvd.positions[from_p];
     VecGVD::Vertex to_v = gvd.positions[to_p];
 
-    boost::tie(e, inserted) = gvd.add_e(from_v, to_v, dist(from_p, to_p));
+    boost::tie(e, inserted) = gvd.add_e(from_v, to_v, from_p.distance_to( to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
   }
   // std::cout<<"Termine de agregar todas las aristas"<<endl;
@@ -174,8 +174,8 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
 
 // Return true if robot is in segment assigned_segment and false if it isnt
 bool Robot::is_in_segment(Pos my_segment, Pos my_pos, Pos assigned_segment, Pos f_pos) {
-  float f_r_dist = dist(f_pos, my_pos);
-  float f_c_dist = dist(f_pos, assigned_segment);
+  float f_r_dist = f_pos.distance_to( my_pos);
+  float f_c_dist = f_pos.distance_to( assigned_segment);
   return (f_r_dist < f_c_dist);
 }
 
@@ -194,7 +194,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   gvd = getGVD(msg.gvd, msg.vertex_segment);
   set_grid();
 
-  pos_set r_set;
+  PosSet r_set;
   r_set.insert(r_pos);
   add_to_gvd(r_set);
   // std::cout << "este es el seg: " << seg << endl;
@@ -203,8 +203,8 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
   Pos my_segment_frontier;
-  pos_set criticals_and_frontiers;
-  pos_set frontiers;
+  PosSet criticals_and_frontiers;
+  PosSet frontiers;
   int my_segment_frontier_index;
   for (int i = 0, j = 0; i < msg.criticals.size(); i++) {
     Pos c_pos = p2d_to_pos(msg.criticals[i]);
@@ -289,7 +289,7 @@ geometry_msgs::Point Robot::pos_to_real_p3d(Pos p) {
 
 // set on the robot variables paths and paths_costs to the frontiers on the array
 void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> points) {
-  pos_set f_set;
+  PosSet f_set;
   for (int i = 0; i < points.size(); i++) {
     Pos f_pos = p2d_to_pos(points[i]);
     // add_to_gvd(f_pos);
@@ -371,7 +371,7 @@ void Robot::add_intermidiate_points(Pos f_pos,
                                     Pos current_pos,
                                     pgmappingcooperativo::goalList& g_list,
                                     float min_dist) {
-  int division_count = dist(f_pos, current_pos) / min_dist;
+  int division_count = f_pos.distance_to(current_pos) / min_dist;
   // the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1))
   for (int i = 1; i < division_count; i++) {
     // current_pos.first = current_pos.first + i/division_count*(f_pos.first - current_pos.first);
