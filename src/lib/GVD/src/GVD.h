@@ -5,14 +5,13 @@
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <iostream>
-#include "data/Vector2.h"
+#include "data/Pos.h"
 
 using namespace std;
 
 /*
  *  position
  */
-typedef Vector2 Pos;
 typedef pair<float, Pos> DistPos;
 typedef priority_queue<DistPos, vector<DistPos>, greater<DistPos>> DistPosQueue;
 
@@ -25,29 +24,13 @@ Pos get_grid_size(vector<vector<T>> grid);
 
 template <typename T>
 bool on_grid(int x, int y, vector<vector<T>> grid);
+
 /*
  *  ocupancy grid
  */
 enum cell_type { Occupied, Unknown, Free, Critical, Frontier };
 typedef vector<cell_type> row_type;
 typedef vector<row_type> grid_type;
-
-/*
- *  Pos implementation
- */
-
-/* Pos operator+(const Pos& p1, const Pos& p2); */
-
-/* Pos operator-(const Pos& p1, const Pos& p2); */
-
-/* Pos operator-(const Pos& p1); */
-
-/* Pos operator*(const int c, const Pos& p1); */
-
-/* Pos operator/(const Pos& p1, const float c); */
-
-/* ostream& operator<<(ostream& out, const Pos& p); */
-
 
 /*
  *  critical info 
@@ -57,7 +40,6 @@ struct critical_info{
   vector<Pos> frontiers;
 };
 typedef boost::unordered_map<Pos, critical_info> criticals_info;
-
 
 /*
  *  dist cell, col and grid

@@ -284,6 +284,7 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(grid_type og
         }
       }
     }
+    bool a =Pos(1,0) != Pos(2,3);
     dqueue = next_dqueue;
     next_dqueue = DistPosQueue();
   }
