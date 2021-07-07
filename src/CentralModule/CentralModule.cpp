@@ -33,10 +33,10 @@ void CentralModule::setCentrosF(vector<int> newCentrosF) {
 };
 
 /* De ocupancy grid a state grid
-grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
+StateGrid og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
-  grid_type res;
+  StateGrid res;
   for (int x = 0; x < mapWidth; x++) {
     res.push_back(row_type());
     for (int y = 0; y < mapHeight; y++) {
@@ -87,7 +87,7 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   cout << "debug :: apply kmeans" << endl;
   aplicarKmeans(frontera);
 
-  grid_type gt = og2gt(map, getCentrosF(), &cell_count);
+  StateGrid gt = og2gt(map, getCentrosF(), &cell_count);
 
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;

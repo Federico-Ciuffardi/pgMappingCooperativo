@@ -15,12 +15,12 @@ using namespace std;
  *  position
  */
 typedef Vector2 Pos;
-typedef pair<float, Pos> dist_pos;
-typedef priority_queue<dist_pos, vector<dist_pos>, greater<dist_pos>> dist_pos_queue;
+typedef pair<float, Pos> DistPos;
+typedef priority_queue<DistPos, vector<DistPos>, greater<DistPos>> DistPosQueue;
+
+typedef boost::unordered_set<Pos> PosSet;
 
 /*
  *  Pos implementation
  */
 bool same_direction(Pos p1, Pos p2);
-
-float angle(Pos p);

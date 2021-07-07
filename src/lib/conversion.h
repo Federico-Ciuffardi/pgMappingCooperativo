@@ -111,16 +111,16 @@ static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){
 }
 
 /* De ocupancy grid a state grid*/
-static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector<int>(), int* count = NULL) {
+static StateGrid og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector<int>(), int* count = NULL) {
   uint mapWidth = og.info.width;
   uint mapHeight = og.info.height;
-  grid_type res;
+  StateGrid res;
   if(count) (*count) = 0;
   cout<<"og2gt general"<<endl; 
   for (int x = 0; x < mapWidth; x++) {
-    res.push_back(row_type());
+    res.grid.push_back(StateGrid::ColType());
     for (int y = 0; y < mapHeight; y++) {
-      cell_type ct = Unknown;
+      CellState ct = Unknown;
       switch (og.data[y * mapWidth + x]) {
         case 0:
           ct = Free;
@@ -134,9 +134,9 @@ static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
           ct = Unknown;
           break;
         default:
-          ct = (cell_type)-1;
+          ct = (CellState)-1;
       }
-      res[x].push_back(ct);
+      res.grid[x].push_back(ct);
     }
   }
   cout<<"og2gt Frontier"<<endl;
@@ -146,7 +146,7 @@ static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
       cout<<"Warning: Frontier out of range"<<endl; //almost sure its a kmeans error happens some times in the office map
     }else{
       Pos p = p1d_to_pos(p1d, mapWidth);
-      res[p.x][p.y] = Frontier;
+      res.grid[p.x][p.y] = Frontier;
     }
   }
   return res;

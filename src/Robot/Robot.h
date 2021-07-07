@@ -66,7 +66,7 @@ class Robot {
 
   /// Map related
   pgmappingcooperativo::mapMergedInfo map_merged;
-  grid_type grid;
+  StateGrid grid;
 
   void setPosition(int x, int y);
   geometry_msgs::Point getPosition();
