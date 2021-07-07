@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 #include "../GlobalParameters.h"
-#include "../lib/GVD/GVD.h"
+#include "../lib/GVD/src/GVD.h"
 #include "../lib/conversion.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"

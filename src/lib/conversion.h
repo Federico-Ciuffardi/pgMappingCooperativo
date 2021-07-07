@@ -1,28 +1,29 @@
 #ifndef CONVERSION_H
 #define CONVERSION_H
 
-#include "../lib/GVD/GVD.h"
+#include "../lib/GVD/src/GVD.h"
+#include "../lib/GVD/src/data/Vector2.h"
 #include <pgmappingcooperativo/Point2D.h>
 #include <pgmappingcooperativo/SegmentAuction.h>
 #include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include "utils.h"
 
-static pgmappingcooperativo::Point2D pos_to_p2d(pos p){
+static pgmappingcooperativo::Point2D pos_to_p2d(Pos p){
   pgmappingcooperativo::Point2D p2d;
-  p2d.x = p.first;
-  p2d.y = p.second; 
+  p2d.x = p.x;
+  p2d.y = p.y; 
   return p2d;
 }
 
-static pos p2d_to_pos(pgmappingcooperativo::Point2D p2d){
-  pos p;
-  p.first = p2d.x; 
-  p.second = p2d.y; 
+static Pos p2d_to_pos(pgmappingcooperativo::Point2D p2d){
+  Pos p;
+  p.x = p2d.x; 
+  p.y = p2d.y; 
   return p;
 }
 
-static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<pos> p){
+static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<Pos> p){
   vector<pgmappingcooperativo::Point2D> res;
   for(auto it = p.begin(); it != p.end(); ++it){
     res.push_back(pos_to_p2d(*it));
@@ -32,7 +33,7 @@ static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<pos> p){
 
 typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
 
-/* Converts from `pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
+/* Converts from `Pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
    adjusting the latter with the `map_info` so it lands on it's correspoing map position */
 static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, map_info_type map_info) {
   geometry_msgs::Point p3d;
@@ -56,49 +57,49 @@ static pgmappingcooperativo::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
 }
 
 
-static geometry_msgs::Point pos_to_p3d(pos p, map_info_type map_info) {
+static geometry_msgs::Point pos_to_p3d(Pos p, map_info_type map_info) {
   geometry_msgs::Point p3d;
-  p3d.x = p.first * map_info.resolution + map_info.origin.position.x + 0.5;
-  p3d.y = p.second * map_info.resolution + map_info.origin.position.y + 0.5;
+  p3d.x = p.x * map_info.resolution + map_info.origin.position.x + 0.5;
+  p3d.y = p.y * map_info.resolution + map_info.origin.position.y + 0.5;
   p3d.z = 0;
   return p3d;
 }
 
-static geometry_msgs::Point pos_to_p3d(pos p) {
+static geometry_msgs::Point pos_to_p3d(Pos p) {
   geometry_msgs::Point p3d;
-  p3d.x = p.first;
-  p3d.y = p.second;
+  p3d.x = p.x;
+  p3d.y = p.y;
   p3d.z = 0;
   return p3d;
 }
 
-static geometry_msgs::Point pos_to_p3d(pos p,float z) {
+static geometry_msgs::Point pos_to_p3d(Pos p,float z) {
   geometry_msgs::Point p3d;
-  p3d.x = p.first;
-  p3d.y = p.second;
+  p3d.x = p.x;
+  p3d.y = p.y;
   p3d.z = z;
   return p3d;
 }
 
 //this should be fila * width + columna
-static int pos_to_p1d(pos p,int width){
-  return p.first + p.second*width;
+static int pos_to_p1d(Pos p,int width){
+  return p.x + p.y*width;
 }
 
-static pos p1d_to_pos(int p1d,int width){
-  return pos(p1d%width,p1d/width);
+static Pos p1d_to_pos(int p1d,int width){
+  return Pos(p1d%width,p1d/width);
 }
 
 static int p3d_to_p1d(geometry_msgs::Point p, int indice_origen, int width){
  return indice_origen + (((int)p.x) + ((int)p.y) * width);
 }
 
-static pos p3d_to_pos(geometry_msgs::Point p, int indice_origen, int width){
+static Pos p3d_to_pos(geometry_msgs::Point p, int indice_origen, int width){
   return p1d_to_pos(p3d_to_p1d(p,indice_origen,width), width); //no sure if is the same width
 }
 
-static pos p3d_to_pos(geometry_msgs::Point p3d){
-  return pos(p3d.x,p3d.y);
+static Pos p3d_to_pos(geometry_msgs::Point p3d){
+  return Pos(p3d.x,p3d.y);
 }
 
 static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){
@@ -144,8 +145,8 @@ static grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
     if(p1d>=mapWidth*mapHeight){
       cout<<"Warning: Frontier out of range"<<endl; //almost sure its a kmeans error happens some times in the office map
     }else{
-      pos p = p1d_to_pos(p1d, mapWidth);
-      res[p.first][p.second] = Frontier;
+      Pos p = p1d_to_pos(p1d, mapWidth);
+      res[p.x][p.y] = Frontier;
     }
   }
   return res;

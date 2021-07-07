@@ -6,6 +6,10 @@ project(main)
 
 # Find sources
 file(GLOB MAIN_SOURCES
+  ./src/data/*.cpp
+  ./src/data/*.cpp
+  ./src/*.h
+  ./src/*.cpp
   ./*.h
   ./*.cpp
 )

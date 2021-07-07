@@ -1,4 +1,4 @@
-#include "../lib/GVD/GVD.h"
+#include "../lib/GVD/src/GVD.h"
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <math.h>
@@ -44,20 +44,20 @@ class Robot {
 
   // Segmentation relatied
   geometry_msgs::Point position;
-  boost::unordered_map<pos,list<VecGVD::Vertex>> paths;
-  boost::unordered_map<pos,float> paths_costs;
+  boost::unordered_map<Pos,list<VecGVD::Vertex>> paths;
+  boost::unordered_map<Pos,float> paths_costs;
 
-  //boost::tuple<boost::unordered_map<pos,list<VecGVD::Vertex>> , boost::unordered_map<pos,float>> multi_paths_with_cost;
+  //boost::tuple<boost::unordered_map<Pos,list<VecGVD::Vertex>> , boost::unordered_map<Pos,float>> multi_paths_with_cost;
   VecGVD gvd;
-  pos my_pos;
-  pos my_segment;
+  Pos my_pos;
+  Pos my_segment;
 
  public:
-  pos offset;
+  Pos offset;
   Robot();
 
   std::string nombreRobot;
-  pos assigned_segment;
+  Pos assigned_segment;
   int last_segment_assignment_id = -1;
   int last_segment_auction_id = -1;
   int last_frontier_auction_id = -1;
@@ -72,8 +72,8 @@ class Robot {
   geometry_msgs::Point getPosition();
   void savePose(const geometry_msgs::Pose msg);
 
-  pos getGVDPos();
-  geometry_msgs::Point pos_to_real_p3d(pos p);
+  Pos getGVDPos();
+  geometry_msgs::Point pos_to_real_p3d(Pos p);
 
   void setNombre(std::string nom);
   std::string getNombre();
@@ -84,20 +84,20 @@ class Robot {
 
   void set_grid();
 
-  bool is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos);
-  void add_intermidiate_points(pos f_pos, pos current_pos,pgmappingcooperativo::goalList & g_list, float min_dist);
-  void add_to_gvd(pos f_pos);
+  bool is_in_segment(Pos my_segment, Pos my_pos, Pos assigned_segment, Pos f_pos);
+  void add_intermidiate_points(Pos f_pos, Pos current_pos,pgmappingcooperativo::goalList & g_list, float min_dist);
+  void add_to_gvd(Pos f_pos);
 
   void add_to_gvd(pos_set p_set);
 
-  //boost::tuple<int, VecGVD> getGVD(pgmappingcooperativo::Graph g, pos r_pos);
+  //boost::tuple<int, VecGVD> getGVD(pgmappingcooperativo::Graph g, Pos r_pos);
   VecGVD getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment);
 
   pgmappingcooperativo::SegmentBid getSegmentBid(pgmappingcooperativo::SegmentAuction msg);
   pgmappingcooperativo::FrontierBid getFrontierBid(vector<pgmappingcooperativo::Point2D> frontiers);
   bool saveFrontierBid(pgmappingcooperativo::FrontierBid fb);
-  pos assignFrontier();
-  pgmappingcooperativo::goalList getPathToSegment(pos p);
+  Pos assignFrontier();
+  pgmappingcooperativo::goalList getPathToSegment(Pos p);
   void reset_bid();
 };
 

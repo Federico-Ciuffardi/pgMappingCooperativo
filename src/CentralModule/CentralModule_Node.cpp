@@ -424,8 +424,8 @@ int main(int argc, char* argv[]) {
     if (published_topic.name.find("/pose") != string::npos) {
       string nombre = published_topic.name;
       nombre.erase(0, 1);
-      int pos = nombre.find('/');
-      nombre = nombre.substr(0, pos);
+      int Pos = nombre.find('/');
+      nombre = nombre.substr(0, Pos);
       // string rep_topic = "/" + nombre + "/bid";
       // bids[nombre] = n.subscribe<pgmappingcooperativo::frontierReport>(
       // rep_topic, 1, boost::bind(&handleReport, _1, nombre));

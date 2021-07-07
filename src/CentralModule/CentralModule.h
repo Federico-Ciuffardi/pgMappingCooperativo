@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "../lib/GVD/GVD.h"
+#include "../lib/GVD/src/GVD.h"
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/rviz.h"
@@ -54,7 +54,7 @@ class CentralModule {
   /// Segment auction related
   criticals_info cis;
   bids_priority_queue bids_pq;
-  boost::unordered_map<pos,int> auction_segment_frontiers_num;
+  boost::unordered_map<Pos,int> auction_segment_frontiers_num;
   boost::unordered_set<string> auction_robots;
 
   // Functions
@@ -85,7 +85,7 @@ class CentralModule {
   //log related
   int cell_count = 0;
 
-  boost::unordered_map<string,boost::unordered_map<pos,float>> segment_bids;
+  boost::unordered_map<string,boost::unordered_map<Pos,float>> segment_bids;
   // getters and setters
   boost::unordered_set<int> getFrontera();
   void setFrontera(boost::unordered_set<int> newFrontera);

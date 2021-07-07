@@ -17,11 +17,11 @@ geometry_msgs::Point Robot::getPosition() {
   return position;
 };
 
-pos Robot::getGVDPos() {
+Pos Robot::getGVDPos() {
   geometry_msgs::Point p3d = getPosition();
 
-  // pos adjustment(signo((int)position.x), 0);
-  pos adjustment(0, 0);
+  // Pos adjustment(signo((int)position.x), 0);
+  Pos adjustment(0, 0);
 
   return p3d_to_pos(p3d) - offset + adjustment;
 }
@@ -45,7 +45,7 @@ void Robot::set_grid() {
 
 // this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction
 // dis) but we did it to finish
-void Robot::add_to_gvd(pos f_pos) {
+void Robot::add_to_gvd(Pos f_pos) {
   float min = -1;
   float min_aux;
   VecGVD::Vertex v_min;
@@ -57,7 +57,7 @@ void Robot::add_to_gvd(pos f_pos) {
 
   VecGVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
-    pos v_pos = gvd.g[*v_it].p;
+    Pos v_pos = gvd.g[*v_it].p;
     min_aux = dist(f_pos, v_pos);
 
     if (min < 0 || min_aux < min) {
@@ -80,8 +80,8 @@ void Robot::add_to_gvd(pos f_pos) {
 }
 
 void Robot::add_to_gvd(pos_set p_set) {
-  boost::unordered_map<pos, boost::unordered_map<pos, pos>> v_paths;
-  boost::unordered_map<pos, pos> v_connection;
+  boost::unordered_map<Pos, boost::unordered_map<Pos, Pos>> v_paths;
+  boost::unordered_map<Pos, Pos> v_connection;
   VecGVD::Vertex v_pred;
   VecGVD::Vertex v;
   bool inserted;
@@ -91,15 +91,15 @@ void Robot::add_to_gvd(pos_set p_set) {
     ROS_INFO("romi voy a calcular el camino");
     boost::tie(v_paths[*it], v_connection[*it]) = find_paths_to_gvd(grid, gvd, *it);
     ROS_INFO("romi termine de calcular el camino");
-    if (v_connection[*it] == pos() || v_paths[*it].size() == 0) {
+    if (v_connection[*it] == Pos() || v_paths[*it].size() == 0) {
       ROS_INFO("romi ERROR");
     }
   }
   for (auto it = p_set.begin(); it != p_set.end(); ++it) {
-    pos v_pred_pos;
-    pos v_pos = v_connection[*it];
+    Pos v_pred_pos;
+    Pos v_pos = v_connection[*it];
     v = gvd.positions[v_pos];
-    boost::unordered_map<pos, pos> v_predecessor = v_paths[*it];
+    boost::unordered_map<Pos, Pos> v_predecessor = v_paths[*it];
     for (v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]) {
       /* ROS_INFO("romi voy a recorerer el camino"); */
       /* cout<<"voy a recorerer el camino"<<endl; */
@@ -130,11 +130,11 @@ void Robot::add_to_gvd(pos_set p_set) {
   }
 }
 
-// Robot process graph, creates boost gvd also adds pos->gvd
+// Robot process graph, creates boost gvd also adds Pos->gvd
 VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment) {
   // std::cout<<"arranca el get gvd"<<endl;
   VecGVD gvd;
-  pos v_pos;
+  Pos v_pos;
   float min = -1;
   float min_aux;
   VecGVD::Vertex v;
@@ -160,8 +160,8 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
   // std::cout<<"Antes de agregar aristas: "<<g.edges.size()<<endl;
   // auto weights = get(edge_weight,gvd.g);
   for (int i = 0; i < g.edges.size(); i++) {
-    pos from_p = p2d_to_pos(g.edges[i].from);
-    pos to_p = p2d_to_pos(g.edges[i].to);
+    Pos from_p = p2d_to_pos(g.edges[i].from);
+    Pos to_p = p2d_to_pos(g.edges[i].to);
     VecGVD::Vertex from_v = gvd.positions[from_p];
     VecGVD::Vertex to_v = gvd.positions[to_p];
 
@@ -173,7 +173,7 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
 }
 
 // Return true if robot is in segment assigned_segment and false if it isnt
-bool Robot::is_in_segment(pos my_segment, pos my_pos, pos assigned_segment, pos f_pos) {
+bool Robot::is_in_segment(Pos my_segment, Pos my_pos, Pos assigned_segment, Pos f_pos) {
   float f_r_dist = dist(f_pos, my_pos);
   float f_c_dist = dist(f_pos, assigned_segment);
   return (f_r_dist < f_c_dist);
@@ -186,10 +186,10 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   // std::cout << "getGVDPOS en la prox lienea" << endl;
   offset = p2d_to_pos(msg.offset);
   my_pos = getGVDPos();
-  // std::cout << "Consegui my pos: "<<endl;
-  pos r_pos = my_pos;
+  // std::cout << "Consegui my Pos: "<<endl;
+  Pos r_pos = my_pos;
 
-  pos r_segment, c_pos, f_pos;
+  Pos r_segment, c_pos, f_pos;
 
   gvd = getGVD(msg.gvd, msg.vertex_segment);
   set_grid();
@@ -202,19 +202,19 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   my_segment = r_segment;
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
-  pos my_segment_frontier;
+  Pos my_segment_frontier;
   pos_set criticals_and_frontiers;
   pos_set frontiers;
   int my_segment_frontier_index;
   for (int i = 0, j = 0; i < msg.criticals.size(); i++) {
-    pos c_pos = p2d_to_pos(msg.criticals[i]);
+    Pos c_pos = p2d_to_pos(msg.criticals[i]);
     criticals_and_frontiers.insert(c_pos);
     bool first = true;
 
-    for (j; (j < msg.frontiers_segment.size()) && (msg.criticals[i] == msg.frontiers_segment[j]);
+    for (; (j < msg.frontiers_segment.size()) && (msg.criticals[i] == msg.frontiers_segment[j]);
          j++) {
       // if is the closest frontier o a frontier of my segment
-      pos f_segment = p2d_to_pos(msg.frontiers_segment[j]);
+      Pos f_segment = p2d_to_pos(msg.frontiers_segment[j]);
       f_pos = p2d_to_pos(msg.frontiers[j]);
 
       if (first || r_segment == f_segment) {
@@ -234,7 +234,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   // add the frontiers to the gvd
   add_to_gvd(frontiers);
 
-  // boost::unordered_map<pos,float> paths_costs;
+  // boost::unordered_map<Pos,float> paths_costs;
 
   // ROS_INFO("tiempos arranca el multipath");
   boost::tie(paths, paths_costs) = get_multi_path(gvd, r_pos, criticals_and_frontiers);
@@ -280,7 +280,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   return segment_bid;
 }
 
-geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
+geometry_msgs::Point Robot::pos_to_real_p3d(Pos p) {
   geometry_msgs::Point p3d = pos_to_p3d(p + offset);
   p3d.x += 0.5;
   p3d.y += 0.5;
@@ -291,7 +291,7 @@ geometry_msgs::Point Robot::pos_to_real_p3d(pos p) {
 void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> points) {
   pos_set f_set;
   for (int i = 0; i < points.size(); i++) {
-    pos f_pos = p2d_to_pos(points[i]);
+    Pos f_pos = p2d_to_pos(points[i]);
     // add_to_gvd(f_pos);
     // add_to_gvd(f_pos);
     f_set.insert(f_pos);
@@ -304,8 +304,8 @@ void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> poin
     boost::tie(paths, paths_costs) = get_multi_path(gvd, my_pos, f_set);
     // ROS_INFO("romi calcule el camino a las fronteras");
   } else {
-    boost::unordered_map<pos, list<VecGVD::Vertex>> f_paths;
-    boost::unordered_map<pos, float> f_paths_costs;
+    boost::unordered_map<Pos, list<VecGVD::Vertex>> f_paths;
+    boost::unordered_map<Pos, float> f_paths_costs;
     boost::tie(f_paths, f_paths_costs) = get_multi_path(gvd, assigned_segment, f_set);
     // duplicated information (robot->segment)
     // where should i assigned the path, under key assigned_segment or under frontier?
@@ -347,7 +347,7 @@ bool Robot::saveFrontierBid(pgmappingcooperativo::FrontierBid fb) {
   // segment_bids[name].clear();
   for (int i = 0; i < fb.frontiers.size(); i++) {
     // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
-    pos f_pos = p2d_to_pos(fb.frontiers[i]);
+    Pos f_pos = p2d_to_pos(fb.frontiers[i]);
     string name = to_string(fb.robotId);
     add_bid(bids_pq, name, f_pos, fb.values[i]);
     // auction_segment_frontiers_num[f_pos] = cis[segment].frontiers.size();
@@ -356,19 +356,19 @@ bool Robot::saveFrontierBid(pgmappingcooperativo::FrontierBid fb) {
   return true;
 }
 
-pos Robot::assignFrontier() {
+Pos Robot::assignFrontier() {
   int total_robots = auction_robots;
   int total_frontiers = paths.size();
   string id = to_string(getRobotId());
-  boost::unordered_map<string, pos> robot_frontiers =
+  boost::unordered_map<string, Pos> robot_frontiers =
       resolve_auction(bids_pq, total_robots, total_frontiers);
   return robot_frontiers[id];
 }
 
 // First solution, didnot work properly
 // Adds extra points so the robot would walk a straight line from current_pos till f_pos(frontier)
-void Robot::add_intermidiate_points(pos f_pos,
-                                    pos current_pos,
+void Robot::add_intermidiate_points(Pos f_pos,
+                                    Pos current_pos,
                                     pgmappingcooperativo::goalList& g_list,
                                     float min_dist) {
   int division_count = dist(f_pos, current_pos) / min_dist;
@@ -385,9 +385,9 @@ void Robot::add_intermidiate_points(pos f_pos,
   }
 }
 
-pgmappingcooperativo::goalList Robot::getPathToSegment(pos frontier) {
+pgmappingcooperativo::goalList Robot::getPathToSegment(Pos frontier) {
   // ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
-  // pos f_pos = p2d_to_pos(frontier);
+  // Pos f_pos = p2d_to_pos(frontier);
 
   // ROS_INFO("tiempos forntera al gvd");
   // add_to_gvd(f_pos);

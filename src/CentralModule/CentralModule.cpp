@@ -60,7 +60,7 @@ grid_type og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
 
   for (auto it = frontera.begin(); it != frontera.end(); it++) {
     int p1d = *it;
-    pos p = p1d_to_pos(p1d, mapWidth);
+    Pos p = p1d_to_pos(p1d, mapWidth);
     res[p.first][p.second] = Frontier;
   }
   return res;
@@ -111,7 +111,7 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
 
   cout << "debug :: cis to rosmsg" << endl;
   for (auto it = cis.begin(); it != cis.end(); it++) {
-    pos segment = it->first;
+    Pos segment = it->first;
     critical_info segment_info = it->second;
 
     segment_auction.criticals.push_back(pos_to_p2d(segment));
@@ -181,7 +181,7 @@ bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid sb, string n
   for (int i = 0; i < sb.criticals.size(); i++) {
     segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
 
-    pos segment = p2d_to_pos(sb.criticals[i]);
+    Pos segment = p2d_to_pos(sb.criticals[i]);
 
     add_bid(bids_pq, name, segment, sb.values[i]);
     auction_segment_frontiers_num[segment] = cis[segment].frontiers.size();
@@ -194,25 +194,25 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
   int total_robots = auction_robots.size();
   int total_segments = cis.size();
 
-  boost::unordered_map<string, pos> robot_segment =
+  boost::unordered_map<string, Pos> robot_segment =
       resolve_auction(bids_pq, total_robots, total_segments, &auction_segment_frontiers_num);
 
-  boost::unordered_map<pos, int> robots_nums;
+  boost::unordered_map<Pos, int> robots_nums;
   for (auto it = robot_segment.begin(); it != robot_segment.end(); it++) {
-    pos seg = it->second;
+    Pos seg = it->second;
     robots_nums[seg]++;
   }
 
   // cout<<"termina la sasignacion"<<endl;
   boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> ret;
 
-  // boost::unordered_map<pos,pgmappingcooperativo::Point2D> frontier2d;
+  // boost::unordered_map<Pos,pgmappingcooperativo::Point2D> frontier2d;
   for (auto it = auction_robots.begin(); it != auction_robots.end(); it++) {
     string r_name = *it;
     pgmappingcooperativo::SegmentAssignment sa;
     sa.id = last_segment_assignment_id;
     if (robot_segment.find(r_name) != robot_segment.end()) {
-      pos seg = robot_segment[r_name];
+      Pos seg = robot_segment[r_name];
       sa.segment = pos_to_p2d(seg);
       sa.frontiers = pos_to_p2d(cis[seg].frontiers);
       // data for frontier auction
@@ -247,8 +247,8 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
     aux.push_back(actual);
     // actualizo sus vecinos
     for (int i = 1; i < 9; i += 2) {
-      int pos = posicionRelativa(actual, i, map_merged.info.width);
-      boost::unordered_set<int>::iterator itv = f_copy.find(pos);
+      int Pos = posicionRelativa(actual, i, map_merged.info.width);
+      boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
       if ((i != 4) && (itv != f_copy.end())) {
         vecinos.push_back(*itv);
         f_copy.erase(itv);
@@ -258,8 +258,8 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
     while (!vecinos.empty()) {
       int primero = vecinos.front();
       for (int i = 1; i < 9; i += 2) {
-        int pos = posicionRelativa(primero, i, map_merged.info.width);
-        boost::unordered_set<int>::iterator itv = f_copy.find(pos);
+        int Pos = posicionRelativa(primero, i, map_merged.info.width);
+        boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
         if ((i != 4) && (itv != f_copy.end())) {
           vecinos.push_back(*itv);
           f_copy.erase(itv);

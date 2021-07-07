@@ -50,7 +50,7 @@ ros::Publisher marker_pub;
 // others
 Robot robot;
 pgmappingcooperativo::goalList path;
-pos f;
+Pos f;
 
 // intends to prevent handling multiple auction at one time
 // could fail if a new segment auction starts before the segment assignment message arrives
@@ -62,8 +62,8 @@ bool FIN = false;
 std::string end_msg("END");
 
 bool first_frontier = true;
-pos last_frontier;
-pos current_frontier;
+Pos last_frontier;
+Pos current_frontier;
 /*
  *  Aux Functions
  */
@@ -73,7 +73,7 @@ string get_frontier_auction_topic(pgmappingcooperativo::Point2D segment, int auc
          to_string(segment.y);
 }
 
-void publishPath(pos frontier) {
+void publishPath(Pos frontier) {
   f = frontier;
   path = robot.getPathToSegment(frontier);
 
@@ -232,11 +232,11 @@ void handleFrontierBid(const pgmappingcooperativo::FrontierBidConstPtr& msg) {
   if (robot.auction_robots <= robots_num) {
     robot.saveFrontierBid(*msg);
     if (robot.auction_robots == robots_num) {
-      pos frontier = robot.assignFrontier();
+      Pos frontier = robot.assignFrontier();
       publishPath(frontier);
       current_frontier = frontier;
       ROS_INFO("%s :: Frontier auction ended, moving to (%d,%d)", robot.getNombre().c_str(),
-               frontier.first, frontier.second);
+               frontier.x, frontier.y);
 
       handlingAuction = false;
     }

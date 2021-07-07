@@ -38,9 +38,9 @@ i-1+width		i+width		i+1+width
         i-1					i
 i+1 i-1-width 	i-width		i+1-width
 */
-static int posicionRelativa(int indice, int pos, uint ancho) {
+static int posicionRelativa(int indice, int Pos, uint ancho) {
   int ret = indice;
-  switch (pos) {
+  switch (Pos) {
     case 0:
       ret = indice - 1 - ancho;
       break;
@@ -103,10 +103,10 @@ static string log_data(string s, string name_file) {
 
 
 
-/*vector<int> getNeighbors(int pos, uint mapWidth){
+/*vector<int> getNeighbors(int Pos, uint mapWidth){
         vector<int> neighbors;
         for(int i = 0; i<9; i++){
-                if(i!=4) neighbors.push_back(posicionRelativa(pos,i,mapWidth));
+                if(i!=4) neighbors.push_back(posicionRelativa(Pos,i,mapWidth));
         }
         return neighbors;
 }*/

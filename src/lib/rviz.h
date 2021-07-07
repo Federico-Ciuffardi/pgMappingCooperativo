@@ -1,7 +1,7 @@
 #ifndef RVIZ_H
 #define RVIZ_H
 
-#include "../lib/GVD/GVD.h"
+#include "../lib/GVD/src/GVD.h"
 #include "conversion.h"
 
 #include <visualization_msgs/Marker.h>

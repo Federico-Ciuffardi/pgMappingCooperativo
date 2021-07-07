@@ -1,5 +1,5 @@
 #include <iostream>
-#include "GVD.h"
+#include "src/GVD.h"
 
 using namespace std;
 
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
     cout << endl;
   }
   dist_grid dgrid;
-  dist_pos_queue dqueue;
+  DistPosQueue dqueue;
   boost::tie(dgrid, dqueue) = calculate_distances(grid, Occupied);
   cout << "distance grid:" << endl;
   for (int x = 0; x < grid_size_x; x++) {
@@ -177,15 +177,15 @@ int main(int argc, char** argv) {
   boost::tie(cis, gvd) = get_points_of_interest(grid);
   cout << "gvd vertices: ";
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first)
-    cout << "(" << gvd.g[*vp.first].p.first << "," << gvd.g[*vp.first].p.second << ") ";
+    cout << "(" << gvd.g[*vp.first].p.x << "," << gvd.g[*vp.first].p.x << ") ";
   cout << endl;
 
   cout << "gvd edges: ";
   for (auto it = edges(gvd.g); it.first != it.second; ++it.first++)
-    std::cout << "|(" << gvd.g[source(*it.first, gvd.g)].p.first << ","
-              << gvd.g[source(*it.first, gvd.g)].p.second << ")-("
-              << gvd.g[target(*it.first, gvd.g)].p.first << ","
-              << gvd.g[target(*it.first, gvd.g)].p.second << ")|";
+    std::cout << "|(" << gvd.g[source(*it.first, gvd.g)].p.x << ","
+              << gvd.g[source(*it.first, gvd.g)].p.y << ")-("
+              << gvd.g[target(*it.first, gvd.g)].p.x << ","
+              << gvd.g[target(*it.first, gvd.g)].p.y << ")|";
   std::cout << std::endl;
 
   // get_path(gvd,pos(1,1),pos(12,4));
