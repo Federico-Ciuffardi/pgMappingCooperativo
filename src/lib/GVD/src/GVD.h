@@ -51,8 +51,6 @@ typedef Graph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,prope
 /*
  *  functions
  */
-boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType);
-
 boost::tuple<boost::unordered_map<Pos,Pos>, Pos> find_paths_to_gvd(StateGrid, VecGVD, Pos p_pos);
 
 GridGvd get_grid_gvd(DistMap dg, DistPosQueue);

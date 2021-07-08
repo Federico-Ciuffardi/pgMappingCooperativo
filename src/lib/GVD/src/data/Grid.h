@@ -14,6 +14,7 @@ template<typename CellType>
 struct Grid{
   typedef vector<CellType> ColType;
   typedef vector<ColType>  GridType;
+  typedef typename ColType::reference reference;
   GridType grid;
 
   Grid(){}
@@ -22,7 +23,7 @@ struct Grid{
     for (Int x = 0; x < size.first; x++) {
       grid.push_back(ColType());
       for (Int y = 0; y < size.second; y++) {
-        grid[x].push_back(CellType());
+        grid.at(x).push_back(CellType());
       }
     }
   }
@@ -33,7 +34,7 @@ struct Grid{
 
   // returns grid size
   pair<Int, Int> size() {
-    return pair<Int, Int>(grid.size(), grid[0].size());
+    return pair<Int, Int>(grid.size(), grid.at(0).size());
   }
 
   // true if Pos is inside the grid bounds
@@ -48,26 +49,34 @@ struct Grid{
   }
 
   // returns the cell corresponding to x, y
-  typename ColType::reference cell(Int x, Int y) {
-    return grid[x][y];
+  reference cell(Int x, Int y) {
+    return grid.at(x).at(y);
   }
   // returns the cell corresponding to Pos p
-  typename ColType::reference cell(Pos p) {
-    return grid[p.x][p.y];
+  reference cell(Pos p) {
+    return grid.at(p.x).at(p.y);
+  }
+  // returns the cell corresponding to Pos p
+  reference operator[](Pos p){
+    return grid.at(p.x).at(p.y);
+  }
+  // returns the Col corresponding to x
+  ColType operator[](Int x){
+    return grid.at(x);
   }
 
   // returns all *valid* neighbors Pos of a given Pos p in the grid
-  PosSet adj(Pos p, vector<CellType> invalids = vector<CellType>()) {
-    PosSet adj;
-    for (auto it = neighborDisplacement.begin(); it != neighborDisplacement.end(); it++) {
-      Pos n = p + (*it);
+  vector<Pos> adj(Pos p, vector<CellType> invalids = vector<CellType>()) {
+    vector<Pos> adj;
+    for (Pos displacement : neighborDisplacement) {
+      Pos n = p + displacement;
       if (inside(n)) {
         bool valid = true;
-        for(auto it : invalids.begin()){
-          valid = cell(n) != *it;
+        for(CellType it : invalids){
+          valid = cell(n) != it;
         }
         if (valid) {
-          adj.insert(n);
+          adj.push_back(n);
         }
       }
     }

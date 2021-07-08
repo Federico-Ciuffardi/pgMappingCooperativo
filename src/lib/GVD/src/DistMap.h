@@ -25,6 +25,8 @@ struct DistMap{
   DistMapType distMap;
 
   DistMap(pair<Int,Int>);
-  DistCell& operator[](Pos p);
-
+  DistMapType::reference operator[](Pos p);
 };
+
+boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType);
+

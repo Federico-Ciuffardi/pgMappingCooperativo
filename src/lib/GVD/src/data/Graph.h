@@ -69,6 +69,12 @@ struct Graph {
     }
   };
 
+  // Get node info asociated with p
+  VertexProperty operator[](Pos p){
+    return g[p];
+  }
+
+  // add vertex asociated with p
   boost::tuple<Vertex, bool> add_v(Pos p) {
     NameVertexMapIterator pos_it;
     bool inserted;

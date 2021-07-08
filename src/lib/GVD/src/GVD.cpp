@@ -8,92 +8,6 @@
  *  main funcs
  */
 
-vector<Pos> neighbor = {Pos(-1, -1), Pos(-1, 0), Pos(-1, 1), Pos(0, 1),
-                        Pos(1, 1),   Pos(1, 0),  Pos(1, -1), Pos(0, -1)};
-
-/* returns the DistMap corresponding to the original grid, relative to
- * Occupide or Critical (from_type) */
-boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid ogrid, CellState sourceState) {
-  // get grid size
-  pair<Int, Int> size = ogrid.size();
-
-  // initialize the dgrid and the distance queues
-  DistMap dgrid(ogrid.size());
-  DistPosQueue dqueue, full_dqueue;
-  for (int x = 0; x < size.first; x++) {
-    for (int y = 0; y < size.second; y++) {
-      Pos p = Pos(x, y);
-      CellState cState = ogrid.cell(p);
-
-      DistMap::DistCell dcell;
-      if (cState == sourceState || cState == Unknown) {  // TODO es asi porque sirve para una funcion
-                                                         // Posterior pero esta semanticamente mal
-        dcell.distance = 0;
-        if (cState == sourceState) {
-          dcell.add_obs(Pos(x, y));
-          dqueue.push(DistPos(0, Pos(x, y)));
-        }
-      } else {
-        dcell.distance = FLT_MAX;
-      }
-      dgrid[p] = dcell;
-    }
-  }
-
-  DistPosQueue next_dqueue;
-  while (!dqueue.empty()) {
-    while (!dqueue.empty()) {
-      // get the x cell to process
-      Pos p = dqueue.top().second;
-      dqueue.pop();
-
-      // Look at neighbors to find a new free cell that needs its distance updated
-      for (int i = 0; i <= neighbor.size(); i++) {
-        Pos np = p + neighbor[i];
-        if (ogrid.inside(np)) {
-          CellState nCState = ogrid.cell(np);
-          DistMap::DistCell& n_dcell = dgrid[np];
-          bool is_traversable = nCState != Unknown && nCState != Occupied;
-          if (is_traversable && n_dcell.distance == FLT_MAX) {
-            float min_distance = FLT_MAX;
-
-            // look at neighbors of freecell to find cells whose distance has already been found
-            for (int i = 0; i <= neighbor.size(); i++) {
-              Pos nnp = np + neighbor[i];
-              if (ogrid.inside(nnp)) {
-                CellState nnCState = ogrid.cell(nnp);
-                DistMap::DistCell& nnDCell = dgrid[nnp];
-                if (nnDCell.obs.size() > 0) {
-                  // find distance to neighbor's closest cell and update the number of obstacles at
-                  // that distance
-                  float d = np.distance_to(nnDCell.obs[0]);
-                  if (d < min_distance) {
-                    min_distance = d;
-                    n_dcell.obs.clear();
-                    n_dcell.add_obs(nnDCell.obs[0]);
-                    n_dcell.distance = min_distance;
-                  } else if (d == min_distance && !n_dcell.has_obs(nnDCell.obs[0])) {
-                    n_dcell.add_obs(nnDCell.obs[0]);
-                  }
-                }
-              }
-            }
-            next_dqueue.push(DistPos(min_distance, np));
-
-            if (sourceState == Critical && nCState != Frontier) {
-              continue;
-            }
-            full_dqueue.push(DistPos(min_distance, np));
-          }
-        }
-      }
-    }
-    dqueue = next_dqueue;
-    next_dqueue = DistPosQueue();
-  }
-  return boost::make_tuple(dgrid, full_dqueue);
-}
-
 boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid ogrid,
                                                                     VecGVD gvd,
                                                                     Pos p_Pos) {
@@ -131,43 +45,37 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
       dqueue.pop();
 
       // Look at neighbors to find a new free cell that needs its distance updated
-      for (int i = 0; i <= neighbor.size(); i++) {
-        Pos np = p + neighbor[i];
-        if (ogrid.inside(np)) {
-          CellState n_ctype = ogrid.cell(np);
-          DistMap::DistCell& n_dcell = dgrid[np];
-          bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
-          if (is_traversable && n_dcell.distance == FLT_MAX) {
-            float min_distance = FLT_MAX;
+      for (Pos np : ogrid.adj(p)) {
+        CellState n_ctype = ogrid.cell(np);
+        DistMap::DistCell& n_dcell = dgrid[np];
+        bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
+        if (is_traversable && n_dcell.distance == FLT_MAX) {
+          float min_distance = FLT_MAX;
 
-            // look at neighbors of freecell to find cells whose distance has already been found
-            for (int i = 0; i <= neighbor.size(); i++) {
-              Pos nnp = np + neighbor[i];
-              if ( ogrid.inside(nnp)) {
-                CellState nn_ctype = ogrid.cell(nnp);
-                DistMap::DistCell& nn_dcell = dgrid[nnp];
-                if (nn_dcell.obs.size() > 0) {
-                  // find distance to neighbor's closest cell and update the number of obstacles at
-                  // that distance
-                  float d = np.distance_to(nnp) + nn_dcell.distance;
-                  if (d < min_distance) {
-                    min_distance = d;
-                    n_dcell.obs.clear();
-                    n_dcell.add_obs(nn_dcell.obs[0]);
-                    n_dcell.distance = min_distance;
-                    v_predecessor[np] = nnp;
-                  } else if (d == min_distance && !n_dcell.has_obs(nn_dcell.obs[0])) {
-                    n_dcell.add_obs(nn_dcell.obs[0]);
-                    v_predecessor[np] = nnp;
-                  }
-                }
+          // look at neighbors of freecell to find cells whose distance has already been found
+          for (Pos nnp : ogrid.adj(np)) {
+            CellState nn_ctype = ogrid.cell(nnp);
+            DistMap::DistCell& nn_dcell = dgrid[nnp];
+            if (nn_dcell.obs.size() > 0) {
+              // find distance to neighbor's closest cell and update the number of obstacles at
+              // that distance
+              float d = np.distance_to(nnp) + nn_dcell.distance;
+              if (d < min_distance) {
+                min_distance = d;
+                n_dcell.obs.clear();
+                n_dcell.add_obs(nn_dcell.obs[0]);
+                n_dcell.distance = min_distance;
+                v_predecessor[np] = nnp;
+              } else if (d == min_distance && !n_dcell.has_obs(nn_dcell.obs[0])) {
+                n_dcell.add_obs(nn_dcell.obs[0]);
+                v_predecessor[np] = nnp;
               }
             }
-            next_dqueue.push(DistPos(min_distance, np));
+          }
+          next_dqueue.push(DistPos(min_distance, np));
 
-            if (gvd.positions.find(np) != gvd.positions.end()) {
-              return boost::make_tuple(v_predecessor, np);
-            }
+          if (gvd.positions.find(np) != gvd.positions.end()) {
+            return boost::make_tuple(v_predecessor, np);
           }
         }
       }
@@ -184,6 +92,7 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
 int A(Pos p, GridGvd ggvd) {
   int res = 0;
   bool prev_np = 0;
+  vector<Pos> neighbor = ggvd.neighborDisplacement;
   for (int i = 0; i < 8; i++) {
     bool v1 = ggvd.cell( p + neighbor[i]);
     bool v2 = ggvd.cell( p + neighbor[(i + 1) % 8]);
