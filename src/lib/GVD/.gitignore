@@ -7,3 +7,5 @@ compile_commands.json
 build
 CTestTestfile.cmake
 libMAIN_SOURCES.a
+tests
+test
