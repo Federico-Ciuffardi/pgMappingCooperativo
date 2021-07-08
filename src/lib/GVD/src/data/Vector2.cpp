@@ -95,7 +95,7 @@ bool Vector2::operator<(const Vector2 v) const {
 }
 
 size_t hash_value(const Vector2 &v){
-  return boost::hash_value(pair<InNum,InNum>(v.x,v.y));
+  return boost::hash_value(pair<Vector2::InNum,Vector2::InNum>(v.x,v.y));
 }
 
 ostream& operator<<(ostream& out, const Vector2 v) {

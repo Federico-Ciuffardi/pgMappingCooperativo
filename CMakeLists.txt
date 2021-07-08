@@ -176,9 +176,9 @@ file(GLOB GVD_SOURCES
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/pgmappingcooperativo_node.cpp)
 add_executable(${PROJECT_NAME}_map_merger src/Map_Merger/Map_Merger_Node.cpp src/Map_Merger/MapMerger.cpp)
-add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModule_Node.cpp src/CentralModule/CentralModule.cpp ${GVD_SOURCES})
-add_executable(${PROJECT_NAME}_move_controller src/MoveController/move_controller.cpp ${GVD_SOURCES})
-add_executable(${PROJECT_NAME}_robot src/Robot/RobotNode.cpp src/Robot/Robot.cpp ${GVD_SOURCES})
+add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModule_Node.cpp src/CentralModule/CentralModule.cpp ${GVD_SOURCES} src/lib/GVD/src/DistMap.cpp)
+add_executable(${PROJECT_NAME}_move_controller src/MoveController/move_controller.cpp ${GVD_SOURCES} src/lib/GVD/src/DistMap.cpp)
+add_executable(${PROJECT_NAME}_robot src/Robot/RobotNode.cpp src/Robot/Robot.cpp ${GVD_SOURCES} src/lib/GVD/src/DistMap.cpp)
 add_executable(${PROJECT_NAME}_end_module src/end_module.cpp)
 #add_executable(${PROJECT_NAME}_monitor src/monitor.cpp src/CentralModule/CentralModule.cpp src/Robot/Robot.cpp)
 

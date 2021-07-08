@@ -5,66 +5,29 @@
 #include <utility>
 
 /*
- *  DistCell implementation
- */
-
-void DistCell::add_obs(Pos p) {
-  obs.push_back(p);
-}
-
-bool DistCell::has_obs(Pos p) {
-  return find(obs.begin(), obs.end(), p) != obs.end();
-}
-
-bool DistCell::operator>(const DistCell& d) const {
-  return this->distance > d.distance;
-}
-
-bool DistCell::operator==(const DistCell& d) const {
-  return this->distance == d.distance;
-}
-
-ostream& operator<<(ostream& out, const DistCell& cell) {
-  // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
-  if (cell.distance != 0) {
-    out << cell.obs.size();
-  } else {
-    out << "=";
-  }
-  return out;
-}
-
-ostream& operator<<(ostream& out, const Pos& p) {
-  // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
-  out << "( " << p.x << " , " << p.y << " )";
-  return out;
-}
-
-/*
  *  main funcs
  */
 
 vector<Pos> neighbor = {Pos(-1, -1), Pos(-1, 0), Pos(-1, 1), Pos(0, 1),
                         Pos(1, 1),   Pos(1, 0),  Pos(1, -1), Pos(0, -1)};
 
-/* returns the DistGrid corresponding to the original grid, relative to
+/* returns the DistMap corresponding to the original grid, relative to
  * Occupide or Critical (from_type) */
-boost::tuple<DistGrid, DistPosQueue> calculate_distances(StateGrid ogrid, CellState sourceState) {
+boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid ogrid, CellState sourceState) {
   // get grid size
   pair<Int, Int> size = ogrid.size();
 
   // initialize the dgrid and the distance queues
-  DistGrid dgrid;
+  DistMap dgrid(ogrid.size());
   DistPosQueue dqueue, full_dqueue;
   for (int x = 0; x < size.first; x++) {
-    dgrid.grid.push_back(DistGrid::ColType());
     for (int y = 0; y < size.second; y++) {
       Pos p = Pos(x, y);
       CellState cState = ogrid.cell(p);
 
-      DistCell dcell;
+      DistMap::DistCell dcell;
       if (cState == sourceState || cState == Unknown) {  // TODO es asi porque sirve para una funcion
-                                                     // Posterior pero esta semanticamente mal
+                                                         // Posterior pero esta semanticamente mal
         dcell.distance = 0;
         if (cState == sourceState) {
           dcell.add_obs(Pos(x, y));
@@ -73,7 +36,7 @@ boost::tuple<DistGrid, DistPosQueue> calculate_distances(StateGrid ogrid, CellSt
       } else {
         dcell.distance = FLT_MAX;
       }
-      dgrid.grid[x].push_back(dcell);
+      dgrid[p] = dcell;
     }
   }
 
@@ -89,7 +52,7 @@ boost::tuple<DistGrid, DistPosQueue> calculate_distances(StateGrid ogrid, CellSt
         Pos np = p + neighbor[i];
         if (ogrid.inside(np)) {
           CellState nCState = ogrid.cell(np);
-          DistCell& n_dcell = dgrid.cell(np);
+          DistMap::DistCell& n_dcell = dgrid[np];
           bool is_traversable = nCState != Unknown && nCState != Occupied;
           if (is_traversable && n_dcell.distance == FLT_MAX) {
             float min_distance = FLT_MAX;
@@ -99,7 +62,7 @@ boost::tuple<DistGrid, DistPosQueue> calculate_distances(StateGrid ogrid, CellSt
               Pos nnp = np + neighbor[i];
               if (ogrid.inside(nnp)) {
                 CellState nnCState = ogrid.cell(nnp);
-                DistCell& nnDCell = dgrid.cell(nnp);
+                DistMap::DistCell& nnDCell = dgrid[nnp];
                 if (nnDCell.obs.size() > 0) {
                   // find distance to neighbor's closest cell and update the number of obstacles at
                   // that distance
@@ -138,15 +101,14 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
   pair<Int,Int> size = ogrid.size();
 
   // initialize the dgrid and the distance queues
-  DistGrid dgrid;
+  DistMap dgrid(ogrid.size());
   DistPosQueue dqueue, full_dqueue;
   for (int x = 0; x < size.first; x++) {
-    dgrid.grid.push_back(DistGrid::ColType());
     for (int y = 0; y < size.second; y++) {
       Pos p = Pos(x, y);
       CellState ctype = ogrid.cell(p);
 
-      DistCell dcell;
+      DistMap::DistCell dcell;
       if (p == p_Pos || ctype == Unknown) {  // TODO es asi porque sirve para una funcion
                                              // Posterior pero esta semanticamente mal
         dcell.distance = 0;
@@ -157,7 +119,7 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
       } else {
         dcell.distance = FLT_MAX;
       }
-      dgrid.grid[x].push_back(dcell);
+      dgrid[p]=dcell;
     }
   }
   boost::unordered_map<Pos, Pos> v_predecessor;
@@ -173,7 +135,7 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
         Pos np = p + neighbor[i];
         if (ogrid.inside(np)) {
           CellState n_ctype = ogrid.cell(np);
-          DistCell& n_dcell = dgrid.cell(np);
+          DistMap::DistCell& n_dcell = dgrid[np];
           bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
           if (is_traversable && n_dcell.distance == FLT_MAX) {
             float min_distance = FLT_MAX;
@@ -183,7 +145,7 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
               Pos nnp = np + neighbor[i];
               if ( ogrid.inside(nnp)) {
                 CellState nn_ctype = ogrid.cell(nnp);
-                DistCell& nn_dcell = dgrid.cell(nnp);
+                DistMap::DistCell& nn_dcell = dgrid[nnp];
                 if (nn_dcell.obs.size() > 0) {
                   // find distance to neighbor's closest cell and update the number of obstacles at
                   // that distance
@@ -239,16 +201,16 @@ int A(Pos p, GridGvd ggvd) {
 
 /* returns a boolean matrix, a cell is true if it belongs to the GVD and false
  * otherwise*/
-GridGvd get_grid_gvd(DistGrid dg, DistPosQueue dqueue) {
+GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
   // get sizes
-  pair<Int,Int> size = dg.size();
+  pair<Int,Int> size = dg.distMap.size();
 
   // initialize GridGvd
   GridGvd GridGvd;
   for (int i = 0; i < size.first; i++) {
     GridGvd.grid.push_back(vector<bool>());
     for (int j = 0; j < size.second; j++) {
-      GridGvd.grid[i].push_back(dg.cell(i,j).distance != 0);  // is not a wall or unknown
+      GridGvd.grid[i].push_back(dg[Pos(i,j)].distance != 0);  // is not a wall or unknown
     }
   }
 
@@ -263,7 +225,7 @@ GridGvd get_grid_gvd(DistGrid dg, DistPosQueue dqueue) {
 
     // Remove from GVD if it does not belongs to the GVD by definition ands does
     // not disconects the GVD
-    if (dg.cell(cx,cy).obs.size() <= 1 && A(current_Pos, GridGvd) <= 1) {
+    if (dg[Pos(cx,cy)].obs.size() <= 1 && A(current_Pos, GridGvd) <= 1) {
       GridGvd.cell(cx,cy) = false;
     }
   }
@@ -271,7 +233,7 @@ GridGvd get_grid_gvd(DistGrid dg, DistPosQueue dqueue) {
 }
 
 // could be of less order, maybe using trees
-boost::unordered_map<Pos, bool> get_local_mins(DistGrid dg, GVD& gvd) {
+boost::unordered_map<Pos, bool> get_local_mins(DistMap dg, GVD& gvd) {
   boost::unordered_map<Pos, bool> lmins;
 
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
@@ -283,8 +245,8 @@ boost::unordered_map<Pos, bool> get_local_mins(DistGrid dg, GVD& gvd) {
     if (not_processed) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         Pos adj_Pos = gvd.g[*ad.first].p;
-        bool auxmin = dg.cell(current_Pos).distance <= dg.cell(adj_Pos).distance;
-        bool adj_greater = dg.cell(current_Pos).distance < dg.cell(adj_Pos).distance;
+        bool auxmin = dg[current_Pos].distance <= dg[adj_Pos].distance;
+        bool adj_greater = dg[current_Pos].distance < dg[adj_Pos].distance;
 
         if (adj_greater) {
           has_greater = true;
@@ -332,7 +294,7 @@ void collapse_vertices(GVD& gvd, boost::unordered_map<Pos, bool> lmins) {
   }
 }
 
-void clean_up(GVD& gvd, DistGrid dgrid, int min_deg) {
+void clean_up(GVD& gvd, DistMap dgrid, int min_deg) {
   GVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
     GVD::VertexIterator v_it_aux = v_it;
@@ -421,7 +383,7 @@ int degree_constraint(StateGrid& ogrid, GVD& gvd, boost::unordered_map<Pos, bool
 }
 
 /*boost::unordered_map<Pos, DistPos> unknown_dist_constraint(StateGrid ogrid, GVD& gvd, int
-criticals_count) { DistGrid dgrid; DistPosQueue dqueue; boost::unordered_map<Pos, DistPos>
+criticals_count) { DistMap dgrid; DistPosQueue dqueue; boost::unordered_map<Pos, DistPos>
 critical_with_frontier; boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical); while
 (criticals_count > 0 && !dqueue.empty()) { DistPos frontier_dp = dqueue.top(); dqueue.pop(); Pos
 critical_Pos = cell(dgrid, frontier_dp.y).obs[0]; GVD::Vertex cv = gvd.Positions[critical_Pos];
@@ -440,7 +402,7 @@ critical_Pos = cell(dgrid, frontier_dp.y).obs[0]; GVD::Vertex cv = gvd.Positions
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
 criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
-  DistGrid dgrid;
+  DistMap dgrid(ogrid.size());
   DistPosQueue dqueue;
   criticals_info res;
   cout << "calculate_distances" << endl;
@@ -451,7 +413,7 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
     dqueue.pop();
     Pos frontier = frontier_dp.second;
 
-    vector<Pos>& frontier_crits = dgrid.cell(frontier).obs;
+    vector<Pos>& frontier_crits = dgrid[frontier].obs;
 
     for (int i = 0; i < frontier_crits.size(); i++) {
       Pos critical_Pos = frontier_crits[i];
@@ -476,8 +438,8 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
   GVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     gvd_vertex& v = gvd.g[*v_it];
-    if (dgrid.cell(v.p).obs.size() > 0) {
-      v.segment = dgrid.cell(v.p).obs[0];
+    if (dgrid[v.p].obs.size() > 0) {
+      v.segment = dgrid[v.p].obs[0];
     } else {
       v.segment = Pos(INT_MIN, INT_MIN);
       cout << "warning vertex without segment" << endl;
@@ -486,7 +448,7 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
   return res;
 }
 
-criticals_info get_critical_points(StateGrid ogrid, DistGrid dg, GVD& gvd) {
+criticals_info get_critical_points(StateGrid ogrid, DistMap dg, GVD& gvd) {
   boost::unordered_map<Pos, bool> local_mins = get_local_mins(dg, gvd);
   cout << "debug :: clean_up" << endl;
   // TODO clean_up and collapse_vertices can be merged into one function
@@ -552,7 +514,7 @@ criticals_info get_critical_points(StateGrid ogrid, DistGrid dg, GVD& gvd) {
 
 boost::tuple<criticals_info, GVD> get_points_of_interest(StateGrid ogrid) {
   boost::unordered_set<Pos> res;
-  DistGrid dgrid;
+  DistMap dgrid(ogrid.size());
   DistPosQueue dqueue;
   cout << "debug :: calculate_distances" << endl;
   boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied);

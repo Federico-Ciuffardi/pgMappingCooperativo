@@ -9,9 +9,10 @@
 
 using namespace std;
 
-typedef Int   InNum;
 
 struct Vector2 {
+  typedef Int InNum;
+
   InNum x, y;
 
   Vector2();

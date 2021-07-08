@@ -6,15 +6,11 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <iostream>
 #include "data/Pos.h"
-#include "Grid.h"
+#include "data/Grid.h"
+#include "Map.h"
+#include "DistMap.h"
 
 using namespace std;
-
-/*
- *  ocupancy grid
- */
-enum CellState { Occupied, Unknown, Free, Critical, Frontier };
-typedef Grid<CellState> StateGrid;
 
 /*
  *  critical info 
@@ -24,25 +20,6 @@ struct critical_info{
   vector<Pos> frontiers;
 };
 typedef boost::unordered_map<Pos, critical_info> criticals_info;
-
-/*
- *  dist cell, col and grid
- */
-struct DistCell {
-  vector<Pos> obs;
-  float distance;
-
-  DistCell(){};
-
-  void add_obs(Pos);
-  bool has_obs(Pos);
-
-  bool operator>(const DistCell& d) const;
-  bool operator==(const DistCell& p) const;
-  friend ostream& operator<<(ostream& out, const DistCell& cell);
-};
-
-typedef Grid<DistCell> DistGrid;
 
 /*
  *  GVD
@@ -145,14 +122,14 @@ using namespace std;
 /*
  *  functions
  */
-boost::tuple<DistGrid, DistPosQueue> calculate_distances(StateGrid, CellState sourceType);
+boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType);
 
 boost::tuple<boost::unordered_map<Pos,Pos>, Pos> find_paths_to_gvd(StateGrid, VecGVD, Pos p_pos);
 
-GridGvd get_grid_gvd(DistGrid dg, DistPosQueue);
+GridGvd get_grid_gvd(DistMap dg, DistPosQueue);
 
-//boost::unordered_map<Pos, DistPos> get_critical_points(grid_type ogrid, DistGrid dg, GVD& gvd);
-// boost::unordered_map<Pos,bool> get_local_mins(DistGrid dg, GVD gvd);
+//boost::unordered_map<Pos, DistPos> get_critical_points(grid_type ogrid, DistMap dg, GVD& gvd);
+// boost::unordered_map<Pos,bool> get_local_mins(DistMap dg, GVD gvd);
 
 boost::tuple<criticals_info, GVD> get_points_of_interest(StateGrid g);
 

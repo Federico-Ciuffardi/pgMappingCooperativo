@@ -2,6 +2,7 @@
 
 #include <bits/stdc++.h>
 #include <iostream>
+#include <limits>
 
 #include <boost/unordered_set.hpp>
 
@@ -9,7 +10,7 @@
 
 using namespace std;
 
-#define NULL_POS Pos(MAXFLOAT, MAXFLOAT)
+#define NULL_POS Pos(numeric_limits<Pos::InNum>::max(), numeric_limits<Pos::InNum>::max())
 
 /*
  *  position

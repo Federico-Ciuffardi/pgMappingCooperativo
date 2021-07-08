@@ -98,13 +98,13 @@ int main(int argc, char** argv) {
     }
     cout << endl;
   }
-  DistGrid dgrid;
+  DistMap dgrid(grid.size());
   DistPosQueue dqueue;
   boost::tie(dgrid, dqueue) = calculate_distances(grid, Occupied);
   cout << "Obstacles at min dist:" << endl;
   for (int x = 0; x < size.first; x++) {
     for (int y = 0; y < size.second; y++) {
-      cout << dgrid.cell(x,y) << " | ";
+      cout << dgrid[Pos(x,y)] << " | ";
     }
     cout << endl;
   }
