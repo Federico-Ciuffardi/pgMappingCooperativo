@@ -139,7 +139,7 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
   float min_aux;
   VecGVD::Vertex v;
   bool inserted;
-  graph_traits<VecGVD::Graph>::edge_descriptor e;
+  graph_traits<VecGVD::GraphType>::edge_descriptor e;
   int segment = -1;
 
   // std::cout<<"Antes de agregar vertices"<<g.vertices.size()<<endl;
@@ -237,7 +237,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   // boost::unordered_map<Pos,float> paths_costs;
 
   // ROS_INFO("tiempos arranca el multipath");
-  boost::tie(paths, paths_costs) = get_multi_path(gvd, r_pos, criticals_and_frontiers);
+  boost::tie(paths, paths_costs) = gvd.getMultiPath(r_pos, criticals_and_frontiers);
   // ROS_INFO("tiempos termina el multipath");
 
   list<VecGVD::Vertex> path_to_frontier = paths[my_segment_frontier];
@@ -301,12 +301,12 @@ void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> poin
   // add_to_gvd(f_set, assigned_segment);
   // maybe i could recalculate for every frontier to be more exact
   if (true) {  // assigned_segment == my_segment){
-    boost::tie(paths, paths_costs) = get_multi_path(gvd, my_pos, f_set);
+    boost::tie(paths, paths_costs) = gvd.getMultiPath( my_pos, f_set);
     // ROS_INFO("romi calcule el camino a las fronteras");
   } else {
     boost::unordered_map<Pos, list<VecGVD::Vertex>> f_paths;
     boost::unordered_map<Pos, float> f_paths_costs;
-    boost::tie(f_paths, f_paths_costs) = get_multi_path(gvd, assigned_segment, f_set);
+    boost::tie(f_paths, f_paths_costs) = gvd.getMultiPath(assigned_segment, f_set);
     // duplicated information (robot->segment)
     // where should i assigned the path, under key assigned_segment or under frontier?
     for (auto it = f_set.begin(); it != f_set.end(); ++it) {
