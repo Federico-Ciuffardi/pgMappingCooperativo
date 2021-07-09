@@ -1,6 +1,8 @@
 controller_frequency: 5
 recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
+# base_global_planner: "voronoi_planner/VoronoiPlanner"
+
 base_local_planner: "eband_local_planner/EBandPlannerROS" 
 EBandPlannerROS:
   max_vel_x: 0.45

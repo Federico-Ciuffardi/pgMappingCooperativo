@@ -45,6 +45,7 @@
     <!-- launch-prefix="bash -c 'sleep 5; $0 $@' "/>> -->
 
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" required="true">
+      <!-- <remap from="move_base/global_costmap/costmap" to="map"/> -->
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/$(arg ns)_costmap_common_params.yaml" command="load" ns="local_costmap" />

@@ -8,18 +8,10 @@
 #include "data/Graph.h"
 #include "Map.h"
 #include "DistMap.h"
+#include "TopoMap.h"
 #include <boost/graph/adjacency_list.hpp>
 
 using namespace std;
-
-/*
- *  critical info 
- */
-struct critical_info{
-  float mind_f; //min distance to frontier
-  vector<Pos> frontiers;
-};
-typedef boost::unordered_map<Pos, critical_info> criticals_info;
 
 /*
  *  GVD
@@ -45,8 +37,8 @@ struct GvdVertexProperty {
   };
 };
 
-typedef Graph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> GVD;
-typedef Graph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> VecGVD;
+typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> GVD;
+typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> VecGVD;
 
 /*
  *  functions

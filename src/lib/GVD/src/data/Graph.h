@@ -14,16 +14,16 @@
 using namespace boost;
 
 // Boost Graph wrapper
-// Focused on Graphs where the vertices are identified by a spatial location (repesented with the type Pos)
-// graph (template parameter) VertexProperty must have a attribute p with time Pos and a constructor `VertexProperty(p)`
-template<typename graph>
+template<typename graph, typename vertex_id>
 struct Graph {
-  typedef graph GraphType;
+  typedef          graph GraphType;
+  typedef          vertex_id VertexId;
+
   typedef typename graph_traits<GraphType>::vertex_descriptor Vertex;
   typedef typename GraphType::vertex_property_type VertexProperty;
   typedef typename graph_traits<GraphType>::edge_descriptor Edge;
 
-  typedef typename boost::unordered_map<Pos, Vertex> NameVertexMap;
+  typedef typename boost::unordered_map<VertexId, Vertex> NameVertexMap;
   typedef typename NameVertexMap::iterator NameVertexMapIterator;
   typedef typename graph_traits<GraphType>::vertex_iterator VertexIterator;
   typedef typename graph_traits<GraphType>::adjacency_iterator AdjacencyIterator;
@@ -32,7 +32,8 @@ struct Graph {
   // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 
   GraphType g;
-  NameVertexMap positions;
+  NameVertexMap vertices;
+
   Graph(){};
   // construct graph based on al boolean grid (true = belongs to GVD)
   Graph(Grid<bool> boolGrid){
@@ -70,8 +71,12 @@ struct Graph {
   };
 
   // Get node info asociated with p
-  VertexProperty operator[](Pos p){
-    return g[p];
+  VertexProperty& operator[](Vertex v){
+    return g[v];
+  }
+  // Get node info asociated with p
+  VertexProperty& operator[](VertexId vid){
+    return g[vertices[vid]];
   }
 
   // add vertex asociated with p
@@ -79,7 +84,7 @@ struct Graph {
     NameVertexMapIterator pos_it;
     bool inserted;
     Vertex u;
-    boost::tie(pos_it, inserted) = positions.insert(std::make_pair(p, Vertex()));
+    boost::tie(pos_it, inserted) = vertices.insert(std::make_pair(p, Vertex()));
     if (inserted) {
       u = add_vertex(g);
       g[u] = VertexProperty(p);
@@ -96,11 +101,37 @@ struct Graph {
     }
     return add_edge(u, v, w, g);
   }
+};
 
-  // Path finding
+// Boost Graph wrapper
+// Focused on Graphs where the vertices are identified by a spatial location (repesented with the type Pos)
+// graph (template parameter) VertexProperty must have a attribute p with time Pos and a constructor `VertexProperty(p)`
+// Adds A* funtions (Pos is hardcoded but in theory any class with a distance_to method could be used)
+template<typename graph>
+struct PosGraph : public Graph<graph,Pos> {
+  // keep updated if the parent class changes
+  typedef Graph<graph,Pos> ParentClass; 
+  using Graph<graph,Pos>::Graph; // inherit constructors (not usign ParentClass becouse intellisense bug)
 
+  // inherit typedefs
+  using typename ParentClass::GraphType;
+
+  using typename ParentClass::VertexId;
+
+  using typename ParentClass::Vertex;
+  using typename ParentClass::VertexProperty;
+  using typename ParentClass::Edge;
+
+  using typename ParentClass::NameVertexMap;
+  using typename ParentClass::NameVertexMapIterator;
+  using typename ParentClass::VertexIterator;
+  using typename ParentClass::AdjacencyIterator;
+
+  using typename ParentClass::EdgeIterator;
+
+
+  // pathfinding
   /// A* single
-
   //// euclidean distance heuristic
   template <class GraphType, class CostType, class LocMap>
   class single_astar_distance_heuristic : public astar_heuristic<GraphType, CostType> {
@@ -130,22 +161,21 @@ struct Graph {
    private:
     Vertex m_goal;
   };
-
   //// get the shortestpath and the cost of reaching the goal
   boost::tuple<list<Vertex>, float> getSinglePath(Pos from, Pos to) {
-    Vertex start = positions[from];
-    Vertex goal = positions[to];
+    Vertex start = this->vertices[from];
+    Vertex goal = this->vertices[to];
     typedef float cost;
 
-    vector<Vertex> p(num_vertices(g));
-    vector<cost> d(num_vertices(g));
+    vector<Vertex> p(num_vertices(this->g));
+    vector<cost> d(num_vertices(this->g));
     list<Vertex> shortest_path;
     try {
       // call astar named parameter interface
-      astar_search_tree(g, start,
-                        single_astar_distance_heuristic<GraphType, cost, GraphType>(g, goal),
-                        predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g)))
-                            .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g)))
+      astar_search_tree(this->g, start,
+                        single_astar_distance_heuristic<GraphType, cost, GraphType>(this->g, goal),
+                        predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, this->g)))
+                            .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, this->g)))
                             .visitor(single_astar_goal_visitor<Vertex>(goal)));
     } catch (found_goal fg) {  // found a path to the goal
 
@@ -167,7 +197,6 @@ struct Graph {
   }
 
   /// Multi A*
-
   //// euclidean distance heuristic
   template <class GraphType, class CostType>
   class multi_astar_distance_heuristic : public astar_heuristic<GraphType, CostType> {
@@ -220,27 +249,26 @@ struct Graph {
    private:
     PosSet m_goals;
   };
-
   //// get the shortestpath and the cost of reaching the goal
   boost::tuple<boost::unordered_map<Pos, list<Vertex>>, boost::unordered_map<Pos, float>>
   getMultiPath(Pos start, PosSet goals) {
-    vector<Vertex> p(num_vertices(g));
-    vector<float> d(num_vertices(g));
+    vector<Vertex> p(num_vertices(this->g));
+    vector<float> d(num_vertices(this->g));
     boost::unordered_map<Pos, list<Vertex>> shortest_paths;
     boost::unordered_map<Pos, float> shortest_paths_costs;
     try {
       // call astar named parameter interface
-      astar_search_tree(g, positions[start],
-                        multi_astar_distance_heuristic<GraphType, float>(g, goals),
-                        predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g)))
-                            .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g)))
+      astar_search_tree(this->g, this->vertices[start],
+                        multi_astar_distance_heuristic<GraphType, float>(this->g, goals),
+                        predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, this->g)))
+                            .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, this->g)))
                             .visitor(multi_astar_goal_visitor<Vertex>(goals)));
     } catch (found_goals fg) {  // found a path to the goal
       // cout<<"comienzo del termino!"<<endl;
       for (auto it = goals.begin(); it != goals.end(); it++) {
         list<Vertex> shortest_path;
         Pos goal = *it;
-        Vertex goal_v = positions[goal];
+        Vertex goal_v = this->vertices[goal];
 
         for (Vertex v = goal_v;; v = p[v]) {
           shortest_path.push_front(v);
@@ -262,11 +290,10 @@ struct Graph {
         for (++spi; spi != shortest_paths[goal].end(); ++spi)
           cout << " -> " << gvd.g[*spi].p;
 
-        cout << endl << "Total travel time: " << d[gvd.Positions[goal]] << endl;*/
+        cout << endl << "Total travel time: " << d[gvd.vertices[goal]] << endl;*/
       /* } */
     }
     // cout<<"fin del termino!"<<endl;
     return boost::make_tuple(shortest_paths, shortest_paths_costs);
   }
-
 };

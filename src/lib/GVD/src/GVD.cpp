@@ -74,13 +74,12 @@ boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid og
           }
           next_dqueue.push(DistPos(min_distance, np));
 
-          if (gvd.positions.find(np) != gvd.positions.end()) {
+          if (gvd.vertices.find(np) != gvd.vertices.end()) {
             return boost::make_tuple(v_predecessor, np);
           }
         }
       }
     }
-    bool a =Pos(1,0) != Pos(2,3);
     dqueue = next_dqueue;
     next_dqueue = DistPosQueue();
   }
@@ -148,12 +147,12 @@ boost::unordered_map<Pos, bool> get_local_mins(DistMap dg, GVD& gvd) {
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     bool is_min_e = true;
     bool has_greater = false;
-    Pos current_Pos = gvd.g[*vp.first].p;
+    Pos current_Pos = gvd[*vp.first].p;
     bool not_processed = lmins.find(current_Pos) == lmins.end();
 
     if (not_processed) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
-        Pos adj_Pos = gvd.g[*ad.first].p;
+        Pos adj_Pos = gvd[*ad.first].p;
         bool auxmin = dg[current_Pos].distance <= dg[adj_Pos].distance;
         bool adj_greater = dg[current_Pos].distance < dg[adj_Pos].distance;
 
@@ -179,18 +178,18 @@ void collapse_vertices(GVD& gvd, boost::unordered_map<Pos, bool> lmins) {
   for (auto vp = vertices(gvd.g); vp.first != vp.second;) {
     auto vp_aux = vp.first;
     ++vp.first;
-    Pos current_Pos = gvd.g[*vp_aux].p;
+    Pos current_Pos = gvd[*vp_aux].p;
 
     bool is_min = lmins[current_Pos];
     if (!is_min && out_degree(*vp_aux, gvd.g) == 2) {
       auto adj = adjacent_vertices(*vp_aux, gvd.g);
 
-      auto adj1 = gvd.g[*adj.first];
+      auto adj1 = gvd[*adj.first];
       Pos adj1_aux = adj1.p - current_Pos;
       auto adj_aux = adj;
 
       ++adj.first;
-      auto adj2 = gvd.g[*adj.first];
+      auto adj2 = gvd[*adj.first];
       Pos adj2_aux = (adj2.p - current_Pos);
 
       if (same_direcction(adj1_aux, adj2_aux)) {
@@ -260,7 +259,7 @@ int degree_constraint(StateGrid& ogrid, GVD& gvd, boost::unordered_map<Pos, bool
   int criticals_count = 0;
   Pos current_Pos;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
-    current_Pos = gvd.g[*vp.first].p;
+    current_Pos = gvd[*vp.first].p;
     if (out_degree(*vp.first, gvd.g) == 2 && local_mins[current_Pos]) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         if (out_degree(*ad.first, gvd.g) >= 3) {
@@ -278,7 +277,7 @@ int degree_constraint(StateGrid& ogrid, GVD& gvd, boost::unordered_map<Pos, bool
     Pos max_Pos;
 
     for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
-      current_Pos = gvd.g[*vp.first].p;
+      current_Pos = gvd[*vp.first].p;
       int current_deg = out_degree(*vp.first, gvd.g);
       if (current_deg > max || max < 0) {
         max = current_deg;
@@ -308,10 +307,10 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
 
     for (int i = 0; i < frontier_crits.size(); i++) {
       Pos critical_Pos = frontier_crits[i];
-      GVD::Vertex cv = gvd.positions[critical_Pos];
-      if (!gvd.g[cv].is_critical) {
-        gvd.g[cv].is_critical = true;
-        // gvd.g[cv].segment = critical_Pos;
+      GvdVertexProperty& c = gvd[critical_Pos];
+      if (!c.is_critical) {
+        c.is_critical = true;
+        // c.segment = critical_Pos;
         res[critical_Pos].mind_f = frontier_dp.first;
         res[critical_Pos].frontiers.push_back(frontier);
         // frontier_crits.clear();
@@ -328,7 +327,7 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
   cout << "set the segment for every vertex" << endl;
   GVD::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
-    GvdVertexProperty& v = gvd.g[*v_it];
+    GvdVertexProperty& v = gvd[*v_it];
     if (dgrid[v.p].obs.size() > 0) {
       v.segment = dgrid[v.p].obs[0];
     } else {

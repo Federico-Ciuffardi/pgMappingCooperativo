@@ -70,26 +70,35 @@ int main(int argc, char* argv[]) {
   map_controller_pub = n.advertise<nav_msgs::OccupancyGrid>("/map_controller", 1);
   end_sub = n.subscribe("/end", 1, handleEnd);
 
-  ros::Rate loop_rate(5);
+  ros::Rate loop_rate(1);
   map_merger = MapMerger();
 
-  int cont_p3dx_ = 0;
   ros::master::V_TopicInfo topic_infos;
 
-  while (cont_p3dx_ < number_robots) {
-    cont_p3dx_ = 0;
+  while (true) {
+    int cont_p3dx_pos = 0;
+    int cont_p3dx_map = 0;
     ros::master::getTopics(topic_infos);
     for (ros::master::V_TopicInfo::const_iterator it_topic = topic_infos.begin();
          it_topic != topic_infos.end(); ++it_topic) {
       const ros::master::TopicInfo& published_topic = *it_topic;
-      if (published_topic.name.find("/pose") != std::string::npos) {
-        cont_p3dx_++;
+      if (published_topic.name.find("/pose") != std::string::npos ) {
+        cont_p3dx_pos++;
       }
-      loop_rate.sleep();
+      /* if (published_topic.name.find("/map") != std::string::npos ) { */
+      if (published_topic.name.find("/move_base/global_costmap/costmap") != std::string::npos ) {
+        cont_p3dx_map++;
+      }
     }
-    ROS_INFO(" MAP MERGER esperando por %d robots ", number_robots - cont_p3dx_);
+    if (cont_p3dx_pos + cont_p3dx_map >= 2*number_robots){
+      ROS_INFO(" MAP MERGER :: all %d ready! ", number_robots);
+      break;
+    }
+    loop_rate.sleep();
+    ROS_INFO(" MAP MERGER :: waiting for %d robots ", number_robots - max(cont_p3dx_pos,cont_p3dx_map));
   }
 
+  ros::Duration(5.0).sleep();
   ros::master::getTopics(topic_infos);
 
   // Subscribed to

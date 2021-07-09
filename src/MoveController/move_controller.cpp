@@ -21,7 +21,6 @@
 
 const double TOLERANCE_GOAL = 0.75;       // 0.30;
 const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
-const double SPEED = ROBOT_SPEED;         // 0.5
 
 // const std::string ODOM_FRAME = "p3dx_0_tf/odom";
 
@@ -122,10 +121,8 @@ pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
 }
 
 void setPath(const pgmappingcooperativo::goalList& msg) {
-  cout<<"Path arrived"<<endl;
   if (msg.listaGoals.size() != 0) {
     path_saved = trim_path(msg);
-    cout<<"Path trimmed"<<endl;
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",
     // msg.listaGoals.size());
     pathflag = 1;
@@ -133,14 +130,11 @@ void setPath(const pgmappingcooperativo::goalList& msg) {
 }
 
 void send_point(geometry_msgs::Point next_point) {
-  cout<<"mandando punto: "<<next_point.x<<","<<next_point.y<<endl;
   // ROS_INFO("Creating path step to (%d,%d)",next_point.x,next_point.y);
   // ROS_INFO("Sending path step ---> X = %f , Y = %f , Z = %f", next_point.x,
   // next_point.y, next_point.z );
   waypoint_pub.publish(next_point);
   msg_id++;
-  cout<<"Point sent"<<endl;
-
 }
 
 /*void saveMap(const nav_msgs::OccupancyGridConstPtr& msg) {

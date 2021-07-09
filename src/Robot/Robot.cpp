@@ -75,7 +75,7 @@ void Robot::add_to_gvd(Pos f_pos) {
     // ROS_INFO("romi arista %d",inserted);
     // ROS_INFO("romi arista es: %d,%d - %d,%d
     // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-    // ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+    // ROS_INFO("romi f_pos vetex: %d",gvd.vertices[f_pos]);
   }
 }
 
@@ -98,7 +98,7 @@ void Robot::add_to_gvd(PosSet p_set) {
   for (auto it = p_set.begin(); it != p_set.end(); ++it) {
     Pos v_pred_pos;
     Pos v_pos = v_connection[*it];
-    v = gvd.positions[v_pos];
+    v = gvd.vertices[v_pos];
     boost::unordered_map<Pos, Pos> v_predecessor = v_paths[*it];
     for (v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]) {
       /* ROS_INFO("romi voy a recorerer el camino"); */
@@ -115,9 +115,9 @@ void Robot::add_to_gvd(PosSet p_set) {
       v = v_pred;
       v_pos = v_pred_pos;
       if (v_pos == (*it)) {
-        cout<<"romi UNION AL GVD, inserte el punto(frontera o robot) vetex: "<<gvd.positions[v_pos] <<endl;
+        cout<<"romi UNION AL GVD, inserte el punto(frontera o robot) vetex: "<<gvd.vertices[v_pos] <<endl;
         /* ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %lu", */
-        /*          gvd.positions[v_pos]); */
+        /*          gvd.vertices[v_pos]); */
         break;
       }
       /* cout<<"romi sali de insertar "<<inserted <<endl; */
@@ -125,7 +125,7 @@ void Robot::add_to_gvd(PosSet p_set) {
       // ROS_INFO("romi arista %d",inserted);
       // ROS_INFO("romi arista es: %d,%d - %d,%d
       // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-      // ROS_INFO("romi f_pos vetex: %d",gvd.positions[f_pos]);
+      // ROS_INFO("romi f_pos vetex: %d",gvd.vertices[f_pos]);
     }
   }
 }
@@ -162,8 +162,8 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
   for (int i = 0; i < g.edges.size(); i++) {
     Pos from_p = p2d_to_pos(g.edges[i].from);
     Pos to_p = p2d_to_pos(g.edges[i].to);
-    VecGVD::Vertex from_v = gvd.positions[from_p];
-    VecGVD::Vertex to_v = gvd.positions[to_p];
+    VecGVD::Vertex from_v = gvd.vertices[from_p];
+    VecGVD::Vertex to_v = gvd.vertices[to_p];
 
     boost::tie(e, inserted) = gvd.add_e(from_v, to_v, from_p.distance_to( to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
@@ -198,7 +198,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   r_set.insert(r_pos);
   add_to_gvd(r_set);
   // std::cout << "este es el seg: " << seg << endl;
-  r_segment = gvd.g[gvd.positions[r_pos]].segment;
+  r_segment = gvd.g[gvd.vertices[r_pos]].segment;
   my_segment = r_segment;
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
@@ -242,7 +242,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
 
   list<VecGVD::Vertex> path_to_frontier = paths[my_segment_frontier];
   bool in_segment = find(path_to_frontier.begin(), path_to_frontier.end(),
-                         gvd.positions[r_segment]) == path_to_frontier.end();
+                         gvd.vertices[r_segment]) == path_to_frontier.end();
   // if robot in segment
   float cost_my_segment_frontier;
   if (in_segment) {
