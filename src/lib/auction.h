@@ -1,8 +1,7 @@
-#ifndef AUCTION_H
-#define AUCTION_H
+#pragma once
 
 #include <bits/stdc++.h>
-#include "../lib/GVD/src/GVD.h"
+#include "../lib/GVD/src/Gvd.h"
 
 using namespace std;
 
@@ -92,5 +91,3 @@ static boost::unordered_map<string,Pos> resolve_auction(bids_priority_queue bids
 
   return bidder_item;
 }
-
-#endif

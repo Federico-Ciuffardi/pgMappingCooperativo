@@ -1,7 +1,6 @@
-#ifndef CONVERSION_H
-#define CONVERSION_H
+#pragma once
 
-#include "../lib/GVD/src/GVD.h"
+#include "../lib/GVD/src/Gvd.h"
 #include "../lib/GVD/src/data/Vector2.h"
 #include <pgmappingcooperativo/Point2D.h>
 #include <pgmappingcooperativo/SegmentAuction.h>
@@ -151,5 +150,3 @@ static StateGrid og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
   }
   return res;
 }
-
-#endif

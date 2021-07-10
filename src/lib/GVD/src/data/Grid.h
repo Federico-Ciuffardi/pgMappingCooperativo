@@ -5,13 +5,15 @@
 
 #include <math.h>
 #include <cfloat>
+#include <iterator>
 
 #include "Pos.h"
 
 using namespace std;
 
-template<typename CellType>
+template<typename cell_type>
 struct Grid{
+  typedef cell_type CellType;
   typedef vector<CellType> ColType;
   typedef vector<ColType>  GridType;
   typedef typename ColType::reference reference;
@@ -24,6 +26,14 @@ struct Grid{
       grid.push_back(ColType());
       for (Int y = 0; y < size.second; y++) {
         grid.at(x).push_back(CellType());
+      }
+    }
+  }
+  Grid(pair<Int,Int> size, CellType def){
+    for (Int x = 0; x < size.first; x++) {
+      grid.push_back(ColType());
+      for (Int y = 0; y < size.second; y++) {
+        grid.at(x).push_back(def);
       }
     }
   }
@@ -64,22 +74,60 @@ struct Grid{
   ColType operator[](Int x){
     return grid.at(x);
   }
-
   // returns all *valid* neighbors Pos of a given Pos p in the grid
   vector<Pos> adj(Pos p, vector<CellType> invalids = vector<CellType>()) {
     vector<Pos> adj;
     for (Pos displacement : neighborDisplacement) {
       Pos n = p + displacement;
-      if (inside(n)) {
-        bool valid = true;
-        for(CellType it : invalids){
-          valid = cell(n) != it;
-        }
-        if (valid) {
-          adj.push_back(n);
-        }
+      if (!inside(n)) continue; 
+
+      bool valid = true;
+      for(CellType invalid : invalids){
+        valid = cell(n) != invalid;
+        if(!valid) break;
+      }
+      if (valid) {
+        adj.push_back(n);
       }
     }
     return adj;
+  }
+  class Iterator : public std::iterator<forward_iterator_tag, int>{
+    Pos p;
+    pair<Int,Int> size;
+  public:
+    Iterator(pair<Int,Int> size, Pos p = Pos() ) { 
+      this-> p = p;
+      this->size = size;
+    }
+    Iterator& operator++() {
+      if ( ++p.x >= size.first ){
+        p.x = 0;
+        p.y++;
+      }
+      return (*this);
+    }
+    Iterator operator++(int) {
+      Iterator tmp(*this); 
+      operator++(); 
+      return tmp;
+    }
+    bool operator==(const Iterator& it) const {
+      return p==p;
+    }
+    bool operator!=(const Iterator& it) const {
+      return p!=it.p;
+    }
+    Pos operator*() {
+      return p;
+    }
+  };
+
+  Iterator begin(){
+    return Iterator(size());
+  }
+  Iterator end(){
+    pair<Int,Int> size = this->size(); 
+    return Iterator(size,Pos(0,size.second));
   }
 };

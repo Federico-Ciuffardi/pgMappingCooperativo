@@ -16,7 +16,7 @@ using namespace std;
  *  position
  */
 typedef Vector2 Pos;
-typedef pair<float, Pos> DistPos;
+typedef pair<Float, Pos> DistPos;
 typedef priority_queue<DistPos, vector<DistPos>, greater<DistPos>> DistPosQueue;
 
 typedef boost::unordered_set<Pos> PosSet;

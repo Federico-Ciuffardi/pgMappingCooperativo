@@ -1,5 +1,4 @@
-#ifndef GVD_H
-#define GVD_H
+#pragma once
 
 #include <bits/stdc++.h>
 #include <iostream>
@@ -11,14 +10,12 @@
 #include "TopoMap.h"
 #include <boost/graph/adjacency_list.hpp>
 
-using namespace std;
+using namespace boost;
 
 /*
- *  GVD
+ *  GvdGraph definition
  */
 typedef Grid<bool> GridGvd;
-
-using namespace boost;
 
 struct GvdVertexProperty {
   Pos p;
@@ -37,19 +34,15 @@ struct GvdVertexProperty {
   };
 };
 
-typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> GVD;
-typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> VecGVD;
+typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> GvdGraph;
+typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, float>>> GvdVecGraph;
 
 /*
  *  functions
  */
-boost::tuple<boost::unordered_map<Pos,Pos>, Pos> find_paths_to_gvd(StateGrid, VecGVD, Pos p_pos);
-
 GridGvd get_grid_gvd(DistMap dg, DistPosQueue);
 
-//boost::unordered_map<Pos, DistPos> get_critical_points(grid_type ogrid, DistMap dg, GVD& gvd);
-// boost::unordered_map<Pos,bool> get_local_mins(DistMap dg, GVD gvd);
+//boost::unordered_map<Pos, DistPos> get_critical_points(grid_type ogrid, DistMap dg, GvdGraph& gvd);
+// boost::unordered_map<Pos,bool> get_local_mins(DistMap dg, GvdGraph gvd);
 
-boost::tuple<criticals_info, GVD> get_points_of_interest(StateGrid g);
-
-#endif
+boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid g);

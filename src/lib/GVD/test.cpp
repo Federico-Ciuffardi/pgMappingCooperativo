@@ -1,5 +1,5 @@
 #include <iostream>
-#include "src/GVD.h"
+#include "src/Gvd.h"
 
 using namespace std;
 

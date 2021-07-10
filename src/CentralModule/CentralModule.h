@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "../lib/GVD/src/GVD.h"
+#include "../lib/GVD/src/Gvd.h"
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/rviz.h"
@@ -122,7 +122,7 @@ class CentralModule {
 
   //boost::unordered_set<int> getGainInfo(int celda);
 
-  //boost::tuple<pgmappingcooperativo::takeobjetive, GVD> getObjetiveMap();
+  //boost::tuple<pgmappingcooperativo::takeobjetive, GvdGraph> getObjetiveMap();
 
   //void saveBid(const pgmappingcooperativo::frontierReportConstPtr& msg, string name);
   //void resetArrivals();

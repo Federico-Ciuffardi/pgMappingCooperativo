@@ -91,17 +91,17 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
 
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;
-  GVD gvd;
+  GvdGraph gvd;
   boost::tie(cis, gvd) = get_points_of_interest(gt);
 
   cout << "debug :: gvd to rosmsg" << endl;
-  GVD::VertexIterator v_it, v_it_end;
+  GvdGraph::VertexIterator v_it, v_it_end;
   for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++) {
     segment_auction.gvd.vertices.push_back(pos_to_p2d(gvd.g[*v_it].p));
     segment_auction.vertex_segment.push_back(pos_to_p2d(gvd.g[*v_it].segment));
   }
 
-  GVD::EdgeIterator e_it, e_it_end;
+  GvdGraph::EdgeIterator e_it, e_it_end;
   for (boost::tie(e_it, e_it_end) = boost::edges(gvd.g); e_it != e_it_end; e_it++) {
     pgmappingcooperativo::Edge e;
     e.from = pos_to_p2d(gvd.g[(*e_it).m_source].p);

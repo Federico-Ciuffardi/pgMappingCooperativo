@@ -48,14 +48,14 @@ void Robot::set_grid() {
 void Robot::add_to_gvd(Pos f_pos) {
   float min = -1;
   float min_aux;
-  VecGVD::Vertex v_min;
-  VecGVD::Vertex v;
+  GvdVecGraph::Vertex v_min;
+  GvdVecGraph::Vertex v;
   bool inserted;
-  VecGVD::Edge e;
+  GvdVecGraph::Edge e;
 
   // ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
 
-  VecGVD::VertexIterator v_it, v_it_end;
+  GvdVecGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     Pos v_pos = gvd.g[*v_it].p;
     min_aux = f_pos.distance_to(v_pos);
@@ -82,17 +82,15 @@ void Robot::add_to_gvd(Pos f_pos) {
 void Robot::add_to_gvd(PosSet p_set) {
   boost::unordered_map<Pos, boost::unordered_map<Pos, Pos>> v_paths;
   boost::unordered_map<Pos, Pos> v_connection;
-  VecGVD::Vertex v_pred;
-  VecGVD::Vertex v;
+  GvdVecGraph::Vertex v_pred;
+  GvdVecGraph::Vertex v;
   bool inserted;
-  VecGVD::Edge e;
+  GvdVecGraph::Edge e;
 
   for (auto it = p_set.begin(); it != p_set.end(); ++it) {
-    ROS_INFO("romi voy a calcular el camino");
-    boost::tie(v_paths[*it], v_connection[*it]) = find_paths_to_gvd(grid, gvd, *it);
-    ROS_INFO("romi termine de calcular el camino");
-    if (v_connection[*it] == Pos() || v_paths[*it].size() == 0) {
-      ROS_INFO("romi ERROR");
+    boost::tie(v_paths[*it], v_connection[*it]) = gvd.findPath(*it, grid, {Unknown, Occupied});
+    if (v_connection[*it] == NULL_POS || v_paths[*it].size() == 0) {
+      ROS_INFO("No path to GVD");
     }
   }
   for (auto it = p_set.begin(); it != p_set.end(); ++it) {
@@ -131,15 +129,15 @@ void Robot::add_to_gvd(PosSet p_set) {
 }
 
 // Robot process graph, creates boost gvd also adds Pos->gvd
-VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment) {
+GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment) {
   // std::cout<<"arranca el get gvd"<<endl;
-  VecGVD gvd;
+  GvdVecGraph gvd;
   Pos v_pos;
   float min = -1;
   float min_aux;
-  VecGVD::Vertex v;
+  GvdVecGraph::Vertex v;
   bool inserted;
-  graph_traits<VecGVD::GraphType>::edge_descriptor e;
+  graph_traits<GvdVecGraph::GraphType>::edge_descriptor e;
   int segment = -1;
 
   // std::cout<<"Antes de agregar vertices"<<g.vertices.size()<<endl;
@@ -162,8 +160,8 @@ VecGVD Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo:
   for (int i = 0; i < g.edges.size(); i++) {
     Pos from_p = p2d_to_pos(g.edges[i].from);
     Pos to_p = p2d_to_pos(g.edges[i].to);
-    VecGVD::Vertex from_v = gvd.vertices[from_p];
-    VecGVD::Vertex to_v = gvd.vertices[to_p];
+    GvdVecGraph::Vertex from_v = gvd.vertices[from_p];
+    GvdVecGraph::Vertex to_v = gvd.vertices[to_p];
 
     boost::tie(e, inserted) = gvd.add_e(from_v, to_v, from_p.distance_to( to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
@@ -240,7 +238,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   boost::tie(paths, paths_costs) = gvd.getMultiPath(r_pos, criticals_and_frontiers);
   // ROS_INFO("tiempos termina el multipath");
 
-  list<VecGVD::Vertex> path_to_frontier = paths[my_segment_frontier];
+  list<GvdVecGraph::Vertex> path_to_frontier = paths[my_segment_frontier];
   bool in_segment = find(path_to_frontier.begin(), path_to_frontier.end(),
                          gvd.vertices[r_segment]) == path_to_frontier.end();
   // if robot in segment
@@ -304,7 +302,7 @@ void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> poin
     boost::tie(paths, paths_costs) = gvd.getMultiPath( my_pos, f_set);
     // ROS_INFO("romi calcule el camino a las fronteras");
   } else {
-    boost::unordered_map<Pos, list<VecGVD::Vertex>> f_paths;
+    boost::unordered_map<Pos, list<GvdVecGraph::Vertex>> f_paths;
     boost::unordered_map<Pos, float> f_paths_costs;
     boost::tie(f_paths, f_paths_costs) = gvd.getMultiPath(assigned_segment, f_set);
     // duplicated information (robot->segment)
@@ -395,7 +393,7 @@ pgmappingcooperativo::goalList Robot::getPathToSegment(Pos frontier) {
   // ROS_INFO("romi ingrese la frontera al gvd");
 
   // ROS_INFO("tiempos voy a calcular el camino");
-  // std::list<VecGVD::Vertex> path;
+  // std::list<GvdVecGraph::Vertex> path;
   // float cost;
 
   // ROS_INFO("tiempos comienza de calcular el camino");
@@ -409,7 +407,7 @@ pgmappingcooperativo::goalList Robot::getPathToSegment(Pos frontier) {
   pgmappingcooperativo::goalList g_list;
   g_list.indice = 1;  // TODO poner bien el indice
 
-  list<VecGVD::Vertex> v_list = paths[frontier];
+  list<GvdVecGraph::Vertex> v_list = paths[frontier];
   geometry_msgs::Point p3d;
 
   // ROS_INFO("romi iterar en los nodos para pasarlos a p3d");

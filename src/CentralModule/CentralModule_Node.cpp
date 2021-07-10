@@ -145,9 +145,9 @@ void startAuction() {
     log_data(data, increment_gvd_file_log);
 
     // gnuplot p;
-    // p.graph_file(gvd_file_log, "Cubrimiento del mapa(%)", "Tiempo de GVD(s)");
+    // p.graph_file(gvd_file_log, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
     // p.graph_file(increment_gvd_file_log, "Cubrimiento del mapa(%)", "Incremento de tiempo de
-    // GVD(s)");
+    // GvdGraph(s)");
   }
 
   // Send auction info: Graph and criticals info
@@ -324,9 +324,9 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
       // gnuplot p;
       // p.graph_file(ejecucion_file_log, "Numero de robots", "Tiempo de ejecucion");
       if (LOG > 1) {
-        // p.graph_file(gvd_file_log, "Cubrimiento del mapa(%)", "Tiempo de GVD(s)");
+        // p.graph_file(gvd_file_log, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
         // p.graph_file(increment_gvd_file_log, "Cubrimiento del mapa(%)", "Incremento de tiempo de
-        // GVD(s)");
+        // GvdGraph(s)");
       }
     }
 

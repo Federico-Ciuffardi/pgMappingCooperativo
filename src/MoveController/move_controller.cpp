@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 #include "../GlobalParameters.h"
-#include "../lib/GVD/src/GVD.h"
+#include "../lib/GVD/src/Gvd.h"
 #include "../lib/conversion.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
@@ -19,7 +19,7 @@
 
 // Constantes
 
-const double TOLERANCE_GOAL = 0.75;       // 0.30;
+const double TOLERANCE_GOAL = 1.25;       // 0.30;
 const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
 
 // const std::string ODOM_FRAME = "p3dx_0_tf/odom";

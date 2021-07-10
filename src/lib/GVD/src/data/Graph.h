@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <limits>
 
 #include <boost/unordered_set.hpp>
 
@@ -35,7 +36,7 @@ struct Graph {
   NameVertexMap vertices;
 
   Graph(){};
-  // construct graph based on al boolean grid (true = belongs to GVD)
+  // construct graph based on al boolean grid (true = belongs to GvdGraph)
   Graph(Grid<bool> boolGrid){
     pair<int, int> size = boolGrid.size();
 
@@ -285,7 +286,7 @@ struct PosGraph : public Graph<graph,Pos> {
         /* Pos goal = *it; */
         // cout << "Shortest path from " << start << " to " << goal << ": ";
 
-        /* list<VecGVD::Vertex>::iterator spi = shortest_paths[goal].begin(); */
+        /* list<GvdVecGraph::Vertex>::iterator spi = shortest_paths[goal].begin(); */
         /*cout << start;
         for (++spi; spi != shortest_paths[goal].end(); ++spi)
           cout << " -> " << gvd.g[*spi].p;
@@ -295,5 +296,52 @@ struct PosGraph : public Graph<graph,Pos> {
     }
     // cout<<"fin del termino!"<<endl;
     return boost::make_tuple(shortest_paths, shortest_paths_costs);
+  }
+  // Find path to Graph
+  template<typename CellType>
+  boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> grid, vector<CellType> notTraversable) {
+    Float inf = numeric_limits<Float>::max(); 
+
+    // initialize the dgrid and the distance queues
+    Grid<Float> distGrid(grid.size(),inf);
+
+    DistPosQueue dqueue, full_dqueue;
+    dqueue.push(DistPos(0,source));
+    distGrid[source] = 0;
+
+    // Find path from p to graph
+    boost::unordered_map<Pos, Pos> predecessor;
+    while (!dqueue.empty()) {
+      Pos p = dqueue.top().second;
+      dqueue.pop();
+
+      // Look at neighbors to explore compute its distances
+      for (Pos np : grid.adj(p,notTraversable)) {
+        if (distGrid[np] != inf) continue; // already processed
+
+        // Compute np distance
+        for (Pos nnp : grid.adj(np)) {
+          if (distGrid[nnp] == inf) continue; // invalid distance, can safely avoid computation
+
+          // find distance to neighbor's closest cell
+          // that distance
+          float d = np.distance_to(nnp) + distGrid[nnp];
+          if (d < distGrid[np]) {
+            distGrid[np] = d;
+            predecessor[np] = nnp;
+          }
+        }
+
+        // if np is on the graph then a path to the graph was found!
+        if (this->vertices.find(np) != this->vertices.end()) {
+          return boost::make_tuple(predecessor, np);
+        }
+
+        // Add neighbor to prossess
+        dqueue.push(DistPos(distGrid[np], np));
+
+      }
+    }
+    return boost::make_tuple(predecessor, NULL_POS);
   }
 };

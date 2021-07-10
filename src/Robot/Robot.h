@@ -1,4 +1,4 @@
-#include "../lib/GVD/src/GVD.h"
+#include "../lib/GVD/src/Gvd.h"
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <math.h>
@@ -44,11 +44,11 @@ class Robot {
 
   // Segmentation relatied
   geometry_msgs::Point position;
-  boost::unordered_map<Pos,list<VecGVD::Vertex>> paths;
+  boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> paths;
   boost::unordered_map<Pos,float> paths_costs;
 
-  //boost::tuple<boost::unordered_map<Pos,list<VecGVD::Vertex>> , boost::unordered_map<Pos,float>> multi_paths_with_cost;
-  VecGVD gvd;
+  //boost::tuple<boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> , boost::unordered_map<Pos,float>> multi_paths_with_cost;
+  GvdVecGraph gvd;
   Pos my_pos;
   Pos my_segment;
 
@@ -90,8 +90,8 @@ class Robot {
 
   void add_to_gvd(PosSet p_set);
 
-  //boost::tuple<int, VecGVD> getGVD(pgmappingcooperativo::Graph g, Pos r_pos);
-  VecGVD getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment);
+  //boost::tuple<int, GvdVecGraph> getGVD(pgmappingcooperativo::Graph g, Pos r_pos);
+  GvdVecGraph getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment);
 
   pgmappingcooperativo::SegmentBid getSegmentBid(pgmappingcooperativo::SegmentAuction msg);
   pgmappingcooperativo::FrontierBid getFrontierBid(vector<pgmappingcooperativo::Point2D> frontiers);

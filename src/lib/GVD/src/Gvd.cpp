@@ -1,4 +1,4 @@
-#include "GVD.h"
+#include "Gvd.h"
 
 #include <math.h>
 #include <cfloat>
@@ -7,84 +7,6 @@
 /*
  *  main funcs
  */
-
-boost::tuple<boost::unordered_map<Pos, Pos>, Pos> find_paths_to_gvd(StateGrid ogrid,
-                                                                    VecGVD gvd,
-                                                                    Pos p_Pos) {
-  // get grid size
-  pair<Int,Int> size = ogrid.size();
-
-  // initialize the dgrid and the distance queues
-  DistMap dgrid(ogrid.size());
-  DistPosQueue dqueue, full_dqueue;
-  for (int x = 0; x < size.first; x++) {
-    for (int y = 0; y < size.second; y++) {
-      Pos p = Pos(x, y);
-      CellState ctype = ogrid.cell(p);
-
-      DistMap::DistCell dcell;
-      if (p == p_Pos || ctype == Unknown) {  // TODO es asi porque sirve para una funcion
-                                             // Posterior pero esta semanticamente mal
-        dcell.distance = 0;
-        if (p == p_Pos) {
-          dcell.add_obs(Pos(x, y));
-          dqueue.push(DistPos(0, Pos(x, y)));
-        }
-      } else {
-        dcell.distance = FLT_MAX;
-      }
-      dgrid[p]=dcell;
-    }
-  }
-  boost::unordered_map<Pos, Pos> v_predecessor;
-  DistPosQueue next_dqueue;
-  while (!dqueue.empty()) {
-    while (!dqueue.empty()) {
-      // get the x cell to process
-      Pos p = dqueue.top().second;
-      dqueue.pop();
-
-      // Look at neighbors to find a new free cell that needs its distance updated
-      for (Pos np : ogrid.adj(p)) {
-        CellState n_ctype = ogrid.cell(np);
-        DistMap::DistCell& n_dcell = dgrid[np];
-        bool is_traversable = n_ctype != Unknown && n_ctype != Occupied;
-        if (is_traversable && n_dcell.distance == FLT_MAX) {
-          float min_distance = FLT_MAX;
-
-          // look at neighbors of freecell to find cells whose distance has already been found
-          for (Pos nnp : ogrid.adj(np)) {
-            CellState nn_ctype = ogrid.cell(nnp);
-            DistMap::DistCell& nn_dcell = dgrid[nnp];
-            if (nn_dcell.obs.size() > 0) {
-              // find distance to neighbor's closest cell and update the number of obstacles at
-              // that distance
-              float d = np.distance_to(nnp) + nn_dcell.distance;
-              if (d < min_distance) {
-                min_distance = d;
-                n_dcell.obs.clear();
-                n_dcell.add_obs(nn_dcell.obs[0]);
-                n_dcell.distance = min_distance;
-                v_predecessor[np] = nnp;
-              } else if (d == min_distance && !n_dcell.has_obs(nn_dcell.obs[0])) {
-                n_dcell.add_obs(nn_dcell.obs[0]);
-                v_predecessor[np] = nnp;
-              }
-            }
-          }
-          next_dqueue.push(DistPos(min_distance, np));
-
-          if (gvd.vertices.find(np) != gvd.vertices.end()) {
-            return boost::make_tuple(v_predecessor, np);
-          }
-        }
-      }
-    }
-    dqueue = next_dqueue;
-    next_dqueue = DistPosQueue();
-  }
-  return boost::make_tuple(v_predecessor, Pos());
-}
 
 /* given a GraphType for the neighbors of a Pos return the number of conex components if Pos would be
  * removed */
@@ -107,7 +29,7 @@ int A(Pos p, GridGvd ggvd) {
   return res;
 }
 
-/* returns a boolean matrix, a cell is true if it belongs to the GVD and false
+/* returns a boolean matrix, a cell is true if it belongs to the GvdGraph and false
  * otherwise*/
 GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
   // get sizes
@@ -122,7 +44,7 @@ GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
     }
   }
 
-  // compute grid GVD
+  // compute grid GvdGraph
   while (!dqueue.empty()) {
     // get the x cell to process
     Pos current_Pos = dqueue.top().second;
@@ -131,8 +53,8 @@ GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
     int cx = current_Pos.x;
     int cy = current_Pos.y;
 
-    // Remove from GVD if it does not belongs to the GVD by definition ands does
-    // not disconects the GVD
+    // Remove from GvdGraph if it does not belongs to the GvdGraph by definition ands does
+    // not disconects the GvdGraph
     if (dg[Pos(cx,cy)].obs.size() <= 1 && A(current_Pos, GridGvd) <= 1) {
       GridGvd.cell(cx,cy) = false;
     }
@@ -141,7 +63,7 @@ GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
 }
 
 // could be of less order, maybe using trees
-boost::unordered_map<Pos, bool> get_local_mins(DistMap dg, GVD& gvd) {
+boost::unordered_map<Pos, bool> get_local_mins(DistMap dg, GvdGraph& gvd) {
   boost::unordered_map<Pos, bool> lmins;
 
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
@@ -174,7 +96,7 @@ bool same_direcction(Pos p1, Pos p2) {
   return p1.normalize() == -p2.normalize();
 }
 
-void collapse_vertices(GVD& gvd, boost::unordered_map<Pos, bool> lmins) {
+void collapse_vertices(GvdGraph& gvd, boost::unordered_map<Pos, bool> lmins) {
   for (auto vp = vertices(gvd.g); vp.first != vp.second;) {
     auto vp_aux = vp.first;
     ++vp.first;
@@ -202,18 +124,18 @@ void collapse_vertices(GVD& gvd, boost::unordered_map<Pos, bool> lmins) {
   }
 }
 
-void clean_up(GVD& gvd, DistMap dgrid, int min_deg) {
-  GVD::VertexIterator v_it, v_it_end;
+void clean_up(GvdGraph& gvd, DistMap dgrid, int min_deg) {
+  GvdGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
-    GVD::VertexIterator v_it_aux = v_it;
+    GvdGraph::VertexIterator v_it_aux = v_it;
     v_it++;
 
-    GVD::Vertex max_deg_v = *v_it_aux;
+    GvdGraph::Vertex max_deg_v = *v_it_aux;
     int max_deg = out_degree(*v_it_aux, gvd.g);
 
     if (max_deg >= min_deg) {  // just for not recalculating out_degree(*v_it_aux, gvd.g) it does
                                // not have anything to do with the max deg itself
-      GVD::AdjacencyIterator av_it, av_it_end;
+      GvdGraph::AdjacencyIterator av_it, av_it_end;
       for (boost::tie(av_it, av_it_end) = boost::adjacent_vertices(*v_it_aux, gvd.g);
            av_it != av_it_end; ++av_it) {
         int current_degree = out_degree(*av_it, gvd.g);
@@ -228,7 +150,7 @@ void clean_up(GVD& gvd, DistMap dgrid, int min_deg) {
         continue;
 
       for (tie(av_it, av_it_end) = adjacent_vertices(*v_it_aux, gvd.g); av_it != av_it_end;) {
-        GVD::AdjacencyIterator av_it_aux = av_it;
+        GvdGraph::AdjacencyIterator av_it_aux = av_it;
         ++av_it;
         if (max_deg_v == *av_it_aux)
           continue;
@@ -247,7 +169,7 @@ void clean_up(GVD& gvd, DistMap dgrid, int min_deg) {
     }
   }
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
-    GVD::VertexIterator v_it_aux = v_it;
+    GvdGraph::VertexIterator v_it_aux = v_it;
     v_it++;
     if (out_degree(*v_it_aux, gvd.g) == 0) {
       remove_vertex(*v_it_aux, gvd.g);
@@ -255,7 +177,7 @@ void clean_up(GVD& gvd, DistMap dgrid, int min_deg) {
   }
 }
 
-int degree_constraint(StateGrid& ogrid, GVD& gvd, boost::unordered_map<Pos, bool> local_mins) {
+int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, boost::unordered_map<Pos, bool> local_mins) {
   int criticals_count = 0;
   Pos current_Pos;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
@@ -291,7 +213,7 @@ int degree_constraint(StateGrid& ogrid, GVD& gvd, boost::unordered_map<Pos, bool
 }
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
+criticals_info unknown_dist_constraint2(StateGrid ogrid, GvdGraph& gvd) {
   DistMap dgrid(ogrid.size());
   DistPosQueue dqueue;
   criticals_info res;
@@ -325,7 +247,7 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
     }
   }
   cout << "set the segment for every vertex" << endl;
-  GVD::VertexIterator v_it, v_it_end;
+  GvdGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     GvdVertexProperty& v = gvd[*v_it];
     if (dgrid[v.p].obs.size() > 0) {
@@ -338,13 +260,13 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GVD& gvd) {
   return res;
 }
 
-criticals_info get_critical_points(StateGrid ogrid, DistMap dg, GVD& gvd) {
+criticals_info get_critical_points(StateGrid ogrid, DistMap dg, GvdGraph& gvd) {
   boost::unordered_map<Pos, bool> local_mins = get_local_mins(dg, gvd);
   cout << "debug :: clean_up" << endl;
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg, 3);
   clean_up(gvd, dg, 2);
-  GVD gvd_copy = gvd;
+  GvdGraph gvd_copy = gvd;
   cout << "debug :: collapse_vertices" << endl;
   collapse_vertices(gvd_copy, local_mins);
 
@@ -359,7 +281,7 @@ criticals_info get_critical_points(StateGrid ogrid, DistMap dg, GVD& gvd) {
   return cis;
 }
 
-boost::tuple<criticals_info, GVD> get_points_of_interest(StateGrid ogrid) {
+boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid ogrid) {
   boost::unordered_set<Pos> res;
   DistMap dgrid(ogrid.size());
   DistPosQueue dqueue;
@@ -368,7 +290,7 @@ boost::tuple<criticals_info, GVD> get_points_of_interest(StateGrid ogrid) {
   cout << "debug :: get_grid_gvd" << endl;
   GridGvd ggvd = get_grid_gvd(dgrid, dqueue);
   cout << "debug :: ggvd" << endl;
-  GVD gvd(ggvd);
+  GvdGraph gvd(ggvd);
   criticals_info cis = get_critical_points(ogrid, dgrid, gvd);
   cout << "debug :: make_tuple" << endl;
   return boost::make_tuple(cis, gvd);
