@@ -1,5 +1,6 @@
 #include <iostream>
 #include "src/Gvd.h"
+#include "src/Map.h"
 
 using namespace std;
 
@@ -98,9 +99,9 @@ int main(int argc, char** argv) {
     }
     cout << endl;
   }
-  DistMap dgrid(grid.size());
-  DistPosQueue dqueue;
-  boost::tie(dgrid, dqueue) = calculate_distances(grid, Occupied);
+  DistMap dgrid(grid.size(),{Occupied},{Occupied,Unknown});
+  /* calculate_distances(grid, Occupied); */
+  dgrid.update(grid);
   cout << "Obstacles at min dist:" << endl;
   for (int x = 0; x < size.first; x++) {
     for (int y = 0; y < size.second; y++) {
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
     }
     cout << endl;
   }
-  GridGvd ggvd = get_grid_gvd(dgrid, dqueue);
+  GridGvd ggvd = get_grid_gvd(dgrid);
   cout << "GVD grid (* GVD, = obstacle, ? unknown,  free:" << endl;
   for (int x = 0; x < size.first; x++) {
     for (int y = 0; y < size.second; y++) {
@@ -124,7 +125,7 @@ int main(int argc, char** argv) {
     }
     cout << endl;
   }
-  GVD gvd;
+  GvdGraph gvd;
   criticals_info cis;
   boost::tie(cis, gvd) = get_points_of_interest(grid);
   cout << "gvd vertices: ";

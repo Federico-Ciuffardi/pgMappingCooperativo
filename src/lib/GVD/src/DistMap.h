@@ -9,12 +9,10 @@
 struct DistMap{
   struct DistCell {
     vector<Pos> obs;
-    float distance;
+    Float distance = inf;
 
-    DistCell(){};
-
-    void add_obs(Pos);
-    bool has_obs(Pos);
+    void addSource(Pos);
+    bool hasSource(Pos);
 
     bool operator>(const DistCell& d) const;
     bool operator==(const DistCell& p) const;
@@ -22,11 +20,20 @@ struct DistMap{
   };
 
   typedef Grid<DistCell> DistMapType;
-  DistMapType distMap;
+  typedef CellState CellType; 
 
-  DistMap(pair<Int,Int>);
+
+  DistMapType distMap;
+  DistPosQueue fullDQueue;
+
   DistMapType::reference operator[](Pos p);
+
+  vector<CellType> nonTraversables;
+  vector<CellType> sources;
+
+  DistMap(pair<Int,Int>, vector<CellType> sourceStates, vector<CellType> nonTraversables);
+  void update(StateGrid);
 };
 
-boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType);
+/* boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType); */
 

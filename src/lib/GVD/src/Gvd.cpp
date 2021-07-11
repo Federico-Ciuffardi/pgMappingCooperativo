@@ -31,7 +31,7 @@ int A(Pos p, GridGvd ggvd) {
 
 /* returns a boolean matrix, a cell is true if it belongs to the GvdGraph and false
  * otherwise*/
-GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
+GridGvd get_grid_gvd(DistMap dg) {
   // get sizes
   pair<Int,Int> size = dg.distMap.size();
 
@@ -45,10 +45,10 @@ GridGvd get_grid_gvd(DistMap dg, DistPosQueue dqueue) {
   }
 
   // compute grid GvdGraph
-  while (!dqueue.empty()) {
+  while (!dg.fullDQueue.empty()) {
     // get the x cell to process
-    Pos current_Pos = dqueue.top().second;
-    dqueue.pop();
+    Pos current_Pos = dg.fullDQueue.top().second;
+    dg.fullDQueue.pop();
 
     int cx = current_Pos.x;
     int cy = current_Pos.y;
@@ -214,18 +214,20 @@ int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, boost::unordered_map<Pos,
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
 criticals_info unknown_dist_constraint2(StateGrid ogrid, GvdGraph& gvd) {
-  DistMap dgrid(ogrid.size());
-  DistPosQueue dqueue;
+  DistMap distMap(ogrid.size(),{Critical},{Unknown,Occupied});
+  /* DistPosQueue dqueue; */
   criticals_info res;
   cout << "calculate_distances" << endl;
-  boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);  // dqueue = frontier queue
+
+  distMap.update(ogrid);
+  /* boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Critical);  // dqueue = frontier queue */
   cout << "set each frontier to a critical" << endl;
-  while (!dqueue.empty()) {
-    DistPos frontier_dp = dqueue.top();
-    dqueue.pop();
+  while (!distMap.fullDQueue.empty()) {
+    DistPos frontier_dp = distMap.fullDQueue.top();
+    distMap.fullDQueue.pop();
     Pos frontier = frontier_dp.second;
 
-    vector<Pos>& frontier_crits = dgrid[frontier].obs;
+    vector<Pos>& frontier_crits = distMap[frontier].obs;
 
     for (int i = 0; i < frontier_crits.size(); i++) {
       Pos critical_Pos = frontier_crits[i];
@@ -250,8 +252,8 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GvdGraph& gvd) {
   GvdGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     GvdVertexProperty& v = gvd[*v_it];
-    if (dgrid[v.p].obs.size() > 0) {
-      v.segment = dgrid[v.p].obs[0];
+    if (distMap[v.p].obs.size() > 0) {
+      v.segment = distMap[v.p].obs[0];
     } else {
       v.segment = Pos(INT_MIN, INT_MIN);
       cout << "warning vertex without segment" << endl;
@@ -283,15 +285,20 @@ criticals_info get_critical_points(StateGrid ogrid, DistMap dg, GvdGraph& gvd) {
 
 boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid ogrid) {
   boost::unordered_set<Pos> res;
-  DistMap dgrid(ogrid.size());
-  DistPosQueue dqueue;
+  DistMap distMap(ogrid.size(),{Occupied},{Occupied,Unknown});
+  /* DistPosQueue dqueue; */
   cout << "debug :: calculate_distances" << endl;
-  boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied);
+  /* boost::tie(dgrid, dqueue) = calculate_distances(ogrid, Occupied); */
+  distMap.update(ogrid);
   cout << "debug :: get_grid_gvd" << endl;
-  GridGvd ggvd = get_grid_gvd(dgrid, dqueue);
+  GridGvd ggvd = get_grid_gvd(distMap);
   cout << "debug :: ggvd" << endl;
   GvdGraph gvd(ggvd);
-  criticals_info cis = get_critical_points(ogrid, dgrid, gvd);
+  criticals_info cis = get_critical_points(ogrid, distMap, gvd);
   cout << "debug :: make_tuple" << endl;
   return boost::make_tuple(cis, gvd);
+}
+
+void Gvd::update(StateGrid sg){
+
 }

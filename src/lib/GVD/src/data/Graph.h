@@ -4,7 +4,6 @@
 #include <iostream>
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <limits>
 
 #include <boost/unordered_set.hpp>
 
@@ -299,32 +298,30 @@ struct PosGraph : public Graph<graph,Pos> {
   }
   // Find path to Graph
   template<typename CellType>
-  boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> grid, vector<CellType> notTraversable) {
-    Float inf = numeric_limits<Float>::max(); 
-
-    // initialize the dgrid and the distance queues
+  boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> grid, vector<CellType> notTraversables) {
+    // Initialize the distance grid
     Grid<Float> distGrid(grid.size(),inf);
-
-    DistPosQueue dqueue, full_dqueue;
+    // Initialize the distance queues 
+    DistPosQueue dqueue;
     dqueue.push(DistPos(0,source));
     distGrid[source] = 0;
+    // Predecessor
+    boost::unordered_map<Pos, Pos> predecessor;
+    predecessor[source] = NULL_POS;
 
     // Find path from p to graph
-    boost::unordered_map<Pos, Pos> predecessor;
     while (!dqueue.empty()) {
       Pos p = dqueue.top().second;
       dqueue.pop();
 
-      // Look at neighbors to explore compute its distances
-      for (Pos np : grid.adj(p,notTraversable)) {
+      // Tell neighbors to compute distance
+      for (Pos np : grid.adj(p,notTraversables)) {
         if (distGrid[np] != inf) continue; // already processed
 
         // Compute np distance
         for (Pos nnp : grid.adj(np)) {
           if (distGrid[nnp] == inf) continue; // invalid distance, can safely avoid computation
 
-          // find distance to neighbor's closest cell
-          // that distance
           float d = np.distance_to(nnp) + distGrid[nnp];
           if (d < distGrid[np]) {
             distGrid[np] = d;
@@ -337,9 +334,10 @@ struct PosGraph : public Graph<graph,Pos> {
           return boost::make_tuple(predecessor, np);
         }
 
-        // Add neighbor to prossess
-        dqueue.push(DistPos(distGrid[np], np));
-
+        // If a path to a source was found add neighbor to the queue
+        if(distGrid[np] != inf){
+          dqueue.push(DistPos(distGrid[np], np));
+        }
       }
     }
     return boost::make_tuple(predecessor, NULL_POS);
