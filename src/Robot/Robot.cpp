@@ -45,87 +45,80 @@ void Robot::set_grid() {
 
 // this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction
 // dis) but we did it to finish
-void Robot::add_to_gvd(Pos f_pos) {
-  float min = -1;
-  float min_aux;
-  GvdVecGraph::Vertex v_min;
-  GvdVecGraph::Vertex v;
-  bool inserted;
-  GvdVecGraph::Edge e;
+/* void Robot::add_to_gvd(Pos f_pos) { */
+/*   float min = -1; */
+/*   float min_aux; */
+/*   GvdVecGraph::Vertex v_min; */
+/*   GvdVecGraph::Vertex v; */
+/*   bool inserted; */
+/*   GvdVecGraph::Edge e; */
 
-  // ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO");
+/*   // ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO"); */
 
-  GvdVecGraph::VertexIterator v_it, v_it_end;
-  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
-    Pos v_pos = gvd.g[*v_it].p;
-    min_aux = f_pos.distance_to(v_pos);
+/*   GvdVecGraph::VertexIterator v_it, v_it_end; */
+/*   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) { */
+/*     Pos v_pos = gvd.g[*v_it].p; */
+/*     min_aux = f_pos.distance_to(v_pos); */
 
-    if (min < 0 || min_aux < min) {
-      min = min_aux;
-      v_min = *v_it;
-    }
-  }
+/*     if (min < 0 || min_aux < min) { */
+/*       min = min_aux; */
+/*       v_min = *v_it; */
+/*     } */
+/*   } */
 
-  if (min != 0) {
-    // ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD");
-    boost::tie(v, inserted) = gvd.add_v(f_pos);
-    // ROS_INFO("romi vertice %d",inserted);
-    boost::tie(e, inserted) = gvd.add_e(v, v_min, min);
-    boost::tie(e, inserted) = gvd.add_e(v_min, v, min);
-    // ROS_INFO("romi arista %d",inserted);
-    // ROS_INFO("romi arista es: %d,%d - %d,%d
-    // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-    // ROS_INFO("romi f_pos vetex: %d",gvd.vertices[f_pos]);
+/*   if (min != 0) { */
+/*     // ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD"); */
+/*     boost::tie(v, inserted) = gvd.add_v(f_pos); */
+/*     // ROS_INFO("romi vertice %d",inserted); */
+/*     boost::tie(e, inserted) = gvd.add_e(v, v_min, min); */
+/*     boost::tie(e, inserted) = gvd.add_e(v_min, v, min); */
+/*     // ROS_INFO("romi arista %d",inserted); */
+/*     // ROS_INFO("romi arista es: %d,%d - %d,%d */
+/*     // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second); */
+/*     // ROS_INFO("romi f_pos vetex: %d",gvd.vertices[f_pos]); */
+/*   } */
+/* } */
+
+void Robot::add_to_gvd(PosSet p_set) {
+  for (Pos pToAdd : p_set) {
+    add_to_gvd(pToAdd);
   }
 }
 
-void Robot::add_to_gvd(PosSet p_set) {
-  boost::unordered_map<Pos, boost::unordered_map<Pos, Pos>> v_paths;
-  boost::unordered_map<Pos, Pos> v_connection;
-  GvdVecGraph::Vertex v_pred;
-  GvdVecGraph::Vertex v;
-  bool inserted;
-  GvdVecGraph::Edge e;
+void Robot::add_to_gvd(Pos pToAdd) {
+  if (is_elem(pToAdd,gvd.vertices)) return;
 
-  for (auto it = p_set.begin(); it != p_set.end(); ++it) {
-    boost::tie(v_paths[*it], v_connection[*it]) = gvd.findPath(*it, grid, {Unknown, Occupied});
-    if (v_connection[*it] == NULL_POS || v_paths[*it].size() == 0) {
+  boost::unordered_map<Pos, Pos> predecessor;
+  Pos connection;
+  boost::tie(predecessor, connection) = gvd.findPath(pToAdd, grid, {Unknown, Occupied});
+
+  Pos currPos = connection;
+
+  do{
+    if(currPos == NULL_POS){
       ROS_INFO("No path to GVD");
+      exit(1);
     }
-  }
-  for (auto it = p_set.begin(); it != p_set.end(); ++it) {
-    Pos v_pred_pos;
-    Pos v_pos = v_connection[*it];
-    v = gvd.vertices[v_pos];
-    boost::unordered_map<Pos, Pos> v_predecessor = v_paths[*it];
-    for (v_pred_pos = v_predecessor[v_pos]; true; v_pred_pos = v_predecessor[v_pos]) {
-      /* ROS_INFO("romi voy a recorerer el camino"); */
-      /* cout<<"voy a recorerer el camino"<<endl; */
-      boost::tie(v_pred, inserted) = gvd.add_v(v_pred_pos);
-      if (inserted) {
-        gvd.g[v_pred].segment = gvd.g[v].segment;
-      }
-      /* ROS_INFO("romi vertice %d", inserted); */
-      /* cout<<"romi insertado vertice "<<inserted <<endl; */
-      float d = v_pred_pos.distance_to( v_pos);
-      boost::tie(e, inserted) = gvd.add_e(v, v_pred, d);
-      boost::tie(e, inserted) = gvd.add_e(v_pred, v, d);
-      v = v_pred;
-      v_pos = v_pred_pos;
-      if (v_pos == (*it)) {
-        cout<<"romi UNION AL GVD, inserte el punto(frontera o robot) vetex: "<<gvd.vertices[v_pos] <<endl;
-        /* ROS_INFO("romi UNION AL GVD, inserte el punto(frontera o robot) vetex: %lu", */
-        /*          gvd.vertices[v_pos]); */
-        break;
-      }
-      /* cout<<"romi sali de insertar "<<inserted <<endl; */
-      /* cout<<"romi insertado vertice "<<inserted <<endl; */
-      // ROS_INFO("romi arista %d",inserted);
-      // ROS_INFO("romi arista es: %d,%d - %d,%d
-      // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second);
-      // ROS_INFO("romi f_pos vetex: %d",gvd.vertices[f_pos]);
+
+    Pos nextPos = predecessor[currPos];
+
+    if(currPos==nextPos){
+      cout<<"Loop on path to GVD"<<endl;
+      exit(1);
     }
-  }
+
+    GvdVecGraph::Vertex nextV;
+    bool inserted;
+    boost::tie(nextV, inserted) = gvd.add_v(nextPos);
+    gvd[nextV].segment = gvd[connection].segment;
+
+    float d = currPos.distance_to(nextPos);
+    GvdVecGraph::Edge e;
+    boost::tie(e, inserted) = gvd.add_e(gvd.vertices[currPos], nextV, d);
+    boost::tie(e, inserted) = gvd.add_e(nextV, gvd.vertices[currPos], d);
+
+    currPos=nextPos;
+  } while (pToAdd != currPos);
 }
 
 // Robot process graph, creates boost gvd also adds Pos->gvd

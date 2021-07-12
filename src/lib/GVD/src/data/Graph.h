@@ -10,6 +10,7 @@
 #include "Grid.h"
 #include "Pos.h"
 
+#include "../utils.h"
 
 using namespace boost;
 
@@ -301,42 +302,32 @@ struct PosGraph : public Graph<graph,Pos> {
   boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> grid, vector<CellType> notTraversables) {
     // Initialize the distance grid
     Grid<Float> distGrid(grid.size(),inf);
-    // Initialize the distance queues 
-    DistPosQueue dqueue;
-    dqueue.push(DistPos(0,source));
+    cout<<distGrid[source]<<endl;
     distGrid[source] = 0;
+    // Initialize the distance queues 
+    DistPosQueue openQueue;
+    openQueue.push(DistPos(0,source));
     // Predecessor
     boost::unordered_map<Pos, Pos> predecessor;
     predecessor[source] = NULL_POS;
 
     // Find path from p to graph
-    while (!dqueue.empty()) {
-      Pos p = dqueue.top().second;
-      dqueue.pop();
+    while (!openQueue.empty()) {
+      Pos p = openQueue.top().second;
+      openQueue.pop();
 
-      // Tell neighbors to compute distance
+      // if np is on the graph then a path to the graph was found!
+      if (is_elem(p, this->vertices)) {
+        return boost::make_tuple(predecessor, p);
+      }
+      // Update neighbors distances
       for (Pos np : grid.adj(p,notTraversables)) {
-        if (distGrid[np] != inf) continue; // already processed
-
         // Compute np distance
-        for (Pos nnp : grid.adj(np)) {
-          if (distGrid[nnp] == inf) continue; // invalid distance, can safely avoid computation
-
-          float d = np.distance_to(nnp) + distGrid[nnp];
-          if (d < distGrid[np]) {
-            distGrid[np] = d;
-            predecessor[np] = nnp;
-          }
-        }
-
-        // if np is on the graph then a path to the graph was found!
-        if (this->vertices.find(np) != this->vertices.end()) {
-          return boost::make_tuple(predecessor, np);
-        }
-
-        // If a path to a source was found add neighbor to the queue
-        if(distGrid[np] != inf){
-          dqueue.push(DistPos(distGrid[np], np));
+        float d = distGrid[p] + p.distance_to(np);
+        if (d < distGrid[np]) {
+          distGrid[np] = d;
+          predecessor[np] = p;
+          openQueue.push(DistPos(distGrid[np], np));
         }
       }
     }
