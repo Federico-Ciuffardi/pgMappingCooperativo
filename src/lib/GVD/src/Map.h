@@ -13,3 +13,5 @@ typedef Grid<CellState> StateGrid;
 
 typedef Map<CellState> StateMap;
 
+ostream& operator<<(ostream& out, const CellState cs);
+

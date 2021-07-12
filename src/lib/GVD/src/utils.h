@@ -85,6 +85,17 @@ ostream& operator<<(ostream& out, const map<K, T>& m) {
   return out;
 }
 
+/* Print maps */
+template <typename K, typename T>
+ostream& operator<<(ostream& out, const boost::unordered_map<K, T>& m) {
+  out << "[";
+  for (auto it = m.begin(); it != m.end(); it++) {
+    out << "(" << it->first << ":" << it->second << ")";
+  }
+  out << "]";
+  return out;
+}
+
 /* Print grid Property (the cells of gt present set) */
 template <typename T>
 inline void print_property(PosSet set, Grid<T> gt) {

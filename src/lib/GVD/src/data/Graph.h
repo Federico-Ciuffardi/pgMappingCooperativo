@@ -30,77 +30,58 @@ struct Graph {
   typedef typename graph_traits<GraphType>::adjacency_iterator AdjacencyIterator;
 
   typedef typename graph_traits<GraphType>::edge_iterator EdgeIterator;
-  // typedef graph_traits<Graph>::adjacency_iterator adjacency_iterator;
 
   GraphType g;
   NameVertexMap vertices;
 
-  Graph(){};
-  // construct graph based on al boolean grid (true = belongs to GvdGraph)
-  Graph(Grid<bool> boolGrid){
-    pair<int, int> size = boolGrid.size();
-
-    // initialize grid_gvd
-    for (int x = 0; x < size.first; x++) {
-      for (int y = 0; y < size.second; y++) {
-        if (!boolGrid.cell(x,y))
-          continue;
-
-        // insert (x,y) to the graph
-        Vertex u;
-        bool inserted;
-        boost::tie(u, inserted) = add_v(Pos(x, y));
-
-        // for each neighbor (nx,ny) of (i,j)
-        for (int i = -1; i <= 1; i++) {
-          int nx = x + i;
-          for (int j = -1; j <= 1; j++) {
-            int ny = y + j;
-            if ((i != 0 || j != 0) && boolGrid.inside(nx, ny) && boolGrid.cell(nx,ny)) {
-              // add it to the graph
-              Vertex v;
-              bool inserted;
-              boost::tie(v, inserted) = add_v(Pos(nx, ny));
-              // and also add an edge connecting them
-              Edge e;
-              add_e(u, v);
-            }
-          }
-        }
-      }
-    }
-  };
-
-  // Get node info asociated with p
+  // Get node info associated with p
   VertexProperty& operator[](Vertex v){
     return g[v];
   }
-  // Get node info asociated with p
+  // Get node info associated with p
   VertexProperty& operator[](VertexId vid){
     return g[vertices[vid]];
   }
 
-  // add vertex asociated with p
-  boost::tuple<Vertex, bool> add_v(Pos p) {
-    NameVertexMapIterator pos_it;
+  // add vertex associated with p
+  boost::tuple<Vertex, bool> addV(VertexId vId) {
+    NameVertexMapIterator nvIt;
     bool inserted;
     Vertex u;
-    boost::tie(pos_it, inserted) = vertices.insert(std::make_pair(p, Vertex()));
+    boost::tie(nvIt, inserted) = vertices.insert(std::make_pair(vId, Vertex()));
     if (inserted) {
       u = add_vertex(g);
-      g[u] = VertexProperty(p);
-      pos_it->second = u;
+      g[u] = VertexProperty(vId);
+      nvIt->second = u;
     } else {
-      u = pos_it->second;
+      u = nvIt->second;
     }
     return boost::make_tuple(u, inserted);
   }
+  // remove vertex associated with vId (also the edges related with vId)
+  void eraseV(VertexId vId) {
+    if (is_elem(vId,vertices)) {
+      Vertex v = vertices[vId];
+      clear_vertex(v, g);
+      remove_vertex(v, g);
+      vertices.erase(vId);
+    }
+  }
 
-  pair<Edge, bool> add_e(Vertex u, Vertex v, float w = -1) {
+  // add Edge associated to u and v
+  pair<Edge, bool> addE(Vertex u, Vertex v, float w = -1) {
     if (w == -1) {
       return add_edge(u, v, g);
     }
     return add_edge(u, v, w, g);
+  }
+  pair<Edge, bool> addE(VertexId v, VertexId u) {
+    return addE(vertices[v], vertices[u]);
+  }
+
+  // add Edge associated to uId and vId
+  void eraseE(VertexId vId, VertexId uId) { 
+    return remove_edge(vertices[vId], vertices[uId], g);
   }
 };
 
@@ -130,6 +111,40 @@ struct PosGraph : public Graph<graph,Pos> {
 
   using typename ParentClass::EdgeIterator;
 
+  // construct graph based on al boolean grid (true = belongs to GvdGraph)
+  PosGraph(Grid<bool> boolGrid){
+    pair<int, int> size = boolGrid.size();
+
+    // initialize grid_gvd
+    for (int x = 0; x < size.first; x++) {
+      for (int y = 0; y < size.second; y++) {
+        if (!boolGrid.cell(x,y))
+          continue;
+
+        // insert (x,y) to the graph
+        Vertex u;
+        bool inserted;
+        boost::tie(u, inserted) = this->addV(Pos(x, y));
+
+        // for each neighbor (nx,ny) of (i,j)
+        for (int i = -1; i <= 1; i++) {
+          int nx = x + i;
+          for (int j = -1; j <= 1; j++) {
+            int ny = y + j;
+            if ((i != 0 || j != 0) && boolGrid.inside(nx, ny) && boolGrid.cell(nx,ny)) {
+              // add it to the graph
+              Vertex v;
+              bool inserted;
+              boost::tie(v, inserted) = this->addV(Pos(nx, ny));
+              // and also add an edge connecting them
+              Edge e;
+              this->addE(u, v);
+            }
+          }
+        }
+      }
+    }
+  };
 
   // pathfinding
   /// A* single

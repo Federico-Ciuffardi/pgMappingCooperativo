@@ -99,6 +99,6 @@ size_t hash_value(const Vector2 &v){
 }
 
 ostream& operator<<(ostream& out, const Vector2 v) {
-  out << "(" << v.x << "," << v.y << "," << ")";
+  out << "(" << v.x << "," << v.y << ")";
   return out;
 }

@@ -33,6 +33,8 @@ struct DistMap{
 
   DistMap(pair<Int,Int>, vector<CellType> sourceStates, vector<CellType> nonTraversables);
   void update(StateGrid);
+
+  friend ostream& operator<<(ostream& out, const DistMap& cell);
 };
 
 /* boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType); */

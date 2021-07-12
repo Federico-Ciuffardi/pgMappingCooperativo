@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "../lib/GVD/src/Gvd.h"
+#include "../lib/GVD/src/TopoMap.h"
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/rviz.h"
@@ -82,6 +82,8 @@ class CentralModule {
 
  public:
 
+  TopoMap* topoMap = NULL;
+
   //log related
   int cell_count = 0;
 
@@ -110,33 +112,7 @@ class CentralModule {
   pgmappingcooperativo::SegmentAuction getSegmentAuctionInfo();
   boost::unordered_map<string,pgmappingcooperativo::SegmentAssignment> assignSegment();
   bool saveSegmentBid( pgmappingcooperativo::SegmentBid msg, string name);
+
+  ~CentralModule();
+
 };
-
-
-  //void resetArray(boost::unordered_map<string, bool> map);
-  //pgmappingcooperativo::asignacionCelda getMaxUtility();
-  //float calcularUtilidad(int info_gain_celda, int cost_celda);
-  //bool checkMap(boost::unordered_map<string, bool> mymap);
-  //void setDifference(boost::unordered_set<int>& set1, boost::unordered_set<int>& set2);
-  //void updateInfoGain(pgmappingcooperativo::asignacionCelda info);
-
-  //boost::unordered_set<int> getGainInfo(int celda);
-
-  //boost::tuple<pgmappingcooperativo::takeobjetive, GvdGraph> getObjetiveMap();
-
-  //void saveBid(const pgmappingcooperativo::frontierReportConstPtr& msg, string name);
-  //void resetArrivals();
-  //vector<int> obstaculos
-  
-  //boost::unordered_map<string, bool> bids_arrivals;
-  //boost::unordered_map<string, boost::unordered_map<int, int> > cost_saved;
-  //boost::unordered_map<string, boost::unordered_map<int, boost::unordered_set<int> > > info_gain_saved;
-
-  //boost::unordered_map<int, boost::unordered_set<int> > info_gain;
-  //boost::unordered_map<string, bool> asignations;
-    //float dist_info_gain_obst;
-
-   //vector<int> getObstaculos();
-  //void setObstaculos(vector<int> newObstaculos);
-
-  //pgmappingcooperativo::asignacion assignTasks();

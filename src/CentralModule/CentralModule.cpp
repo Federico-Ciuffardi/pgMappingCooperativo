@@ -92,7 +92,14 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;
   GvdGraph gvd;
-  boost::tie(cis, gvd) = get_points_of_interest(gt);
+  if(!topoMap){
+    topoMap = new TopoMap(gt.size());
+  }
+  topoMap->update(gt);
+  cout << "debug :: topoMap updated" << endl;
+
+  cis = topoMap->cis;
+  gvd = topoMap->gvd->graphGvd;
 
   cout << "debug :: gvd to rosmsg" << endl;
   GvdGraph::VertexIterator v_it, v_it_end;
@@ -498,4 +505,8 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
     }
   }
   return centros_de_frontera;
+}
+
+CentralModule::~CentralModule(){
+  delete topoMap;
 }

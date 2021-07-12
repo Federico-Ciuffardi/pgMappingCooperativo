@@ -19,6 +19,10 @@ struct Grid{
   typedef typename ColType::reference reference;
   GridType grid;
 
+  // diplacement to possible neighbors (defaults to 8-connected)
+  vector<Pos> neighborDisplacement = {Pos(-1, -1), Pos(-1, 0), Pos(-1, 1), Pos(0, 1),
+                                      Pos(1, 1),   Pos(1, 0),  Pos(1, -1), Pos(0, -1)};
+
   Grid(){}
 
   Grid(pair<Int,Int> size){
@@ -37,10 +41,6 @@ struct Grid{
       }
     }
   }
-
-  // diplacement to possible neighbors (defaults to 8-connected)
-  vector<Pos> neighborDisplacement = {Pos(-1, -1), Pos(-1, 0), Pos(-1, 1), Pos(0, 1),
-                                      Pos(1, 1),   Pos(1, 0),  Pos(1, -1), Pos(0, -1)};
 
   // returns grid size
   pair<Int, Int> size() {
@@ -130,4 +130,20 @@ struct Grid{
     pair<Int,Int> size = this->size(); 
     return Iterator(size,Pos(0,size.second));
   }
+  template<typename CellType>
+  friend ostream& operator<<(ostream& out, const Grid<CellType>);
 };
+
+
+template<typename CellType>
+ostream& operator<<(ostream& out, Grid<CellType> grid){
+  pair<Int,Int> size = grid.size(); 
+  for(int x = 0; x < size.first ; x++){
+    for(int y = 0; y < size.second; y++){
+      out<<"|"<<grid[x][y];
+    }
+    out<<"|"<<endl;
+  }
+  return out;
+}
+

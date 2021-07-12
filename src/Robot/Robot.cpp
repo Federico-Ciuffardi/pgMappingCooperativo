@@ -68,10 +68,10 @@ void Robot::set_grid() {
 
 /*   if (min != 0) { */
 /*     // ROS_INFO("romi VOY A AGREGAR LA FRONTERA AL GVD"); */
-/*     boost::tie(v, inserted) = gvd.add_v(f_pos); */
+/*     boost::tie(v, inserted) = gvd.addV(f_pos); */
 /*     // ROS_INFO("romi vertice %d",inserted); */
-/*     boost::tie(e, inserted) = gvd.add_e(v, v_min, min); */
-/*     boost::tie(e, inserted) = gvd.add_e(v_min, v, min); */
+/*     boost::tie(e, inserted) = gvd.addE(v, v_min, min); */
+/*     boost::tie(e, inserted) = gvd.addE(v_min, v, min); */
 /*     // ROS_INFO("romi arista %d",inserted); */
 /*     // ROS_INFO("romi arista es: %d,%d - %d,%d */
 /*     // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second); */
@@ -109,13 +109,13 @@ void Robot::add_to_gvd(Pos pToAdd) {
 
     GvdVecGraph::Vertex nextV;
     bool inserted;
-    boost::tie(nextV, inserted) = gvd.add_v(nextPos);
+    boost::tie(nextV, inserted) = gvd.addV(nextPos);
     gvd[nextV].segment = gvd[connection].segment;
 
     float d = currPos.distance_to(nextPos);
     GvdVecGraph::Edge e;
-    boost::tie(e, inserted) = gvd.add_e(gvd.vertices[currPos], nextV, d);
-    boost::tie(e, inserted) = gvd.add_e(nextV, gvd.vertices[currPos], d);
+    boost::tie(e, inserted) = gvd.addE(gvd.vertices[currPos], nextV, d);
+    boost::tie(e, inserted) = gvd.addE(nextV, gvd.vertices[currPos], d);
 
     currPos=nextPos;
   } while (pToAdd != currPos);
@@ -136,7 +136,7 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
   // std::cout<<"Antes de agregar vertices"<<g.vertices.size()<<endl;
   for (int i = 0; i < g.vertices.size(); i++) {
     v_pos = p2d_to_pos(g.vertices[i]);
-    boost::tie(v, inserted) = gvd.add_v(v_pos);
+    boost::tie(v, inserted) = gvd.addV(v_pos);
 
     // min_aux = dist(r_pos, v_pos);
     // std::cout<<"min_aux "<<min_aux<<endl;
@@ -156,7 +156,7 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
     GvdVecGraph::Vertex from_v = gvd.vertices[from_p];
     GvdVecGraph::Vertex to_v = gvd.vertices[to_p];
 
-    boost::tie(e, inserted) = gvd.add_e(from_v, to_v, from_p.distance_to( to_p));
+    boost::tie(e, inserted) = gvd.addE(from_v, to_v, from_p.distance_to( to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
   }
   // std::cout<<"Termine de agregar todas las aristas"<<endl;

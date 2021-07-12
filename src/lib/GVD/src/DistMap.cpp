@@ -1,4 +1,5 @@
 #include "DistMap.h"
+#include <cmath>
 
 //////////////
 // DistCell //
@@ -22,9 +23,14 @@ bool DistMap::DistCell::operator==(const DistMap::DistCell& d) const {
 ostream& operator<<(ostream& out, const DistMap::DistCell& cell) {
   // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
   if (cell.distance != 0) {
-    out << cell.obs.size();
+    int intDist = floor(cell.distance);
+    if(cell.distance == intDist){
+      out << " " << intDist;
+    }else{
+      out << "~" << intDist;
+    }
   } else {
-    out << "=";
+    out << "██";
   }
   return out;
 }
@@ -102,3 +108,9 @@ void DistMap::update(StateGrid grid) {
   }
   /* return boost::make_tuple(dgrid, full_dqueue); */
 }
+
+ostream& operator<<(ostream& out, const DistMap& distMap) {
+  // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
+  return out<<distMap.distMap;
+}
+
