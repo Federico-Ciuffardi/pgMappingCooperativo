@@ -37,10 +37,10 @@ typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,
 typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdVecGraph;
 
 struct Gvd {
-  DistMap* distMap;
   void update(StateGrid g);
   GridGvd gridGvd;
-  GvdGraph graphGvd;
+  GvdGraph* graphGvd = NULL;
+  DistMap* distMap = NULL;
   Gvd(DistMap* distMap);
   Gvd(pair<Int, Int> size);
 

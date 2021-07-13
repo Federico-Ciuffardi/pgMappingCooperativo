@@ -56,7 +56,7 @@ void Robot::set_grid() {
 /*   // ROS_INFO("romi VOY A ENCONTRAR EL MAS CERCANO"); */
 
 /*   GvdVecGraph::VertexIterator v_it, v_it_end; */
-/*   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) { */
+/*   for (tie(v_it, v_it_end) = idVertexMap(gvd.g); v_it != v_it_end; v_it++) { */
 /*     Pos v_pos = gvd.g[*v_it].p; */
 /*     min_aux = f_pos.distance_to(v_pos); */
 
@@ -75,7 +75,7 @@ void Robot::set_grid() {
 /*     // ROS_INFO("romi arista %d",inserted); */
 /*     // ROS_INFO("romi arista es: %d,%d - %d,%d */
 /*     // ",gvd.g[v].p.first,gvd.g[v].p.second,gvd.g[v_min].p.first,gvd.g[v_min].p.second); */
-/*     // ROS_INFO("romi f_pos vetex: %d",gvd.vertices[f_pos]); */
+/*     // ROS_INFO("romi f_pos vetex: %d",gvd.idVertexMap[f_pos]); */
 /*   } */
 /* } */
 
@@ -86,7 +86,7 @@ void Robot::add_to_gvd(PosSet p_set) {
 }
 
 void Robot::add_to_gvd(Pos pToAdd) {
-  if (is_elem(pToAdd,gvd.vertices)) return;
+  if (is_elem(pToAdd,gvd.idVertexMap)) return;
 
   boost::unordered_map<Pos, Pos> predecessor;
   Pos connection;
@@ -114,8 +114,8 @@ void Robot::add_to_gvd(Pos pToAdd) {
 
     float d = currPos.distance_to(nextPos);
     GvdVecGraph::Edge e;
-    boost::tie(e, inserted) = gvd.addE(gvd.vertices[currPos], nextV, d);
-    boost::tie(e, inserted) = gvd.addE(nextV, gvd.vertices[currPos], d);
+    boost::tie(e, inserted) = gvd.addE(gvd.idVertexMap[currPos], nextV, d);
+    boost::tie(e, inserted) = gvd.addE(nextV, gvd.idVertexMap[currPos], d);
 
     currPos=nextPos;
   } while (pToAdd != currPos);
@@ -133,7 +133,7 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
   graph_traits<GvdVecGraph::GraphType>::edge_descriptor e;
   int segment = -1;
 
-  // std::cout<<"Antes de agregar vertices"<<g.vertices.size()<<endl;
+  // std::cout<<"Antes de agregar idVertexMap"<<g.idVertexMap.size()<<endl;
   for (int i = 0; i < g.vertices.size(); i++) {
     v_pos = p2d_to_pos(g.vertices[i]);
     boost::tie(v, inserted) = gvd.addV(v_pos);
@@ -153,8 +153,8 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
   for (int i = 0; i < g.edges.size(); i++) {
     Pos from_p = p2d_to_pos(g.edges[i].from);
     Pos to_p = p2d_to_pos(g.edges[i].to);
-    GvdVecGraph::Vertex from_v = gvd.vertices[from_p];
-    GvdVecGraph::Vertex to_v = gvd.vertices[to_p];
+    GvdVecGraph::Vertex from_v = gvd.idVertexMap[from_p];
+    GvdVecGraph::Vertex to_v = gvd.idVertexMap[to_p];
 
     boost::tie(e, inserted) = gvd.addE(from_v, to_v, from_p.distance_to( to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
@@ -189,7 +189,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   r_set.insert(r_pos);
   add_to_gvd(r_set);
   // std::cout << "este es el seg: " << seg << endl;
-  r_segment = gvd.g[gvd.vertices[r_pos]].segment;
+  r_segment = gvd.g[gvd.idVertexMap[r_pos]].segment;
   my_segment = r_segment;
   // std::cout<<"se logro calcular el seg: "<<r_segment.first<<","<<r_segment.first<<endl;
 
@@ -233,7 +233,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
 
   list<GvdVecGraph::Vertex> path_to_frontier = paths[my_segment_frontier];
   bool in_segment = find(path_to_frontier.begin(), path_to_frontier.end(),
-                         gvd.vertices[r_segment]) == path_to_frontier.end();
+                         gvd.idVertexMap[r_segment]) == path_to_frontier.end();
   // if robot in segment
   float cost_my_segment_frontier;
   if (in_segment) {

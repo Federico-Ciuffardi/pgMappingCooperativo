@@ -94,7 +94,7 @@ bool Vector2::operator<(const Vector2 v) const {
   return (x < v.x) || (x == v.x && y < v.y);
 }
 
-size_t hash_value(const Vector2 &v){
+size_t hash_value(const Vector2 v){
   return boost::hash_value(pair<Vector2::InNum,Vector2::InNum>(v.x,v.y));
 }
 

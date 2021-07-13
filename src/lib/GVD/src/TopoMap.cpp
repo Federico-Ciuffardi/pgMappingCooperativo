@@ -1,27 +1,17 @@
 #include "TopoMap.h"
 #include "Gvd.h"
 
-boost::unordered_map<Pos, bool> get_local_mins(DistMap dg, GvdGraph gvd) {
+boost::unordered_map<Pos, bool> get_local_mins(DistMap& dg, GvdGraph& gvd) {
   boost::unordered_map<Pos, bool> lmins;
 
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     bool is_min_e = true;
     bool has_greater = false;
     Pos current_Pos = gvd[*vp.first].p;
-    cout<<endl;
-    cout<<">> Processing: "<<*vp.first<<" -> "<<current_Pos<<endl;
-    cout<<endl;
 
     if (is_elem(current_Pos,lmins)) continue; // already processed
 
-    /* for (GvdGraph::Vertex nv : gvd.adj(*vp.first)) { */
-    /*   Pos adj_Pos = gvd[nv].p; */
-
-    /* for (Pos adj_Pos : gvd.adj(current_Pos)) { */
-
-    for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
-      Pos adj_Pos = gvd[*ad.first].p;
-
+    for (Pos adj_Pos : gvd.adj(current_Pos)) {
       bool auxmin = dg[current_Pos].distance <= dg[adj_Pos].distance;
       bool adj_greater = dg[current_Pos].distance < dg[adj_Pos].distance;
 
@@ -71,7 +61,7 @@ void collapse_vertices(GvdGraph& gvd, boost::unordered_map<Pos, bool> lmins) {
 }
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-criticals_info unknown_dist_constraint2(StateGrid ogrid, GvdGraph gvd) {
+criticals_info unknown_dist_constraint2(StateGrid& ogrid, GvdGraph& gvd) {
   DistMap distMap(ogrid.size(),{Critical},{Unknown,Occupied});
   /* DistPosQueue dqueue; */
   criticals_info res;
@@ -123,7 +113,7 @@ criticals_info unknown_dist_constraint2(StateGrid ogrid, GvdGraph gvd) {
 }
 
 
-void clean_up(GvdGraph& gvd, DistMap dgrid, int min_deg) {
+void clean_up(GvdGraph& gvd, DistMap& dgrid, int min_deg) {
   GvdGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end;) {
     GvdGraph::VertexIterator v_it_aux = v_it;
@@ -212,7 +202,7 @@ int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, boost::unordered_map<Pos,
   return criticals_count;
 }
 
-criticals_info get_critical_points(StateGrid stateGrid, DistMap dg, GvdGraph gvd) {
+criticals_info get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
   boost::unordered_map<Pos, bool> local_mins = get_local_mins(dg, gvd);
   cout << "debug :: clean_up" << endl;
   // TODO clean_up and collapse_vertices can be merged into one function
@@ -244,10 +234,10 @@ TopoMap::TopoMap(pair<Int, Int> size){
 }
 
 /* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid ogrid) { */
-void TopoMap::update(StateGrid sg){
+void TopoMap::update(StateGrid& sg){
   this->gvd->update(sg); // also updates the shared distMap
   cout << "debug :: Calculate ciritical points" << endl;
-  this->cis = get_critical_points(sg, *distMap, gvd->graphGvd);
+  this->cis = get_critical_points(sg, *distMap, *gvd->graphGvd);
 }
 
 TopoMap::~TopoMap(){

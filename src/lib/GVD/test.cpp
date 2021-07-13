@@ -25,7 +25,7 @@ void testGrid(StateGrid stateGrid){
   cout<<*topoMap.distMap<<endl;
 
   // GVD
-  GvdGraph gvd = topoMap.gvd->graphGvd;
+  GvdGraph& gvd = *topoMap.gvd->graphGvd;
 
   cout << "Gvd:" << endl;
 
@@ -35,8 +35,7 @@ void testGrid(StateGrid stateGrid){
     for (int y = 0; y < size.second; y++) {
       Pos p(x,y);
       cout<<"|";
-      /* if (gvd.has(p)) { */
-      if (is_elem(gvd.vertices,p)) {
+      if (gvd.has(p)) {
         cout << " *";
       }else{
         cout << stateGrid[p];
@@ -69,8 +68,7 @@ void testGrid(StateGrid stateGrid){
       cout<<"|";
       if(is_elem(p,cis)){
         cout << "!*";
-      /* } else if(gvd.has(p)) { */
-      } else if (is_elem(gvd.vertices,p)) {
+      } else if(gvd.has(p)) {
         cout << " *";
       }else{
         cout << stateGrid[p];

@@ -91,7 +91,7 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
 
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;
-  GvdGraph gvd;
+  
   if(!topoMap){
     topoMap = new TopoMap(gt.size());
   }
@@ -99,7 +99,7 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   cout << "debug :: topoMap updated" << endl;
 
   cis = topoMap->cis;
-  gvd = topoMap->gvd->graphGvd;
+  GvdGraph& gvd = *topoMap->gvd->graphGvd;
 
   cout << "debug :: gvd to rosmsg" << endl;
   GvdGraph::VertexIterator v_it, v_it_end;

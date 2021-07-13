@@ -14,6 +14,19 @@
 
 using namespace boost;
 
+// README
+// Copies of the graph definded here may not work.
+//
+// I think this is caused by the use of maps and vertex_descriptors to access
+// vertices properties.
+//
+// The vertex_descriptors are stored in a map and then can be retrieved with an ID 
+// I think vertex_descriptors are invalidated when the structure is copied.
+//
+// If you need to copy a graph I would recomend trying discard everything
+// related to vertex_descriptors and reload them with the new vertex
+// descriptors wich should be obtained with the boost graph g
+
 // Boost Graph wrapper
 template<typename graph, typename vertex_id>
 struct Graph {
@@ -24,15 +37,20 @@ struct Graph {
   typedef typename GraphType::vertex_property_type VertexProperty;
   typedef typename graph_traits<GraphType>::edge_descriptor Edge;
 
-  typedef typename boost::unordered_map<VertexId, Vertex> NameVertexMap;
-  typedef typename NameVertexMap::iterator NameVertexMapIterator;
+  typedef typename boost::unordered_map<VertexId, Vertex> IdVertexMap;
+  typedef typename IdVertexMap::iterator IdVertexMapIterator;
+
+  typedef typename boost::unordered_map<Vertex, VertexId> VertexIdMap;
+  typedef typename VertexIdMap::iterator VertexIdMapIterator;
+
   typedef typename graph_traits<GraphType>::vertex_iterator VertexIterator;
   typedef typename graph_traits<GraphType>::adjacency_iterator AdjacencyIterator;
 
   typedef typename graph_traits<GraphType>::edge_iterator EdgeIterator;
 
   GraphType g;
-  NameVertexMap vertices;
+  VertexIdMap vertexIdMap;
+  IdVertexMap idVertexMap;
 
   // Get node info associated with p
   VertexProperty& operator[](Vertex v){
@@ -40,31 +58,51 @@ struct Graph {
   }
   // Get node info associated with p
   VertexProperty& operator[](VertexId vid){
-    return g[vertices[vid]];
+    return g[idVertexMap[vid]];
   }
 
   // add vertex associated with p
   boost::tuple<Vertex, bool> addV(VertexId vId) {
-    NameVertexMapIterator nvIt;
+    Vertex v;
+
+    IdVertexMapIterator idVertexMapIterator;
     bool inserted;
-    Vertex u;
-    boost::tie(nvIt, inserted) = vertices.insert(std::make_pair(vId, Vertex()));
+    boost::tie(idVertexMapIterator, inserted) = idVertexMap.insert(std::make_pair(vId, Vertex()));
     if (inserted) {
-      u = add_vertex(g);
-      g[u] = VertexProperty(vId);
-      nvIt->second = u;
+      v = add_vertex(g);
+      g[v] = VertexProperty(vId);
+      idVertexMapIterator->second = v;
+      vertexIdMap[v] = vId;
     } else {
-      u = nvIt->second;
+      v = idVertexMapIterator->second;
     }
-    return boost::make_tuple(u, inserted);
+    return boost::make_tuple(v, inserted);
   }
+
   // remove vertex associated with vId (also the edges related with vId)
-  void eraseV(VertexId vId) {
-    if (is_elem(vId,vertices)) {
-      Vertex v = vertices[vId];
+  void removeV(VertexId vId) {
+    IdVertexMapIterator it = idVertexMap.find(vId);
+    if (it != idVertexMap.end()) {
+      Vertex v = it->second;
+
       clear_vertex(v, g);
       remove_vertex(v, g);
-      vertices.erase(vId);
+
+      vertexIdMap.erase(v);
+      idVertexMap.erase(vId);
+    }
+  }
+  // remove vertex associated with v (also the edges related with vId)
+  void removeV(Vertex v) {
+    VertexIdMapIterator it = vertexIdMap.find(v);
+    if (it != vertexIdMap.end()) {
+      VertexId vId = it->second;
+
+      clear_vertex(v, g);
+      remove_vertex(v, g);
+
+      vertexIdMap.erase(v);
+      idVertexMap.erase(vId);
     }
   }
 
@@ -75,13 +113,46 @@ struct Graph {
     }
     return add_edge(u, v, w, g);
   }
-  pair<Edge, bool> addE(VertexId v, VertexId u) {
-    return addE(vertices[v], vertices[u]);
+  pair<Edge, bool> addE(VertexId vId, VertexId uId) {
+    return addE(idVertexMap[vId], idVertexMap[uId]);
   }
 
-  // add Edge associated to uId and vId
-  void eraseE(VertexId vId, VertexId uId) { 
-    return remove_edge(vertices[vId], vertices[uId], g);
+  /* // add Edge associated to uId and vId */
+  void removeE(VertexId vId, VertexId uId) { 
+    return remove_edge(idVertexMap[vId], idVertexMap[uId], g);
+  }
+  void removeE(Vertex v, Vertex u) { 
+    return remove_edge(v, u, g);
+  }
+
+  vector<Vertex> adj(Vertex v){
+    vector<Vertex> res;
+    AdjacencyIterator vIt, vItEnd;
+
+    for (tie(vIt,vItEnd) = adjacent_vertices(v, g); vIt != vItEnd; ++vIt) {
+      res.push_back(*vIt);
+    }
+    return res;
+  }
+
+  vector<VertexId> adj(VertexId vId){
+    vector<VertexId> res;
+    Vertex v = idVertexMap[vId];
+
+    AdjacencyIterator vIt, vItEnd;
+    for (tie(vIt,vItEnd) = adjacent_vertices(v, g); vIt != vItEnd; ++vIt) {
+      res.push_back(vertexIdMap[*vIt]);
+    }
+    return res;
+  }
+
+  // check if vertex or vertexIdMap exists
+  bool has(Vertex v){
+    return is_elem(v,vertexIdMap);
+  }
+
+  bool has(VertexId vId){
+    return is_elem(vId,idVertexMap);
   }
 };
 
@@ -104,44 +175,38 @@ struct PosGraph : public Graph<graph,Pos> {
   using typename ParentClass::VertexProperty;
   using typename ParentClass::Edge;
 
-  using typename ParentClass::NameVertexMap;
-  using typename ParentClass::NameVertexMapIterator;
+  using typename ParentClass::VertexIdMap;
+  using typename ParentClass::VertexIdMapIterator;
+
+  using typename ParentClass::IdVertexMap;
+  using typename ParentClass::IdVertexMapIterator;
+
   using typename ParentClass::VertexIterator;
   using typename ParentClass::AdjacencyIterator;
 
   using typename ParentClass::EdgeIterator;
 
   // construct graph based on al boolean grid (true = belongs to GvdGraph)
-  PosGraph(Grid<bool> boolGrid){
-    pair<int, int> size = boolGrid.size();
-
+  PosGraph(Grid<bool>& boolGrid){
     // initialize grid_gvd
-    for (int x = 0; x < size.first; x++) {
-      for (int y = 0; y < size.second; y++) {
-        if (!boolGrid.cell(x,y))
-          continue;
+    for(Pos p : boolGrid){
+      if (!boolGrid[p]) continue; // skip false
 
-        // insert (x,y) to the graph
-        Vertex u;
+      // insert (x,y) to the graph
+      Vertex u;
+      bool inserted;
+      tie(u, inserted) = this->addV(p);
+
+      // for each neighbor (nx,ny) of (i,j)
+      for(Pos pN : boolGrid.adj(p)){
+        if (!boolGrid[pN]) continue; // skip false
+
+        // add it to the graph
+        Vertex v;
         bool inserted;
-        boost::tie(u, inserted) = this->addV(Pos(x, y));
-
-        // for each neighbor (nx,ny) of (i,j)
-        for (int i = -1; i <= 1; i++) {
-          int nx = x + i;
-          for (int j = -1; j <= 1; j++) {
-            int ny = y + j;
-            if ((i != 0 || j != 0) && boolGrid.inside(nx, ny) && boolGrid.cell(nx,ny)) {
-              // add it to the graph
-              Vertex v;
-              bool inserted;
-              boost::tie(v, inserted) = this->addV(Pos(nx, ny));
-              // and also add an edge connecting them
-              Edge e;
-              this->addE(u, v);
-            }
-          }
-        }
+        tie(v, inserted) = this->addV(pN);
+        // and also add an edge connecting them
+        this->addE(u, v);
       }
     }
   };
@@ -179,8 +244,8 @@ struct PosGraph : public Graph<graph,Pos> {
   };
   //// get the shortestpath and the cost of reaching the goal
   boost::tuple<list<Vertex>, float> getSinglePath(Pos from, Pos to) {
-    Vertex start = this->vertices[from];
-    Vertex goal = this->vertices[to];
+    Vertex start = this->idVertexMap[from];
+    Vertex goal = this->idVertexMap[to];
     typedef float cost;
 
     vector<Vertex> p(num_vertices(this->g));
@@ -274,7 +339,7 @@ struct PosGraph : public Graph<graph,Pos> {
     boost::unordered_map<Pos, float> shortest_paths_costs;
     try {
       // call astar named parameter interface
-      astar_search_tree(this->g, this->vertices[start],
+      astar_search_tree(this->g, this->idVertexMap[start],
                         multi_astar_distance_heuristic<GraphType, float>(this->g, goals),
                         predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, this->g)))
                             .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, this->g)))
@@ -284,7 +349,7 @@ struct PosGraph : public Graph<graph,Pos> {
       for (auto it = goals.begin(); it != goals.end(); it++) {
         list<Vertex> shortest_path;
         Pos goal = *it;
-        Vertex goal_v = this->vertices[goal];
+        Vertex goal_v = this->idVertexMap[goal];
 
         for (Vertex v = goal_v;; v = p[v]) {
           shortest_path.push_front(v);
@@ -306,7 +371,7 @@ struct PosGraph : public Graph<graph,Pos> {
         for (++spi; spi != shortest_paths[goal].end(); ++spi)
           cout << " -> " << gvd.g[*spi].p;
 
-        cout << endl << "Total travel time: " << d[gvd.vertices[goal]] << endl;*/
+        cout << endl << "Total travel time: " << d[gvd.idVertexMap[goal]] << endl;*/
       /* } */
     }
     // cout<<"fin del termino!"<<endl;
@@ -314,15 +379,16 @@ struct PosGraph : public Graph<graph,Pos> {
   }
   // Find path to Graph
   template<typename CellType>
-  boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> grid, vector<CellType> notTraversables) {
+  boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> &grid, vector<CellType> notTraversables) {
     // Initialize the distance grid
     Grid<Float> distGrid(grid.size(),inf);
-    cout<<distGrid[source]<<endl;
     distGrid[source] = 0;
+
     // Initialize the distance queues 
     DistPosQueue openQueue;
     openQueue.push(DistPos(0,source));
-    // Predecessor
+
+    // Initialize the predecessor map
     boost::unordered_map<Pos, Pos> predecessor;
     predecessor[source] = NULL_POS;
 
@@ -332,7 +398,7 @@ struct PosGraph : public Graph<graph,Pos> {
       openQueue.pop();
 
       // if np is on the graph then a path to the graph was found!
-      if (is_elem(p, this->vertices)) {
+      if (is_elem(p, this->idVertexMap)) {
         return boost::make_tuple(predecessor, p);
       }
       // Update neighbors distances

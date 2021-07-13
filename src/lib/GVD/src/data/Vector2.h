@@ -58,7 +58,7 @@ struct Vector2 {
   friend ostream& operator<<(ostream& out, const Vector2);
 };
 
-size_t hash_value(const Vector2 &v);
+size_t hash_value(const Vector2 v);
 
 ostream& operator<<(ostream& out, const Vector2);
 

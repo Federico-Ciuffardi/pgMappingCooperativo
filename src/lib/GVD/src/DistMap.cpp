@@ -42,13 +42,17 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 /////////////
 // DistMap //
 /////////////
+pair<Int,Int> DistMap::size(){
+  return distMap.size();
+}
+
 DistMap::DistMap(pair<Int,Int> size, vector<CellState> sources, vector<CellState> nonTraversables){
  distMap = DistMapType(size); 
  this->sources = sources;
  this->nonTraversables = nonTraversables;
 }
 
-void DistMap::update(StateGrid grid) {
+void DistMap::update(StateGrid& grid) {
   // initialize the dgrid and the distance queues
   DistPosQueue dqueue; // new queue
   fullDQueue = DistPosQueue(); //clear las full_dqueue
@@ -109,7 +113,7 @@ void DistMap::update(StateGrid grid) {
   /* return boost::make_tuple(dgrid, full_dqueue); */
 }
 
-ostream& operator<<(ostream& out, const DistMap& distMap) {
+ostream& operator<<(ostream& out, DistMap& distMap) {
   // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
   return out<<distMap.distMap;
 }

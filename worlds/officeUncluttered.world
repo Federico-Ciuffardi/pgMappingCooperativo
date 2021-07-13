@@ -40,10 +40,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>894 703000000</sim_time>
-      <real_time>23 139901557</real_time>
-      <wall_time>1625095213 86498759</wall_time>
-      <iterations>23060</iterations>
+      <sim_time>929 247000000</sim_time>
+      <real_time>34 692269300</real_time>
+      <wall_time>1625100951 900350125</wall_time>
+      <iterations>34544</iterations>
       <model name='ground_plane'>
         <pose>0 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -55,10 +55,10 @@
         </link>
       </model>
       <model name='willowgarage'>
-        <pose>-62.3317 -70.4338 0 0 -0 0</pose>
+        <pose>-56.9463 -71.853 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='walls'>
-          <pose>-62.3317 -70.4338 0 0 -0 0</pose>
+          <pose>-56.9463 -71.853 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>

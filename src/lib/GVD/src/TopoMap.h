@@ -20,7 +20,7 @@ struct TopoMap{
   Gvd* gvd;
   criticals_info cis;
 
-  void update(StateGrid g);
+  void update(StateGrid& g);
   TopoMap(Gvd* gvd);
   TopoMap(pair<Int, Int> size);
   ~TopoMap();

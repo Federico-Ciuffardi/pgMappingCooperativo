@@ -98,7 +98,7 @@ ostream& operator<<(ostream& out, const boost::unordered_map<K, T>& m) {
 
 /* Print grid Property (the cells of gt present set) */
 template <typename T>
-inline void print_property(PosSet set, Grid<T> gt) {
+inline void print_property(PosSet set, Grid<T>& gt) {
   int mapWidth = gt.size();
   int mapHeight = gt[0].size();
   for (int x = 0; x < mapWidth; x++) {
@@ -111,7 +111,7 @@ inline void print_property(PosSet set, Grid<T> gt) {
 
 /* Print grid Property (the cells of grid present in the map) */
 template <typename T>
-inline void print_property(boost::unordered_map<Pos, int> map, Grid<T> gt) {
+inline void print_property(boost::unordered_map<Pos, int> map, Grid<T>& gt) {
   int mapWidth = gt.size();
   int mapHeight = gt[0].size();
   for (int x = 0; x < mapWidth; x++) {

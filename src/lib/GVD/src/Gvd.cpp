@@ -9,58 +9,56 @@
  *  main funcs
  */
 
-/* given a GraphType for the neighbors of a Pos return the number of conex components if Pos would be
- * removed */
-int A(Pos p, GridGvd ggvd) {
+/* If removing `p` from  disconects the graph represented with the Grid then  */
+template<typename CellType>
+int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
+  vector<Pos> neighbor = gridGraph.neighborDisplacement;
+
   int res = 0;
-  bool prev_np = 0;
-  vector<Pos> neighbor = ggvd.neighborDisplacement;
+
   for (int i = 0; i < 8; i++) {
-    bool v1 = ggvd.cell( p + neighbor[i]);
-    bool v2 = ggvd.cell( p + neighbor[(i + 1) % 8]);
+    Pos pN1 = p + neighbor[i];
+    bool v1 = gridGraph.inside(pN1) && gridGraph[pN1];
+
+    Pos pN2 =  p + neighbor[(i + 1) % 8];
+    bool v2 = gridGraph.inside(pN2) && gridGraph[pN2];
+
+    // if non diagonal
     if (neighbor[i].x == 0 || neighbor[i].y == 0) {
-      bool v3 = ggvd.cell( p + neighbor[(i + 2) % 8]);
+      Pos pN3 =   p + neighbor[(i + 2) % 8];
+      bool v3 = gridGraph.inside(pN3) && gridGraph[pN3];
       res += v1 && !v2 && !v3;
     } else {
       res += v1 && !v2;
     }
-    if (res > 1)
-      break;
+
+    if (res > 1) break;
   }
-  return res;
+  return res > 1;
 }
 
 /* returns a boolean matrix, a cell is true if it belongs to the GvdGraph and false
  * otherwise*/
-GridGvd getGridGvd(DistMap dg) {
-  // get sizes
-  pair<Int,Int> size = dg.distMap.size();
-
+GridGvd getGridGvd(DistMap& distMap) {
   // initialize GridGvd
-  GridGvd GridGvd;
-  for (int i = 0; i < size.first; i++) {
-    GridGvd.grid.push_back(vector<bool>());
-    for (int j = 0; j < size.second; j++) {
-      GridGvd.grid[i].push_back(dg[Pos(i,j)].distance != 0);  // is not a wall or unknown
-    }
+  GridGvd gridGvd(distMap.size());
+  for (Pos p : gridGvd) {
+    gridGvd[p] = distMap[p].distance != 0;  // is not a wall or unknown
   }
 
   // compute grid GvdGraph
-  while (!dg.fullDQueue.empty()) {
+  while (!distMap.fullDQueue.empty()) {
     // get the x cell to process
-    Pos current_Pos = dg.fullDQueue.top().second;
-    dg.fullDQueue.pop();
-
-    int cx = current_Pos.x;
-    int cy = current_Pos.y;
+    Pos p = distMap.fullDQueue.top().second;
+    distMap.fullDQueue.pop();
 
     // Remove from GvdGraph if it does not belongs to the GvdGraph by definition ands does
     // not disconects the GvdGraph
-    if (dg[Pos(cx,cy)].obs.size() <= 1 && A(current_Pos, GridGvd) <= 1) {
-      GridGvd.cell(cx,cy) = false;
+    if (distMap[p].obs.size() <= 1 && !disconnectsOnRemoval(p, gridGvd)) {
+      gridGvd[p] = false;
     }
   }
-  return GridGvd;
+  return gridGvd;
 }
 
 Gvd::Gvd(DistMap* distMap){
@@ -77,7 +75,8 @@ void Gvd::update(StateGrid sg){
   cout << "debug :: Generate gridGVD" << endl;
   gridGvd = getGridGvd(*distMap);
   cout << "debug :: Generate graphGVD" << endl;
-  graphGvd = GvdGraph(gridGvd);
+  if(graphGvd) delete graphGvd;
+  graphGvd = new GvdGraph(gridGvd);
 }
 
 Gvd::~Gvd(){

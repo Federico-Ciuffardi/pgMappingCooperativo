@@ -32,7 +32,9 @@ struct DistMap{
   vector<CellType> sources;
 
   DistMap(pair<Int,Int>, vector<CellType> sourceStates, vector<CellType> nonTraversables);
-  void update(StateGrid);
+  void update(StateGrid&);
+
+  pair<Int,Int> size();
 
   friend ostream& operator<<(ostream& out, const DistMap& cell);
 };

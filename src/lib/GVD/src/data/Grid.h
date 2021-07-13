@@ -20,6 +20,7 @@ struct Grid{
   GridType grid;
 
   // diplacement to possible neighbors (defaults to 8-connected)
+  // must be ordered clockwise
   vector<Pos> neighborDisplacement = {Pos(-1, -1), Pos(-1, 0), Pos(-1, 1), Pos(0, 1),
                                       Pos(1, 1),   Pos(1, 0),  Pos(1, -1), Pos(0, -1)};
 
@@ -131,12 +132,12 @@ struct Grid{
     return Iterator(size,Pos(0,size.second));
   }
   template<typename CellType>
-  friend ostream& operator<<(ostream& out, const Grid<CellType>);
+  friend ostream& operator<<(ostream& out, Grid<CellType>&);
 };
 
 
 template<typename CellType>
-ostream& operator<<(ostream& out, Grid<CellType> grid){
+ostream& operator<<(ostream& out, Grid<CellType>& grid){
   pair<Int,Int> size = grid.size(); 
   for(int x = 0; x < size.first ; x++){
     for(int y = 0; y < size.second; y++){
