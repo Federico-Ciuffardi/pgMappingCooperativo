@@ -1,70 +1,75 @@
 #include "TopoMap.h"
+#include <vector>
 #include "Gvd.h"
+#include "utils.h"
 
-boost::unordered_map<Pos, bool> get_local_mins(DistMap& dg, GvdGraph& gvd) {
-  boost::unordered_map<Pos, bool> lmins;
+PosSet getLocalMins(DistMap& dg, GvdGraph& gvd) {
+  PosSet localMins;
+  PosSet notLocalMins;
 
-  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
-    bool is_min_e = true;
-    bool has_greater = false;
-    Pos current_Pos = gvd[*vp.first].p;
+  for (auto it : gvd.idVertexMap) {
+    Pos p = it.first;
 
-    if (is_elem(current_Pos,lmins)) continue; // already processed
+    if (is_elem(p,localMins) || is_elem(p,notLocalMins)) continue; // already processed
 
-    for (Pos adj_Pos : gvd.adj(current_Pos)) {
-      bool auxmin = dg[current_Pos].distance <= dg[adj_Pos].distance;
-      bool adj_greater = dg[current_Pos].distance < dg[adj_Pos].distance;
+    bool isMin = true;
+    bool hasGreater = false;
 
-      if (adj_greater) {
-        has_greater = true;
-        lmins[adj_Pos] = false;
+    for (Pos pN : gvd.adj(p)) {
+
+      // p must have at least one neighbor with greater distance
+      if (dg[p].distance < dg[pN].distance) { 
+        hasGreater = true; // p has a neighbor with greater distance
+        notLocalMins.insert(pN); // pN is not a min
       }
-      is_min_e = is_min_e && auxmin;
-      if (!is_min_e)
-        break;
+
+      // neighbor of p must be grater or equal
+      isMin = isMin && dg[p].distance <= dg[pN].distance; 
+
+      if (!isMin) break;
     }
-    lmins[current_Pos] = is_min_e && has_greater;
+    if (isMin && hasGreater){
+      localMins.insert(p);
+    }
   }
-  return lmins;
+  return localMins;
 }
 
-bool same_direcction(Pos p1, Pos p2) {
+bool sameDirecction(Pos p1, Pos p2) {
   return p1.normalize() == -p2.normalize();
 }
 
-void collapse_vertices(GvdGraph& gvd, boost::unordered_map<Pos, bool> lmins) {
-  for (auto vp = vertices(gvd.g); vp.first != vp.second;) {
-    auto vp_aux = vp.first;
-    ++vp.first;
-    Pos current_Pos = gvd[*vp_aux].p;
+void collapseVertices(GvdGraph& gvd, PosSet lmins) {
+  for (GvdGraph::VertexIterator vp = gvd.begin(); vp != gvd.end();) {
+    GvdGraph::VertexIterator vpAux = vp++;
 
-    bool is_min = lmins[current_Pos];
-    if (!is_min && out_degree(*vp_aux, gvd.g) == 2) {
-      auto adj = adjacent_vertices(*vp_aux, gvd.g);
+    Pos current_Pos = gvd[*vpAux].p;
 
-      auto adj1 = gvd[*adj.first];
-      Pos adj1_aux = adj1.p - current_Pos;
-      auto adj_aux = adj;
+    bool is_min = is_elem(current_Pos,lmins);
+    if (!is_min && gvd.degree(*vpAux) == 2) {
+      vector<GvdGraph::Vertex> adj = gvd.adj(*vpAux);//adjacent_vertices(*vpAux, gvd.g);
 
-      ++adj.first;
-      auto adj2 = gvd[*adj.first];
-      Pos adj2_aux = (adj2.p - current_Pos);
+      auto adj1 = gvd[adj[0]];
+      Pos pToAdj1 = adj1.p - current_Pos;
 
-      if (same_direcction(adj1_aux, adj2_aux)) {
-        gvd.addE(*adj_aux.first, *adj.first);
-        gvd.addE(*adj.first, *adj_aux.first);
-        clear_vertex(*vp_aux, gvd.g);
-        remove_vertex(*vp_aux, gvd.g);
+      auto adj2 = gvd[adj[1]];
+      Pos pToAdj2 = (adj2.p - current_Pos);
+
+      if (sameDirecction(pToAdj1, pToAdj2)) {
+        gvd.addE(adj[0], adj[1]);
+        gvd.addE(adj[1], adj[0]);
+        gvd.removeV(*vpAux);
       }
     }
   }
 }
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-criticals_info unknown_dist_constraint2(StateGrid& ogrid, GvdGraph& gvd) {
+CriticalInfos unknownDistConstraint(StateGrid& ogrid, GvdGraph& gvd) {
   DistMap distMap(ogrid.size(),{Critical},{Unknown,Occupied});
+
   /* DistPosQueue dqueue; */
-  criticals_info res;
+  CriticalInfos res;
   cout << "calculate_distances" << endl;
 
   distMap.update(ogrid);
@@ -83,7 +88,7 @@ criticals_info unknown_dist_constraint2(StateGrid& ogrid, GvdGraph& gvd) {
       if (!c.is_critical) {
         c.is_critical = true;
         // c.segment = critical_Pos;
-        res[critical_Pos].mind_f = frontier_dp.first;
+        res[critical_Pos].mindToF = frontier_dp.first;
         res[critical_Pos].frontiers.push_back(frontier);
         // frontier_crits.clear();
         frontier_crits[0] = critical_Pos;
@@ -167,12 +172,12 @@ void clean_up(GvdGraph& gvd, DistMap& dgrid, int min_deg) {
 }
 
 
-int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, boost::unordered_map<Pos, bool> local_mins) {
+int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, PosSet local_mins) {
   int criticals_count = 0;
   Pos current_Pos;
   for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
     current_Pos = gvd[*vp.first].p;
-    if (out_degree(*vp.first, gvd.g) == 2 && local_mins[current_Pos]) {
+    if (out_degree(*vp.first, gvd.g) == 2 && is_elem(current_Pos,local_mins)) {
       for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
         if (out_degree(*ad.first, gvd.g) >= 3) {
           ogrid.cell(current_Pos.x,current_Pos.y) = Critical;
@@ -202,15 +207,18 @@ int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, boost::unordered_map<Pos,
   return criticals_count;
 }
 
-criticals_info get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
-  boost::unordered_map<Pos, bool> local_mins = get_local_mins(dg, gvd);
+CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
+  cout << "debug :: get local mins" << endl;
+  PosSet local_mins = getLocalMins(dg, gvd);
+
   cout << "debug :: clean_up" << endl;
   // TODO clean_up and collapse_vertices can be merged into one function
   clean_up(gvd, dg, 3);
   clean_up(gvd, dg, 2);
-  GvdGraph graphGvdCopy = gvd;
+
   cout << "debug :: collapse_vertices" << endl;
-  collapse_vertices(graphGvdCopy, local_mins);
+  GvdGraph graphGvdCopy = gvd;
+  collapseVertices(graphGvdCopy, local_mins);
 
   // TODO borrar el criticals count no se usa
   // Quick Fix, pass the local_mins to the degree constraint, this should be mark on the gvd so
@@ -218,7 +226,7 @@ criticals_info get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& 
   cout << "debug :: degree_constraint" << endl;
   degree_constraint(stateGrid, graphGvdCopy, local_mins);
   cout << "debug :: unknown_dist_constraint2" << endl;
-  criticals_info cis = unknown_dist_constraint2(stateGrid, gvd);
+  CriticalInfos cis = unknownDistConstraint(stateGrid, gvd);
   // return critical_with_frontier;
   return cis;
 }

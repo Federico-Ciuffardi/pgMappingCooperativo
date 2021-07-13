@@ -6,6 +6,7 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #include <boost/unordered_set.hpp>
+#include <iterator>
 
 #include "Grid.h"
 #include "Pos.h"
@@ -146,6 +147,10 @@ struct Graph {
     return res;
   }
 
+  Int degree(Vertex v){
+    return out_degree(v, g);
+  }
+
   // check if vertex or vertexIdMap exists
   bool has(Vertex v){
     return is_elem(v,vertexIdMap);
@@ -153,6 +158,19 @@ struct Graph {
 
   bool has(VertexId vId){
     return is_elem(vId,idVertexMap);
+  }
+
+  VertexIterator begin(){
+    VertexIterator vIt;
+    VertexIterator vItEnd;
+    boost::tie(vIt,vItEnd) = vertices(g);
+    return vIt;
+  }
+  VertexIterator end(){
+    VertexIterator vIt;
+    VertexIterator vItEnd;
+    boost::tie(vIt,vItEnd) = vertices(g);
+    return vItEnd;
   }
 };
 

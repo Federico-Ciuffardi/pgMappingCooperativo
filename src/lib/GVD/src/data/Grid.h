@@ -93,7 +93,7 @@ struct Grid{
     }
     return adj;
   }
-  class Iterator : public std::iterator<forward_iterator_tag, int>{
+  class Iterator : public std::iterator<output_iterator_tag, Pos>{
     Pos p;
     pair<Int,Int> size;
   public:

@@ -8,17 +8,17 @@
 /*
  *  critical info 
  */
-struct critical_info{
-  float mind_f; //min distance to frontier
+struct CriticalInfo{
+  float mindToF; //min distance to frontier
   vector<Pos> frontiers;
 };
 
-typedef boost::unordered_map<Pos, critical_info> criticals_info;
+typedef boost::unordered_map<Pos, CriticalInfo> CriticalInfos;
 
 struct TopoMap{
   DistMap* distMap;
   Gvd* gvd;
-  criticals_info cis;
+  CriticalInfos cis;
 
   void update(StateGrid& g);
   TopoMap(Gvd* gvd);

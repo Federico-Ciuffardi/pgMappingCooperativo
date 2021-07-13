@@ -52,7 +52,7 @@ class CentralModule {
   vector<int> centros_de_frontera;
 
   /// Segment auction related
-  criticals_info cis;
+  CriticalInfos cis;
   bids_priority_queue bids_pq;
   boost::unordered_map<Pos,int> auction_segment_frontiers_num;
   boost::unordered_set<string> auction_robots;

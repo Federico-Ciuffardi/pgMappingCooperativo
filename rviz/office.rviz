@@ -3,7 +3,8 @@ Panels:
     Help Height: 90
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Global Options1
       Splitter Ratio: 0.5
     Tree Height: 688
   - Class: rviz/Selection
@@ -24,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: laser_2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -869,7 +870,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 100.1400146484375
+      Distance: 145.75729370117188
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -877,9 +878,9 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -35.536216735839844
-        Y: 28.288488388061523
-        Z: -33.059234619140625
+        X: -11.034584999084473
+        Y: 3.7273054122924805
+        Z: -32.05287551879883
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
