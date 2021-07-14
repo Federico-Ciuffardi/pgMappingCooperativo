@@ -24,10 +24,15 @@ using namespace boost;
 // The vertex_descriptors are stored in a map and then can be retrieved with an ID 
 // I think vertex_descriptors are invalidated when the structure is copied.
 //
-// If you need to copy a graph the copy constructor should work but I'm not sure.
-// The operator= is also impemented, but again not sure if it is 100% correct.
+// If you need to copy a graph the copy constructor should work but I'm not
+// completly sure.  
+// The operator= is also impemented, but again not sure if it is 100% correct,
+// further testing is needed
+//
+// TODO avoid duplicate code regarding operator= and copy constructor between them
+// and withing classes
 
-// Boost Graph wrapper
+// Generic Boost Graph wrapper
 template<typename graph, typename vertex_id>
 struct Graph {
   typedef          graph GraphType;
@@ -73,9 +78,7 @@ struct Graph {
         tie(thisVN, inserted) = this->addV(vIdN,other[vN]);
 
         // and also add an edge connecting them
-        Edge e;
-        tie(e, inserted) = other.addE(v,vN); 
-        this->addE(thisV, thisVN, get(edge_weight, other.g, e));
+        this->addE(thisV, thisVN);
       }
     }
   } 
@@ -103,9 +106,7 @@ struct Graph {
         tie(thisVN, inserted) = this->addV(vIdN,other[vN]);
 
         // and also add an edge connecting them
-        Edge e;
-        tie(e, inserted) = other.addE(v,vN); 
-        this->addE(thisV, thisVN, get(edge_weight, other.g, e));
+        this->addE(thisV, thisVN);
       }
     }
     return *this;
@@ -236,10 +237,14 @@ struct Graph {
   }
 };
 
-// Boost Graph wrapper
-// Focused on Graphs where the vertices are identified by a spatial location (repesented with the type Pos)
-// graph (template parameter) VertexProperty must have a attribute p with time Pos and a constructor `VertexProperty(p)`
-// Adds A* funtions (Pos is hardcoded but in theory any class with a distance_to method could be used)
+// Boost Graph wrapper Focused on Graphs where the vertices are identified by a
+// spatial location (repesented with the type Pos)
+//
+// graph (template parameter) VertexProperty must have a attribute p with time
+// Pos and a constructor `VertexProperty(p)` 
+//
+// Adds A* funtions (Pos is hardcoded but in theory any class with a
+// distance_to method could be used)
 template<typename graph>
 struct PosGraph : public Graph<graph,Pos> {
   // keep updated if the parent class changes
@@ -265,6 +270,64 @@ struct PosGraph : public Graph<graph,Pos> {
   using typename ParentClass::AdjacencyIterator;
 
   using typename ParentClass::EdgeIterator;
+
+  PosGraph(){}
+  PosGraph(PosGraph& other){
+    /* for(auto it : other.idVertexMap){ */ // not working properly
+    /*   VertexId vId = it.first; */
+    for(Vertex v : other){
+      VertexId vId = other.vertexIdMap[v];
+      /* cout<<vId<<endl; */
+
+      Vertex thisV;
+      bool inserted;
+      tie(thisV, inserted) = this->addV(vId,other[v]);
+
+      for(Vertex vN : other.adj(v)){
+        VertexId vIdN = other.vertexIdMap[vN];
+
+        // add it to the graph
+        Vertex thisVN;
+        bool inserted;
+        tie(thisVN, inserted) = this->addV(vIdN,other[vN]);
+
+        // and also add an edge connecting them
+        Edge e;
+        tie(e, inserted) = edge(v,vN,other.g); 
+        this->addE(thisV, thisVN, get(edge_weight_t(), other.g, e));
+      }
+    }
+  } 
+
+  PosGraph& operator=(PosGraph&& other) {
+    this->idVertexMap = IdVertexMap();
+    this->vertexIdMap = VertexIdMap();
+    this->g           = GraphType();
+    /* for(auto it : other.idVertexMap){ */ // not working properly
+    /*   VertexId vId = it.first; */
+    for(Vertex v : other){
+      VertexId vId = other.vertexIdMap[v];
+      /* cout<<vId<<endl; */
+
+      Vertex thisV;
+      bool inserted;
+      tie(thisV, inserted) = this->addV(vId,other[v]);
+
+      for(Vertex vN : other.adj(v)){
+        VertexId vIdN = other.vertexIdMap[vN];
+
+        // add it to the graph
+        Vertex thisVN;
+        bool inserted;
+        tie(thisVN, inserted) = this->addV(vIdN,other[vN]);
+
+        Edge e;
+        tie(e, inserted) = edge(v,vN,other.g); 
+        this->addE(thisV, thisVN, get(edge_weight_t(), other.g, e));
+      }
+    }
+    return *this;
+  }
 
   // construct graph based on al boolean grid (true = belongs to GvdGraph)
   PosGraph(Grid<bool>& boolGrid){
