@@ -53,6 +53,33 @@ struct Graph {
   VertexIdMap vertexIdMap;
   IdVertexMap idVertexMap;
 
+  Graph(){}
+  Graph(Graph& other){
+    for(auto it : other.idVertexMap){
+      VertexId vId = it.first;
+      cout<<vId<<endl;
+
+      Vertex thisV;
+      bool inserted;
+      tie(thisV, inserted) = this->addV(vId);
+
+      for(VertexId vIdN : other.adj(vId)){
+        // add it to the graph
+        Vertex thisU;
+        bool inserted;
+        tie(thisU, inserted) = this->addV(vIdN);
+        // and also add an edge connecting them
+        this->addE(thisV, thisU);
+      }
+    }
+  } 
+  /* Graph& operator=(const Graph& other) { */
+  /*     Graph tmp(other); */
+  /*     this->idVertexMap = idVertexMap; */
+  /*     this->vertexIdMap = vertexIdMap; */
+
+  /*     return *this; */
+  /* } */
   // Get node info associated with p
   VertexProperty& operator[](Vertex v){
     return g[v];
@@ -70,8 +97,8 @@ struct Graph {
     bool inserted;
     boost::tie(idVertexMapIterator, inserted) = idVertexMap.insert(std::make_pair(vId, Vertex()));
     if (inserted) {
-      v = add_vertex(g);
-      g[v] = VertexProperty(vId);
+      v = add_vertex(vId,g);
+      /* g[v] = VertexProperty(vId); */
       idVertexMapIterator->second = v;
       vertexIdMap[v] = vId;
     } else {

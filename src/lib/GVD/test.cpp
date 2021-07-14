@@ -22,7 +22,7 @@ void testGrid(StateGrid stateGrid){
 
   // DistGrid
   cout << "DistGrid:" << endl;
-  cout<<*topoMap.distMap<<endl;
+  cout<<topoMap.distMap->distMap<<endl;
 
   // GVD
   GvdGraph& gvd = *topoMap.gvd->graphGvd;
@@ -45,22 +45,20 @@ void testGrid(StateGrid stateGrid){
   }
 
   cout << "GVD vertices:" << endl;
-  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first){
-    cout << "(" << gvd.g[*vp.first].p.x << "," << gvd.g[*vp.first].p.x << ") ";
+  for (GvdGraph::Vertex v : gvd){
+    cout<<"|"<< gvd.g[v].p <<"| ";
+    cout<<gvd.degree(v)<<endl;
   }
   cout << endl;
 
   cout << "GVD edges:" << endl;
   for (auto it = edges(gvd.g); it.first != it.second; ++it.first++){
-    std::cout << "|(" << gvd.g[source(*it.first, gvd.g)].p.x << ","
-              << gvd.g[source(*it.first, gvd.g)].p.y << ")-("
-              << gvd.g[target(*it.first, gvd.g)].p.x << ","
-              << gvd.g[target(*it.first, gvd.g)].p.y << ")| ";
+    std::cout << "|" << gvd.g[source(*it.first, gvd.g)].p << "-" << gvd.g[target(*it.first, gvd.g)].p << "| ";
   }
   cout << endl;
 
   // TopoMap
-  criticals_info cis = topoMap.cis;
+  CriticalInfos cis = topoMap.cis;
   cout << "GVD and Crits in stateGrid:" << endl;
   for (int x = 0; x < size.first; x++) {
     for (int y = 0; y < size.second; y++) {
@@ -178,6 +176,12 @@ int main(int argc, char** argv) {
       exit(1);
     }
     cout<<"Test "<<num<<endl;
+    for(int i = 0; i < tests[num].size().first; i++){
+      for(int j = 0; j < tests[num].size().second; j++){
+        cout<<"|"<<Pos(i,j)<<"|";
+      }
+      cout<<endl;
+    }
     testGrid(tests[num]);
   }else{
     int i = 0;

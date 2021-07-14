@@ -30,8 +30,9 @@ struct DistMap{
 
   vector<CellType> nonTraversables;
   vector<CellType> sources;
+  vector<CellType> objectives;
 
-  DistMap(pair<Int,Int>, vector<CellType> sourceStates, vector<CellType> nonTraversables);
+  DistMap(pair<Int,Int>, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
   void update(StateGrid&);
 
   pair<Int,Int> size();

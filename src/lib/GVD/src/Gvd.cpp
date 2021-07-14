@@ -43,7 +43,7 @@ GridGvd getGridGvd(DistMap& distMap) {
   // initialize GridGvd
   GridGvd gridGvd(distMap.size());
   for (Pos p : gridGvd) {
-    gridGvd[p] = distMap[p].distance != 0;  // is not a wall or unknown
+    gridGvd[p] = distMap[p].distance != 0 && distMap[p].distance != inf;  // is not a wall or unknown
   }
 
   // compute grid GvdGraph

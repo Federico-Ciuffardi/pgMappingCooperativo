@@ -1,5 +1,6 @@
 #include "DistMap.h"
 #include <cmath>
+#include "utils.h"
 
 //////////////
 // DistCell //
@@ -22,15 +23,17 @@ bool DistMap::DistCell::operator==(const DistMap::DistCell& d) const {
 
 ostream& operator<<(ostream& out, const DistMap::DistCell& cell) {
   // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
-  if (cell.distance != 0) {
+  if(cell.distance == inf){
+    out << " ∞,"<<cell.obs.size();
+  }else if (cell.distance != 0) {
     int intDist = floor(cell.distance);
     if(cell.distance == intDist){
-      out << " " << intDist;
+      out << " " << intDist<<","<<cell.obs.size();
     }else{
-      out << "~" << intDist;
+      out << "~" << intDist<<","<<cell.obs.size();
     }
   } else {
-    out << "██";
+    out << "████";
   }
   return out;
 }
@@ -46,10 +49,11 @@ pair<Int,Int> DistMap::size(){
   return distMap.size();
 }
 
-DistMap::DistMap(pair<Int,Int> size, vector<CellState> sources, vector<CellState> nonTraversables){
+DistMap::DistMap(pair<Int,Int> size, vector<CellState> sources, vector<CellState> nonTraversables, vector<CellState> objectives){
  distMap = DistMapType(size); 
  this->sources = sources;
  this->nonTraversables = nonTraversables;
+ this->objectives = objectives;
 }
 
 void DistMap::update(StateGrid& grid) {
@@ -62,12 +66,10 @@ void DistMap::update(StateGrid& grid) {
     CellState cState = grid[p];
 
     DistMap::DistCell dcell;
-    if (is_elem(cState, sources) || cState == Unknown) {  // TODO generalizar mejor
+    if (is_elem(cState, sources)) { 
       dcell.distance = 0;
-      if (is_elem(cState,sources)) {
-        dcell.addSource(p);
-        dqueue.push(DistPos(0, p));
-      }
+      dcell.addSource(p);
+      dqueue.push(DistPos(0, p));
     } else {
       dcell.distance = inf;
     }
@@ -101,7 +103,7 @@ void DistMap::update(StateGrid& grid) {
         }
         next_dqueue.push(DistPos(distMap[np].distance, np));
 
-        if (is_elem(Critical,sources) && grid[np] != Frontier) {
+        if (!objectives.empty() && !is_elem(grid[np],objectives)) {
           continue;
         }
         fullDQueue.push(DistPos(distMap[np].distance, np));
