@@ -6,11 +6,11 @@
 // DistCell //
 //////////////
 void DistMap::DistCell::addSource(Pos p) {
-  obs.push_back(p);
+  parents.push_back(p);
 }
 
 bool DistMap::DistCell::hasSource(Pos p) {
-  return find(obs.begin(), obs.end(), p) != obs.end();
+  return find(parents.begin(), parents.end(), p) != parents.end();
 }
 
 bool DistMap::DistCell::operator>(const DistMap::DistCell& d) const {
@@ -22,15 +22,15 @@ bool DistMap::DistCell::operator==(const DistMap::DistCell& d) const {
 }
 
 ostream& operator<<(ostream& out, const DistMap::DistCell& cell) {
-  // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
+  // out<<"("<< cell.distance<<", "<< cell.parents.size() << " )";
   if(cell.distance == inf){
-    out << " ∞,"<<cell.obs.size();
+    out << " ∞,"<<cell.parents.size();
   }else if (cell.distance != 0) {
     int intDist = floor(cell.distance);
     if(cell.distance == intDist){
-      out << " " << intDist<<","<<cell.obs.size();
+      out << " " << intDist<<","<<cell.parents.size();
     }else{
-      out << "~" << intDist<<","<<cell.obs.size();
+      out << "~" << intDist<<","<<cell.parents.size();
     }
   } else {
     out << "████";
@@ -89,16 +89,16 @@ void DistMap::update(StateGrid& grid) {
         // Compute np distance to the nearest source
         for (Pos nnp : grid.adj(np)) {
           /* if (distMap[nnp].distance == inf) continue; // invalid distance, can safely avoid computation */
-          if(distMap[nnp].obs.empty()) continue;
+          if(distMap[nnp].parents.empty()) continue;
 
-          float d = np.distance_to(distMap[nnp].obs[0]);
+          float d = np.distance_to(distMap[nnp].parents[0]);
           if (d < distMap[np].distance) {
             distMap[np].distance = d;
-            distMap[np].obs.clear();
-            distMap[np].addSource(distMap[nnp].obs[0]);
+            distMap[np].parents.clear();
+            distMap[np].addSource(distMap[nnp].parents[0]);
             distMap[np].distance = distMap[np].distance;
-          } else if (d == distMap[np].distance && !distMap[np].hasSource(distMap[nnp].obs[0])) {
-            distMap[np].addSource(distMap[nnp].obs[0]);
+          } else if (d == distMap[np].distance && !distMap[np].hasSource(distMap[nnp].parents[0])) {
+            distMap[np].addSource(distMap[nnp].parents[0]);
           }
         }
         next_dqueue.push(DistPos(distMap[np].distance, np));
@@ -116,7 +116,7 @@ void DistMap::update(StateGrid& grid) {
 }
 
 ostream& operator<<(ostream& out, DistMap& distMap) {
-  // out<<"("<< cell.distance<<", "<< cell.obs.size() << " )";
+  // out<<"("<< cell.distance<<", "<< cell.parents.size() << " )";
   return out<<distMap.distMap;
 }
 

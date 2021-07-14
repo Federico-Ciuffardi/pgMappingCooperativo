@@ -54,7 +54,7 @@ GridGvd getGridGvd(DistMap& distMap) {
 
     // Remove from GvdGraph if it does not belongs to the GvdGraph by definition ands does
     // not disconects the GvdGraph
-    if (distMap[p].obs.size() <= 1 && !disconnectsOnRemoval(p, gridGvd)) {
+    if (distMap[p].parents.size() <= 1 && !disconnectsOnRemoval(p, gridGvd)) {
       gridGvd[p] = false;
     }
   }
@@ -69,7 +69,7 @@ Gvd::Gvd(pair<Int, Int> size){
   this->distMap = new DistMap(size,{Occupied},{Occupied,Unknown});
 }
 
-void Gvd::update(StateGrid sg){
+void Gvd::update(StateGrid& sg){
   cout << "debug :: Update distMap" << endl;
   distMap->update(sg);
   cout << "debug :: Generate gridGVD" << endl;

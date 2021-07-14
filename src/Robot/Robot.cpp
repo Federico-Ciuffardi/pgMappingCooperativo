@@ -156,7 +156,7 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
     GvdVecGraph::Vertex from_v = gvd.idVertexMap[from_p];
     GvdVecGraph::Vertex to_v = gvd.idVertexMap[to_p];
 
-    boost::tie(e, inserted) = gvd.addE(from_v, to_v, from_p.distance_to( to_p));
+    gvd.addE(from_v, to_v, from_p.distance_to(to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
   }
   // std::cout<<"Termine de agregar todas las aristas"<<endl;

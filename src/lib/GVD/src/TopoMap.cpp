@@ -134,25 +134,30 @@ void collapseVertices(GvdGraph& gvd) {
 }
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-CriticalInfos unknownDistConstraint(StateGrid& ogrid, GvdGraph& gvd) {
+CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
   CriticalInfos res;
 
-  DistMap distMap(ogrid.size(),{Critical},{Unknown,Occupied}, {Frontier});
-  cout << "unknownDistConstraint" << endl;
-  distMap.update(ogrid);
+  cout << "debug :: Get the nearest frontiers to each critical" << endl;
+  for(Pos p : stateGrid){
+    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain){
+      stateGrid[p] = Critical;
+    }
+  }
+  DistMap distMap(stateGrid.size(),{Critical},{Unknown,Occupied}, {Frontier});
+  distMap.update(stateGrid);
 
-  cout << "set each frontier to a critical" << endl;
+  cout << "debug :: set each frontier to a critical" << endl;
   while (!distMap.fullDQueue.empty()) {
     DistPos frontier_dp = distMap.fullDQueue.top();
     distMap.fullDQueue.pop();
     Pos frontier = frontier_dp.second;
 
     /* cout<<"Frontier: "<<frontier_dp.second<<endl; */
-    /* cout<<"Critical: "<<distMap[frontier].obs<<endl; */
-    vector<Pos>& frontier_crits = distMap[frontier].obs;
+    /* cout<<"Critical: "<<distMap[frontier].parents<<endl; */
+    vector<Pos>& frontierCrits = distMap[frontier].parents;
 
-    for (int i = 0; i < frontier_crits.size(); i++) {
-      Pos critical_Pos = frontier_crits[i];
+    for (int i = 0; i < frontierCrits.size(); i++) {
+      Pos critical_Pos = frontierCrits[i];
       GvdVertexProperty& c = gvd[critical_Pos];
       if (!c.is_critical) {
         c.is_critical = true;
@@ -160,13 +165,13 @@ CriticalInfos unknownDistConstraint(StateGrid& ogrid, GvdGraph& gvd) {
         res[critical_Pos].mindToF = frontier_dp.first;
         res[critical_Pos].frontiers.push_back(frontier);
         // frontier_crits.clear();
-        frontier_crits[0] = critical_Pos;
+        frontierCrits[0] = critical_Pos;
         break;
       }
-      if (i == (frontier_crits.size() - 1)) {  // i is the last one
+      if (i == (frontierCrits.size() - 1)) {  // i is the last one
         res[critical_Pos].frontiers.push_back(frontier);
         // frontier_crits.clear();
-        frontier_crits[0] = critical_Pos;
+        frontierCrits[0] = critical_Pos;
       }
     }
   }
@@ -174,8 +179,8 @@ CriticalInfos unknownDistConstraint(StateGrid& ogrid, GvdGraph& gvd) {
   GvdGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     GvdVertexProperty& v = gvd[*v_it];
-    if (distMap[v.p].obs.size() > 0) {
-      v.segment = distMap[v.p].obs[0];
+    if (distMap[v.p].parents.size() > 0) {
+      v.segment = distMap[v.p].parents[0];
     } else {
       v.segment = Pos(INT_MIN, INT_MIN);
       cout << "warning vertex without segment" << endl;
@@ -203,8 +208,9 @@ bool degreeConstraintAux(GvdGraph& gvd,GvdGraph::Vertex& prevV, GvdGraph::Vertex
 }
 
 
-void degreeConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
+void degreeConstraint(GvdGraph& gvd) {
   int criticalsCount = 0;
+
   for (auto it : gvd.idVertexMap) {
     Pos p = it.first;
     GvdGraph::Vertex v = it.second;
@@ -215,7 +221,7 @@ void degreeConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
     // check if it has a neighbor of degree 3 
     for (GvdGraph::Vertex vN : gvd.adj(v)) {
       if(degreeConstraintAux(gvd,v,vN)){
-        stateGrid[p] = Critical;
+        gvd[v].degreeConstrain = true;
         criticalsCount++;
         break;
       }
@@ -242,28 +248,37 @@ void degreeConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
   }
 
   if(maxPos != NULL_POS){
-    stateGrid[maxPos] = Critical;
+     gvd[maxPos].degreeConstrain = true;
   }
 
 }
 
 CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
-  cout << "debug :: clean_up" << endl;
+  cout << "debug :: cleanUp" << endl;
   cleanUp(gvd);
 
-  cout << "debug :: get local mins" << endl;
+  cout << "debug :: setLocalMins" << endl;
   setLocalMins(dg, gvd);
 
-  cout << "debug :: copy graph" << endl;
-  GvdGraph graphGvdCopy(gvd);
+  // collapsedGvd graph (used to save some time on the degreeConstrain
+  cout << "debug :: copy gvd" << endl;
+  GvdGraph collapsedGvd(gvd);
 
-  cout << "debug :: collapse_vertices" << endl;
-  collapseVertices(graphGvdCopy);
+  cout << "debug :: collapseVertices" << endl;
+  collapseVertices(collapsedGvd);
 
-  cout << "debug :: degree_constraint" << endl;
-  degreeConstraint(stateGrid, graphGvdCopy);
+  cout << "debug :: degreeConstraint" << endl;
+  degreeConstraint(collapsedGvd);
 
-  cout << "debug :: unknown_dist_constraint" << endl;
+  // pass info to complete gvd 
+  // collapsedGvd ⊂ gvd
+  for(auto it : collapsedGvd.idVertexMap){
+    Pos p = it.first;
+    GvdGraph::Vertex v = it.second;
+    gvd[p] = collapsedGvd[v]; 
+  }
+
+  cout << "debug :: unknownDistConstraint" << endl;
   CriticalInfos cis = unknownDistConstraint(stateGrid, gvd);
 
   return cis;
@@ -279,7 +294,7 @@ TopoMap::TopoMap(pair<Int, Int> size){
   this->gvd = new Gvd(distMap);
 }
 
-/* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid ogrid) { */
+/* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
 void TopoMap::update(StateGrid& sg){
   this->gvd->update(sg); // also updates the shared distMap
   cout << "debug :: Calculate ciritical points" << endl;

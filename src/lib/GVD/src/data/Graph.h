@@ -25,7 +25,7 @@ using namespace boost;
 // I think vertex_descriptors are invalidated when the structure is copied.
 //
 // If you need to copy a graph the copy constructor should work but I'm not sure.
-// The operator= is not impemented.
+// The operator= is also impemented, but again not sure if it is 100% correct.
 
 // Boost Graph wrapper
 template<typename graph, typename vertex_id>
@@ -58,29 +58,58 @@ struct Graph {
     /*   VertexId vId = it.first; */
     for(Vertex v : other){
       VertexId vId = other.vertexIdMap[v];
-      cout<<vId<<endl;
+      /* cout<<vId<<endl; */
 
       Vertex thisV;
       bool inserted;
-      tie(thisV, inserted) = this->addV(vId,other[vId]);
+      tie(thisV, inserted) = this->addV(vId,other[v]);
 
-      for(VertexId vIdN : other.adj(vId)){
+      for(Vertex vN : other.adj(v)){
+        VertexId vIdN = other.vertexIdMap[vN];
+
         // add it to the graph
-        Vertex thisU;
+        Vertex thisVN;
         bool inserted;
-        tie(thisU, inserted) = this->addV(vIdN,other[vIdN]);
+        tie(thisVN, inserted) = this->addV(vIdN,other[vN]);
+
         // and also add an edge connecting them
-        this->addE(thisV, thisU);
+        Edge e;
+        tie(e, inserted) = other.addE(v,vN); 
+        this->addE(thisV, thisVN, get(edge_weight, other.g, e));
       }
     }
   } 
-  /* Graph& operator=(const Graph& other) { */
-  /*     Graph tmp(other); */
-  /*     /1* swap(this->idVertexMap, idVertexMap); *1/ */
-  /*     /1* swap(this->vertexIdMap, vertexIdMap); *1/ */
-  /*     /1* swap(this->g,g); *1/ */
-  /*     return Graph(); */
-  /* } */
+
+  Graph& operator=(Graph&& other) {
+    this->idVertexMap = IdVertexMap();
+    this->vertexIdMap = VertexIdMap();
+    this->g           = GraphType();
+    /* for(auto it : other.idVertexMap){ */ // not working properly
+    /*   VertexId vId = it.first; */
+    for(Vertex v : other){
+      VertexId vId = other.vertexIdMap[v];
+      /* cout<<vId<<endl; */
+
+      Vertex thisV;
+      bool inserted;
+      tie(thisV, inserted) = this->addV(vId,other[v]);
+
+      for(Vertex vN : other.adj(v)){
+        VertexId vIdN = other.vertexIdMap[vN];
+
+        // add it to the graph
+        Vertex thisVN;
+        bool inserted;
+        tie(thisVN, inserted) = this->addV(vIdN,other[vN]);
+
+        // and also add an edge connecting them
+        Edge e;
+        tie(e, inserted) = other.addE(v,vN); 
+        this->addE(thisV, thisVN, get(edge_weight, other.g, e));
+      }
+    }
+    return *this;
+  }
 
   // Get node info associated with p
   VertexProperty& operator[](Vertex v){
@@ -141,7 +170,7 @@ struct Graph {
   }
 
   // add Edge associated to u and v
-  pair<Edge, bool> addE(Vertex u, Vertex v, float w = -1) {
+  pair<Edge, bool> addE(Vertex u, Vertex v, Float w = -1) {
     if (w == -1) {
       return add_edge(u, v, g);
     }

@@ -8,7 +8,7 @@
  */
 struct DistMap{
   struct DistCell {
-    vector<Pos> obs;
+    vector<Pos> parents;
     Float distance = inf;
 
     void addSource(Pos);

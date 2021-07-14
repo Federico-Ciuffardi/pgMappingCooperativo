@@ -20,6 +20,7 @@ struct GvdVertexProperty {
   Pos p = NULL_POS;
 
   bool isLocalMin = false;
+  bool degreeConstrain = false;
 
   bool is_critical = false;
 
@@ -43,7 +44,7 @@ typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,
 typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdVecGraph;
 
 struct Gvd {
-  void update(StateGrid g);
+  void update(StateGrid& g);
   GridGvd gridGvd;
   GvdGraph* graphGvd = NULL;
   DistMap* distMap = NULL;
