@@ -18,6 +18,11 @@ inline bool is_elem(boost::unordered_map<K, T> m, K e) {
   return m.find(e) != m.end();
 }
 
+template <typename K, typename T>
+inline bool is_elem(map<K, T> m, K e) {
+  return m.find(e) != m.end();
+}
+
 template <typename T>
 inline bool is_elem(vector<T> v, T e) {
   for(int i = 0; i < v.size() ; i++){
@@ -35,6 +40,11 @@ inline bool is_elem(T e, boost::unordered_set<T> s) {
 
 template <typename K, typename T>
 inline bool is_elem(K e, boost::unordered_map<K, T> m) {
+  return m.find(e) != m.end();
+}
+
+template <typename K, typename T>
+inline bool is_elem(K e, map<K, T> m) {
   return m.find(e) != m.end();
 }
 

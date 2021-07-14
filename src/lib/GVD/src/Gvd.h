@@ -17,10 +17,16 @@ using namespace boost;
 typedef Grid<bool> GridGvd;
 
 struct GvdVertexProperty {
-  Pos p;
-  bool is_critical;
-  Pos segment;
+  Pos p = NULL_POS;
+
+  bool isLocalMin = false;
+
+  bool is_critical = false;
+
+  Pos segment = NULL_POS;
+
   GvdVertexProperty(){};
+
   GvdVertexProperty(Pos p, bool is_critical, Pos segment) {
     this->p = p;
     this->is_critical = is_critical;

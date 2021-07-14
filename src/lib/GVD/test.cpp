@@ -46,8 +46,8 @@ void testGrid(StateGrid stateGrid){
 
   cout << "GVD vertices:" << endl;
   for (GvdGraph::Vertex v : gvd){
-    cout<<"|"<< gvd.g[v].p <<"| ";
-    cout<<gvd.degree(v)<<endl;
+    cout<<"|"<< gvd.g[v].p<<"|";//<<"->"<<v<<" : gr ";
+    /* cout<<gvd.degree(v)<<endl; */
   }
   cout << endl;
 

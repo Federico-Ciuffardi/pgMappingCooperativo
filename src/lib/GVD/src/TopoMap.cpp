@@ -5,18 +5,18 @@
 #include "Map.h"
 #include "utils.h"
 
-// Returns all the positions of distance local mins vertices
+// Sets the isLocalMin value of all the distance local mins vertices  
 // Local min here means:
 //  * there is no neighbor with less distance
 //  * there is at least one neighbor with greater distance
-PosSet getLocalMins(DistMap& dg, GvdGraph& gvd) {
-  PosSet localMins;
+void setLocalMins(DistMap& dg, GvdGraph& gvd) {
   PosSet notLocalMins;
 
   for (auto it : gvd.idVertexMap) {
     Pos p = it.first;
+    GvdGraph::Vertex v = it.second;
 
-    if (is_elem(p,localMins) || is_elem(p,notLocalMins)) continue; // already processed
+    if (gvd[p].isLocalMin || is_elem(p,notLocalMins)) continue; // already processed
 
     bool isMin = true;
     bool hasGreater = false;
@@ -35,10 +35,10 @@ PosSet getLocalMins(DistMap& dg, GvdGraph& gvd) {
       if (!isMin) break;
     }
     if (isMin && hasGreater){
-      localMins.insert(p);
-    }
+      gvd[p].isLocalMin = true;
+    } // no need to add to notLocalMins, as this is only used to avoid extra processing 
+    
   }
-  return localMins;
 }
 
 // increase sparseness by removing redundant edges:
@@ -91,10 +91,10 @@ void cleanUp(GvdGraph& gvd) {
       }
     }
   }
-  for (GvdGraph::VertexIterator vp = gvd.begin(); vp != gvd.end();) {
-    GvdGraph::VertexIterator vpAux = vp++;
-    if (out_degree(*vpAux, gvd.g) == 0) {
-      gvd.removeV(*vpAux);
+  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
+    GvdGraph::Vertex v = *(vIt++);
+    if (gvd.degree(v) == 0) {
+      gvd.removeV(v);
     }
   }
 }
@@ -108,26 +108,26 @@ bool sameDirecction(Pos p1, Pos p2) {
 //   Remove all the non critical candidates of degree2 that lie within a
 //   straight line of vertices and are not the ends. The removed vertices are
 //   represented with an edge connecting the preserved ends of the line.
-void collapseVertices(GvdGraph& gvd, PosSet lmins) {
-  for (GvdGraph::VertexIterator vp = gvd.begin(); vp != gvd.end();) {
-    GvdGraph::VertexIterator vpAux = vp++;
+void collapseVertices(GvdGraph& gvd) {
+  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
+    GvdGraph::Vertex v = *(vIt++);
 
-    Pos current_Pos = gvd[*vpAux].p;
+    Pos p = gvd[v].p;
 
-    bool is_min = is_elem(current_Pos,lmins);
-    if (!is_min && gvd.degree(*vpAux) == 2) {
-      vector<GvdGraph::Vertex> adj = gvd.adj(*vpAux);
+    bool isMin = gvd[v].isLocalMin;
+    if (!isMin && gvd.degree(v) == 2) {
+      vector<GvdGraph::Vertex> adj = gvd.adj(v);
 
       auto adj1 = gvd[adj[0]];
-      Pos pToAdj1 = adj1.p - current_Pos;
+      Pos pToAdj1 = adj1.p - p;
 
       auto adj2 = gvd[adj[1]];
-      Pos pToAdj2 = (adj2.p - current_Pos);
+      Pos pToAdj2 = (adj2.p - p);
 
       if (sameDirecction(pToAdj1, pToAdj2)) {
         gvd.addE(adj[0], adj[1]);
         gvd.addE(adj[1], adj[0]);
-        gvd.removeV(*vpAux);
+        gvd.removeV(v);
       }
     }
   }
@@ -137,11 +137,9 @@ void collapseVertices(GvdGraph& gvd, PosSet lmins) {
 CriticalInfos unknownDistConstraint(StateGrid& ogrid, GvdGraph& gvd) {
   CriticalInfos res;
 
-  /* DistPosQueue dqueue; */
   DistMap distMap(ogrid.size(),{Critical},{Unknown,Occupied}, {Frontier});
   cout << "unknownDistConstraint" << endl;
   distMap.update(ogrid);
-  /* cout<<distMap.distMap<<endl; */
 
   cout << "set each frontier to a critical" << endl;
   while (!distMap.fullDQueue.empty()) {
@@ -188,67 +186,86 @@ CriticalInfos unknownDistConstraint(StateGrid& ogrid, GvdGraph& gvd) {
   return res;
 }
 
-int degree_constraint(StateGrid& ogrid, GvdGraph& gvd, PosSet local_mins) {
-  int criticals_count = 0;
-  Pos current_Pos;
-  for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
-    current_Pos = gvd[*vp.first].p;
-    if (out_degree(*vp.first, gvd.g) == 2 && is_elem(current_Pos,local_mins)) {
-      for (auto ad = adjacent_vertices(*vp.first, gvd.g); ad.first != ad.second; ++ad.first) {
-        if (out_degree(*ad.first, gvd.g) >= 3) {
-          ogrid.cell(current_Pos.x,current_Pos.y) = Critical;
-          criticals_count++;
-          break;
-        }
+bool degreeConstraintAux(GvdGraph& gvd,GvdGraph::Vertex& prevV, GvdGraph::Vertex& v){
+  if (gvd.degree(v) >= 3){ // neighbor of degree 3 or greater
+    return true;
+  } else if (gvd.degree(v) == 1 || gvd[v].isLocalMin){ // path end or another candidate
+    return false;
+  } else{
+    for (GvdGraph::Vertex vN : gvd.adj(v)) {
+      if(vN != prevV){
+        return degreeConstraintAux(gvd,v,vN);
       }
     }
   }
-  // No real critical point found, create an artificial one representing the hole space as one
-  // segment
-  if (criticals_count == 0) {
-    int max = -1;
-    Pos max_Pos;
+  cout<< "WARNING: degreeConstraintAux bad base case reached"<<endl;
+  return false;
+}
 
-    for (auto vp = vertices(gvd.g); vp.first != vp.second; ++vp.first) {
-      current_Pos = gvd[*vp.first].p;
-      int current_deg = out_degree(*vp.first, gvd.g);
-      if (current_deg > max || max < 0) {
-        max = current_deg;
-        max_Pos = current_Pos;
+
+void degreeConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
+  int criticalsCount = 0;
+  for (auto it : gvd.idVertexMap) {
+    Pos p = it.first;
+    GvdGraph::Vertex v = it.second;
+
+    // skip does not complies with some of the requirmets already
+    if (gvd.degree(v) != 2 || !gvd[p].isLocalMin) continue;
+
+    // check if it has a neighbor of degree 3 
+    for (GvdGraph::Vertex vN : gvd.adj(v)) {
+      if(degreeConstraintAux(gvd,v,vN)){
+        stateGrid[p] = Critical;
+        criticalsCount++;
+        break;
       }
     }
-    ogrid.cell(max_Pos.x,max_Pos.y) = Critical;
-    criticals_count++;
   }
-  return criticals_count;
+
+  if (criticalsCount > 0) return;
+
+  // No real critical point found, create an artificial one representing the
+  // hole space as one segment
+
+  int maxDeg = -1;
+  Pos maxPos = NULL_POS;
+
+  for (auto it : gvd.idVertexMap) {
+    Pos p = it.first;
+    GvdGraph::Vertex v = it.second;
+
+    int currentDegree = gvd.degree(v);
+    if (currentDegree > maxDeg) {
+      maxDeg = currentDegree;
+      maxPos = p;
+    }
+  }
+
+  if(maxPos != NULL_POS){
+    stateGrid[maxPos] = Critical;
+  }
+
 }
 
 CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
-  cout << "debug :: get local mins" << endl;
-  PosSet local_mins = getLocalMins(dg, gvd);
-
   cout << "debug :: clean_up" << endl;
-  // TODO clean_up and collapse_vertices can be merged into one function
   cleanUp(gvd);
+
+  cout << "debug :: get local mins" << endl;
+  setLocalMins(dg, gvd);
 
   cout << "debug :: copy graph" << endl;
   GvdGraph graphGvdCopy(gvd);
-  /* cout << "debug :: after copy" << endl; */
 
   cout << "debug :: collapse_vertices" << endl;
-  collapseVertices(graphGvdCopy, local_mins);
+  collapseVertices(graphGvdCopy);
 
-  /* cout << "debug :: copycopy" << endl; */
-  /* GvdGraph graphGvdCopyCopy(graphGvdCopy); */
-  /* cout << "debug :: aftercopy" << endl; */
-  // TODO borrar el criticals count no se usa
-  // Quick Fix, pass the local_mins to the degree constraint, this should be mark on the gvd so
-  // there is no need to passed the map of local mins
   cout << "debug :: degree_constraint" << endl;
-  degree_constraint(stateGrid, graphGvdCopy, local_mins);
-  cout << "debug :: unknown_dist_constraint2" << endl;
+  degreeConstraint(stateGrid, graphGvdCopy);
+
+  cout << "debug :: unknown_dist_constraint" << endl;
   CriticalInfos cis = unknownDistConstraint(stateGrid, gvd);
-  // return critical_with_frontier;
+
   return cis;
 }
 

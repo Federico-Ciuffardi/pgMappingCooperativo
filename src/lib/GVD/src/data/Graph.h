@@ -24,9 +24,8 @@ using namespace boost;
 // The vertex_descriptors are stored in a map and then can be retrieved with an ID 
 // I think vertex_descriptors are invalidated when the structure is copied.
 //
-// If you need to copy a graph I would recomend trying discard everything
-// related to vertex_descriptors and reload them with the new vertex
-// descriptors wich should be obtained with the boost graph g
+// If you need to copy a graph the copy constructor should work but I'm not sure.
+// The operator= is not impemented.
 
 // Boost Graph wrapper
 template<typename graph, typename vertex_id>
@@ -55,19 +54,21 @@ struct Graph {
 
   Graph(){}
   Graph(Graph& other){
-    for(auto it : other.idVertexMap){
-      VertexId vId = it.first;
+    /* for(auto it : other.idVertexMap){ */ // not working properly
+    /*   VertexId vId = it.first; */
+    for(Vertex v : other){
+      VertexId vId = other.vertexIdMap[v];
       cout<<vId<<endl;
 
       Vertex thisV;
       bool inserted;
-      tie(thisV, inserted) = this->addV(vId);
+      tie(thisV, inserted) = this->addV(vId,other[vId]);
 
       for(VertexId vIdN : other.adj(vId)){
         // add it to the graph
         Vertex thisU;
         bool inserted;
-        tie(thisU, inserted) = this->addV(vIdN);
+        tie(thisU, inserted) = this->addV(vIdN,other[vIdN]);
         // and also add an edge connecting them
         this->addE(thisV, thisU);
       }
@@ -75,11 +76,12 @@ struct Graph {
   } 
   /* Graph& operator=(const Graph& other) { */
   /*     Graph tmp(other); */
-  /*     this->idVertexMap = idVertexMap; */
-  /*     this->vertexIdMap = vertexIdMap; */
-
-  /*     return *this; */
+  /*     /1* swap(this->idVertexMap, idVertexMap); *1/ */
+  /*     /1* swap(this->vertexIdMap, vertexIdMap); *1/ */
+  /*     /1* swap(this->g,g); *1/ */
+  /*     return Graph(); */
   /* } */
+
   // Get node info associated with p
   VertexProperty& operator[](Vertex v){
     return g[v];
@@ -91,18 +93,22 @@ struct Graph {
 
   // add vertex associated with p
   boost::tuple<Vertex, bool> addV(VertexId vId) {
+    return addV(vId,VertexProperty(vId));
+  }
+  boost::tuple<Vertex, bool> addV(VertexId vId, VertexProperty vP) {
     Vertex v;
 
-    IdVertexMapIterator idVertexMapIterator;
-    bool inserted;
-    boost::tie(idVertexMapIterator, inserted) = idVertexMap.insert(std::make_pair(vId, Vertex()));
+    auto it = idVertexMap.find(vId);
+    bool inserted = it == idVertexMap.end();
+    /* bool inserted = !is_elem(vId,idVertexMap); */
     if (inserted) {
-      v = add_vertex(vId,g);
+      v = add_vertex(vP,g);
       /* g[v] = VertexProperty(vId); */
-      idVertexMapIterator->second = v;
+      idVertexMap[vId] = v;
       vertexIdMap[v] = vId;
     } else {
-      v = idVertexMapIterator->second;
+      /* v = idVertexMap[vId]; */
+      v = it->second;
     }
     return boost::make_tuple(v, inserted);
   }
