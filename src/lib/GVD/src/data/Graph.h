@@ -523,7 +523,7 @@ struct PosGraph : public Graph<graph,Pos> {
   template<typename CellType>
   boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> &grid, vector<CellType> notTraversables) {
     // Initialize the distance grid
-    Grid<Float> distGrid(grid.size(),inf);
+    Grid<Float> distGrid(grid.size(),INF);
     distGrid[source] = 0;
 
     // Initialize the distance queues 

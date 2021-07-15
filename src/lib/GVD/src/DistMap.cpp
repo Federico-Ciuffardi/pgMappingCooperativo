@@ -18,7 +18,7 @@ bool DistMap::DistCell::operator==(const DistMap::DistCell& d) const {
 
 ostream& operator<<(ostream& out, const DistMap::DistCell& cell) {
   // out<<"("<< cell.distance<<", "<< cell.sources.size() << " )";
-  if(cell.distance == inf){
+  if(cell.distance == INF){
     out << " ∞,"<<cell.sources.size();
   }else if (cell.distance != 0) {
     int intDist = floor(cell.distance);
@@ -42,7 +42,7 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 /////////////
 
 boost::tuple<Float, PosSet> closestSources(Pos p, PosSet sources) {
-  Float minD = inf;
+  Float minD = INF;
   PosSet minDSources;
   for (Pos source : sources) {
     Float d = p.distance_to(source);
@@ -114,7 +114,7 @@ void DistMap::update(StateGrid& grid) {
         dqueue.push(DistPos(0, p));
       }
     } else {
-      dcell.distance = inf;
+      dcell.distance = INF;
     }
     distMap[p] = dcell;
   }

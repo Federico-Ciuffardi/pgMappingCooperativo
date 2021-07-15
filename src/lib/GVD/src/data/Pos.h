@@ -5,6 +5,7 @@
 #include <limits>
 
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 
 #include "Vector2.h"
 
@@ -20,6 +21,11 @@ typedef pair<Float, Pos> DistPos;
 typedef priority_queue<DistPos, vector<DistPos>, greater<DistPos>> DistPosQueue;
 
 typedef boost::unordered_set<Pos> PosSet;
+
+template <typename T>
+struct PosMap {
+    typedef boost::unordered_map<Pos, T> type;
+};
 
 /*
  *  Pos implementation

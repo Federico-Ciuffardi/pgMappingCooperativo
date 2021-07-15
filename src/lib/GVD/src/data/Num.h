@@ -4,4 +4,4 @@
 typedef int Int;
 typedef float Float;
 
-static const Float inf = std::numeric_limits<Float>::max(); 
+#define INF std::numeric_limits<Float>::infinity()

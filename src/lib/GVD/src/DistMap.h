@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "Map.h"
+#include "data/Num.h"
 
 /*
  *  dist cell, col and grid
@@ -9,7 +10,7 @@
 struct DistMap{
   struct DistCell {
     PosSet sources;
-    Float distance = inf;
+    Float distance = INF;
 
     PosSet crashingWaves;
 
