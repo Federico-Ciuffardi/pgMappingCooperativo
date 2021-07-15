@@ -150,7 +150,7 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap
 
   cout << "debug :: Get the nearest frontiers to each critical" << endl;
   for(Pos p : stateGrid){
-    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,dg)){
+    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,dg,stateGrid)){
       stateGrid[p] = Critical;
     }
   }

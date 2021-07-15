@@ -41,7 +41,7 @@ int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
 
 /* returns a boolean matrix, a cell is true if it belongs to the GvdGraph and false
  * otherwise*/
-GridGvd getGridGvd(DistMap& distMap, StateGrid sg) {
+GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
   // Initialize grid GVD
   GridGvd gridGvd(distMap.size(), false);
   GridGvd obstGridGvd(distMap.size(), false);
@@ -53,7 +53,7 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid sg) {
 
     gridGvd[p] = true;
 
-    obstGridGvd[p] = isObstacleGenerated(p,distMap);
+    obstGridGvd[p] = isObstacleGenerated(p,distMap,sg);
   }
 
   // Discard unnecesary candidates

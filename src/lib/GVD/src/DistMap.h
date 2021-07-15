@@ -11,8 +11,7 @@ struct DistMap{
     PosSet sources;
     Float distance = inf;
 
-    void addSource(Pos);
-    bool hasSource(Pos);
+    PosSet crashingWaves;
 
     bool operator>(const DistCell& d) const;
     bool operator==(const DistCell& p) const;
@@ -24,7 +23,6 @@ struct DistMap{
 
 
   DistMapType distMap;
-  StateGrid grid;
   DistPosQueue objectiveDQueue;
   PosSet waveCrashPoss;
 
@@ -45,11 +43,14 @@ struct DistMap{
 /* boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType); */
 
 // util
-inline bool isObstacleGenerated(Pos p, DistMap distMap){
-  bool obstacleGenerated = true;
+inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){
   for(Pos source : distMap[p].sources){
-    obstacleGenerated = distMap.grid[source] == Occupied;
-    if(!obstacleGenerated) break; 
+    if(sg[source] != Occupied) return false; 
   }
-  return obstacleGenerated;
+  for(Pos crashing : distMap[p].crashingWaves){
+    for(Pos source : distMap[crashing].sources){
+      if(sg[source] != Occupied) return false; 
+    }
+  }
+  return true;
 }

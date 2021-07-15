@@ -8,14 +8,6 @@
 //////////////
 // DistCell //
 //////////////
-void DistMap::DistCell::addSource(Pos p) {
-  sources.insert(p);
-}
-
-bool DistMap::DistCell::hasSource(Pos p) {
-  return find(sources.begin(), sources.end(), p) != sources.end();
-}
-
 bool DistMap::DistCell::operator>(const DistMap::DistCell& d) const {
   return this->distance > d.distance;
 }
@@ -86,9 +78,11 @@ void checkWaveCrash(Pos p, Pos np, DistMap::DistMapType& distMap, PosSet& waveCr
 
   if (distMap[p].distance > 0) { //(dist(s, obst_n) <= dist(n, obst_s)) &&  could add the multi obstacle variation
     waveCrashPoss.insert(p);
+    distMap[p].crashingWaves.insert(np);
   }
   if (distMap[np].distance > 0) { //(dist(n, obst_s) <= dist(s, obst_n)) && could add the multi obstacle variation 
     waveCrashPoss.insert(np);
+    distMap[np].crashingWaves.insert(p);
   }
 }
 
@@ -104,12 +98,9 @@ DistMap::DistMap(pair<Int,Int> size, vector<CellState> sources, vector<CellState
 }
 
 void DistMap::update(StateGrid& grid) {
-  this->grid = grid;
-
   // initialize the dgrid and the distance queues
   DistPosQueue dqueue; 
   objectiveDQueue = DistPosQueue(); //clear las full_dqueue
-
 
   // clear reset distanceMap
   for (Pos p : grid) {
@@ -118,8 +109,10 @@ void DistMap::update(StateGrid& grid) {
     DistMap::DistCell dcell;
     if (is_elem(cState, sources)) { 
       dcell.distance = 0;
-      dcell.addSource(p);
-      dqueue.push(DistPos(0, p));
+      dcell.sources.insert(p);
+      if(!grid.adj(p,nonTraversables).empty()){
+        dqueue.push(DistPos(0, p));
+      }
     } else {
       dcell.distance = inf;
     }
@@ -131,8 +124,9 @@ void DistMap::update(StateGrid& grid) {
     dqueue.pop();
 
     waveCrashPoss.erase(p);
+    distMap[p].crashingWaves.clear();
 
-    // Tell neighbors to compute distance
+    // Update neihbors distance
     for (Pos np : grid.adj(p,nonTraversables)) {
       Float minD;
       PosSet minDSources;
@@ -148,9 +142,11 @@ void DistMap::update(StateGrid& grid) {
         }
         checkWaveCrash(p, np, distMap, waveCrashPoss);
       }
+
       if (objectives.empty() || is_elem(grid[np],objectives)){
         objectiveDQueue.push(DistPos(distMap[np].distance, np));
       }
+
     }
   }
 }
