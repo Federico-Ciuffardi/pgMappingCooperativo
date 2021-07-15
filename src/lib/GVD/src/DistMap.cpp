@@ -1,16 +1,19 @@
 #include "DistMap.h"
 #include <cmath>
+#include <limits>
+#include "Map.h"
+#include "data/Pos.h"
 #include "utils.h"
 
 //////////////
 // DistCell //
 //////////////
 void DistMap::DistCell::addSource(Pos p) {
-  parents.push_back(p);
+  sources.insert(p);
 }
 
 bool DistMap::DistCell::hasSource(Pos p) {
-  return find(parents.begin(), parents.end(), p) != parents.end();
+  return find(sources.begin(), sources.end(), p) != sources.end();
 }
 
 bool DistMap::DistCell::operator>(const DistMap::DistCell& d) const {
@@ -22,15 +25,15 @@ bool DistMap::DistCell::operator==(const DistMap::DistCell& d) const {
 }
 
 ostream& operator<<(ostream& out, const DistMap::DistCell& cell) {
-  // out<<"("<< cell.distance<<", "<< cell.parents.size() << " )";
+  // out<<"("<< cell.distance<<", "<< cell.sources.size() << " )";
   if(cell.distance == inf){
-    out << " ∞,"<<cell.parents.size();
+    out << " ∞,"<<cell.sources.size();
   }else if (cell.distance != 0) {
     int intDist = floor(cell.distance);
     if(cell.distance == intDist){
-      out << " " << intDist<<","<<cell.parents.size();
+      out << " " << intDist<<","<<cell.sources.size();
     }else{
-      out << "~" << intDist<<","<<cell.parents.size();
+      out << "~" << intDist<<","<<cell.sources.size();
     }
   } else {
     out << "████";
@@ -45,6 +48,50 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 /////////////
 // DistMap //
 /////////////
+
+boost::tuple<Float, PosSet> closestSources(Pos p, PosSet sources) {
+  Float minD = inf;
+  PosSet minDSources;
+  for (Pos source : sources) {
+    Float d = p.distance_to(source);
+    if (d < minD) {
+      minD = d;
+      minDSources.clear();
+      minDSources.insert(source);
+    } else if (d == minD) {
+      minDSources.insert(source);
+    }
+  }
+  return boost::make_tuple(minD, minDSources);
+}
+
+void checkWaveCrash(Pos p, Pos np, DistMap::DistMapType& distMap, PosSet& waveCrashPoss) {
+  /* if (distMap[p].sources.size() > 1) { */
+  /*   waveCrashPoss.insert(p); */
+  /* } */
+  /* if (distMap[np].sources.size() > 1) { */
+  /*   waveCrashPoss.insert(np); */
+  /* } */
+
+  bool are_adj = true;
+  for(Pos pSource : distMap[p].sources){
+    for(Pos npSource : distMap[np].sources){
+      are_adj = npSource == pSource || is_elem(pSource, distMap.adj(npSource));
+      if(!are_adj) break;
+    }
+    if(!are_adj) break;
+  }
+
+  if(are_adj) return;
+
+  if (distMap[p].distance > 0) { //(dist(s, obst_n) <= dist(n, obst_s)) &&  could add the multi obstacle variation
+    waveCrashPoss.insert(p);
+  }
+  if (distMap[np].distance > 0) { //(dist(n, obst_s) <= dist(s, obst_n)) && could add the multi obstacle variation 
+    waveCrashPoss.insert(np);
+  }
+}
+
 pair<Int,Int> DistMap::size(){
   return distMap.size();
 }
@@ -57,9 +104,12 @@ DistMap::DistMap(pair<Int,Int> size, vector<CellState> sources, vector<CellState
 }
 
 void DistMap::update(StateGrid& grid) {
+  this->grid = grid;
+
   // initialize the dgrid and the distance queues
-  DistPosQueue dqueue; // new queue
-  fullDQueue = DistPosQueue(); //clear las full_dqueue
+  DistPosQueue dqueue; 
+  objectiveDQueue = DistPosQueue(); //clear las full_dqueue
+
 
   // clear reset distanceMap
   for (Pos p : grid) {
@@ -76,47 +126,37 @@ void DistMap::update(StateGrid& grid) {
     distMap[p] = dcell;
   }
 
-  DistPosQueue next_dqueue;
   while (!dqueue.empty()) {
-    while (!dqueue.empty()) {
-      Pos p = dqueue.top().second;
-      dqueue.pop();
+    Pos p = dqueue.top().second;
+    dqueue.pop();
 
-      // Tell neighbors to compute distance
-      for (Pos np : grid.adj(p,nonTraversables)) {
-        if (distMap[np].distance != inf) continue; // already computed
+    waveCrashPoss.erase(p);
 
-        // Compute np distance to the nearest source
-        for (Pos nnp : grid.adj(np)) {
-          /* if (distMap[nnp].distance == inf) continue; // invalid distance, can safely avoid computation */
-          if(distMap[nnp].parents.empty()) continue;
+    // Tell neighbors to compute distance
+    for (Pos np : grid.adj(p,nonTraversables)) {
+      Float minD;
+      PosSet minDSources;
+      tie(minD,minDSources) = closestSources(np,distMap[p].sources);
 
-          float d = np.distance_to(distMap[nnp].parents[0]);
-          if (d < distMap[np].distance) {
-            distMap[np].distance = d;
-            distMap[np].parents.clear();
-            distMap[np].addSource(distMap[nnp].parents[0]);
-            distMap[np].distance = distMap[np].distance;
-          } else if (d == distMap[np].distance && !distMap[np].hasSource(distMap[nnp].parents[0])) {
-            distMap[np].addSource(distMap[nnp].parents[0]);
-          }
+      if (minD < distMap[np].distance) {
+        distMap[np].distance = minD;
+        distMap[np].sources = minDSources;
+        dqueue.push(DistPos(distMap[np].distance, np));
+      } else {
+        if (minD == distMap[np].distance){
+          distMap[np].sources.insert(minDSources.begin(), minDSources.end());
         }
-        next_dqueue.push(DistPos(distMap[np].distance, np));
-
-        if (!objectives.empty() && !is_elem(grid[np],objectives)) {
-          continue;
-        }
-        fullDQueue.push(DistPos(distMap[np].distance, np));
+        checkWaveCrash(p, np, distMap, waveCrashPoss);
+      }
+      if (objectives.empty() || is_elem(grid[np],objectives)){
+        objectiveDQueue.push(DistPos(distMap[np].distance, np));
       }
     }
-    dqueue = next_dqueue;
-    next_dqueue = DistPosQueue();
   }
-  /* return boost::make_tuple(dgrid, full_dqueue); */
 }
 
 ostream& operator<<(ostream& out, DistMap& distMap) {
-  // out<<"("<< cell.distance<<", "<< cell.parents.size() << " )";
+  // out<<"("<< cell.distance<<", "<< cell.sources.size() << " )";
   return out<<distMap.distMap;
 }
 

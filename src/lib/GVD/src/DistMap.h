@@ -8,7 +8,7 @@
  */
 struct DistMap{
   struct DistCell {
-    vector<Pos> parents;
+    PosSet sources;
     Float distance = inf;
 
     void addSource(Pos);
@@ -24,7 +24,9 @@ struct DistMap{
 
 
   DistMapType distMap;
-  DistPosQueue fullDQueue;
+  StateGrid grid;
+  DistPosQueue objectiveDQueue;
+  PosSet waveCrashPoss;
 
   DistMapType::reference operator[](Pos p);
 
@@ -42,3 +44,12 @@ struct DistMap{
 
 /* boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType); */
 
+// util
+inline bool isObstacleGenerated(Pos p, DistMap distMap){
+  bool obstacleGenerated = true;
+  for(Pos source : distMap[p].sources){
+    obstacleGenerated = distMap.grid[source] == Occupied;
+    if(!obstacleGenerated) break; 
+  }
+  return obstacleGenerated;
+}

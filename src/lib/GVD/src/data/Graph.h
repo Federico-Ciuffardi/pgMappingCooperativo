@@ -24,10 +24,9 @@ using namespace boost;
 // The vertex_descriptors are stored in a map and then can be retrieved with an ID 
 // I think vertex_descriptors are invalidated when the structure is copied.
 //
-// If you need to copy a graph the copy constructor should work but I'm not
-// completly sure.  
-// The operator= is also impemented, but again not sure if it is 100% correct,
-// further testing is needed
+// If you need to copy a graph the default copy constructor and the the default
+// operator= were overrided to amend this issue. I tested both and currently
+// use them but I'm not sure if they are 100% correct.
 //
 // TODO avoid duplicate code regarding operator= and copy constructor between them
 // and withing classes

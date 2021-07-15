@@ -168,6 +168,25 @@ int main(int argc, char** argv) {
                {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
   tests.push_back(grid);
 
+  //8
+  grid.grid = {{Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
+  tests.push_back(grid);
+
   if (argc == 2) {
     char* a = argv[1];
     int num = atoi(a);

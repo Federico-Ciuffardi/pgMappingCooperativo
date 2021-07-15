@@ -15,6 +15,14 @@ struct CriticalInfo{
 
 typedef boost::unordered_map<Pos, CriticalInfo> CriticalInfos;
 
+struct Segment{
+  Int id;
+  boost::unordered_set<Pos> members;
+  Pos center;
+};
+
+typedef boost::unordered_map<Int, Segment> segments;
+
 struct TopoMap{
   DistMap* distMap;
   Gvd* gvd;

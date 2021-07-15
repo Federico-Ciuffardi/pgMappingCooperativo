@@ -24,6 +24,8 @@ struct GvdVertexProperty {
 
   bool is_critical = false;
 
+  Int segmentId = -1;
+
   Pos segment = NULL_POS;
 
   GvdVertexProperty(){};

@@ -73,6 +73,15 @@ void CentralModule::reset_bid() {
   auction_robots.clear();
 }
 
+template<typename T>
+vector<T> toVec(boost::unordered_set<T> set){
+  vector<T> res;
+  for(T t : set){
+    res.push_back(t);
+  }
+  return res;
+}
+
 pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution
   cout << "debug :: clear data from previous auction" << endl;
@@ -87,7 +96,7 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   cout << "debug :: apply kmeans" << endl;
   aplicarKmeans(frontera);
 
-  StateGrid gt = og2gt(map, getCentrosF(), &cell_count);
+  StateGrid gt = og2gt(map, toVec(frontera) /*getCentrosF()*/, &cell_count);
 
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;

@@ -4,6 +4,8 @@
 #include <cfloat>
 #include <utility>
 #include "DistMap.h"
+#include "Map.h"
+#include "data/Pos.h"
 
 /*
  *  main funcs
@@ -39,24 +41,33 @@ int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
 
 /* returns a boolean matrix, a cell is true if it belongs to the GvdGraph and false
  * otherwise*/
-GridGvd getGridGvd(DistMap& distMap) {
-  // initialize GridGvd
-  GridGvd gridGvd(distMap.size());
-  for (Pos p : gridGvd) {
-    gridGvd[p] = distMap[p].distance != 0 && distMap[p].distance != inf;  // is not a wall or unknown
+GridGvd getGridGvd(DistMap& distMap, StateGrid sg) {
+  // Initialize grid GVD
+  GridGvd gridGvd(distMap.size(), false);
+  GridGvd obstGridGvd(distMap.size(), false);
+
+  // Set the candidates to belong to the GVD
+  DistPosQueue gvdCandidatesQueue;
+  for (Pos p : distMap.waveCrashPoss){
+    gvdCandidatesQueue.push(make_pair(distMap[p].distance, p));
+
+    gridGvd[p] = true;
+
+    obstGridGvd[p] = isObstacleGenerated(p,distMap);
   }
 
-  // compute grid GvdGraph
-  while (!distMap.fullDQueue.empty()) {
-    // get the x cell to process
-    Pos p = distMap.fullDQueue.top().second;
-    distMap.fullDQueue.pop();
+  // Discard unnecesary candidates
+  while (!gvdCandidatesQueue.empty()) {
+    Float d = gvdCandidatesQueue.top().first;
+    Pos p = gvdCandidatesQueue.top().second;
+    gvdCandidatesQueue.pop();
 
-    // Remove from GvdGraph if it does not belongs to the GvdGraph by definition ands does
-    // not disconects the GvdGraph
-    if (distMap[p].parents.size() <= 1 && !disconnectsOnRemoval(p, gridGvd)) {
-      gridGvd[p] = false;
-    }
+    // all  
+    /* gridGvd[p] = true; */
+    // Preserve shape 
+    gridGvd[p] =  (obstGridGvd[p] && distMap[p].sources.size() > 1 && d <= 2) || disconnectsOnRemoval(p, gridGvd);
+    // Max celanup
+    /* gridGvd[p] = disconnectsOnRemoval(p, gridGvd); */ 
   }
   return gridGvd;
 }
@@ -66,14 +77,14 @@ Gvd::Gvd(DistMap* distMap){
 }
 
 Gvd::Gvd(pair<Int, Int> size){
-  this->distMap = new DistMap(size,{Occupied},{Occupied,Unknown});
+  this->distMap = new DistMap(size,{Occupied,Unknown},{Occupied,Unknown});
 }
 
 void Gvd::update(StateGrid& sg){
   cout << "debug :: Update distMap" << endl;
   distMap->update(sg);
   cout << "debug :: Generate gridGVD" << endl;
-  gridGvd = getGridGvd(*distMap);
+  gridGvd = getGridGvd(*distMap, sg);
   cout << "debug :: Generate graphGVD" << endl;
   if(graphGvd) delete graphGvd;
   graphGvd = new GvdGraph(gridGvd);

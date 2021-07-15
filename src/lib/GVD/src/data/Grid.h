@@ -75,8 +75,19 @@ struct Grid{
   ColType operator[](Int x){
     return grid.at(x);
   }
+
+  // returns all the neighbors Pos of a given Pos p in the grid
+  vector<Pos> adj(Pos p) {
+    vector<Pos> adj;
+    for (Pos displacement : neighborDisplacement) {
+      Pos n = p + displacement;
+      if (!inside(n)) continue; 
+      adj.push_back(n);
+    }
+    return adj;
+  }
   // returns all *valid* neighbors Pos of a given Pos p in the grid
-  vector<Pos> adj(Pos p, vector<CellType> invalids = vector<CellType>()) {
+  vector<Pos> adj(Pos p, vector<CellType> invalids) {
     vector<Pos> adj;
     for (Pos displacement : neighborDisplacement) {
       Pos n = p + displacement;

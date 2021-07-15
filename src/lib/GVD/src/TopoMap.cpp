@@ -1,6 +1,7 @@
 #include "TopoMap.h"
 #include <iostream>
 #include <vector>
+#include "DistMap.h"
 #include "Gvd.h"
 #include "Map.h"
 #include "utils.h"
@@ -133,13 +134,23 @@ void collapseVertices(GvdGraph& gvd) {
   }
 }
 
+// TODO remove toVec
+template<typename T>
+vector<T> toVec(boost::unordered_set<T> set){
+  vector<T> res;
+  for(T t : set){
+    res.push_back(t);
+  }
+  return res;
+}
+
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
+CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap& dg) {
   CriticalInfos res;
 
   cout << "debug :: Get the nearest frontiers to each critical" << endl;
   for(Pos p : stateGrid){
-    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain){
+    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,dg)){
       stateGrid[p] = Critical;
     }
   }
@@ -147,14 +158,14 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
   distMap.update(stateGrid);
 
   cout << "debug :: set each frontier to a critical" << endl;
-  while (!distMap.fullDQueue.empty()) {
-    DistPos frontier_dp = distMap.fullDQueue.top();
-    distMap.fullDQueue.pop();
+  while (!distMap.objectiveDQueue.empty()) {
+    DistPos frontier_dp = distMap.objectiveDQueue.top();
+    distMap.objectiveDQueue.pop();
     Pos frontier = frontier_dp.second;
 
     /* cout<<"Frontier: "<<frontier_dp.second<<endl; */
-    /* cout<<"Critical: "<<distMap[frontier].parents<<endl; */
-    vector<Pos>& frontierCrits = distMap[frontier].parents;
+    /* cout<<"Critical: "<<distMap[frontier].sources<<endl; */
+    vector<Pos> frontierCrits = toVec(distMap[frontier].sources);
 
     for (int i = 0; i < frontierCrits.size(); i++) {
       Pos critical_Pos = frontierCrits[i];
@@ -179,8 +190,8 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
   GvdGraph::VertexIterator v_it, v_it_end;
   for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
     GvdVertexProperty& v = gvd[*v_it];
-    if (distMap[v.p].parents.size() > 0) {
-      v.segment = distMap[v.p].parents[0];
+    if (distMap[v.p].sources.size() > 0) {
+      v.segment = *distMap[v.p].sources.begin();
     } else {
       v.segment = Pos(INT_MIN, INT_MIN);
       cout << "warning vertex without segment" << endl;
@@ -279,7 +290,7 @@ CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& g
   }
 
   cout << "debug :: unknownDistConstraint" << endl;
-  CriticalInfos cis = unknownDistConstraint(stateGrid, gvd);
+  CriticalInfos cis = unknownDistConstraint(stateGrid, gvd, dg);
 
   return cis;
 }
@@ -290,8 +301,8 @@ TopoMap::TopoMap(Gvd* gvd){
 }
 
 TopoMap::TopoMap(pair<Int, Int> size){
-  this->distMap = new DistMap(size,{Occupied},{Occupied,Unknown});
-  this->gvd = new Gvd(distMap);
+  this->gvd = new Gvd(size);
+  this->distMap = gvd->distMap;
 }
 
 /* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
