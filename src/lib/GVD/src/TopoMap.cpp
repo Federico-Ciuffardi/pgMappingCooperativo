@@ -6,10 +6,11 @@
 #include "Map.h"
 #include "utils.h"
 
-// Sets the isLocalMin value of all the distance local mins vertices  
-// Local min here means:
-//  * there is no neighbor with less distance
-//  * there is at least one neighbor with greater distance
+// Sets to true the isLocalMin attribute of all the distance local minimum vertices.
+//
+// Local minimum here means:
+//  * There is no neighbor with less distance
+//  * There is at least one neighbor with greater distance
 void setLocalMins(DistMap& dg, GvdGraph& gvd) {
   PosSet notLocalMins;
 
@@ -42,7 +43,7 @@ void setLocalMins(DistMap& dg, GvdGraph& gvd) {
   }
 }
 
-// increase sparseness by removing redundant edges:
+// increase the sparseness of the graph by removing redundant edges:
 //
 //   * in this case redundant edges are the ones that from v lead to a neighbor
 //     vN1 that can be reached from another neighbor of v vN2, meaning there is a
@@ -105,8 +106,9 @@ bool sameDirecction(Pos p1, Pos p2) {
   return p1.normalize() == -p2.normalize();
 }
 
-// Simplify the graph without removing information.
-//   Remove all the non critical candidates of degree2 that lie within a
+// Simplify the graph without removing spatial information.
+//
+//   Remove all the non critical candidates of degree 2 that lie within a
 //   straight line of vertices and are not the ends. The removed vertices are
 //   represented with an edge connecting the preserved ends of the line.
 void collapseVertices(GvdGraph& gvd) {
@@ -134,74 +136,11 @@ void collapseVertices(GvdGraph& gvd) {
   }
 }
 
-// TODO remove toVec
-template<typename T>
-vector<T> toVec(boost::unordered_set<T> set){
-  vector<T> res;
-  for(T t : set){
-    res.push_back(t);
-  }
-  return res;
-}
-
-// Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap& dg) {
-  CriticalInfos res;
-
-  cout << "debug :: Get the nearest frontiers to each critical" << endl;
-  for(Pos p : stateGrid){
-    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,dg,stateGrid)){
-      stateGrid[p] = Critical;
-    }
-  }
-  DistMap distMap(stateGrid.size(),{Critical},{Unknown,Occupied}, {Frontier});
-  distMap.update(stateGrid);
-
-  cout << "debug :: set each frontier to a critical" << endl;
-  while (!distMap.objectiveDQueue.empty()) {
-    DistPos frontier_dp = distMap.objectiveDQueue.top();
-    distMap.objectiveDQueue.pop();
-    Pos frontier = frontier_dp.second;
-
-    /* cout<<"Frontier: "<<frontier_dp.second<<endl; */
-    /* cout<<"Critical: "<<distMap[frontier].sources<<endl; */
-    vector<Pos> frontierCrits = toVec(distMap[frontier].sources);
-
-    for (int i = 0; i < frontierCrits.size(); i++) {
-      Pos critical_Pos = frontierCrits[i];
-      GvdVertexProperty& c = gvd[critical_Pos];
-      if (!c.is_critical) {
-        c.is_critical = true;
-        // c.segment = critical_Pos;
-        res[critical_Pos].mindToF = frontier_dp.first;
-        res[critical_Pos].frontiers.push_back(frontier);
-        // frontier_crits.clear();
-        frontierCrits[0] = critical_Pos;
-        break;
-      }
-      if (i == (frontierCrits.size() - 1)) {  // i is the last one
-        res[critical_Pos].frontiers.push_back(frontier);
-        // frontier_crits.clear();
-        frontierCrits[0] = critical_Pos;
-      }
-    }
-  }
-  cout << "set the segment for every vertex" << endl;
-  GvdGraph::VertexIterator v_it, v_it_end;
-  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
-    GvdVertexProperty& v = gvd[*v_it];
-    if (distMap[v.p].sources.size() > 0) {
-      v.segment = *distMap[v.p].sources.begin();
-    } else {
-      v.segment = Pos(INT_MIN, INT_MIN);
-      cout << "warning vertex without segment" << endl;
-    }
-  }
-  cout << "Done" << endl;
-
-  return res;
-}
-
+// Return true if there is a path from `prevV` that:
+// * Includes `v` and reaches a
+// * Ends on a vertex of degree 3 
+// * Does not contain a critial vertex candidate meaning a local min vertex
+//   (see setLocalMins for local min definition) 
 bool degreeConstraintAux(GvdGraph& gvd,GvdGraph::Vertex& prevV, GvdGraph::Vertex& v){
   if (gvd.degree(v) >= 3){ // neighbor of degree 3 or greater
     return true;
@@ -218,7 +157,12 @@ bool degreeConstraintAux(GvdGraph& gvd,GvdGraph::Vertex& prevV, GvdGraph::Vertex
   return false;
 }
 
-
+// Sets to true the degreeConstrain attribute of all the vertices that satisfy it.
+// The degree constrain is satisfied if:
+// * A vertex has degree 2 
+// * Is a local min
+// * has a path with the characteristics described on the `degreeConstraintAux`
+//   function
 void degreeConstraint(GvdGraph& gvd) {
   int criticalsCount = 0;
 
@@ -264,6 +208,58 @@ void degreeConstraint(GvdGraph& gvd) {
 
 }
 
+// Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
+CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap& dg) {
+  CriticalInfos res;
+  cout << "debug :: Get the nearest frontiers to each critical" << endl;
+
+  DistMap distMap(stateGrid.size(),{Critical},{Unknown,Occupied}, {Frontier});
+  distMap.update(stateGrid);
+
+  cout << "debug :: set each frontier to a critical" << endl;
+  while (!distMap.objectiveDQueue.empty()) {
+    DistPos frontier_dp = distMap.objectiveDQueue.top();
+    distMap.objectiveDQueue.pop();
+    Pos frontier = frontier_dp.second;
+
+    vector<Pos> frontierCrits = toVec(distMap[frontier].sources);
+
+    for (int i = 0; i < frontierCrits.size(); i++) {
+      Pos critical_Pos = frontierCrits[i];
+      GvdVertexProperty& c = gvd[critical_Pos];
+      if (!c.is_critical) {
+        c.is_critical = true;
+        // c.segment = critical_Pos;
+        res[critical_Pos].mindToF = frontier_dp.first;
+        res[critical_Pos].frontiers.push_back(frontier);
+        // frontier_crits.clear();
+        frontierCrits[0] = critical_Pos;
+        break;
+      }
+      if (i == (frontierCrits.size() - 1)) {  // i is the last one
+        res[critical_Pos].frontiers.push_back(frontier);
+        // frontier_crits.clear();
+        frontierCrits[0] = critical_Pos;
+      }
+    }
+  }
+  cout << "set the segment for every vertex" << endl;
+  GvdGraph::VertexIterator v_it, v_it_end;
+  for (tie(v_it, v_it_end) = vertices(gvd.g); v_it != v_it_end; v_it++) {
+    GvdVertexProperty& v = gvd[*v_it];
+    if (distMap[v.p].sources.size() > 0) {
+      v.segment = *distMap[v.p].sources.begin();
+    } else {
+      v.segment = Pos(INT_MIN, INT_MIN);
+      cout << "warning vertex without segment" << endl;
+    }
+  }
+  cout << "Done" << endl;
+
+  return res;
+}
+
+
 CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
   cout << "debug :: cleanUp" << endl;
   cleanUp(gvd);
@@ -287,6 +283,13 @@ CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& g
     Pos p = it.first;
     GvdGraph::Vertex v = it.second;
     gvd[p] = collapsedGvd[v]; 
+  }
+
+  // Set the critical points on the state grid
+  for(Pos p : stateGrid){
+    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,dg,stateGrid)){
+      stateGrid[p] = Critical;
+    }
   }
 
   cout << "debug :: unknownDistConstraint" << endl;

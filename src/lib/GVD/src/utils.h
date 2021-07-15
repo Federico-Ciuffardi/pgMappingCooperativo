@@ -9,17 +9,17 @@ using namespace std;
 
 ////// productive
 template <typename T>
-inline bool is_elem(boost::unordered_set<T> s, T e) {
+inline bool is_elem(boost::unordered_set<T>& s, T e) {
   return s.find(e) != s.end();
 }
 
 template <typename K, typename T>
-inline bool is_elem(boost::unordered_map<K, T> m, K e) {
+inline bool is_elem(boost::unordered_map<K, T>& m, K e) {
   return m.find(e) != m.end();
 }
 
 template <typename K, typename T>
-inline bool is_elem(map<K, T> m, K e) {
+inline bool is_elem(map<K, T>& m, K e) {
   return m.find(e) != m.end();
 }
 
@@ -34,17 +34,17 @@ inline bool is_elem(vector<T> v, T e) {
 }
 
 template <typename T>
-inline bool is_elem(T e, boost::unordered_set<T> s) {
+inline bool is_elem(T e, boost::unordered_set<T>& s) {
   return s.find(e) != s.end();
 }
 
 template <typename K, typename T>
-inline bool is_elem(K e, boost::unordered_map<K, T> m) {
+inline bool is_elem(K e, boost::unordered_map<K, T>& m) {
   return m.find(e) != m.end();
 }
 
 template <typename K, typename T>
-inline bool is_elem(K e, map<K, T> m) {
+inline bool is_elem(K e, map<K, T>& m) {
   return m.find(e) != m.end();
 }
 
@@ -57,6 +57,18 @@ inline bool is_elem(T e,vector<T> v) {
   }
   return false;
 }
+
+
+template<typename T>
+vector<T> toVec(boost::unordered_set<T> set){
+  vector<T> res;
+  for(T t : set){
+    res.push_back(t);
+  }
+  return res;
+}
+
+
 
 ///// Test/Debug Aux
 
@@ -108,7 +120,7 @@ ostream& operator<<(ostream& out, const boost::unordered_map<K, T>& m) {
 
 /* Print grid Property (the cells of gt present set) */
 template <typename T>
-inline void print_property(PosSet set, Grid<T>& gt) {
+inline void print_property(PosSet& set, Grid<T>& gt) {
   int mapWidth = gt.size();
   int mapHeight = gt[0].size();
   for (int x = 0; x < mapWidth; x++) {
@@ -121,7 +133,7 @@ inline void print_property(PosSet set, Grid<T>& gt) {
 
 /* Print grid Property (the cells of grid present in the map) */
 template <typename T>
-inline void print_property(boost::unordered_map<Pos, int> map, Grid<T>& gt) {
+inline void print_property(boost::unordered_map<Pos, int>& map, Grid<T>& gt) {
   int mapWidth = gt.size();
   int mapHeight = gt[0].size();
   for (int x = 0; x < mapWidth; x++) {

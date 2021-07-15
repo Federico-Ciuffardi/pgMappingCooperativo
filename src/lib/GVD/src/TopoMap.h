@@ -13,11 +13,12 @@ struct CriticalInfo{
   vector<Pos> frontiers;
 };
 
-typedef boost::unordered_map<Pos, CriticalInfo> CriticalInfos;
+typedef PosMap<CriticalInfo>::type CriticalInfos;
 
 struct Segment{
   Int id;
-  boost::unordered_set<Pos> members;
+  PosSet members;
+  PosMap<PosSet>::type typeMembers;
   Pos center;
 };
 
