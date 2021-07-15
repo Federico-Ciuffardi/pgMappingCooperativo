@@ -47,10 +47,20 @@ inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){
   for(Pos source : distMap[p].sources){
     if(sg[source] != Occupied) return false; 
   }
+  /* for(Pos crashing : distMap[p].crashingWaves){ */
+  /*   for(Pos source : distMap[crashing].sources){ */
+  /*     if(sg[source] != Occupied) return false; */ 
+  /*   } */
+  /* } */
+  int obstacleWaves = 0;
   for(Pos crashing : distMap[p].crashingWaves){
+    bool obstacleWave;
     for(Pos source : distMap[crashing].sources){
-      if(sg[source] != Occupied) return false; 
+      obstacleWave = sg[source] == Occupied;
+      if(!obstacleWave) break;
     }
+    if(obstacleWave) obstacleWaves++;
+    if(obstacleWaves >= 1) break;
   }
-  return true;
+  return (obstacleWaves >= 1);
 }
