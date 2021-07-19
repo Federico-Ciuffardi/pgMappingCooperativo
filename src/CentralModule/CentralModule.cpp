@@ -73,14 +73,14 @@ void CentralModule::reset_bid() {
   auction_robots.clear();
 }
 
-template<typename T>
-vector<T> toVec(boost::unordered_set<T> set){
-  vector<T> res;
-  for(T t : set){
-    res.push_back(t);
-  }
-  return res;
-}
+/* template<typename T> */
+/* vector<T> toVec(boost::unordered_set<T> set){ */
+/*   vector<T> res; */
+/*   for(T t : set){ */
+/*     res.push_back(t); */
+/*   } */
+/*   return res; */
+/* } */
 
 pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution

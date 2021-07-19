@@ -90,27 +90,25 @@ pair<Int,Int> DistMap::size(){
   return distMap.size();
 }
 
-DistMap::DistMap(pair<Int,Int> size, vector<CellState> sources, vector<CellState> nonTraversables, vector<CellState> objectives){
+DistMap::DistMap(pair<Int,Int> size, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives){
  distMap = DistMapType(size); 
  this->sources = sources;
  this->nonTraversables = nonTraversables;
  this->objectives = objectives;
 }
 
-void DistMap::update(StateGrid& grid) {
-  // initialize the dgrid and the distance queues
+void DistMap::update(MapType& map) {
+  // initialize the dmap and the distance queues
   DistPosQueue dqueue; 
   objectiveDQueue = DistPosQueue(); //clear las full_dqueue
 
   // clear reset distanceMap
-  for (Pos p : grid) {
-    CellState cState = grid[p];
-
+  for (Pos p : map) {
     DistMap::DistCell dcell;
-    if (is_elem(cState, sources)) { 
+    if (is_elem(map[p], sources)) { 
       dcell.distance = 0;
       dcell.sources.insert(p);
-      if(!grid.adj(p,nonTraversables).empty()){
+      if(!map.adj(p,nonTraversables).empty()){
         dqueue.push(DistPos(0, p));
       }
     } else {
@@ -127,7 +125,7 @@ void DistMap::update(StateGrid& grid) {
     distMap[p].crashingWaves.clear();
 
     // Update neihbors distance
-    for (Pos np : grid.adj(p,nonTraversables)) {
+    for (Pos np : map.adj(p,nonTraversables)) {
       Float minD;
       PosSet minDSources;
       tie(minD,minDSources) = closestSources(np,distMap[p].sources);
@@ -143,7 +141,7 @@ void DistMap::update(StateGrid& grid) {
         checkWaveCrash(p, np, distMap, waveCrashPoss);
       }
 
-      if (objectives.empty() || is_elem(grid[np],objectives)){
+      if (objectives.empty() || is_elem(map[np],objectives)){
         objectiveDQueue.push(DistPos(distMap[np].distance, np));
       }
 
@@ -155,4 +153,3 @@ ostream& operator<<(ostream& out, DistMap& distMap) {
   // out<<"("<< cell.distance<<", "<< cell.sources.size() << " )";
   return out<<distMap.distMap;
 }
-

@@ -309,10 +309,10 @@ TopoMap::TopoMap(pair<Int, Int> size){
 }
 
 /* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
-void TopoMap::update(StateGrid& sg){
-  this->gvd->update(sg); // also updates the shared distMap
+void TopoMap::update(MapType& map){
+  this->gvd->update(map); // also updates the shared distMap
   cout << "debug :: Calculate ciritical points" << endl;
-  this->cis = get_critical_points(sg, *distMap, *gvd->graphGvd);
+  this->cis = get_critical_points(map, *distMap, *gvd->graphGvd);
 }
 
 TopoMap::~TopoMap(){

@@ -186,6 +186,28 @@ int main(int argc, char** argv) {
                {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
                {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
   tests.push_back(grid);
+  //9 esquina inferior izquierda no pertenece al GVD por culpa del cleanup (esto es correcto)
+  grid.grid = {{Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
+  tests.push_back(grid);
 
   if (argc == 2) {
     char* a = argv[1];

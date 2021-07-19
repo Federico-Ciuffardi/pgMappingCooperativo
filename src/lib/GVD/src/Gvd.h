@@ -15,7 +15,6 @@ using namespace boost;
  *  GvdGraph definition
  */
 typedef Grid<bool> GridGvd;
-
 struct GvdVertexProperty {
   Pos p = NULL_POS;
 
@@ -46,12 +45,21 @@ typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,
 typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdVecGraph;
 
 struct Gvd {
-  void update(StateGrid& g);
+  typedef CellState      CellType; // could be set as template if needed
+  typedef Grid<CellType> MapType; // could be set as template if needed
+
+  // Results
   GridGvd gridGvd;
   GvdGraph* graphGvd = NULL;
   DistMap* distMap = NULL;
-  Gvd(DistMap* distMap);
+
+  // Constructors
+  Gvd(DistMap*);
   Gvd(pair<Int, Int> size);
 
+  // Functions
+  void update(MapType&);
+
+  // Destructor
   ~Gvd();
 };

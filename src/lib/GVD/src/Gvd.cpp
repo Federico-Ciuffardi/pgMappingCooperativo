@@ -7,10 +7,6 @@
 #include "Map.h"
 #include "data/Pos.h"
 
-/*
- *  main funcs
- */
-
 /* If removing `p` from  disconects the graph represented with the Grid then  */
 template<typename CellType>
 int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
@@ -80,11 +76,11 @@ Gvd::Gvd(pair<Int, Int> size){
   this->distMap = new DistMap(size,{Occupied,Unknown},{Occupied,Unknown});
 }
 
-void Gvd::update(StateGrid& sg){
+void Gvd::update(MapType& map){
   cout << "debug :: Update distMap" << endl;
-  distMap->update(sg);
+  distMap->update(map);
   cout << "debug :: Generate gridGVD" << endl;
-  gridGvd = getGridGvd(*distMap, sg);
+  gridGvd = getGridGvd(*distMap, map);
   cout << "debug :: Generate graphGVD" << endl;
   if(graphGvd) delete graphGvd;
   graphGvd = new GvdGraph(gridGvd);

@@ -25,13 +25,22 @@ struct Segment{
 typedef boost::unordered_map<Int, Segment> segments;
 
 struct TopoMap{
+  typedef CellState      CellType; // could be set as template if needed
+  typedef Grid<CellType> MapType; // could be set as template if needed
+
+  // Results
   DistMap* distMap;
   Gvd* gvd;
   CriticalInfos cis;
 
-  void update(StateGrid& g);
-  TopoMap(Gvd* gvd);
+  // Constructors
+  TopoMap(Gvd*);
   TopoMap(pair<Int, Int> size);
+
+  // Functions
+  void update(MapType&);
+
+  // Destructor
   ~TopoMap();
 };
 

@@ -8,6 +8,9 @@
  *  dist cell, col and grid
  */
 struct DistMap{
+  typedef CellState      CellType; // could be set as template if needed
+  typedef Grid<CellType> MapType; // could be set as template if needed
+
   struct DistCell {
     PosSet sources;
     Float distance = INF;
@@ -20,31 +23,32 @@ struct DistMap{
   };
 
   typedef Grid<DistCell> DistMapType;
-  typedef CellState CellType; 
 
-
+  // Results
   DistMapType distMap;
   DistPosQueue objectiveDQueue;
   PosSet waveCrashPoss;
 
-  DistMapType::reference operator[](Pos p);
-
+  // Configuration
   vector<CellType> nonTraversables;
   vector<CellType> sources;
   vector<CellType> objectives;
 
-  DistMap(pair<Int,Int>, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
-  void update(StateGrid&);
+  // Constructor
+  DistMap(pair<Int,Int> size, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
 
+  // functions
   pair<Int,Int> size();
+  DistMapType::reference operator[](Pos);
+  void update(MapType&);
 
-  friend ostream& operator<<(ostream& out, const DistMap& cell);
+  friend ostream& operator<<(ostream& out, const DistMap&);
 };
 
-/* boost::tuple<DistMap, DistPosQueue> calculate_distances(StateGrid, CellState sourceType); */
-
 // util
-inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){
+
+// Could be modified to accept a arbitrary CellType value if needed due to DistMap templating
+inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){ 
   for(Pos source : distMap[p].sources){
     if(sg[source] != Occupied) return false; 
   }

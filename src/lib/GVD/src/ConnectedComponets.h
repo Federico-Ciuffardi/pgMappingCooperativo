@@ -5,21 +5,25 @@
 #include "Map.h"
 #include "data/Grid.h"
 
-
 struct ConnectedComponents{
+  typedef CellState      CellType; // could be set as template if needed
+  typedef Grid<CellType> MapType; // could be set as template if needed
+
+  typedef Int IdType;
+
   struct ConectedComponent{
-    Int id;
+    IdType id;
     PosSet members;
-    boost::unordered_map<CellState, PosSet> typeMembers;
+    boost::unordered_map<CellType, PosSet> typeMembers;
     Pos center;
   };
 
   unordered_map<Int, ConectedComponent> connectedComponents;
 
-  ConnectedComponents(pair<Int, Int>);
+  Grid<IdType> idGrid;
 
-
-
-
-}
+  ConnectedComponents(pair<Int, Int> size, vector<CellType> nonTraversable);
+    
+  void update(MapType);
+};
 
