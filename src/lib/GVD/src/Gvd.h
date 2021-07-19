@@ -53,12 +53,15 @@ struct Gvd {
   GvdGraph* graphGvd = NULL;
   DistMap* distMap = NULL;
 
+  // Info
+  MapType& map;
+
   // Constructors
   Gvd(DistMap*);
-  Gvd(pair<Int, Int> size);
+  Gvd(MapType&);
 
   // Functions
-  void update(MapType&);
+  void update();
 
   // Destructor
   ~Gvd();

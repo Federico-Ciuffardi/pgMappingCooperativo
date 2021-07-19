@@ -81,7 +81,7 @@ void CentralModule::reset_bid() {
 /*   } */
 /*   return res; */
 /* } */
-
+StateGrid gt;
 pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution
   cout << "debug :: clear data from previous auction" << endl;
@@ -96,15 +96,15 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   cout << "debug :: apply kmeans" << endl;
   aplicarKmeans(frontera);
 
-  StateGrid gt = og2gt(map, /*toVec(frontera)*/ getCentrosF(), &cell_count);
+   gt = og2gt(map, /*toVec(frontera)*/ getCentrosF(), &cell_count);
 
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;
   
   if(!topoMap){
-    topoMap = new TopoMap(gt.size());
+    topoMap = new TopoMap(gt);
   }
-  topoMap->update(gt);
+  topoMap->update();
   cout << "debug :: topoMap updated" << endl;
 
   cis = topoMap->cis;

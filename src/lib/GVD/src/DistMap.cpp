@@ -90,14 +90,14 @@ pair<Int,Int> DistMap::size(){
   return distMap.size();
 }
 
-DistMap::DistMap(pair<Int,Int> size, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives){
- distMap = DistMapType(size); 
+DistMap::DistMap(MapType& map, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives) : map(map){
+ distMap = DistMapType(map.size()); 
  this->sources = sources;
  this->nonTraversables = nonTraversables;
  this->objectives = objectives;
 }
 
-void DistMap::update(MapType& map) {
+void DistMap::update() {
   // initialize the dmap and the distance queues
   DistPosQueue dqueue; 
   objectiveDQueue = DistPosQueue(); //clear las full_dqueue

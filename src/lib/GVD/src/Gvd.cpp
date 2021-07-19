@@ -68,17 +68,17 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
   return gridGvd;
 }
 
-Gvd::Gvd(DistMap* distMap){
+Gvd::Gvd(DistMap* distMap) : map(distMap->map){
   this->distMap = distMap;
 }
 
-Gvd::Gvd(pair<Int, Int> size){
-  this->distMap = new DistMap(size,{Occupied,Unknown},{Occupied,Unknown});
+Gvd::Gvd(MapType& map) : map(map){
+  this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
 }
 
-void Gvd::update(MapType& map){
+void Gvd::update(){
   cout << "debug :: Update distMap" << endl;
-  distMap->update(map);
+  distMap->update();
   cout << "debug :: Generate gridGVD" << endl;
   gridGvd = getGridGvd(*distMap, map);
   cout << "debug :: Generate graphGVD" << endl;

@@ -17,8 +17,8 @@ void testGrid(StateGrid stateGrid){
   
   // Init topo map and update it with the stateGrid
   // meaning: update DistMap, update Gvd, update TopoMap 
-  TopoMap topoMap(stateGrid.size());
-  topoMap.update(stateGrid);
+  TopoMap topoMap(stateGrid);
+  topoMap.update();
 
   // DistGrid
   cout << "DistGrid:" << endl;

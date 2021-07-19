@@ -213,8 +213,8 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap
   CriticalInfos res;
   cout << "debug :: Get the nearest frontiers to each critical" << endl;
 
-  DistMap distMap(stateGrid.size(),{Critical},{Unknown,Occupied}, {Frontier});
-  distMap.update(stateGrid);
+  DistMap distMap(stateGrid,{Critical},{Unknown,Occupied}, {Frontier});
+  distMap.update();
 
   cout << "debug :: set each frontier to a critical" << endl;
   while (!distMap.objectiveDQueue.empty()) {
@@ -298,19 +298,21 @@ CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& g
   return cis;
 }
 
-TopoMap::TopoMap(Gvd* gvd){
+TopoMap::TopoMap(Gvd* gvd) : map(gvd->map){
   this->gvd = gvd;
   this->distMap = gvd->distMap;
 }
 
-TopoMap::TopoMap(pair<Int, Int> size){
-  this->gvd = new Gvd(size);
+TopoMap::TopoMap(MapType& map) : map(map) {
+  this->gvd = new Gvd(map);
   this->distMap = gvd->distMap;
 }
 
 /* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
-void TopoMap::update(MapType& map){
-  this->gvd->update(map); // also updates the shared distMap
+void TopoMap::update(){
+  cis.clear();
+
+  this->gvd->update(); // also updates the shared distMap
   cout << "debug :: Calculate ciritical points" << endl;
   this->cis = get_critical_points(map, *distMap, *gvd->graphGvd);
 }

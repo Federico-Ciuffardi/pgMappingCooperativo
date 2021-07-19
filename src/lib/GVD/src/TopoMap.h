@@ -29,16 +29,21 @@ struct TopoMap{
   typedef Grid<CellType> MapType; // could be set as template if needed
 
   // Results
+  CriticalInfos cis;
+  
+  // Sub results
   DistMap* distMap;
   Gvd* gvd;
-  CriticalInfos cis;
+
+  // Info
+  MapType& map;
 
   // Constructors
   TopoMap(Gvd*);
-  TopoMap(pair<Int, Int> size);
+  TopoMap(MapType&);
 
   // Functions
-  void update(MapType&);
+  void update();
 
   // Destructor
   ~TopoMap();

@@ -29,18 +29,21 @@ struct DistMap{
   DistPosQueue objectiveDQueue;
   PosSet waveCrashPoss;
 
+  // Info
+  MapType& map;
+
   // Configuration
   vector<CellType> nonTraversables;
   vector<CellType> sources;
   vector<CellType> objectives;
 
   // Constructor
-  DistMap(pair<Int,Int> size, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
+  DistMap(MapType&, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
 
   // functions
   pair<Int,Int> size();
   DistMapType::reference operator[](Pos);
-  void update(MapType&);
+  void update();
 
   friend ostream& operator<<(ostream& out, const DistMap&);
 };

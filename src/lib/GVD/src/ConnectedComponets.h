@@ -5,25 +5,41 @@
 #include "Map.h"
 #include "data/Grid.h"
 
-struct ConnectedComponents{
+#define NULL_ID NULL_INT 
+
+class ConnectedComponents{
+public:
   typedef CellState      CellType; // could be set as template if needed
   typedef Grid<CellType> MapType; // could be set as template if needed
 
   typedef Int IdType;
+  static const IdType firstId = 0;
 
   struct ConectedComponent{
-    IdType id;
     PosSet members;
     boost::unordered_map<CellType, PosSet> typeMembers;
     Pos center;
   };
 
-  unordered_map<Int, ConectedComponent> connectedComponents;
-
+  // Results
+  std::map<Int, ConectedComponent> connectedComponents;
   Grid<IdType> idGrid;
 
-  ConnectedComponents(pair<Int, Int> size, vector<CellType> nonTraversable);
-    
-  void update(MapType);
-};
+  // Info
+  MapType& map;
 
+  // Config
+  vector<CellType> nonTraversables;
+
+  // Constructor
+  ConnectedComponents(MapType& map, vector<CellType> nonTraversables);
+    
+  // functions
+  void update(); // Non incremental
+
+private:
+  // Aux Funcs
+  IdType genId();
+  void add(Pos p, IdType);
+  void fill(Pos p, IdType id);
+};
