@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 struct Vector2 {
   typedef Int InNum;
 
@@ -50,6 +49,7 @@ struct Vector2 {
 
   Float distanceTo(Vector2) const;
   Float distanceToSquared(Vector2) const;
+  bool adjacent(Vector2) const;
 
   bool operator==(const Vector2) const;
   bool operator!=(const Vector2) const;

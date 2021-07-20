@@ -49,19 +49,15 @@ struct DistMap{
 };
 
 // util
-boost::tuple<Float, PosSet> closestSources(Pos p, PosSet sources);
-
 inline PosSet basisPoints(Pos p, DistMap& distMap){
   PosSet res;
 
+  // sources U pseudoSources
   res.insert(distMap[p].sources.begin(), distMap[p].sources.end());
   res.insert(distMap[p].pseudoSources.begin(), distMap[p].pseudoSources.end());
-  cout<<p<<" "<<"sources:       "<<distMap[p].sources<<endl;
-  cout<<p<<" "<<"pseudoSources: "<<distMap[p].pseudoSources<<endl;
 
   return res;
 }
-
 
 // Could be modified to accept a arbitrary CellType value if needed due to DistMap templating
 inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){ 

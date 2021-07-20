@@ -3,6 +3,7 @@
 #include "DistMap.h"
 #include "Gvd.h"
 #include "data/Grid.h"
+#include "ConnectedComponents.h"
 #include <boost/graph/adjacency_list.hpp>
 
 /*
@@ -34,6 +35,7 @@ struct TopoMap{
   // Sub results
   DistMap* distMap;
   Gvd* gvd;
+  ConnectedComponents* segmenter;
 
   // Info
   MapType& map;

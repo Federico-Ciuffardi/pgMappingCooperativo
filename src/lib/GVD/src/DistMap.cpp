@@ -41,27 +41,11 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 // DistMap //
 /////////////
 
-boost::tuple<Float, PosSet> closestSources(Pos p, PosSet sources) {
-  Float minD = INF;
-  PosSet minDSources;
-  for (Pos source : sources) {
-    Float d = p.distanceTo(source);
-    if (d < minD) {
-      minD = d;
-      minDSources.clear();
-      minDSources.insert(source);
-    } else if (d == minD) {
-      minDSources.insert(source);
-    }
-  }
-  return boost::make_tuple(minD, minDSources);
-}
-
-// the boolean value indicates if the pseudoSources are modified
-bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap::DistMapType& distMap){
+// the boolean value indicates if the pseudo sources are modified
+bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
   Int min;
   PosSet candidatePseudoSources;
-  tie(min,candidatePseudoSources) = closestSources(p, distMap[waveP].sources);
+  tie(min,candidatePseudoSources) = closests(p, distMap[waveP].sources);
 
   // Skip if there exist already a pseudo source closer than the candidates
   Float distToCurrentPesudoSource;
@@ -77,7 +61,7 @@ bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap::DistMapType& distMap){
   // Skip if adjacent to a source
   for(Pos candidatePseudoSource : candidatePseudoSources){
     for(Pos pSource : distMap[p].sources){
-      if(candidatePseudoSource.distanceToSquared(pSource) <= 4) return false;
+      if(candidatePseudoSource.adjacent(pSource)) return false;
     }
   }
 
@@ -94,7 +78,7 @@ bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap::DistMapType& distMap){
     for(Pos candidatePseudoSource : candidatePseudoSources){
       bool adjacent = false;
       for(Pos pPseudoSource : distMap[p].pseudoSources){
-        adjacent = candidatePseudoSource.distanceToSquared(pPseudoSource) <= 4;
+        adjacent = candidatePseudoSource.adjacent(pPseudoSource);
         if(adjacent) break;
       }
       if(!adjacent){
@@ -106,18 +90,40 @@ bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap::DistMapType& distMap){
   }
 }
 
-void checkWaveCrash(Pos p, Pos np, DistMap::DistMapType& distMap, PosSet& waveCrashPoss) {
-  if (distMap[p].sources.size() > 1) {
-    waveCrashPoss.insert(p);
+bool existsNonAdjacent(PosSet ps1, PosSet ps2){
+  for(Pos p1 : ps1){
+    for(Pos p2 : ps2){
+        if(!p1.adjacent(p2)) return true;
+    }
   }
-  if (distMap[np].sources.size() > 1) {
-    waveCrashPoss.insert(np);
-  }
+  return false;
+}
 
+bool existsNonAdjacent(PosSet ps){
+  return existsNonAdjacent(ps, ps);
+}
+
+void checkWaveCrash(Pos p, Pos np, DistMap& distMap, PosSet& waveCrashPoss) {
+  // mehtod 3
+  setPseudoSourcesFromWave(p, np, distMap); 
+  setPseudoSourcesFromWave(np, p, distMap); 
+
+  if (existsNonAdjacent(basisPoints(p, distMap)))  waveCrashPoss.insert(p);
+  if (existsNonAdjacent(basisPoints(np, distMap))) waveCrashPoss.insert(np);
+
+  // method 2
+  /* if (distMap[p].sources.size()  > 1) waveCrashPoss.insert(p); */ 
+  /* if (distMap[np].sources.size() > 1) waveCrashPoss.insert(np); */
+  
+  /* if(setPseudoSourcesFromWave(p, np, distMap)) waveCrashPoss.insert(p); */ 
+  /* if(setPseudoSourcesFromWave(np, p, distMap)) waveCrashPoss.insert(np); */ 
+
+
+  // method 1
   /* bool are_adj = true; */
   /* for(Pos pSource : distMap[p].sources){ */
   /*   for(Pos npSource : distMap[np].sources){ */
-  /*     are_adj = npSource.distanceToSquared(pSource) <= 4;//npSource == pSource || is_elem(pSource, distMap.adj(npSource)); */
+  /*     are_adj = npSource.adjacent(pSource); // better than: `npSource == pSource || is_elem(pSource, distMap.adj(npSource));` */
   /*     if(!are_adj) break; */
   /*   } */
   /*   if(!are_adj) break; */
@@ -133,8 +139,6 @@ void checkWaveCrash(Pos p, Pos np, DistMap::DistMapType& distMap, PosSet& waveCr
   /*   waveCrashPoss.insert(np); */
   /*   distMap[np].crashingWaves.insert(p); */
   /* } */
-  if(setPseudoSourcesFromWave(p, np, distMap)) waveCrashPoss.insert(p); 
-  if(setPseudoSourcesFromWave(np, p, distMap)) waveCrashPoss.insert(np); 
 }
 
 pair<Int,Int> DistMap::size(){
@@ -176,11 +180,11 @@ void DistMap::update() {
     waveCrashPoss.erase(p);
     distMap[p].pseudoSources.clear();
 
-    // Update neihbors distance
+    // Update neighbors distance
     for (Pos np : map.adj(p,nonTraversables)) {
       Float minD;
       PosSet minDSources;
-      tie(minD,minDSources) = closestSources(np,distMap[p].sources);
+      tie(minD,minDSources) = closests(np,distMap[p].sources);
 
       if (minD < distMap[np].distance) {
         distMap[np].distance = minD;
@@ -190,7 +194,7 @@ void DistMap::update() {
         if (minD == distMap[np].distance){
           distMap[np].sources.insert(minDSources.begin(), minDSources.end());
         }
-        checkWaveCrash(p, np, distMap, waveCrashPoss);
+        checkWaveCrash(p, np, *this, waveCrashPoss);
       }
 
       if (objectives.empty() || is_elem(map[np],objectives)){

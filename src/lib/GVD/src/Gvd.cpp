@@ -7,6 +7,8 @@
 #include "Map.h"
 #include "data/Pos.h"
 
+// Gvd class utils functions
+
 /* If removing `p` from  disconects the graph represented with the Grid then  */
 template<typename CellType>
 int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
@@ -68,6 +70,7 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
   return gridGvd;
 }
 
+// Gvd class definition
 Gvd::Gvd(DistMap* distMap) : map(distMap->map){
   this->distMap = distMap;
 }

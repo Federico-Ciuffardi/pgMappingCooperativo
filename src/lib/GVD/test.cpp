@@ -45,18 +45,18 @@ void testGrid(StateGrid stateGrid){
     cout <<"|"<<endl;
   }
 
-  cout << "GVD vertices:" << endl;
-  for (GvdGraph::Vertex v : gvd){
-    cout<<"|"<< gvd.g[v].p<<"|";//<<"->"<<v<<" : gr ";
-    /* cout<<gvd.degree(v)<<endl; */
-  }
-  cout << endl;
+  /* cout << "GVD vertices:" << endl; */
+  /* for (GvdGraph::Vertex v : gvd){ */
+  /*   cout<<"|"<< gvd.g[v].p<<"|";//<<"->"<<v<<" : gr "; */
+  /*   /1* cout<<gvd.degree(v)<<endl; *1/ */
+  /* } */
+  /* cout << endl; */
 
-  cout << "GVD edges:" << endl;
-  for (auto it = edges(gvd.g); it.first != it.second; ++it.first++){
-    std::cout << "|" << gvd.g[source(*it.first, gvd.g)].p << "-" << gvd.g[target(*it.first, gvd.g)].p << "| ";
-  }
-  cout << endl;
+  /* cout << "GVD edges:" << endl; */
+  /* for (auto it = edges(gvd.g); it.first != it.second; ++it.first++){ */
+  /*   std::cout << "|" << gvd.g[source(*it.first, gvd.g)].p << "-" << gvd.g[target(*it.first, gvd.g)].p << "| "; */
+  /* } */
+  /* cout << endl; */
 
   // TopoMap
   CriticalInfos cis = topoMap.cis;
@@ -77,14 +77,13 @@ void testGrid(StateGrid stateGrid){
   }
 
   // Connected Componnents
-  ConnectedComponents cc(stateGrid, {Occupied,Unknown});
-  cc.update();
+  cout<<"Segments: "<<endl;
   for (int x = 0; x < size.first; x++) {
     for (int y = 0; y < size.second; y++) {
       Pos p = Pos(x,y);
       cout<<"|";
-      if(cc.idGrid[p] != NULL_ID){
-        cout << " "<< cc.idGrid[p];
+      if(topoMap.segmenter->idGrid[p] != NULL_ID){
+        cout << " "<< topoMap.segmenter->idGrid[p];
       }else{
         cout << stateGrid[p];
       }
@@ -271,6 +270,49 @@ int main(int argc, char** argv) {
                {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
                {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
                {Occupied, Free,     Frontier, Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Unknown,  Unknown,  Unknown,  Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Unknown,  Unknown,  Unknown,  Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
+  tests.push_back(grid);
+
+  //11 componentes conexas + lineas criticas
+  grid.grid = {{Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Occupied, Free,     Free,     Free,     Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Occupied, Free,     Free,     Free,     Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Unknown,  Unknown },
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Unknown,  Unknown },
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Frontier, Unknown,  Unknown },
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Unknown,  Unknown },
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Unknown,  Unknown },
+               {Occupied, Free,     Free,     Free,     Occupied, Occupied, Occupied, Free,     Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Frontier, Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
+               {Occupied, Free,     Free,     Free,     Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
                {Occupied, Unknown,  Unknown,  Unknown,  Occupied, Free,     Free,     Free,     Free,     Free,     Free,     Occupied},
                {Occupied, Unknown,  Unknown,  Unknown,  Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied, Occupied}};
   tests.push_back(grid);

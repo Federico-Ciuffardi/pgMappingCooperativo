@@ -23,6 +23,7 @@ struct Grid{
   // must be ordered clockwise
   vector<Pos> neighborDisplacement = {Pos(-1, -1), Pos(-1, 0), Pos(-1, 1), Pos(0, 1),
                                       Pos(1, 1),   Pos(1, 0),  Pos(1, -1), Pos(0, -1)};
+  /* vector<Pos> neighborDisplacement = {Pos(-1, 0), Pos(0, 1), Pos(1, 0), Pos(0, -1)}; */
 
   Grid(){}
 

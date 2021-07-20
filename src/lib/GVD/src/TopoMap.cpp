@@ -6,12 +6,14 @@
 #include "Map.h"
 #include "utils.h"
 
+// TopoMap utils functions
+
 // Sets to true the isLocalMin attribute of all the distance local minimum vertices.
 //
 // Local minimum here means:
 //  * There is no neighbor with less distance
 //  * There is at least one neighbor with greater distance
-void setLocalMins(DistMap& dg, GvdGraph& gvd) {
+void setLocalMins(DistMap& distMap, GvdGraph& gvd) {
   PosSet notLocalMins;
 
   for (auto it : gvd.idVertexMap) {
@@ -26,13 +28,13 @@ void setLocalMins(DistMap& dg, GvdGraph& gvd) {
     for (Pos pN : gvd.adj(p)) {
 
       // p must have at least one neighbor with greater distance
-      if (dg[p].distance < dg[pN].distance) { 
+      if (distMap[p].distance < distMap[pN].distance) { 
         hasGreater = true; // p has a neighbor with greater distance
         notLocalMins.insert(pN); // pN is not a min
       }
 
       // neighbor of p must be grater or equal
-      isMin = isMin && dg[p].distance <= dg[pN].distance; 
+      isMin = isMin && distMap[p].distance <= distMap[pN].distance; 
 
       if (!isMin) break;
     }
@@ -209,7 +211,7 @@ void degreeConstraint(GvdGraph& gvd) {
 }
 
 // Returns two maps : criticals -> frontiers, criticals-> min dis to frontier, segments gvd
-CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap& dg) {
+CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
   CriticalInfos res;
   cout << "debug :: Get the nearest frontiers to each critical" << endl;
 
@@ -259,15 +261,31 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap
   return res;
 }
 
-void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& dg){
+void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap){
+  // Set the critical points on the state grid
+  for(Pos p : stateGrid){
+    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,distMap,stateGrid)){
+      stateGrid[p] = Critical;
+      for(Pos bp : basisPoints(p,distMap)){
+        cout<< "line between " << p << " and " << bp << " : ";
+        for(Pos linePos : discretizeLine(p,bp)){
+          cout<< linePos <<", ";
+          if(stateGrid[linePos] == Free){
+            stateGrid[linePos] = CriticalLine;
+          }
+        }
+        cout<<endl;
+      }
+    }
+  }
 }
 
-CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
+CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter) {
   cout << "debug :: cleanUp" << endl;
   cleanUp(gvd);
 
   cout << "debug :: setLocalMins" << endl;
-  setLocalMins(dg, gvd);
+  setLocalMins(distMap, gvd);
 
   // collapsedGvd graph (used to save some time on the degreeConstrain
   cout << "debug :: copy gvd" << endl;
@@ -287,29 +305,29 @@ CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& g
     gvd[p] = collapsedGvd[v]; 
   }
 
-  // Set the critical points on the state grid
-  for(Pos p : stateGrid){
-    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && isObstacleGenerated(p,dg,stateGrid)){
-      stateGrid[p] = Critical;
-    }
-  }
+
+  cout << "debug :: setCriticals" << endl;
+  setCriticals(stateGrid,gvd,distMap);
+
+  segmenter.update();
 
   cout << "debug :: unknownDistConstraint" << endl;
-  CriticalInfos cis = unknownDistConstraint(stateGrid, gvd, dg);
-
-  setCriticals(stateGrid,gvd,dg);
+  CriticalInfos cis = unknownDistConstraint(stateGrid, gvd);
 
   return cis;
 }
 
+// TopoMap class definition
 TopoMap::TopoMap(Gvd* gvd) : map(gvd->map){
   this->gvd = gvd;
   this->distMap = gvd->distMap;
+  this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
 }
 
-TopoMap::TopoMap(MapType& map) : map(map) {
+TopoMap::TopoMap(MapType& map) : map(map){
   this->gvd = new Gvd(map);
   this->distMap = gvd->distMap;
+  this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
 }
 
 /* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
@@ -319,8 +337,9 @@ void TopoMap::update(){
 
   // Get new result / replace old
   this->gvd->update(); // also updates the shared distMap
+
   cout << "debug :: Calculate ciritical points" << endl;
-  this->cis = get_critical_points(map, *distMap, *gvd->graphGvd);
+  this->cis = get_critical_points(map, *distMap, *gvd->graphGvd, *segmenter);
 }
 
 TopoMap::~TopoMap(){
@@ -328,4 +347,5 @@ TopoMap::~TopoMap(){
   if(gvd)
     gvd->distMap = NULL;
   delete gvd;
+  delete segmenter;
 }

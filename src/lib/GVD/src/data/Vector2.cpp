@@ -82,6 +82,9 @@ Float Vector2::distanceTo(Vector2 v) const{
 Float Vector2::distanceToSquared(Vector2 v) const{
   return ((*this) - v).lengthSquared();
 }
+bool Vector2::adjacent(Vector2 v) const{
+  return this->distanceToSquared(v) <= 2;
+};
 
 bool Vector2::operator==(const Vector2 v) const {
   return (x == v.x) && (y == v.y);
