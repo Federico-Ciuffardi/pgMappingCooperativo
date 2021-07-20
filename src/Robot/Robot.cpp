@@ -112,7 +112,7 @@ void Robot::add_to_gvd(Pos pToAdd) {
     boost::tie(nextV, inserted) = gvd.addV(nextPos);
     gvd[nextV].segment = gvd[connection].segment;
 
-    float d = currPos.distance_to(nextPos);
+    float d = currPos.distanceTo(nextPos);
     GvdVecGraph::Edge e;
     boost::tie(e, inserted) = gvd.addE(gvd.idVertexMap[currPos], nextV, d);
     boost::tie(e, inserted) = gvd.addE(nextV, gvd.idVertexMap[currPos], d);
@@ -156,7 +156,7 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
     GvdVecGraph::Vertex from_v = gvd.idVertexMap[from_p];
     GvdVecGraph::Vertex to_v = gvd.idVertexMap[to_p];
 
-    gvd.addE(from_v, to_v, from_p.distance_to(to_p));
+    gvd.addE(from_v, to_v, from_p.distanceTo(to_p));
     // sqrt(pow(from_p.first - to_p.first, 2) + pow(from_p.second - to_p.second, 2));
   }
   // std::cout<<"Termine de agregar todas las aristas"<<endl;
@@ -165,8 +165,8 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
 
 // Return true if robot is in segment assigned_segment and false if it isnt
 bool Robot::is_in_segment(Pos my_segment, Pos my_pos, Pos assigned_segment, Pos f_pos) {
-  float f_r_dist = f_pos.distance_to( my_pos);
-  float f_c_dist = f_pos.distance_to( assigned_segment);
+  float f_r_dist = f_pos.distanceTo( my_pos);
+  float f_c_dist = f_pos.distanceTo( assigned_segment);
   return (f_r_dist < f_c_dist);
 }
 
@@ -362,7 +362,7 @@ void Robot::add_intermidiate_points(Pos f_pos,
                                     Pos current_pos,
                                     pgmappingcooperativo::goalList& g_list,
                                     float min_dist) {
-  int division_count = f_pos.distance_to(current_pos) / min_dist;
+  int division_count = f_pos.distanceTo(current_pos) / min_dist;
   // the formula is (x,y) = (x1 + k(x2-x1), y1+k(y2-y1))
   for (int i = 1; i < division_count; i++) {
     // current_pos.first = current_pos.first + i/division_count*(f_pos.first - current_pos.first);

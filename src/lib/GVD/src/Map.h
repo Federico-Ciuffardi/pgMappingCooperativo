@@ -8,7 +8,7 @@
 
 /* }; */
 
-enum CellState { Occupied, Unknown, Free, Critical, Frontier };
+enum CellState { Occupied, Unknown, Free, Critical, Frontier, CriticalLine };
 typedef Grid<CellState> StateGrid;
 
 /* typedef Map<CellState> StateMap; */

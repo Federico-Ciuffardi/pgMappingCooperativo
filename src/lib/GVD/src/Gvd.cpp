@@ -77,12 +77,15 @@ Gvd::Gvd(MapType& map) : map(map){
 }
 
 void Gvd::update(){
+  // Clean old result
+  if(graphGvd) delete graphGvd;
+
+  // Get new result / replace old
   cout << "debug :: Update distMap" << endl;
   distMap->update();
   cout << "debug :: Generate gridGVD" << endl;
   gridGvd = getGridGvd(*distMap, map);
   cout << "debug :: Generate graphGVD" << endl;
-  if(graphGvd) delete graphGvd;
   graphGvd = new GvdGraph(gridGvd);
 }
 

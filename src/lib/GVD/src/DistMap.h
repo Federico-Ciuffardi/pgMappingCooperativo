@@ -15,7 +15,7 @@ struct DistMap{
     PosSet sources;
     Float distance = INF;
 
-    PosSet crashingWaves;
+    PosSet pseudoSources;
 
     bool operator>(const DistCell& d) const;
     bool operator==(const DistCell& p) const;
@@ -49,26 +49,26 @@ struct DistMap{
 };
 
 // util
+boost::tuple<Float, PosSet> closestSources(Pos p, PosSet sources);
+
+inline PosSet basisPoints(Pos p, DistMap& distMap){
+  PosSet res;
+
+  res.insert(distMap[p].sources.begin(), distMap[p].sources.end());
+  res.insert(distMap[p].pseudoSources.begin(), distMap[p].pseudoSources.end());
+  cout<<p<<" "<<"sources:       "<<distMap[p].sources<<endl;
+  cout<<p<<" "<<"pseudoSources: "<<distMap[p].pseudoSources<<endl;
+
+  return res;
+}
+
 
 // Could be modified to accept a arbitrary CellType value if needed due to DistMap templating
 inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){ 
-  for(Pos source : distMap[p].sources){
-    if(sg[source] != Occupied) return false; 
+  int obstacleBasis = 0;
+  for(Pos bp : basisPoints(p, distMap)){
+    obstacleBasis += sg[bp] == Occupied;
+    if(obstacleBasis > 1) return true;
   }
-  /* for(Pos crashing : distMap[p].crashingWaves){ */
-  /*   for(Pos source : distMap[crashing].sources){ */
-  /*     if(sg[source] != Occupied) return false; */ 
-  /*   } */
-  /* } */
-  int obstacleWaves = 0;
-  for(Pos crashing : distMap[p].crashingWaves){
-    bool obstacleWave;
-    for(Pos source : distMap[crashing].sources){
-      obstacleWave = sg[source] == Occupied;
-      if(!obstacleWave) break;
-    }
-    if(obstacleWave) obstacleWaves++;
-    if(obstacleWaves >= 1) break;
-  }
-  return (obstacleWaves >= 1);
+  return false;
 }

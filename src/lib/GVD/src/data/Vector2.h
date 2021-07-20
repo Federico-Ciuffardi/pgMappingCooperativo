@@ -42,13 +42,14 @@ struct Vector2 {
 
   Float length() const;
 
-  Float length_squared() const;
+  Float lengthSquared() const;
 
   Vector2 normalize() const;
 
   Vector2 symmetric(Vector2) const;
 
-  Float distance_to(Vector2) const;
+  Float distanceTo(Vector2) const;
+  Float distanceToSquared(Vector2) const;
 
   bool operator==(const Vector2) const;
   bool operator!=(const Vector2) const;

@@ -259,6 +259,8 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd, DistMap
   return res;
 }
 
+void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& dg){
+}
 
 CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& gvd) {
   cout << "debug :: cleanUp" << endl;
@@ -295,6 +297,8 @@ CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& dg, GvdGraph& g
   cout << "debug :: unknownDistConstraint" << endl;
   CriticalInfos cis = unknownDistConstraint(stateGrid, gvd, dg);
 
+  setCriticals(stateGrid,gvd,dg);
+
   return cis;
 }
 
@@ -310,8 +314,10 @@ TopoMap::TopoMap(MapType& map) : map(map) {
 
 /* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
 void TopoMap::update(){
+  // Clean old result
   cis.clear();
 
+  // Get new result / replace old
   this->gvd->update(); // also updates the shared distMap
   cout << "debug :: Calculate ciritical points" << endl;
   this->cis = get_critical_points(map, *distMap, *gvd->graphGvd);

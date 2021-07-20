@@ -243,7 +243,7 @@ struct Graph {
 // Pos and a constructor `VertexProperty(p)` 
 //
 // Adds A* funtions (Pos is hardcoded but in theory any class with a
-// distance_to method could be used)
+// distanceTo method could be used)
 template<typename graph>
 struct PosGraph : public Graph<graph,Pos> {
   // keep updated if the parent class changes
@@ -361,7 +361,7 @@ struct PosGraph : public Graph<graph,Pos> {
    public:
     typedef typename graph_traits<GraphType>::vertex_descriptor Vertex;
     single_astar_distance_heuristic(LocMap l, Vertex goal) : m_location(l), m_goal(goal) {}
-    CostType operator()(Vertex u) { return m_location[u].p.distance_to(m_location[m_goal].p); }
+    CostType operator()(Vertex u) { return m_location[u].p.distanceTo(m_location[m_goal].p); }
 
    private:
     LocMap m_location;
@@ -429,7 +429,7 @@ struct PosGraph : public Graph<graph,Pos> {
     CostType operator()(Vertex u) {
       // cout<<"heuristica antes"<<m_goals.size()<<endl;
       Pos current_target = *(m_goals.begin());
-      CostType distance = m_graph[u].p.distance_to(current_target);
+      CostType distance = m_graph[u].p.distanceTo(current_target);
       // cout<<distance<<endl;
       auto it = m_goals.find(m_graph[u].p);
       if (it != m_goals.end() && m_goals.size() > 1) {
@@ -437,7 +437,7 @@ struct PosGraph : public Graph<graph,Pos> {
       }
       Pos new_target = *(m_goals.begin());
       // cout<<"heuristica desopues"<<m_goals.size()<<endl;
-      return m_graph[u].p.distance_to(new_target);
+      return m_graph[u].p.distanceTo(new_target);
     }
 
    private:
@@ -546,7 +546,7 @@ struct PosGraph : public Graph<graph,Pos> {
       // Update neighbors distances
       for (Pos np : grid.adj(p,notTraversables)) {
         // Compute np distance
-        float d = distGrid[p] + p.distance_to(np);
+        float d = distGrid[p] + p.distanceTo(np);
         if (d < distGrid[np]) {
           distGrid[np] = d;
           predecessor[np] = p;

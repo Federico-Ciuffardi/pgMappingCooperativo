@@ -68,7 +68,7 @@ Float Vector2::length() const{
   return sqrt(this->dot(*this));
 }
 
-Float Vector2::length_squared() const{
+Float Vector2::lengthSquared() const{
   return this->dot(*this);
 }
 
@@ -76,8 +76,11 @@ Vector2 Vector2::normalize() const{
   return this->length() == 0 ? Vector2() : *this/this->length();
 }
 
-Float Vector2::distance_to(Vector2 v) const{
-  return ((*this) - v).length();
+Float Vector2::distanceTo(Vector2 v) const{
+  return sqrt(this->distanceToSquared(v));
+}
+Float Vector2::distanceToSquared(Vector2 v) const{
+  return ((*this) - v).lengthSquared();
 }
 
 bool Vector2::operator==(const Vector2 v) const {

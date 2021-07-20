@@ -1,4 +1,4 @@
-#include "ConnectedComponets.h"
+#include "ConnectedComponents.h"
 #include "utils.h"
 
 ConnectedComponents::ConnectedComponents(MapType& map, vector<CellType> nonTraversables) : map(map){
