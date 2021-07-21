@@ -264,7 +264,7 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
 void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap){
   // Set the critical points on the state grid
   for(Pos p : stateGrid){
-    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && necesary(p,stateGrid,distMap)){
+    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && !connectivityAux(p,stateGrid,distMap)){
       stateGrid[p] = Critical;
       for(Pos bp : basisPoints(p,distMap)){
         cout<< "line between " << p << " and " << bp << " : ";

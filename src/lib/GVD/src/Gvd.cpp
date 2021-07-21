@@ -48,22 +48,22 @@ bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){
 }
 
 // filter condition specific to the connectivity method applied
-bool necesary(Pos p , StateGrid& sg, DistMap& distMap){
+bool connectivityAux(Pos p , StateGrid& sg, DistMap& distMap){
   switch (connectivityMethod) {
     case 0:
-      return isObstacleGenerated(p,distMap,sg);
+      return !isObstacleGenerated(p,distMap,sg);
       break;
     case 1:
     case 2:
       // p is not unknown or a neighbor of unknown
-      if (sg[p] == Unknown) return false;
+      if (sg[p] == Unknown) return true;
       for (Pos pn : sg.adj(p)){
-        if (sg[pn] == Unknown) return false;
+        if (sg[pn] == Unknown) return true;
       } 
-      return true;
+      return false;
       break;
   }
-  return true;
+  return false;
 }
 
 // returns a boolean matrix, a cell is true if it should belong to the GvdGraph
@@ -91,7 +91,7 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
       /*   gridGvd[p] = true; */
       /*   break; */
       case 1:
-        gridGvd[p] =  (necesary(p,sg,distMap) && distMap[p].sources.size() > 1 && d <= 2) 
+        gridGvd[p] =  (!connectivityAux(p,sg,distMap) && distMap[p].sources.size() > 1 && d <= 2) 
                    || disconnectsOnRemoval(p, gridGvd);
         break;
       case 2:
