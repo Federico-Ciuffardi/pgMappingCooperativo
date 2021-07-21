@@ -11,9 +11,33 @@
 
 using namespace boost;
 
-/*
- *  GvdGraph definition
- */
+////////////
+// Config //
+////////////
+
+// connectivityMethod: how connectivity is assured
+// 0: unknown cell generate waves
+// 1: unknown cells are considered unobstructed and map is surrounded with obstacles
+// 2: unknown cells are considered unobstructed
+static const int connectivityMethod = 2;
+
+// GVD simplification: how hard is the GVD thinned/eroded/simplified
+// 0: no simplification
+// 1: the cells that are considered unnecessary are discarded if they can be
+//    safely discarded without disconnecting the GVD.
+//    The cells that are considered unnecessary depends on the connectivity method used:
+//       0: Cells that have less than 2 obstacles as basis points  are
+//          unnecessary (are a products of unknown cells)
+//       1 and 2: Cells that are unknown or are close to unknown
+// 2: All cells are considered unnecessary and will be discarded if they can be
+//    safely discarded without disconnecting the GVD.
+static const int simplificationMethod = 1;
+
+/////////////////
+// Definitions //
+/////////////////
+bool necesary(Pos p , StateGrid& sg, DistMap& distMap);
+
 typedef Grid<bool> GridGvd;
 struct GvdVertexProperty {
   Pos p = NULL_POS;

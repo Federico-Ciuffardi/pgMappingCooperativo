@@ -4,9 +4,6 @@
 #include "Map.h"
 #include "data/Num.h"
 
-/*
- *  dist cell, col and grid
- */
 struct DistMap{
   typedef CellState      CellType; // could be set as template if needed
   typedef Grid<CellType> MapType; // could be set as template if needed
@@ -59,12 +56,3 @@ inline PosSet basisPoints(Pos p, DistMap& distMap){
   return res;
 }
 
-// Could be modified to accept a arbitrary CellType value if needed due to DistMap templating
-inline bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){ 
-  int obstacleBasis = 0;
-  for(Pos bp : basisPoints(p, distMap)){
-    obstacleBasis += sg[bp] == Occupied;
-    if(obstacleBasis > 1) return true;
-  }
-  return false;
-}

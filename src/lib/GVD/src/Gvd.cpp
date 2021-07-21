@@ -37,8 +37,37 @@ int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
   return res > 1;
 }
 
-/* returns a boolean matrix, a cell is true if it belongs to the GvdGraph and false
- * otherwise*/
+// p has at least 2 obstacles as basis points  
+bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){ 
+  int obstacleBasis = 0;
+  for(Pos bp : basisPoints(p, distMap)){
+    obstacleBasis += sg[bp] == Occupied;
+    if(obstacleBasis > 1) return true;
+  }
+  return false;
+}
+
+// filter condition specific to the connectivity method applied
+bool necesary(Pos p , StateGrid& sg, DistMap& distMap){
+  switch (connectivityMethod) {
+    case 0:
+      return isObstacleGenerated(p,distMap,sg);
+      break;
+    case 1:
+    case 2:
+      // p is not unknown or a neighbor of unknown
+      if (sg[p] == Unknown) return false;
+      for (Pos pn : sg.adj(p)){
+        if (sg[pn] == Unknown) return false;
+      } 
+      return true;
+      break;
+  }
+  return true;
+}
+
+// returns a boolean matrix, a cell is true if it should belong to the GvdGraph
+// and false otherwise
 GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
   // Initialize grid GVD
   GridGvd gridGvd(distMap.size(), false);
@@ -48,24 +77,27 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
   DistPosQueue gvdCandidatesQueue;
   for (Pos p : distMap.waveCrashPoss){
     gvdCandidatesQueue.push(make_pair(distMap[p].distance, p));
-
     gridGvd[p] = true;
-
-    obstGridGvd[p] = isObstacleGenerated(p,distMap,sg);
   }
 
-  // Discard unnecesary candidates
-  while (!gvdCandidatesQueue.empty()) {
+  // Simplify GVD
+  while (!gvdCandidatesQueue.empty() && simplificationMethod>0) {
     Float d = gvdCandidatesQueue.top().first;
     Pos p = gvdCandidatesQueue.top().second;
     gvdCandidatesQueue.pop();
 
-    // all  
-    /* gridGvd[p] = true; */
-    // Preserve shape 
-    gridGvd[p] =  (obstGridGvd[p] && distMap[p].sources.size() > 1 && d <= 2) || disconnectsOnRemoval(p, gridGvd);
-    // Max celanup
-    /* gridGvd[p] = disconnectsOnRemoval(p, gridGvd); */ 
+    switch (simplificationMethod) {
+      /* case 0: */
+      /*   gridGvd[p] = true; */
+      /*   break; */
+      case 1:
+        gridGvd[p] =  (necesary(p,sg,distMap) && distMap[p].sources.size() > 1 && d <= 2) 
+                   || disconnectsOnRemoval(p, gridGvd);
+        break;
+      case 2:
+        gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 
+        break;
+    }
   }
   return gridGvd;
 }
@@ -76,10 +108,31 @@ Gvd::Gvd(DistMap* distMap) : map(distMap->map){
 }
 
 Gvd::Gvd(MapType& map) : map(map){
-  this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
+  switch (connectivityMethod) {
+    case 0:
+      this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
+      break;
+    case 1:
+    case 2:
+      this->distMap = new DistMap(map,{Occupied},{Occupied});
+      break;
+  }
 }
 
 void Gvd::update(){
+  // if connectivityMethod is 1 fill boders with obstacles
+  if(connectivityMethod == 1){
+    pair<Int,Int> size = map.size();
+    for(int x = 0; x < size.first; x++){
+      map[x][0] = Occupied;
+      map[x][size.second - 1] = Occupied;
+    }
+    for(int y = 0; y < size.second; y++){
+      map[0][y] = Occupied;
+      map[size.first - 1][y] = Occupied;
+    }
+  }
+
   // Clean old result
   if(graphGvd) delete graphGvd;
 

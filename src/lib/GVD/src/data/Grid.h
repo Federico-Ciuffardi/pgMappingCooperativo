@@ -73,7 +73,7 @@ struct Grid{
     return grid.at(p.x).at(p.y);
   }
   // returns the Col corresponding to x
-  ColType operator[](Int x){
+  ColType& operator[](Int x){
     return grid.at(x);
   }
 
