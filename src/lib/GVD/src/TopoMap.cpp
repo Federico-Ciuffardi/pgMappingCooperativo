@@ -45,65 +45,6 @@ void setLocalMins(DistMap& distMap, GvdGraph& gvd) {
   }
 }
 
-// increase the sparseness of the graph by removing redundant edges:
-//
-//   * in this case redundant edges are the ones that from v lead to a neighbor
-//     vN1 that can be reached from another neighbor of v vN2, meaning there is a
-//     path v - vN1 and a path v - vN2 - vN1, so v - vN1 can be safely removed
-//
-//   * v is only considered for cleanUp if it has a neighbor with a greater or
-//     equal degree one of those neighbors of greater or equal degree (then v and
-//     v's neighbors) will keep the connection with v
-void cleanUp(GvdGraph& gvd) {
-  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
-    GvdGraph::Vertex v = *(vIt++);
-
-    // get the vertex with max degree from the v and its neighbors
-    GvdGraph::Vertex maxDegV = v;
-    int maxDeg = gvd.degree(v);
-    for (GvdGraph::Vertex vN : gvd.adj(v)) {
-      int vNdegree = gvd.degree(vN);
-      if (vNdegree >= maxDeg) {
-        maxDegV = vN;
-        maxDeg = vNdegree;
-      }
-    }
-
-    if (maxDegV == v) continue;
-                                
-    GvdGraph::AdjacencyIterator avIt, avItEnd;
-    for (boost::tie(avIt, avItEnd) = adjacent_vertices(v, gvd.g); avIt != avItEnd;) {
-      GvdGraph::Vertex vN = *(avIt++);
-
-      if (maxDegV == vN) continue; //skip max deg vertex
-
-      if (edge(vN, maxDegV, gvd.g).second) {
-        gvd.removeE(vN, v);
-        gvd.removeE(v,vN);
-
-        if(gvd.degree(vN)==1){
-          gvd.removeE(vN,maxDegV);
-          gvd.removeE(maxDegV,vN);
-        }
-
-        if(gvd.degree(v)==1){
-          gvd.removeE(v,maxDegV);
-          gvd.removeE(maxDegV,v);
-        }
-
-        boost::tie(avIt, avItEnd) = adjacent_vertices(v, gvd.g);
-      }
-    }
-  }
-  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
-    GvdGraph::Vertex v = *(vIt++);
-    if (gvd.degree(v) == 0) {
-      gvd.removeV(v);
-    }
-  }
-}
-
-
 bool sameDirecction(Pos p1, Pos p2) {
   return p1.normalize() == -p2.normalize();
 }
@@ -281,8 +222,6 @@ void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap){
 }
 
 CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter) {
-  cout << "debug :: cleanUp" << endl;
-  cleanUp(gvd);
 
   cout << "debug :: setLocalMins" << endl;
   setLocalMins(distMap, gvd);

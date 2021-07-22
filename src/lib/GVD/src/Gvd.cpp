@@ -68,7 +68,7 @@ bool connectivityAux(Pos p , StateGrid& sg, DistMap& distMap){
 
 // returns a boolean matrix, a cell is true if it should belong to the GvdGraph
 // and false otherwise
-GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
+GridGvd getGridGvd(DistMap& distMap, StateGrid& sg, Int simplification) {
   // Initialize grid GVD
   GridGvd gridGvd(distMap.size(), false);
   GridGvd obstGridGvd(distMap.size(), false);
@@ -81,17 +81,17 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
   }
 
   // Simplify GVD
-  while (!gvdCandidatesQueue.empty() && simplificationMethod>0) {
+  while (!gvdCandidatesQueue.empty() && simplification > 0) {
     Float d = gvdCandidatesQueue.top().first;
     Pos p = gvdCandidatesQueue.top().second;
     gvdCandidatesQueue.pop();
 
-    switch (simplificationMethod) {
-      /* case 0: */
-      /*   gridGvd[p] = true; */
-      /*   break; */
+    switch (simplification) {
+      case 0:
+        gridGvd[p] = true;
+        break;
       case 1:
-        gridGvd[p] =  (!connectivityAux(p,sg,distMap) && distMap[p].sources.size() > 1 && d <= 2) 
+        gridGvd[p] =  (!connectivityAux(p,sg,distMap) && distMap[p].sources.size() > 1) 
                    || disconnectsOnRemoval(p, gridGvd);
         break;
       case 2:
@@ -100,6 +100,66 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg) {
     }
   }
   return gridGvd;
+}
+
+// increase the sparseness of the graph by removing redundant edges:
+//
+//   * in this case redundant edges are the ones that from v lead to a neighbor
+//     vN1 that can be reached from another neighbor of v vN2, meaning there is a
+//     path v - vN1 and a path v - vN2 - vN1, so v - vN1 can be safely removed
+//
+//   * v is only considered for cleanUp if it has a neighbor with a greater or
+//     equal degree one of those neighbors of greater or equal degree (then v and
+//     v's neighbors) will keep the connection with v
+void cleanUp(GvdGraph& gvd, Int simplification) {
+  if (simplification <= 0) return;
+
+  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
+    GvdGraph::Vertex v = *(vIt++);
+
+    // get the vertex with max degree from the v and its neighbors
+    GvdGraph::Vertex maxDegV = v;
+    int maxDeg = gvd.degree(v);
+    for (GvdGraph::Vertex vN : gvd.adj(v)) {
+      int vNdegree = gvd.degree(vN);
+      if (vNdegree > maxDeg || (simplification > 1 && vNdegree == maxDeg)) {
+        maxDegV = vN;
+        maxDeg = vNdegree;
+      }
+    }
+
+    if (maxDegV == v) continue;
+                                
+    GvdGraph::AdjacencyIterator avIt, avItEnd;
+    for (boost::tie(avIt, avItEnd) = adjacent_vertices(v, gvd.g); avIt != avItEnd;) {
+      GvdGraph::Vertex vN = *(avIt++);
+
+      if (maxDegV == vN) continue; //skip max deg vertex
+
+      if (edge(vN, maxDegV, gvd.g).second) {
+        gvd.removeE(vN, v);
+        gvd.removeE(v,vN);
+
+        if(gvd.degree(vN)==1){
+          gvd.removeE(vN,maxDegV);
+          gvd.removeE(maxDegV,vN);
+        }
+
+        if(gvd.degree(v)==1){
+          gvd.removeE(v,maxDegV);
+          gvd.removeE(maxDegV,v);
+        }
+
+        boost::tie(avIt, avItEnd) = adjacent_vertices(v, gvd.g);
+      }
+    }
+  }
+  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
+    GvdGraph::Vertex v = *(vIt++);
+    if (gvd.degree(v) == 0) {
+      gvd.removeV(v);
+    }
+  }
 }
 
 // Gvd class definition
@@ -140,9 +200,13 @@ void Gvd::update(){
   cout << "debug :: Update distMap" << endl;
   distMap->update();
   cout << "debug :: Generate gridGVD" << endl;
-  gridGvd = getGridGvd(*distMap, map);
+  gridGvd = getGridGvd(*distMap, map, vertexSimplificationMethod);
   cout << "debug :: Generate graphGVD" << endl;
   graphGvd = new GvdGraph(gridGvd);
+  cout << "debug :: cleanUp" << endl;
+
+  cleanUp(*graphGvd, edgeSimplificationMethod);
+
 }
 
 Gvd::~Gvd(){
