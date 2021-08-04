@@ -41,6 +41,11 @@ static const int vertexSimplificationMethod = 1;
 // 2: edges to vertices that can be accessed through a neighbor of grater or equal degree are deleted
 static const int edgeSimplificationMethod = 2;
 
+// Allow GVD edge simplification to remove vertex: if when removing edges the verte
+// 0: Do not allow vertex removal
+// 1: Allow vertex removal
+static const int edgeSimplificationAllowVertexRemoval = 0;
+
 /////////////////
 // Definitions //
 /////////////////

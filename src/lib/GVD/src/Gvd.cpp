@@ -111,7 +111,7 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg, Int simplification) {
 //   * v is only considered for cleanUp if it has a neighbor with a greater or
 //     equal degree one of those neighbors of greater or equal degree (then v and
 //     v's neighbors) will keep the connection with v
-void cleanUp(GvdGraph& gvd, Int simplification) {
+void cleanUp(GvdGraph& gvd, Int simplification, Int vertexRemoval) {
   if (simplification <= 0) return;
 
   for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
@@ -140,12 +140,12 @@ void cleanUp(GvdGraph& gvd, Int simplification) {
         gvd.removeE(vN, v);
         gvd.removeE(v,vN);
 
-        if(gvd.degree(vN)==1){
+        if(gvd.degree(vN)==1 && vertexRemoval){
           gvd.removeE(vN,maxDegV);
           gvd.removeE(maxDegV,vN);
         }
 
-        if(gvd.degree(v)==1){
+        if(gvd.degree(v)==1 && vertexRemoval){
           gvd.removeE(v,maxDegV);
           gvd.removeE(maxDegV,v);
         }
@@ -154,10 +154,12 @@ void cleanUp(GvdGraph& gvd, Int simplification) {
       }
     }
   }
-  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
-    GvdGraph::Vertex v = *(vIt++);
-    if (gvd.degree(v) == 0) {
-      gvd.removeV(v);
+  if(vertexRemoval){
+    for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
+      GvdGraph::Vertex v = *(vIt++);
+      if (gvd.degree(v) == 0) {
+        gvd.removeV(v);
+      }
     }
   }
 }
@@ -205,7 +207,7 @@ void Gvd::update(){
   graphGvd = new GvdGraph(gridGvd);
   cout << "debug :: cleanUp" << endl;
 
-  cleanUp(*graphGvd, edgeSimplificationMethod);
+  cleanUp(*graphGvd, edgeSimplificationMethod, edgeSimplificationAllowVertexRemoval);
 
 }
 

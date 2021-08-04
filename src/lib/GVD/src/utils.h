@@ -49,6 +49,7 @@ inline vector<Pos> discretizeLineAux(int x0, int y0, int x1, int y1){
 inline vector<Pos> discretizeLine(Pos p1, Pos p2){
   Pos deltaP = p1 - p2;
   bool swapXY = abs(deltaP.x) < abs(deltaP.y);
+
   if(swapXY){
     swap(p1.x,p1.y);
     swap(p2.x,p2.y);
@@ -56,10 +57,33 @@ inline vector<Pos> discretizeLine(Pos p1, Pos p2){
 
   bool negX = p1.x > p2.x; 
   if(negX){
-    swap(p1,p2);
+    p1.x = -p1.x;
+    p2.x = -p2.x;
+  }
+
+  bool negY = p1.y > p2.y; 
+  if(negY){
+    p1.y = -p1.y;
+    p2.y = -p2.y;
   }
 
   vector<Pos> line = discretizeLineAux(p1.x,p1.y,p2.x,p2.y);
+
+  if(negY){
+    vector<Pos> auxLine;
+    for(Pos linePos : line){
+      auxLine.push_back( Pos(linePos.x, -linePos.y) );
+    }
+    line = auxLine;
+  }
+
+  if(negX){
+    vector<Pos> auxLine;
+    for(Pos linePos : line){
+      auxLine.push_back( Pos(-linePos.x, linePos.y) );
+    }
+    line = auxLine;
+  }
 
   if(swapXY){
     vector<Pos> auxLine;
@@ -69,10 +93,6 @@ inline vector<Pos> discretizeLine(Pos p1, Pos p2){
     }
     line = auxLine;
   }
-
-  /* if(negX){ */
-    // the line is backwards could change that here
-  /* } */
 
   return line;
 }

@@ -43,50 +43,52 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 
 // the boolean value indicates if the pseudo sources are modified
 bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
-  Int min;
-  PosSet candidatePseudoSources;
-  tie(min,candidatePseudoSources) = closests(p, distMap[waveP].sources);
 
-  // Skip if there exist already a pseudo source closer than the candidates
-  Float distToCurrentPesudoSource;
-  if(!distMap[p].pseudoSources.empty()){
-    distToCurrentPesudoSource = p.distanceTo(*distMap[p].pseudoSources.begin());
-    if (min > distToCurrentPesudoSource) return false;
-  }
 
-  // Skip if the difference of distance of the source and the pseudo sources is grater than 1
-  // a pseudo source should be a rounding error caused by discretization
-  if(abs(min - distMap[p].distance) > 1) return false;
+  PosSet pseudoSources;
+  for ( Pos candidatePseudoSource : basisPoints(waveP, distMap)){
+    Float candidateDist = p.distanceTo(candidatePseudoSource);
 
-  // Skip if adjacent to a source
-  for(Pos candidatePseudoSource : candidatePseudoSources){
+    // Skip if there exist already a pseudo source closer than the candidates
+    Float currentDist;
+    if(!distMap[p].pseudoSources.empty()){
+      currentDist = p.distanceTo(*distMap[p].pseudoSources.begin());
+      if (candidateDist > currentDist) continue;
+    }
+
+    // Skip if the difference of distance of the source and the pseudo sources is grater than 1
+    // a pseudo source should be a rounding error caused by discretization
+    if(abs(candidateDist - distMap[p].distance) > 1) continue;
+
+    // Skip if adjacent to a source
     for(Pos pSource : distMap[p].sources){
       if(candidatePseudoSource.adjacent(pSource)) return false;
     }
-  }
 
-  if(distMap[p].pseudoSources.empty() || min < distToCurrentPesudoSource){
-    // if p does not have pseudo sources already or if the distance to
-    // the current ones is grater than the candidates set the candidates
-    // as the pseudo sources of p 
-    distMap[p].pseudoSources = candidatePseudoSources;
-    return true;
-  }else{
-    // if the current pseudo sources are at the same distance that the
-    // candidates only add the non adjacent to the current ones
-    bool modified = false;
-    for(Pos candidatePseudoSource : candidatePseudoSources){
+    if(distMap[p].pseudoSources.empty() || candidateDist < currentDist){
+      // if p does not have pseudo sources already or if the distance to
+      // the current ones is grater than the candidates set the candidates
+      // as the pseudo sources of p 
+      pseudoSources.insert(candidatePseudoSource);
+    }else{
+      // if the current pseudo sources are at the same distance that the
+      // candidates only add the non adjacent to the current ones
+      bool modified = false;
       bool adjacent = false;
       for(Pos pPseudoSource : distMap[p].pseudoSources){
         adjacent = candidatePseudoSource.adjacent(pPseudoSource);
         if(adjacent) break;
       }
       if(!adjacent){
-        distMap[p].pseudoSources.insert(candidatePseudoSource);
-        modified = true;
+        pseudoSources.insert(candidatePseudoSource);
       }
     }
-    return modified;
+  }
+  if(pseudoSources.empty()){
+    return false;
+  }else{
+    distMap[p].pseudoSources = pseudoSources;
+    return true;
   }
 }
 
