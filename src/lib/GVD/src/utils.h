@@ -130,24 +130,33 @@ inline bool is_elem(K e, map<K, T>& m) {
 }
 
 //// vector
-template <typename T>
-inline bool is_elem(vector<T> v, T e) {
-  for(int i = 0; i < v.size() ; i++){
-    if(v[i] == e){
-      return true;
-    }
-  }
-  return false;
+/* template <typename T> */
+/* inline bool is_elem(vector<T> v, T e) { */
+/*   for(int i = 0; i < v.size() ; i++){ */
+/*     if(v[i] == e){ */
+/*       return true; */
+/*     } */
+/*   } */
+/*   return false; */
+/* } */
+/* template <typename T> */
+/* inline bool is_elem(T e,vector<T> v) { */
+/*   for(int i = 0; i < v.size() ; i++){ */
+/*     if(v[i] == e){ */
+/*       return true; */
+/*     } */
+/*   } */
+/*   return false; */
+/* } */
+
+/// filter
+
+
+template<typename T, typename F>
+inline void filter(vector<T> &collection, F f){
+    collection.erase(remove_if(collection.begin(), collection.end(), f), collection.end());
 }
-template <typename T>
-inline bool is_elem(T e,vector<T> v) {
-  for(int i = 0; i < v.size() ; i++){
-    if(v[i] == e){
-      return true;
-    }
-  }
-  return false;
-}
+
 
 /// Transform from unordered_set to vector
 template<typename T>

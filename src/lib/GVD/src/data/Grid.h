@@ -11,6 +11,26 @@
 
 using namespace std;
 
+//// vector
+template <typename T>
+inline bool is_elem(vector<T> v, T e) {
+  for(int i = 0; i < v.size() ; i++){
+    if(v[i] == e){
+      return true;
+    }
+  }
+  return false;
+}
+template <typename T>
+inline bool is_elem(T e,vector<T> v) {
+  for(int i = 0; i < v.size() ; i++){
+    if(v[i] == e){
+      return true;
+    }
+  }
+  return false;
+}
+
 template<typename cell_type>
 struct Grid{
   typedef cell_type CellType;
@@ -89,21 +109,24 @@ struct Grid{
   }
   // returns all *valid* neighbors Pos of a given Pos p in the grid
   vector<Pos> adj(Pos p, vector<CellType> invalids) {
-    vector<Pos> adj;
-    for (Pos displacement : neighborDisplacement) {
-      Pos n = p + displacement;
-      if (!inside(n)) continue; 
-
-      bool valid = true;
-      for(CellType invalid : invalids){
-        valid = cell(n) != invalid;
-        if(!valid) break;
-      }
-      if (valid) {
-        adj.push_back(n);
-      }
-    }
-    return adj;
+    vector<Pos> adjs = adj(p);
+    filter(adjs, [this,invalids](Pos a){
+                   return is_elem(this->cell(a), invalids);
+                 });
+    vector<Pos> copyAdjs = adjs;
+    filter(adjs, [copyAdjs,p](Pos a){
+                   Pos disp = a-p;
+                   if(disp.x != 0 && disp.y != 0){
+                     Pos dispX = disp;
+                     dispX.y = 0;
+                     Pos dispY = disp;
+                     dispY.x = 0;
+                     return !is_elem(p + dispX,copyAdjs) && !is_elem(p+dispY,copyAdjs);
+                   }else{
+                    return false;
+                   }
+                 });
+    return adjs;
   }
   class Iterator : public std::iterator<output_iterator_tag, Pos>{
     Pos p;
@@ -159,4 +182,3 @@ ostream& operator<<(ostream& out, Grid<CellType>& grid){
   }
   return out;
 }
-
