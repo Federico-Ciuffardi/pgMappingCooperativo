@@ -9,6 +9,20 @@
 
   <param name ="/use_sim_time" value="true"/>
 
+  <!-- GVD lib config check '../src/lib/GVD/src/config.h' for help -->
+  <!-- <arg name="gvd_connectivity_method" default="0" /> -->
+  <!-- <param name="gvd_connectivity_method" type="int" value="$(arg gvd_connectivity_method)" /> -->
+
+  <!-- <arg name="gvd_vertex_simplification_method" default="1" /> -->
+  <!-- <param name="gvd_vertex_simplification_method" type="int" value="$(arg gvd_vertex_simplification_method)" /> -->  
+
+  <!-- <arg name="gvd_edge_simplification_method" default="2" /> -->
+  <!-- <param name="gvd_edge_simplification_method" type="int" value="$(arg gvd_edge_simplification_method)" /> -->  
+
+  <!-- <arg name="gvd_edge_simplification_allow_vertex_removal" default="1" /> -->
+  <!-- <param name="gvd_edge_simplification_allow_vertex_removal" type="int" value="$(arg gvd_edge_simplification_allow_vertex_removal)" /> -->  
+
+
   <!-- start gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find pgmappingcooperativo)/worlds/$(arg map_name).world"/>

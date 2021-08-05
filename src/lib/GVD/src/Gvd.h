@@ -8,43 +8,9 @@
 #include "Map.h"
 #include "DistMap.h"
 #include <boost/graph/adjacency_list.hpp>
+#include "config.h"
 
 using namespace boost;
-
-////////////
-// Config //
-////////////
-
-// connectivityMethod: how connectivity is assured
-// 0: unknown cell generate waves
-// 1: unknown cells are considered unobstructed and map is surrounded with obstacles
-// 2: unknown cells are considered unobstructed
-static const int connectivityMethod = 0;
-
-// GVD vertex simplification: how hard are the GVD vercices eroded/deleted to
-// simplify or thin the GVD:
-// 0: no simplification
-// 1: the cells that are considered auxiliar [*] (for connectivity) are discarded
-//    if they can be safely discarded without disconnecting the GVD.
-// 2: All cells  will be discarded if they can be safely discarded without
-//    disconnecting the GVD.
-// [*] The cells that are considered auxiliar depends on the connectivity method used:
-//       0: Cells that have less than 2 obstacles as basis points  are auxiliar
-//       (are a products of unknown cells)
-//       1 and 2: Cells that are unknown or are close to unknown
-static const int vertexSimplificationMethod = 1;
-
-
-// GVD edge simplification: how hard are the GVD edges deleted to simplify the GVD:
-// 0: no simplification
-// 1: edges to vertices that can be accessed through a neighbor of grater degree are deleted
-// 2: edges to vertices that can be accessed through a neighbor of grater or equal degree are deleted
-static const int edgeSimplificationMethod = 2;
-
-// Allow GVD edge simplification to remove vertex: if when removing edges the verte
-// 0: Do not allow vertex removal
-// 1: Allow vertex removal
-static const int edgeSimplificationAllowVertexRemoval = 1;
 
 /////////////////
 // Definitions //

@@ -49,7 +49,7 @@ bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){
 
 // filter condition specific to the connectivity method applied
 bool connectivityAux(Pos p , StateGrid& sg, DistMap& distMap){
-  switch (connectivityMethod) {
+  switch (GvdConfig::get()->connectivityMethod) {
     case 0:
       return !isObstacleGenerated(p,distMap,sg);
       break;
@@ -170,7 +170,8 @@ Gvd::Gvd(DistMap* distMap) : map(distMap->map){
 }
 
 Gvd::Gvd(MapType& map) : map(map){
-  switch (connectivityMethod) {
+  cout<<"connectivityMethod: "<<GvdConfig::get()->connectivityMethod<<endl;
+  switch (GvdConfig::get()->connectivityMethod) {
     case 0:
       this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
       break;
@@ -183,7 +184,7 @@ Gvd::Gvd(MapType& map) : map(map){
 
 void Gvd::update(){
   // if connectivityMethod is 1 fill boders with obstacles
-  if(connectivityMethod == 1){
+  if(GvdConfig::get()->connectivityMethod == 1){
     pair<Int,Int> size = map.size();
     for(int x = 0; x < size.first; x++){
       map[x][0] = Occupied;
@@ -202,12 +203,12 @@ void Gvd::update(){
   cout << "debug :: Update distMap" << endl;
   distMap->update();
   cout << "debug :: Generate gridGVD" << endl;
-  gridGvd = getGridGvd(*distMap, map, vertexSimplificationMethod);
+  gridGvd = getGridGvd(*distMap, map, GvdConfig::get()->vertexSimplificationMethod);
   cout << "debug :: Generate graphGVD" << endl;
   graphGvd = new GvdGraph(gridGvd);
   cout << "debug :: cleanUp" << endl;
 
-  cleanUp(*graphGvd, edgeSimplificationMethod, edgeSimplificationAllowVertexRemoval);
+  cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
 
 }
 

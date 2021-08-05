@@ -1,4 +1,5 @@
 #include "CentralModule.h"
+#include "../lib/GVD/src/config.h"
 
 using namespace std;
 
@@ -369,6 +370,13 @@ void handleSegmentBid(const pgmappingcooperativo::SegmentBidConstPtr& msg, strin
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "central_module");
   ros::NodeHandle n;
+
+  // configure GVD lib
+  n.param<int>("/gvd_connectivity_method", GvdConfig::get()->connectivityMethod, GvdConfig::get()->connectivityMethod);
+  n.param<int>("/gvd_vertex_simplification_method", GvdConfig::get()->vertexSimplificationMethod, GvdConfig::get()->vertexSimplificationMethod);
+  n.param<int>("/gvd_edge_simplification_method", GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationMethod);
+  n.param<int>("/gvd_edge_simplification_allow_vertex_removal", GvdConfig::get()->edgeSimplificationAllowVertexRemoval, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
+
   centralModule = CentralModule();
 
   int starting_robot_number;
