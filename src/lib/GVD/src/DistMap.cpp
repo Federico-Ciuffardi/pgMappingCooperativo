@@ -46,7 +46,8 @@ bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
 
 
   PosSet pseudoSources;
-  for ( Pos candidatePseudoSource : basisPoints(waveP, distMap)){
+  /* for ( Pos candidatePseudoSource : basisPoints(waveP, distMap)){ */
+  for ( Pos candidatePseudoSource : distMap[waveP].sources){
     Float candidateDist = p.distanceTo(candidatePseudoSource);
 
     // Skip if there exist already a pseudo source closer than the candidates
