@@ -34,7 +34,10 @@ void setLocalMins(DistMap& distMap, GvdGraph& gvd) {
       }
 
       // neighbor of p must be grater or equal
-      isMin = isMin && distMap[p].distance <= distMap[pN].distance; 
+      switch (GvdConfig::get()->criticalConditiontMin){
+        case 0: isMin = isMin && distMap[p].distance < distMap[pN].distance;
+        case 1: isMin = isMin && distMap[p].distance <= distMap[pN].distance;
+      }
 
       if (!isMin) break;
     }

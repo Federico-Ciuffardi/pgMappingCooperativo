@@ -22,6 +22,8 @@
   <!-- <arg name="gvd_edge_simplification_allow_vertex_removal" default="1" /> -->
   <!-- <param name="gvd_edge_simplification_allow_vertex_removal" type="int" value="$(arg gvd_edge_simplification_allow_vertex_removal)" /> -->  
 
+  <!-- <arg name="critical_conditiont_min" default="0" /> -->
+  <!-- <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" /> -->  
 
   <!-- start gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">

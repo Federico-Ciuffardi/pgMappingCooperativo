@@ -376,6 +376,7 @@ int main(int argc, char* argv[]) {
   n.param<int>("/gvd_vertex_simplification_method", GvdConfig::get()->vertexSimplificationMethod, GvdConfig::get()->vertexSimplificationMethod);
   n.param<int>("/gvd_edge_simplification_method", GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationMethod);
   n.param<int>("/gvd_edge_simplification_allow_vertex_removal", GvdConfig::get()->edgeSimplificationAllowVertexRemoval, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
+  n.param<int>("/critical_conditiont_min", GvdConfig::get()->criticalConditiontMin, GvdConfig::get()->criticalConditiontMin);
 
   centralModule = CentralModule();
 

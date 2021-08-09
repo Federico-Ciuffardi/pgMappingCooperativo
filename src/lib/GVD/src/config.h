@@ -3,10 +3,10 @@
 // Config //
 ////////////
 
-// singleton that stores the lib config
+// singleton that stores the Gvd lib config
 class GvdConfig {
 public:
-  // connectivityMethod: how connectivity is assured
+  // connectivityMethod: how connectivity is guaranteed
   // 0: unknown cell generate waves
   // 1: unknown cells are considered unobstructed and map is surrounded with obstacles
   // 2: unknown cells are considered unobstructed
@@ -14,7 +14,7 @@ public:
 
   // GVD vertex simplification: how hard are the GVD vercices eroded/deleted to
   // simplify or thin the GVD:
-  // 0: no simplification
+  // 0: no simplification (only for debugging)
   // 1: the cells that are considered auxiliar [*] (for connectivity) are discarded
   //    if they can be safely discarded without disconnecting the GVD.
   // 2: All cells  will be discarded if they can be safely discarded without
@@ -37,6 +37,11 @@ public:
   // 1: Allow vertex removal
   int edgeSimplificationAllowVertexRemoval = 1;
 
+  // Set what is the min codition 
+  // 0: - All neighbors has greater distance
+  // 1: - There is no neighbor with less distance 
+  //    - And there is at least one neighbor with greater distance
+  int criticalConditiontMin = 1;
 
 private:
   GvdConfig();
