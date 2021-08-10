@@ -3,6 +3,22 @@
 
 using namespace std;
 
+////////////////
+// Parameters //
+////////////////
+
+/// auctionStartTimeoutMode:
+///   * -1 : disabled, no timeout, starts the auction immediately after the first robot request 
+///   *  0 : disabled, no timeout, starts the auction immediately after a little timeout to wait for the map update of that first robot
+///   *  1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
+///          after the first robot request
+///   *  2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
+///          after the first robot request. Reset and decrease the delay on new requests.
+int auctionStartTimeoutMode = -1;
+
+/// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
+float mapUpdateDelay = 2;
+
 ///////////////
 // Variables //
 ///////////////
@@ -32,19 +48,6 @@ ros::Duration auctionStartDelayTimeout;
 
 ros::Timer auctionStartTimeoutTimer;
 ros::Duration auctionStartTimeout;
-
-// Params
-/// auctionStartTimeoutMode:
-///   * -1 : disabled, no timeout, starts the auction immediately after the first robot request 
-///   *  0 : disabled, no timeout, starts the auction immediately after a little timeout to wait for the map update of that first robot
-///   *  1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
-///          after the first robot request
-///   *  2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
-///          after the first robot request. Reset and decrease the delay on new requests.
-int auctionStartTimeoutMode = -1;
-
-/// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
-float mapUpdateDelay = 2;
 
 // others
 
@@ -137,7 +140,7 @@ void startAuction() {
   if (LOG >= 2) {
     ros::Duration currentTime = ros::Time::now() - firstAuction;
     string time = to_string(currentTime.toSec());
-    string coveragePer = to_string(((float)centralModule.cell_count / MAP_SIZE) * 100);
+    string coveragePer = to_string(((float)centralModule.cellCount / MAP_SIZE) * 100);
 
     if (coverageFileLog.empty()) {
       coverageFileLog = "covarage";
@@ -172,7 +175,7 @@ void startAuction() {
   /// Reset auction variables
   requests = 0;
   /// Change state
-  centralModule.setEstado(WaitingFirstBid);
+  centralModule.setState(WaitingFirstBid);
 
   // Send auction info so the bids can be calculated
   segmentAuctionPub.publish(segmentAuction);
@@ -181,7 +184,7 @@ void startAuction() {
 
 void resolveAuction() {
   // Change state to reolving auction
-  centralModule.setEstado(Resolving);
+  centralModule.setState(Resolving);
 
   // Show estimated auction resolution time (aution resolution timeout) and the real time
   ros::Duration resolutionTime = ros::Time::now() - lastAuctionStart;
@@ -199,7 +202,7 @@ void resolveAuction() {
   /// Reset auction variables
   succesfulBids = 0;
   /// Change state
-  centralModule.setEstado(WaitingAuction);
+  centralModule.setState(WaitingAuction);
 
   // Parse the robot-segment assignment
   visualization_msgs::Marker::_points_type points;
@@ -216,7 +219,7 @@ void resolveAuction() {
     segmentAssignmentPubs[robot].publish(sa);
 
     // Calculate the estimated task completion time
-    float estimatedTime = max(0.f,(centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
+    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
 
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
     minEstimatedTime = min(minEstimatedTime, estimatedTime);
@@ -236,7 +239,7 @@ void resolveAuction() {
     pgmappingcooperativo::SegmentAssignment sa = it.second;
     string robot = it.first;
 
-    float estimatedTime = max(0.f,(centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
+    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
     if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
       expectedRobots--;
     }
@@ -364,7 +367,7 @@ void segmentBidCallBack(const pgmappingcooperativo::SegmentBidConstPtr& msg, str
 
   if (centralModule.getEstado() == WaitingFirstBid) {
     ROS_DEBUG_STREAM("Is the first one, starting the auction resolution timeout");
-    centralModule.setEstado(WaitingBids);
+    centralModule.setState(WaitingBids);
     lastAuctionStart = ros::Time::now();
     auctionResolutionTimeoutTimer.start(); // Start the timeout to wait for the other working robots
   }
@@ -421,7 +424,6 @@ int main(int argc, char* argv[]) {
   // Init node
   ros::init(argc, argv, "central_module");
   ros::NodeHandle n;
-  centralModule = CentralModule();
 
   // Load params
   /// GVD lib (check ../lib/GVD/src/config.h)
@@ -434,6 +436,9 @@ int main(int argc, char* argv[]) {
   /// Auction
   n.param<int>("/auction_start_timeout_mode", auctionStartTimeoutMode, auctionStartTimeoutMode);
   n.param<float>("/map_update_delay", mapUpdateDelay, mapUpdateDelay);
+
+  // Frontier
+  n.param<int>("/frontier_simplification_method", centralModule.frontierSimplificationMethod, centralModule.frontierSimplificationMethod);
 
   /// Current scenario
   int startingRobotNumber;

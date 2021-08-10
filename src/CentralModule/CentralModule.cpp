@@ -1,60 +1,109 @@
 #include "CentralModule.h"
 
+//////////////////
+// Constructors //
+//////////////////
 CentralModule::CentralModule() {
-  estado = WaitingAuction;
+  state = WaitingAuction;
   first = true;
-  last_segment_assignment_id = 0;
-  segment_auction_id = 0;
-  sensor_range = 6.0;
+  lastSegmentAssignmentId = 0;
+  segmentAuctionId = 0;
+  sensorRange = 6.0;
   // dist_info_gain_obst = 1.0 / sqrt(2);
 }
 
+///////////////
+// Get / Set //
+///////////////
+void CentralModule::setFrontiers(boost::unordered_set<int> newFrontiers) {
+  frontiers = newFrontiers;
+};
+
+vector<int> CentralModule::getFrontierCenters() {
+  return frontierCenters;
+};
+
+void CentralModule::setFrontierCenters(vector<int> newFrontierCenters) {
+  frontierCenters = newFrontierCenters;
+};
+
+centralMouleState CentralModule::getEstado() {
+  return state;
+};
+
+void CentralModule::setState(centralMouleState newState) {
+  state = newState;
+};
+
+nav_msgs::OccupancyGrid CentralModule::getMap() {
+  return mapMerged;
+};
+
+int CentralModule::getNumRobots() {
+  return robotNumber;
+};
+
+void CentralModule::setNumRobots(int newNumRobots) {
+  robotNumber = newNumRobots;
+};
+
+///////////
+// Other //
+///////////
+
 void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
-  saveMap(newMap->mapa);
-  // setObstaculos(newMap->obstaculos);
+  // store occGrid
+  nav_msgs::OccupancyGrid occGrid = newMap->mapa;
+  if (first) {
+    uint width = occGrid.info.width;
+    uint height = occGrid.info.height;
+    int y_origin = occGrid.info.origin.position.x;
+    int x_origin = occGrid.info.origin.position.y;
+    for (int i = 0; i < width * height; i++) {
+      int fila = i % width;
+      int columna = i / width;
+      float a = ((x_origin + fila) + 0.5);
+      float b = ((y_origin + columna) + 0.5);
+      mapPoints[i] = cv::Point2f(a, b);
+    }
+    first = false;
+  }
+  mapMerged.info   = occGrid.info;
+  mapMerged.header = occGrid.header;
+  mapMerged.data   = occGrid.data;
+
+  // store frontiers
   boost::unordered_set<int> set(newMap->frontera.begin(), newMap->frontera.end());
-  setFrontera(set);
+  setFrontiers(set);
 }
 
-boost::unordered_set<int> CentralModule::getFrontera() {
-  return frontera;
-};
-
-void CentralModule::setFrontera(boost::unordered_set<int> newFrontera) {
-  frontera = newFrontera;
-};
-
-vector<int> CentralModule::getCentrosF() {
-  return centros_de_frontera;
-};
-
-void CentralModule::setCentrosF(vector<int> newCentrosF) {
-  centros_de_frontera = newCentrosF;
-};
-
-void CentralModule::reset_bid() {
-  cis.clear();
-  clear_bids(bids_pq);
-  auction_segment_frontiers_num.clear();
-  auction_robots.clear();
-}
-
-StateGrid gt;
+// Get the info to start an Auction
 pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
-  // restart the previous aution
+  // reset the state for a new auction
   cout << "debug :: clear data from previous auction" << endl;
-  segment_bids.clear();
-  reset_bid();
+  segmentBids.clear();
+  cis.clear();
+  clear_bids(bidsPQ);
+  auctionSegmentFrontiersNum.clear();
+  auctionRobots.clear();
 
+  // Get the map offset (where does the origin of the map on the world coordinate system)
   cout << "debug :: get offset" << endl;
   pgmappingcooperativo::SegmentAuction segment_auction;
   nav_msgs::OccupancyGrid map = getMap();
   segment_auction.offset = p3d_to_p2d(map.info.origin.position);
-  // taking into account the vision range of robot and leaving only significants frontiers
-  cout << "debug :: apply kmeans" << endl;
-  aplicarKmeans(frontera);
 
-   gt = og2gt(map, /*toVec(frontera)*/ getCentrosF(), &cell_count);
+  // Get the significant frontiers taking into account the vision range of the robots
+  cout << "debug :: get significant frontiers" << endl;
+  switch (frontierSimplificationMethod) {
+    case 0:
+      gt = og2gt(map, toVec(frontiers), &cellCount);
+      break;
+    case 1:
+      aplicarKmeans(frontiers);
+      gt = og2gt(map, getFrontierCenters(), &cellCount);
+      break;
+  }
 
   // criticals_info cis_aux;
   cout << "debug :: gvd and cis" << endl;
@@ -102,74 +151,36 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
       segment_auction.frontier_segment.push_back(pos_to_p2d(segment));
     }*/
   }
-  segment_auction.id = segment_auction_id;
-  segment_auction_id++;
+  segment_auction.id = segmentAuctionId;
+  segmentAuctionId++;
   return segment_auction;
 }
 
-centralMouleState CentralModule::getEstado() {
-  return estado;
-};
-
-void CentralModule::setEstado(centralMouleState newEstado) {
-  estado = newEstado;
-};
-
-nav_msgs::OccupancyGrid CentralModule::getMap() {
-  return map_merged;
-};
-
-int CentralModule::getNumRobots() {
-  return number_robots;
-};
-
-void CentralModule::setNumRobots(int newNumRobots) {
-  number_robots = newNumRobots;
-};
-
-void CentralModule::saveMap(const nav_msgs::OccupancyGrid map) {
-  if (first) {
-    uint width = map.info.width;
-    uint height = map.info.height;
-    int y_origin = map.info.origin.position.x;
-    int x_origin = map.info.origin.position.y;
-    for (int i = 0; i < width * height; i++) {
-      int fila = i % width;
-      int columna = i / width;
-      float a = ((x_origin + fila) + 0.5);
-      float b = ((y_origin + columna) + 0.5);
-      map_points[i] = cv::Point2f(a, b);
-    }
-    first = false;
-  }
-  map_merged.info = map.info;
-  map_merged.header = map.header;
-  map_merged.data = map.data;
-}
-
+// Save the bid of a robot (name) for an ongoing auction
 bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid sb, string name) {
-  if (last_segment_assignment_id != sb.id) {
+  if (lastSegmentAssignmentId != sb.id) {
     return false;
   }
-  // segment_bids[name].clear();
+  // segmentBids[name].clear();
   for (int i = 0; i < sb.criticals.size(); i++) {
-    segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
+    segmentBids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
 
     Pos segment = p2d_to_pos(sb.criticals[i]);
 
-    add_bid(bids_pq, name, segment, sb.values[i]);
-    auction_segment_frontiers_num[segment] = cis[segment].frontiers.size();
-    auction_robots.insert(name);
+    add_bid(bidsPQ, name, segment, sb.values[i]);
+    auctionSegmentFrontiersNum[segment] = cis[segment].frontiers.size();
+    auctionRobots.insert(name);
   }
   return true;
 }
 
+// Resolve the auction given the current bids
 boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralModule::assignSegment() {
-  int total_robots = auction_robots.size();
+  int total_robots = auctionRobots.size();
   int total_segments = cis.size();
 
   boost::unordered_map<string, Pos> robot_segment =
-      resolve_auction(bids_pq, total_robots, total_segments, &auction_segment_frontiers_num);
+      resolve_auction(bidsPQ, total_robots, total_segments, &auctionSegmentFrontiersNum);
 
   boost::unordered_map<Pos, int> robots_nums;
   for (auto it = robot_segment.begin(); it != robot_segment.end(); it++) {
@@ -181,10 +192,10 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
   boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> ret;
 
   // boost::unordered_map<Pos,pgmappingcooperativo::Point2D> frontier2d;
-  for (auto it = auction_robots.begin(); it != auction_robots.end(); it++) {
+  for (auto it = auctionRobots.begin(); it != auctionRobots.end(); it++) {
     string r_name = *it;
     pgmappingcooperativo::SegmentAssignment sa;
-    sa.id = last_segment_assignment_id;
+    sa.id = lastSegmentAssignmentId;
     if (robot_segment.find(r_name) != robot_segment.end()) {
       Pos seg = robot_segment[r_name];
       sa.segment = pos_to_p2d(seg);
@@ -198,13 +209,13 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
     }
     ret[r_name] = sa;
   }
-  last_segment_assignment_id++;
+  lastSegmentAssignmentId++;
   return ret;
 }
 
-//--//
+// TODO Refactor all the code below
 
-/*Funcion que clasifica los puntos de frontera en clases de equivalencia*/
+/*Funcion que clasifica los puntos de frontiers en clases de equivalencia*/
 int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clusters) {
   int count = 1;
   boost::unordered_set<int> f_copy = f;
@@ -221,7 +232,7 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
     aux.push_back(actual);
     // actualizo sus vecinos
     for (int i = 1; i < 9; i += 2) {
-      int Pos = posicionRelativa(actual, i, map_merged.info.width);
+      int Pos = posicionRelativa(actual, i, mapMerged.info.width);
       boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
       if ((i != 4) && (itv != f_copy.end())) {
         vecinos.push_back(*itv);
@@ -232,7 +243,7 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
     while (!vecinos.empty()) {
       int primero = vecinos.front();
       for (int i = 1; i < 9; i += 2) {
-        int Pos = posicionRelativa(primero, i, map_merged.info.width);
+        int Pos = posicionRelativa(primero, i, mapMerged.info.width);
         boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
         if ((i != 4) && (itv != f_copy.end())) {
           vecinos.push_back(*itv);
@@ -252,18 +263,16 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
 }
 
 /*Funcion que realiza la asignacion del metodo k means*/
-vector<list<int> > CentralModule::asignacionKmean(int k,
-                                                  list<int> puntos,
-                                                  vector<cv::Point2f> centros) {
+vector<list<int> > CentralModule::asignacionKmean(int k, list<int> puntos, vector<cv::Point2f> centros) {
   list<int>::iterator it_puntos;
   vector<list<int> > puntos_de_centros(k);
 
   for (it_puntos = puntos.begin(); it_puntos != puntos.end(); it_puntos++) {
     int centro = -1;
     float dist_a_centro = 1000.0;
-    /* ROS_DEBUG("Punto ---> (%f , %f) ", map_points[(*it_puntos)].x, map_points[(*it_puntos)].y); */
+    /* ROS_DEBUG("Punto ---> (%f , %f) ", mapPoints[(*it_puntos)].x, mapPoints[(*it_puntos)].y); */
     for (int i = 0; i < k; i++) {
-      float dist = distacia2Puntos(centros[i], map_points[(*it_puntos)]);
+      float dist = distacia2Puntos(centros[i], mapPoints[(*it_puntos)]);
       /* ROS_DEBUG("    Distancia a centro %d ---> %f ", i, dist); */
       if (dist_a_centro > dist) {
         centro = i;
@@ -276,8 +285,7 @@ vector<list<int> > CentralModule::asignacionKmean(int k,
   return puntos_de_centros;
 }
 
-/*Funcion que realiza la actualizacion de la posicion de los centrso en k
- * means*/
+/*Funcion que realiza la actualizacion de la posicion de los centrso en k-means*/
 vector<cv::Point2f> CentralModule::actualizacionKmean(vector<list<int> > puntos_de_centros,
                                                       int cant_centros) {
   list<int>::iterator it_puntos;
@@ -293,10 +301,10 @@ vector<cv::Point2f> CentralModule::actualizacionKmean(vector<list<int> > puntos_
     /* ROS_DEBUG("   X2 Puntos de %d ", i); */
     for (it_puntos = puntos_de_centros[i].begin(); it_puntos != puntos_de_centros[i].end();
          it_puntos++) {
-      /* ROS_DEBUG("      X ---> %f ", map_points[(*it_puntos)].x); */
-      /* ROS_DEBUG("      Y ---> %f ", map_points[(*it_puntos)].y); */
-      sum_x += map_points[(*it_puntos)].x;
-      sum_y += map_points[(*it_puntos)].y;
+      /* ROS_DEBUG("      X ---> %f ", mapPoints[(*it_puntos)].x); */
+      /* ROS_DEBUG("      Y ---> %f ", mapPoints[(*it_puntos)].y); */
+      sum_x += mapPoints[(*it_puntos)].x;
+      sum_y += mapPoints[(*it_puntos)].y;
       cont++;
     }
     centros_nuevos[i] = cv::Point2f(sum_x / cont, sum_y / cont);
@@ -304,8 +312,7 @@ vector<cv::Point2f> CentralModule::actualizacionKmean(vector<list<int> > puntos_
   return centros_nuevos;
 }
 
-/*Funcion que me determina cuando el error en k mean es lo suficientemente chico
- * como para finalizar*/
+/*Funcion que me determina cuando el error en k mean es lo suficientemente chico como para finalizar*/
 bool CentralModule::finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos,
                                            vector<cv::Point2f> centros_nuevos,
                                            float dist_lim) {
@@ -321,8 +328,7 @@ bool CentralModule::finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos,
   return ret;
 }
 
-/*Funcion que me lleva los centros obtenidos por kmeans a los puntos de mi
- * frontera mas cercanos*/
+/*Funcion que me lleva los centros obtenidos por kmeans a los puntos de mi frontiers mas cercanos*/
 list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos, list<int> puntos) {
   list<int> points;
 
@@ -331,7 +337,7 @@ list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos, list<i
     float dist_a_centro = 100.0;
     list<int>::iterator it_puntos;
     for (it_puntos = puntos.begin(); it_puntos != puntos.end(); it_puntos++) {
-      float dist = distacia2Puntos(centros_nuevos[j], map_points[(*it_puntos)]);
+      float dist = distacia2Puntos(centros_nuevos[j], mapPoints[(*it_puntos)]);
 
       if (dist_a_centro >= dist) {
         te = (*it_puntos);
@@ -344,10 +350,7 @@ list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos, list<i
 }
 
 /*Funcion que aplica kmean para un grupo de puntos*/
-pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k,
-                                                           list<int> puntos,
-                                                           vector<cv::Point2f> centros,
-                                                           float dist_lim) {
+pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k, list<int> puntos, vector<cv::Point2f> centros, float dist_lim) {
   vector<cv::Point2f> centros_viejos;
   vector<cv::Point2f> centros_nuevos = centros;
   vector<list<int> > puntos_de_centros;
@@ -380,10 +383,10 @@ pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k,
 /*dadas 2 celdas me indica si son vecinas o no*/
 bool CentralModule::esVecino(int celda, int vecino) {
   return (
-      (vecino == celda - 1 - map_merged.info.width) || (vecino == celda - map_merged.info.width) ||
-      (vecino == celda + 1 - map_merged.info.width) || (vecino == celda - 1) ||
-      (vecino == celda + 1) || (vecino == celda - 1 + map_merged.info.width) ||
-      (vecino == celda + map_merged.info.width) || (vecino == celda + 1 + map_merged.info.width));
+      (vecino == celda - 1 - mapMerged.info.width) || (vecino == celda - mapMerged.info.width) ||
+      (vecino == celda + 1 - mapMerged.info.width) || (vecino == celda - 1) ||
+      (vecino == celda + 1) || (vecino == celda - 1 + mapMerged.info.width) ||
+      (vecino == celda + mapMerged.info.width) || (vecino == celda + 1 + mapMerged.info.width));
 }
 
 /*dada una celda y una lista de celdas, me dice si la celda es vecina de alguna
@@ -398,28 +401,20 @@ bool CentralModule::esVecinoDeSet(int celda, boost::unordered_set<int> lista_de_
   return ret;
 }
 
-/*Funcion que me devuelve la distancia de un punto p a una recta formada por i y
- * f*/
+/*Funcion que me devuelve la distancia de un punto p a una recta formada por i y f*/
 float CentralModule::distanciaArecta(int inicio, int fin, int punto) {
   float dist = abs(
-      ((map_points[inicio].y - map_points[fin].y) / (map_points[inicio].x - map_points[fin].x)) *
-          map_points[punto].x -
-      map_points[punto].y +
-      (map_points[inicio].y -
-       ((map_points[inicio].y - map_points[fin].y) / (map_points[inicio].x - map_points[fin].x)) *
-           map_points[inicio].x));
-  dist = dist / sqrt(pow(((map_points[inicio].y - map_points[fin].y) /
-                          (map_points[inicio].x - map_points[fin].x)),
-                         2) +
-                     1);
+      ((mapPoints[inicio].y - mapPoints[fin].y) / (mapPoints[inicio].x - mapPoints[fin].x)) * mapPoints[punto].x - mapPoints[punto].y +
+      (mapPoints[inicio].y - ((mapPoints[inicio].y - mapPoints[fin].y) / (mapPoints[inicio].x - mapPoints[fin].x)) * mapPoints[inicio].x));
+  dist = dist / sqrt(pow(((mapPoints[inicio].y - mapPoints[fin].y) / (mapPoints[inicio].x - mapPoints[fin].x)), 2) + 1);
   return dist;
 }
 
-vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
-  centros_de_frontera.clear();
+vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontiers) {
+  frontierCenters.clear();
   // info_gain.clear();
   dict_clusters clusters;
-  int cantidad_fronteras = dividirFront(frontera, clusters);
+  int cantidad_fronteras = dividirFront(frontiers, clusters);
 
   for (int i = 1; i <= cantidad_fronteras; i++) {
     int k = 1;
@@ -437,7 +432,7 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
       // inicializaciones anteriores
       list<int>::iterator it = clusters[i].begin();
       for (int pe = 0; pe < k; pe++) {
-        centros.push_back(map_points[*it]);
+        centros.push_back(mapPoints[*it]);
         it++;
       }
       // Aplico kmeans
@@ -452,7 +447,7 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
       while (!fin_iteracion && (it_centros != centros_nuevo.end())) {
         it_puntos = puntos_de_centros[cont].rbegin();
         while (!fin_iteracion && (it_puntos != puntos_de_centros[cont].rend())) {
-          fin_iteracion = (distacia2Puntos(map_points[*it_puntos], map_points[*it_centros]) > 6.0);
+          fin_iteracion = (distacia2Puntos(mapPoints[*it_puntos], mapPoints[*it_centros]) > 6.0);
           it_puntos++;
         }
         cont++;
@@ -466,12 +461,12 @@ vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontera) {
           // cout<<"centro --->"<<*it_puntos<<endl;
           // boost::unordered_set<int> infoGain = getGainInfo((*it_puntos));
           // info_gain.insert(pair<int, boost::unordered_set<int> >((*it_puntos), infoGain));
-          centros_de_frontera.push_back((*it_puntos));
+          frontierCenters.push_back((*it_puntos));
         }
       }
     }
   }
-  return centros_de_frontera;
+  return frontierCenters;
 }
 
 CentralModule::~CentralModule(){
