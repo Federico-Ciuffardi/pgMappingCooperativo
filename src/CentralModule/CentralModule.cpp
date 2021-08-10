@@ -332,11 +332,11 @@ vector<cv::Point2f> CentralModule::actualizacionKmean(vector<list<int> > puntos_
     cont = 0;
     sum_x = 0.0;
     sum_y = 0.0;
-    ROS_DEBUG("   X2 Puntos de %d ", i);
+    /* ROS_DEBUG("   X2 Puntos de %d ", i); */
     for (it_puntos = puntos_de_centros[i].begin(); it_puntos != puntos_de_centros[i].end();
          it_puntos++) {
-      ROS_DEBUG("      X ---> %f ", map_points[(*it_puntos)].x);
-      ROS_DEBUG("      Y ---> %f ", map_points[(*it_puntos)].y);
+      /* ROS_DEBUG("      X ---> %f ", map_points[(*it_puntos)].x); */
+      /* ROS_DEBUG("      Y ---> %f ", map_points[(*it_puntos)].y); */
       sum_x += map_points[(*it_puntos)].x;
       sum_y += map_points[(*it_puntos)].y;
       cont++;
@@ -355,8 +355,8 @@ bool CentralModule::finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos,
   int i = 0;
   int lim = centros_viejos.size();
   while ((i < lim) && (ret)) {
-    ROS_DEBUG("Lugar %d", i);
-    ROS_DEBUG("   Diff ---> , %f", distacia2Puntos(centros_viejos[i], centros_nuevos[i]));
+    /* ROS_DEBUG("Lugar %d", i); */
+    /* ROS_DEBUG("   Diff ---> , %f", distacia2Puntos(centros_viejos[i], centros_nuevos[i])); */
     ret = !(distacia2Puntos(centros_viejos[i], centros_nuevos[i]) >= dist_lim);
     i++;
   }
@@ -396,7 +396,7 @@ pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k,
   int i = 0;
   do {
     i++;
-    ROS_DEBUG("Cant. ciclos ---> %d !!", i);
+    /* ROS_DEBUG("Cant. ciclos ---> %d !!", i); */
     centros_viejos.clear();
     centros_viejos = centros_nuevos;
     centros_nuevos.clear();
@@ -411,7 +411,7 @@ pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k,
     }
 
   } while ((i <= 100) && (!finalizarPorErrorKmean(centros_viejos, centros_nuevos, dist_lim)));
-  ROS_DEBUG(" Ciclos realizados %d", i);
+  /* ROS_DEBUG(" Ciclos realizados %d", i); */
 
   pair<list<int>, vector<list<int> > > retorno(nearestPoint(centros_nuevos, puntos),
                                                puntos_de_centros);

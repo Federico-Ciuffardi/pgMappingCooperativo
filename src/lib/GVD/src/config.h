@@ -41,7 +41,7 @@ public:
   // 0: - All neighbors has greater distance
   // 1: - There is no neighbor with less distance 
   //    - And there is at least one neighbor with greater distance
-  int criticalConditiontMin = 1;
+  int criticalConditionMin = 1;
 
 private:
   GvdConfig();

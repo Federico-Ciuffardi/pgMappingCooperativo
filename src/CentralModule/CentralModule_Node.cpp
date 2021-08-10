@@ -28,12 +28,26 @@ ros::Timer auctionResolutionTimeoutTimer;
 ros::Duration AuctionResolutionTimeout(0.1); // first AuctionResolutionTimeout
 
 ros::Timer auctionStartDelayTimer;
-ros::Duration auctionStartDelayTimeout(2);   // The expected delay of a map update to arrive from the robot to the central module
+ros::Duration auctionStartDelayTimeout;
 
 ros::Timer auctionStartTimeoutTimer;
 ros::Duration auctionStartTimeout;
 
+// Params
+/// auctionStartTimeoutMode:
+///   * 0 : disabled, no timeout, starts the auction immediately after the first robot request (actually there is a little timeout to wait 
+///         for the map update of that first robot)
+///   * 1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
+///         after the first robot request
+///   * 2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
+///         after the first robot request. Reset and decrease the delay on new requests.
+int auctionStartTimeoutMode = 2;
+
+/// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
+float mapUpdateDelay = 2;
+
 // others
+
 CentralModule centralModule;
 
 int succesfulBids  = 0;
@@ -227,10 +241,6 @@ void resolveAuction() {
     }
   }
 
-  if(assignedRobots > 2){
-    auctionStartTimeout = auctionStartTimeout*(1.0/(assignedRobots-1));
-  }
-
   // Mark frontiers
   std_msgs::ColorRGBA green;
   green.g = 1.0f;
@@ -297,12 +307,36 @@ void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
   ROS_INFO_STREAM("Auction request successful, request "<<requests<<"/"<<assignedRobots<<" (arrived/expected)");
 
   if (requests >= assignedRobots) {
-    ROS_DEBUG_STREAM("Is the last robot of the auction, start auction");
     auctionStartTimeoutTimer.stop(); // Stop the timeout as it was not necessary
-    auctionStartDelayTimer.start();  // Delay to wait for the map update of the last robot to arrive to its objetive
+
+    // Delay to wait for the map update of the last robot to arrive to its objective (reset)
+    ROS_DEBUG_STREAM("Is the last robot of the auction, start auction after "<<auctionStartDelayTimeout.toSec());
+    auctionStartDelayTimer.stop();
+    auctionStartDelayTimer.start();  
   } else {
-    ROS_DEBUG_STREAM_COND(requests == 1,"Starting the auction timeout");
-    auctionStartTimeoutTimer.start(); // Start the timeout to wait for the other expected robots
+    switch (auctionStartTimeoutMode) {
+      case 0:
+        // Delay to wait for the map update of the last robot to arrive to its objective (reset)
+        auctionStartDelayTimer.stop(); 
+        auctionStartDelayTimer.start();  
+        break;
+      case 1:
+        // Start the timeout to wait for the other expected robots (does not reset)
+        ROS_DEBUG_STREAM_COND(requests == 1,"Starting the auction timeout, delay = "<<auctionStartTimeout.toSec());
+        auctionStartTimeoutTimer.start(); 
+        break;
+      case 2:
+        // Modify timeout if more than 1 request arrived
+        if(requests > 1){
+          auctionStartTimeout = auctionStartTimeout*(1.0/requests);
+          auctionStartTimeoutTimer.setPeriod(auctionStartTimeout);
+        }
+        ROS_DEBUG_STREAM("Starting/Restarting the auction timeout, delay = "<<auctionStartTimeout.toSec());
+        // Restart the timeout to wait for the other expected robots 
+        auctionStartTimeoutTimer.stop(); 
+        auctionStartTimeoutTimer.start(); 
+        break;
+    }
   }
 }
 
@@ -370,12 +404,11 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
   ros::shutdown();
 }
 
-
 int main(int argc, char* argv[]) {
   // Change log level to debug
-  /* if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { */
-  /*    ros::console::notifyLoggerLevelsChanged(); */
-  /* } */
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
+     ros::console::notifyLoggerLevelsChanged();
+  }
 
   // Init node
   ros::init(argc, argv, "central_module");
@@ -383,12 +416,16 @@ int main(int argc, char* argv[]) {
   centralModule = CentralModule();
 
   // Load params
-  /// GVD lib
+  /// GVD lib (check ../lib/GVD/src/config.h)
   n.param<int>("/gvd_connectivity_method", GvdConfig::get()->connectivityMethod, GvdConfig::get()->connectivityMethod);
   n.param<int>("/gvd_vertex_simplification_method", GvdConfig::get()->vertexSimplificationMethod, GvdConfig::get()->vertexSimplificationMethod);
   n.param<int>("/gvd_edge_simplification_method", GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationMethod);
   n.param<int>("/gvd_edge_simplification_allow_vertex_removal", GvdConfig::get()->edgeSimplificationAllowVertexRemoval, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
-  n.param<int>("/critical_conditiont_min", GvdConfig::get()->criticalConditiontMin, GvdConfig::get()->criticalConditiontMin);
+  n.param<int>("/critical_condition_min", GvdConfig::get()->criticalConditionMin, GvdConfig::get()->criticalConditionMin);
+
+  /// Auction
+  n.param<int>("/auction_start_timeout_mode", auctionStartTimeoutMode, auctionStartTimeoutMode);
+  n.param<float>("/map_update_delay", mapUpdateDelay, mapUpdateDelay);
 
   /// Current scenario
   int startingRobotNumber;
@@ -400,6 +437,8 @@ int main(int argc, char* argv[]) {
   // Initilize timers
   auctionResolutionTimeoutTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimeoutTimerRoutine, true, false);
   auctionStartTimeoutTimer      = n.createTimer(auctionStartTimeout     , auctionStartTimeoutTimerRoutine     , true, false);
+
+  auctionStartDelayTimeout.fromSec(mapUpdateDelay);
   auctionStartDelayTimer        = n.createTimer(auctionStartDelayTimeout, auctionStartDelayTimerRoutine       , true, false);
 
   // Initilize Publishers

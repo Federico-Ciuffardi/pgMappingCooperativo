@@ -15,8 +15,8 @@ roscore &>/dev/null &
 
 sleep 5
 
-rviz -d /home/fede/catkin_ws/src/pgmappingcooperativo/rviz/"$map_name".rviz &>/dev/null &
 rqt_console &>/dev/null &
+rviz -d /home/fede/catkin_ws/src/pgmappingcooperativo/rviz/"$map_name".rviz &>/dev/null &
 
 echo "> Simulation on $map_name with $starting_robot_number"
 echo
