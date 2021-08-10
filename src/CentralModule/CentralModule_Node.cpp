@@ -24,21 +24,21 @@ ros::Publisher segmentAuctionPub;
 map<string, ros::Publisher> segmentAssignmentPubs;
 
 // timers 
-ros::Timer auctionResolutionTimer;
-ros::Duration AuctionResolutionTimeout(0.1);  // first AuctionResolutionTimeout
+ros::Timer auctionResolutionTimeoutTimer;
+ros::Duration AuctionResolutionTimeout(0.1); // first AuctionResolutionTimeout
 
 ros::Timer auctionStartDelayTimer;
-ros::Duration auctionStartDelayTimeout(2);  // 1
+ros::Duration auctionStartDelayTimeout(2);   // The expected delay of a map update to arrive from the robot to the central module
 
-ros::Timer auctionStartTimer;
-ros::Duration auctionStartTimeout;  //(5.0);
+ros::Timer auctionStartTimeoutTimer;
+ros::Duration auctionStartTimeout;
 
 // others
 CentralModule centralModule;
 
-int succesfulBids = 0;
+int succesfulBids  = 0;
 int assignedRobots = 0;
-int requests = 0;
+int requests       = 0;
 
 bool endFlag = false;
 
@@ -62,7 +62,7 @@ string coverageFileLog;
 ////////////////
 
 // Publishes marks corresponding to the gvd to be visualized on rviz 
-static void drawGvd(pgmappingcooperativo::SegmentAuction sac, map_info_type map_info) {
+static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
   // Colors
   std_msgs::ColorRGBA blue;
   blue.b = 1.0f;
@@ -75,20 +75,20 @@ static void drawGvd(pgmappingcooperativo::SegmentAuction sac, map_info_type map_
   // set up critical points
   visualization_msgs::Marker::_points_type criticalPoints;
   for (int i = 0; i < sac.criticals.size(); i++) {
-    criticalPoints.push_back(p2d_to_p3d(sac.criticals[i], map_info));
+    criticalPoints.push_back(p2d_to_p3d(sac.criticals[i], mapInfo));
   }
 
   // set up vertices points
   visualization_msgs::Marker::_points_type points;
   for (int i = 0; i < sac.gvd.vertices.size(); i++) {
-    points.push_back(p2d_to_p3d(sac.gvd.vertices[i], -0.1, map_info));
+    points.push_back(p2d_to_p3d(sac.gvd.vertices[i], -0.1, mapInfo));
   }
 
   // edges
   visualization_msgs::Marker::_points_type edges;
   for (int i = 0; i < sac.gvd.edges.size(); i++) {
-    edges.push_back(p2d_to_p3d(sac.gvd.edges[i].from, map_info));
-    edges.push_back(p2d_to_p3d(sac.gvd.edges[i].to, map_info));
+    edges.push_back(p2d_to_p3d(sac.gvd.edges[i].from, mapInfo));
+    edges.push_back(p2d_to_p3d(sac.gvd.edges[i].to, mapInfo));
   }
 
   // publish
@@ -102,25 +102,25 @@ static void drawGvd(pgmappingcooperativo::SegmentAuction sac, map_info_type map_
 ///////////////////
 
 void startAuction() {
-  // initialization
-  map_info_type mapInfo = centralModule.getMap().info;
-
-  // get aution info
-  pgmappingcooperativo::SegmentAuction segmentAuction;
+  // get aution info (calculate gvd + mesure time of calculation)
 
   lastGvdStart = ros::Time::now();
+
   ROS_INFO("Computing the segment auction to publish");
+  pgmappingcooperativo::SegmentAuction segmentAuction;
   segmentAuction = centralModule.getSegmentAuctionInfo();
   ROS_INFO("Computed the segment auction to publish");
+
   ros::Duration lastGvdTime = gvdTime;
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
+
   // set markers for rviz gvd visualization
-  drawGvd(segmentAuction, mapInfo);
+  drawGvd(segmentAuction, centralModule.getMap().info);
+
   // log gvd time
   if (LOG >= 2) {
     ros::Duration currentTime = ros::Time::now() - firstAuction;
-    // string data = to_string(current_time.toSec())+" "+to_string(gvd_time.toSec());
     string time = to_string(currentTime.toSec());
     string coveragePer = to_string(((float)centralModule.cell_count / MAP_SIZE) * 100);
 
@@ -139,160 +139,143 @@ void startAuction() {
     log_data(data, gvdFileLog);
 
     ros::Duration increment = (gvdTime - lastGvdTime);
-    // data = to_string(current_time.toSec())+"  "+to_string(increment.toSec());
+    data = to_string(currentTime.toSec())+"  "+to_string(increment.toSec());
     data = coveragePer + "  " + to_string(increment.toSec());
     if (incrementGvdFileLog.empty()) {
       incrementGvdFileLog = "incrementoGVD";
-      incrementGvdFileLog = LOG_FILE_PATH + mapName + "_" + incrementGvdFileLog +
-                               to_string(centralModule.getNumRobots());
+      incrementGvdFileLog = LOG_FILE_PATH + mapName + "_" + incrementGvdFileLog + to_string(centralModule.getNumRobots());
     }
 
     log_data(data, incrementGvdFileLog);
 
-    // gnuplot p;
-    // p.graph_file(gvd_file_log, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
-    // p.graph_file(increment_gvd_file_log, "Cubrimiento del mapa(%)", "Incremento de tiempo de
-    // GvdGraph(s)");
+    gnuplot p;
+    p.graph_file(gvdFileLog, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
+    p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
   }
 
-  // Send auction info: Graph and criticals info
-
+  // As the bid was started bids can be received
+  /// Reset auction variables
   requests = 0;
+  /// Change state
   centralModule.setEstado(WaitingFirstBid);
 
+  // Send auction info so the bids can be calculated
   segmentAuctionPub.publish(segmentAuction);
   ROS_INFO("Segment Auction published");
-  /* ROS_INFO("Segment Auction disabled"); */
 }
 
 void resolveAuction() {
+  // Change state to reolving auction
   centralModule.setEstado(Resolving);
+
+  // Show estimated auction resolution time (aution resolution timeout) and the real time
   ros::Duration resolutionTime = ros::Time::now() - lastAuctionStart;
-  ROS_INFO("Auction Resolution Start, expected %f, real %f", AuctionResolutionTimeout.toSec(),
-           resolutionTime.toSec());
-  AuctionResolutionTimeout =
-      max(ros::Duration(0.5) + resolutionTime * 2, AuctionResolutionTimeout);
-  auctionResolutionTimer.setPeriod(AuctionResolutionTimeout);
+  ROS_INFO_STREAM("Auction resolution | real time "<<resolutionTime.toSec()<<" | max estimated time "<<AuctionResolutionTimeout.toSec());
 
-  succesfulBids = 0;
+  // Set the auction resolution timeout
+  AuctionResolutionTimeout = max(ros::Duration(0.5) + resolutionTime * 2, AuctionResolutionTimeout);
+  auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
-  // set up
-  visualization_msgs::Marker::_points_type points;
-  map_info_type mapInfo = centralModule.getMap().info;
-
-  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> assignment =
-      centralModule.assignSegment();
+  // Get the robot-segment assignment
+  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> assignment = centralModule.assignSegment();
   assignedRobots = assignment.size();
+
+  // As the assignment was calculated a new auction can be started
+  /// Reset auction variables
+  succesfulBids = 0;
+  /// Change state
+  centralModule.setEstado(WaitingAuction);
+
+  // Parse the robot-segment assignment
+  visualization_msgs::Marker::_points_type points;
+  mapInfoType mapInfo = centralModule.getMap().info;
 
   float maxEstimatedTime = 0;
   float minEstimatedTime = FLT_MAX;
 
-  centralModule.setEstado(WaitingAuction);
+  for (auto it : assignment) {
+    pgmappingcooperativo::SegmentAssignment sa = it.second;
+    string robot = it.first;
 
-  for (auto it = assignment.begin(); it != assignment.end(); it++) {
-    pgmappingcooperativo::SegmentAssignment sa = it->second;
-    string robot = it->first;
+    // Let the robot know about it assigned segment
+    segmentAssignmentPubs[robot].publish(sa);
 
-    // publish
-    segmentAssignmentPubs[it->first].publish(it->second);
-
-    // obtain costs
-    float estimatedTime =
-        (centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED);
+    // Calculate the estimated task completion time
+    float estimatedTime = max(0.f,(centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
 
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
-    minEstimatedTime = max(minEstimatedTime, estimatedTime);
+    minEstimatedTime = min(minEstimatedTime, estimatedTime);
 
-    for (auto it = sa.frontiers.begin(); it != sa.frontiers.end(); it++) {
-      points.push_back(p2d_to_p3d(*it, 0.1, mapInfo));
+    // Store all the objetives of the assigned segment to show on rviz
+    for (pgmappingcooperativo::Point2D p2d : sa.frontiers) {
+      points.push_back(p2d_to_p3d(p2d, 0.1, mapInfo));
     }
   }
 
-  for (auto it = assignment.begin(); it != assignment.end(); it++) {
-    pgmappingcooperativo::SegmentAssignment sa = it->second;
-    string robot = it->first;
-    float estimatedTime =
-        (centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED);
-    if (estimatedTime >
-        minEstimatedTime + (gvdTime + gvdTimeIncrement + auctionStartDelayTimeout).toSec()) {
+  // Set the timeout to start the next auction
+  auctionStartTimeout = gvdTime + gvdTimeIncrement + auctionStartDelayTimeout;
+  auctionStartTimeoutTimer.setPeriod(auctionStartTimeout,false);
+
+  // Calculate the robots that are expected to complete the assigned task not long after the first auction request
+  for (auto it : assignment) {
+    pgmappingcooperativo::SegmentAssignment sa = it.second;
+    string robot = it.first;
+
+    float estimatedTime = max(0.f,(centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
+    if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
       assignedRobots--;
     }
   }
 
-  auctionStartTimeout = (gvdTime + gvdTimeIncrement + auctionStartDelayTimeout);
-  auctionStartTimer.setPeriod(auctionStartTimeout);
+  if(assignedRobots > 2){
+    auctionStartTimeout = auctionStartTimeout*(1.0/(assignedRobots-1));
+  }
 
-  ROS_INFO("gvd time = %f , gvd estimated time = %f, max estimated time %f", (gvdTime).toSec(),
-           (gvdTime + gvdTimeIncrement + auctionStartDelayTimeout).toSec(), maxEstimatedTime);
-
+  // Mark frontiers
   std_msgs::ColorRGBA green;
   green.g = 1.0f;
   green.a = 1.0f;
   markerPub.publish(mark_points("Frontiers", points, green));
-  ROS_INFO("Auction resoved, %d robots assigned", assignedRobots);
 
-  ros::Duration currentTime = ros::Time::now() - firstAuction;
-  ROS_INFO("Elapsed time: %f", currentTime.toSec());
+  // Show the last gvd construction the estimated and the max estimated time 
+  ROS_INFO_STREAM("GVD | estimated time "<<auctionStartTimeout.toSec()<<" | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<
+                  " | last robot task completion estimated time "<<maxEstimatedTime);
+
+  // Show auction result 
+  ROS_INFO_STREAM("Auction resoved, "<<assignedRobots<<" robots assigned");
 }
 
-/*
- *  Timer Functions
- */
+/////////////////////
+// Timer Functions //
+/////////////////////
 
-// bool pending = false;
-/* cuando: auctionResolutionTimer AuctionResolutionTimeout */
-/* que: ejecucion subasta (asignacion de tareas) y publicacion de resultados */
-
-void auctionResolutionTimerRoutine(const ros::TimerEvent&) {
-  auctionResolutionTimer.stop();
+void auctionResolutionTimeoutTimerRoutine(const ros::TimerEvent&) {
+  auctionResolutionTimeoutTimer.stop();
   if (centralModule.getEstado() == WaitingBids) {
     resolveAuction();
   } else {
-    ROS_INFO("WARNING: auction AuctionResolutionTimeout with no bids");
+    ROS_WARN_STREAM("Auction AuctionResolutionTimeout with no bids");
   }
 }
 
-void auctionStartTimerRoutine(const ros::TimerEvent&) {
-  auctionStartTimer.stop();
-  ROS_INFO("Segment Auction triggered BECOUSE of timeout");
+void auctionStartTimeoutTimerRoutine(const ros::TimerEvent&) {
+  auctionStartTimeoutTimer.stop();
+  ROS_DEBUG("Segment Auction triggered BECOUSE of timeout");
   startAuction();
 }
 
 void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
-  ROS_INFO("Segment Auction triggered BEFORE timeout");
   auctionStartDelayTimer.stop();
+  ROS_DEBUG("Segment Auction triggered BEFORE timeout");
   startAuction();
 }
 
-/*
- *  Call Backs
- */
-
-/* cuando: un robot te pide un objetivo */
-/* que: inicia una subasta */
-void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
-  if (centralModule.getEstado() != WaitingAuction) {
-    ROS_INFO("Auction request from ignored, already one on course");
-  } else {
-    requests++;
-    if (requests >= assignedRobots) {
-      // ROS_INFO("Auction request successful, it is the last one starting the auction");
-      auctionStartTimer.stop();
-      auctionStartDelayTimer.start();  // delay to wait for the map
-      // startAuction();
-    } else {
-      // ROS_INFO("Auction request successful, starting timer, %d robots
-      // left",assigned_robots-requests);
-
-      auctionStartTimer.start();
-    }
-  }
-}
+///////////////
+// CallBacks //
+///////////////
 
 int maps = 0;
 bool first = true;
-// When: A new map arrives
-// What: Update map
 void mapMergedCallBack(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
   centralModule.updateMap(msg);
   maps++;
@@ -303,38 +286,23 @@ void mapMergedCallBack(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
   }
 }
 
-void endCallBack(const std_msgs::StringConstPtr& msg) {
-  endFlag = msg->data.compare(endMsg) == 0;
-  if (endFlag) {
-    // log data
-    if (LOG > 0) {
-      ros::Duration currentTime = ros::Time::now() - firstAuction;
-      string robotCount = to_string(centralModule.getNumRobots());
-      string time = to_string(currentTime.toSec());
+void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
+  if (centralModule.getEstado() != WaitingAuction) {
+    ROS_DEBUG_STREAM("Auction request ignored, already one on course");
+    return;
+  }
 
-      string data = "Cantidad Robots: " + robotCount + "\n";
-      data += "Tiempo de ejecucion: " + time;
-      string ejecucionFileLog = "tiemposEjecucion";
-      ejecucionFileLog = LOG_FILE_PATH + mapName + "_" + ejecucionFileLog;
-      log_data(data, ejecucionFileLog);
+  requests++;
 
-      ejecucionFileLog = "tiemposEjecucionG";
-      ejecucionFileLog = LOG_FILE_PATH + mapName + "_" + ejecucionFileLog;
-      string gData = robotCount + "  " + time;
-      log_data(gData, ejecucionFileLog);
-      log_data(time, (ejecucionFileLog + robotCount));
+  ROS_INFO_STREAM("Auction request successful, request "<<requests<<"/"<<assignedRobots<<" (arrived/expected)");
 
-      gnuplot p;
-      p.graph_file(ejecucionFileLog, "Numero de robots", "Tiempo de ejecucion");
-      if (LOG > 1) {
-        p.graph_file(gvdFileLog, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
-        p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
-      }
-    }
-
-    ROS_INFO("Exploration completed, shutting down ros...");
-    ros::Duration(2.5).sleep();
-    ros::shutdown();
+  if (requests >= assignedRobots) {
+    ROS_DEBUG_STREAM("Is the last robot of the auction, start auction");
+    auctionStartTimeoutTimer.stop(); // Stop the timeout as it was not necessary
+    auctionStartDelayTimer.start();  // Delay to wait for the map update of the last robot to arrive to its objetive
+  } else {
+    ROS_DEBUG_STREAM_COND(requests == 1,"Starting the auction timeout");
+    auctionStartTimeoutTimer.start(); // Start the timeout to wait for the other expected robots
   }
 }
 
@@ -344,27 +312,64 @@ void segmentBidCallBack(const pgmappingcooperativo::SegmentBidConstPtr& msg, str
   bool successful = centralModule.saveSegmentBid(*msg, name);
 
   if (!successful) {
-    ROS_DEBUG_STREAM("Got OLD segment bid from "<<name.c_str());
+    ROS_DEBUG_STREAM("Segment bid ignored from "<<name.c_str()<<" (OLD)");
     return;
   }
 
-  ROS_INFO_STREAM("Got segment bid from "<<name.c_str()<<" , id "<<msg->id);
+  ROS_INFO_STREAM("Segment bid from "<<name.c_str()<<" , id "<<msg->id);
 
   succesfulBids++;
 
   if (centralModule.getEstado() == WaitingFirstBid) {
-    ROS_DEBUG_STREAM("Is the first one, starting auctionResolutionTimer");
+    ROS_DEBUG_STREAM("Is the first one, starting the auction resolution timeout");
     centralModule.setEstado(WaitingBids);
     lastAuctionStart = ros::Time::now();
-    auctionResolutionTimer.start();
+    auctionResolutionTimeoutTimer.start(); // Start the timeout to wait for the other working robots
   }
 
   if (succesfulBids == centralModule.getNumRobots()) {
-    ROS_DEBUG_STREAM("its the last one, stopping auctionResolutionTimer and starting resultion");
-    auctionResolutionTimer.stop();
-    resolveAuction();
+    ROS_DEBUG_STREAM("Is the last one, starting the auction resultion before timeout");
+    auctionResolutionTimeoutTimer.stop(); // Stop the timeout as it was not necessary
+    resolveAuction();                     // Resolve the auction
   }
 }
+
+void endCallBack(const std_msgs::StringConstPtr& msg) {
+  endFlag = msg->data.compare(endMsg) == 0;
+
+  if (!endFlag) return;
+
+  // log data
+  if (LOG > 0) {
+    ros::Duration currentTime = ros::Time::now() - firstAuction;
+    string robotCount = to_string(centralModule.getNumRobots());
+    string time = to_string(currentTime.toSec());
+
+    string data = "Cantidad Robots: " + robotCount + "\n";
+    data += "Tiempo de ejecucion: " + time;
+    string ejecucionFileLog = "tiemposEjecucion";
+    ejecucionFileLog = LOG_FILE_PATH + mapName + "_" + ejecucionFileLog;
+    log_data(data, ejecucionFileLog);
+
+    ejecucionFileLog = "tiemposEjecucionG";
+    ejecucionFileLog = LOG_FILE_PATH + mapName + "_" + ejecucionFileLog;
+    string gData = robotCount + "  " + time;
+    log_data(gData, ejecucionFileLog);
+    log_data(time, (ejecucionFileLog + robotCount));
+
+    gnuplot p;
+    p.graph_file(ejecucionFileLog, "Numero de robots", "Tiempo de ejecucion");
+    if (LOG > 1) {
+      p.graph_file(gvdFileLog, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
+      p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
+    }
+  }
+
+  ROS_INFO("Exploration completed, shutting down ros...");
+  ros::Duration(2.5).sleep();
+  ros::shutdown();
+}
+
 
 int main(int argc, char* argv[]) {
   // Change log level to debug
@@ -393,9 +398,9 @@ int main(int argc, char* argv[]) {
   n.param<string>("/map_name", mapName, "");
 
   // Initilize timers
-  auctionResolutionTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimerRoutine, true, false);
-  auctionStartTimer      = n.createTimer(auctionStartTimeout, auctionStartTimerRoutine          , true, false);
-  auctionStartDelayTimer = n.createTimer(auctionStartDelayTimeout, auctionStartDelayTimerRoutine, true, false);
+  auctionResolutionTimeoutTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimeoutTimerRoutine, true, false);
+  auctionStartTimeoutTimer      = n.createTimer(auctionStartTimeout     , auctionStartTimeoutTimerRoutine     , true, false);
+  auctionStartDelayTimer        = n.createTimer(auctionStartDelayTimeout, auctionStartDelayTimerRoutine       , true, false);
 
   // Initilize Publishers
   takeObjPub        = n.advertise<pgmappingcooperativo::takeobjetive>("/take_obj", 1);
@@ -436,7 +441,7 @@ int main(int argc, char* argv[]) {
   ros::master::getTopics(topicInfos);
   for (ros::master::TopicInfo& publishedTopic : topicInfos) {
     if (publishedTopic.name.find("/pose") != string::npos) {
-      string topicName = publishedTopic.name;                                   // name = "/robot_name/..."
+      string topicName = publishedTopic.name;                                  // name = "/robot_name/..."
       string robotName = topicName.erase(0, 1).substr(0, topicName.find('/')); // name = "robot_name"
 
       segmentBidSubs[robotName] = n.subscribe<pgmappingcooperativo::SegmentBid>("/"+robotName+"/segment_bid", 1, boost::bind(&segmentBidCallBack, _1, robotName));

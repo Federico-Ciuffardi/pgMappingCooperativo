@@ -30,11 +30,11 @@ static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<Pos> p){
   return res;  
 } 
 
-typedef nav_msgs::OccupancyGrid::_info_type map_info_type;
+typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
 
 /* Converts from `Pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
    adjusting the latter with the `map_info` so it lands on it's correspoing map position */
-static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, map_info_type map_info) {
+static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, mapInfoType map_info) {
   geometry_msgs::Point p3d;
   p3d.x = p2d.x * map_info.resolution + map_info.origin.position.x + 0.5;
   p3d.y = p2d.y * map_info.resolution + map_info.origin.position.y + 0.5;
@@ -42,7 +42,7 @@ static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, map_in
   return p3d;
 }
 
-static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d,float z, map_info_type map_info){
+static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d,float z, mapInfoType map_info){
   geometry_msgs::Point p3d = p2d_to_p3d(p2d, map_info); 
   p3d.z = z;
   return p3d;
@@ -56,7 +56,7 @@ static pgmappingcooperativo::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
 }
 
 
-static geometry_msgs::Point pos_to_p3d(Pos p, map_info_type map_info) {
+static geometry_msgs::Point pos_to_p3d(Pos p, mapInfoType map_info) {
   geometry_msgs::Point p3d;
   p3d.x = p.x * map_info.resolution + map_info.origin.position.x + 0.5;
   p3d.y = p.y * map_info.resolution + map_info.origin.position.y + 0.5;
