@@ -32,40 +32,6 @@ void CentralModule::setCentrosF(vector<int> newCentrosF) {
   centros_de_frontera = newCentrosF;
 };
 
-/* De ocupancy grid a state grid
-StateGrid og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera) {
-  uint mapWidth = og.info.width;
-  uint mapHeight = og.info.height;
-  StateGrid res;
-  for (int x = 0; x < mapWidth; x++) {
-    res.push_back(row_type());
-    for (int y = 0; y < mapHeight; y++) {
-      cell_type ct = Unknown;
-      switch (og.data[y * mapWidth + x]) {
-        case 0:
-          ct = Free;
-          break;
-        case 100:
-          ct = Occupied;
-          break;
-        case -1:
-          ct = Unknown;
-          break;
-        default:
-          ct = (cell_type)-1;
-      }
-      res[x].push_back(ct);
-    }
-  }
-
-  for (auto it = frontera.begin(); it != frontera.end(); it++) {
-    int p1d = *it;
-    Pos p = p1d_to_pos(p1d, mapWidth);
-    res[p.first][p.second] = Frontier;
-  }
-  return res;
-}*/
-
 void CentralModule::reset_bid() {
   cis.clear();
   clear_bids(bids_pq);
@@ -73,14 +39,6 @@ void CentralModule::reset_bid() {
   auction_robots.clear();
 }
 
-/* template<typename T> */
-/* vector<T> toVec(boost::unordered_set<T> set){ */
-/*   vector<T> res; */
-/*   for(T t : set){ */
-/*     res.push_back(t); */
-/*   } */
-/*   return res; */
-/* } */
 StateGrid gt;
 pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // restart the previous aution

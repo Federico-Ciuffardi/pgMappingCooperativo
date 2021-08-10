@@ -35,13 +35,13 @@ ros::Duration auctionStartTimeout;
 
 // Params
 /// auctionStartTimeoutMode:
-///   * 0 : disabled, no timeout, starts the auction immediately after the first robot request (actually there is a little timeout to wait 
-///         for the map update of that first robot)
-///   * 1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
-///         after the first robot request
-///   * 2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
-///         after the first robot request. Reset and decrease the delay on new requests.
-int auctionStartTimeoutMode = 2;
+///   * -1 : disabled, no timeout, starts the auction immediately after the first robot request 
+///   *  0 : disabled, no timeout, starts the auction immediately after a little timeout to wait for the map update of that first robot
+///   *  1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
+///          after the first robot request
+///   *  2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
+///          after the first robot request. Reset and decrease the delay on new requests.
+int auctionStartTimeoutMode = -1;
 
 /// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
 float mapUpdateDelay = 2;
@@ -52,6 +52,7 @@ CentralModule centralModule;
 
 int succesfulBids  = 0;
 int assignedRobots = 0;
+int expectedRobots = 0;
 int requests       = 0;
 
 bool endFlag = false;
@@ -192,7 +193,7 @@ void resolveAuction() {
 
   // Get the robot-segment assignment
   boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> assignment = centralModule.assignSegment();
-  assignedRobots = assignment.size();
+  expectedRobots = assignedRobots = assignment.size();
 
   // As the assignment was calculated a new auction can be started
   /// Reset auction variables
@@ -237,7 +238,7 @@ void resolveAuction() {
 
     float estimatedTime = max(0.f,(centralModule.segment_bids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
     if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
-      assignedRobots--;
+      expectedRobots--;
     }
   }
 
@@ -252,7 +253,7 @@ void resolveAuction() {
                   " | last robot task completion estimated time "<<maxEstimatedTime);
 
   // Show auction result 
-  ROS_INFO_STREAM("Auction resoved, "<<assignedRobots<<" robots assigned");
+  ROS_INFO_STREAM("Auction resoved, robots assigned = "<<assignedRobots<<" | robots expected "<<expectedRobots);
 }
 
 /////////////////////
@@ -302,21 +303,28 @@ void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
     return;
   }
 
+  if (auctionStartTimeoutMode == -1){
+    ROS_INFO_STREAM("Auction request successful stating auction");
+    startAuction();
+    return;
+  }
+
   requests++;
 
-  ROS_INFO_STREAM("Auction request successful, request "<<requests<<"/"<<assignedRobots<<" (arrived/expected)");
+  ROS_INFO_STREAM("Auction request successful, request "<<requests<<"/"<<expectedRobots<<" (arrived/expected)");
 
-  if (requests >= assignedRobots) {
+  if (requests >= expectedRobots) {
     auctionStartTimeoutTimer.stop(); // Stop the timeout as it was not necessary
 
     // Delay to wait for the map update of the last robot to arrive to its objective (reset)
-    ROS_DEBUG_STREAM("Is the last robot of the auction, start auction after "<<auctionStartDelayTimeout.toSec());
+    ROS_DEBUG_STREAM("Start auction after the map delay "<<auctionStartDelayTimeout.toSec());
     auctionStartDelayTimer.stop();
     auctionStartDelayTimer.start();  
   } else {
     switch (auctionStartTimeoutMode) {
-      case 0:
+      case  0:
         // Delay to wait for the map update of the last robot to arrive to its objective (reset)
+        ROS_DEBUG_STREAM("Start auction after the map delay "<<auctionStartDelayTimeout.toSec());
         auctionStartDelayTimer.stop(); 
         auctionStartDelayTimer.start();  
         break;
