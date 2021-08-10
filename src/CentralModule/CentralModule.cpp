@@ -303,16 +303,16 @@ vector<list<int> > CentralModule::asignacionKmean(int k,
   for (it_puntos = puntos.begin(); it_puntos != puntos.end(); it_puntos++) {
     int centro = -1;
     float dist_a_centro = 1000.0;
-    ROS_DEBUG("Punto ---> (%f , %f) ", map_points[(*it_puntos)].x, map_points[(*it_puntos)].y);
+    /* ROS_DEBUG("Punto ---> (%f , %f) ", map_points[(*it_puntos)].x, map_points[(*it_puntos)].y); */
     for (int i = 0; i < k; i++) {
       float dist = distacia2Puntos(centros[i], map_points[(*it_puntos)]);
-      ROS_DEBUG("    Distancia a centro %d ---> %f ", i, dist);
+      /* ROS_DEBUG("    Distancia a centro %d ---> %f ", i, dist); */
       if (dist_a_centro > dist) {
         centro = i;
         dist_a_centro = dist;
       }
     }
-    ROS_DEBUG("    Asignado a %d ", centro);
+    /* ROS_DEBUG("    Asignado a %d ", centro); */
     puntos_de_centros[centro].push_back(*it_puntos);
   }
   return puntos_de_centros;
