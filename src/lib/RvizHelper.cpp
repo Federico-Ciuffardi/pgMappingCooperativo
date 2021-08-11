@@ -1,4 +1,5 @@
 #include "RvizHelper.h"
+#include "geometry_msgs/Point.h"
 
 RvizHelper::Marker RvizHelper::getMark(MarkerPoints markerPoints, string ns, int id) {
   if (id == -1) id = this->id;
@@ -13,6 +14,8 @@ RvizHelper::Marker RvizHelper::getMark(MarkerPoints markerPoints, string ns, int
   marker.header.stamp = ros::Time::now();
   // pose/scale
   marker.pose.orientation = orientation;
+  geometry_msgs::Point p; p.x = position.x; p.y = position.y; p.z = position.z; // Vector3 to Point
+  marker.pose.position = p;
   marker.scale = scale;
   // others
   marker.type = type;

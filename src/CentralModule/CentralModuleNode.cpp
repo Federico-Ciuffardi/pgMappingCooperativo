@@ -82,22 +82,11 @@ string coverageFileLog;
 
 // Publishes marks corresponding to the gvd to be visualized on rviz 
 static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
-  rvizHelper.scale = makeVector3(centralModule.cellSize, centralModule.cellSize, 1);
 
 
-  rvizHelper.topic = &topoMapMarkerPub;
-  // set up critical points
-  rvizHelper.color  = YELLOW;
-  rvizHelper.type   = RvizHelper::POINTS;
-  rvizHelper.mark(p2ds_to_p3ds(sac.criticals, mapInfo), "gvd_critical_vertices");
-
+  // gvd
   rvizHelper.topic = &gvdMarkerPub;
-  // vertices points
-  rvizHelper.color  = BLUE;
-  rvizHelper.type   = RvizHelper::POINTS;
-  rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
-
-  // edges
+  /// edges
   RvizHelper::MarkerPoints edges;
   for (auto e : sac.gvd.edges) {
     edges.push_back(p2d_to_p3d(e.from, mapInfo));
@@ -106,7 +95,25 @@ static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInf
   rvizHelper.color  = BLUE;
   rvizHelper.type   = RvizHelper::LINE_LIST;
   rvizHelper.scale = makeVector3(centralModule.cellSize*0.2, centralModule.cellSize, 1);
+  rvizHelper.position = makeVector3(0);
   rvizHelper.mark(edges, "gvd_edges");
+
+  /// vertices
+  rvizHelper.color  = BLUE;
+  rvizHelper.type   = RvizHelper::POINTS;
+  rvizHelper.scale = makeVector3(centralModule.cellSize*0.6);
+  rvizHelper.position = makeVector3(0,0,0.1);
+  rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
+
+  // topological map
+  rvizHelper.topic = &topoMapMarkerPub;
+  /// set up critical points
+  rvizHelper.color  = YELLOW;
+  rvizHelper.type   = RvizHelper::POINTS;
+  rvizHelper.scale = makeVector3(centralModule.cellSize*0.75);
+  rvizHelper.position = makeVector3(0,0,0.2);
+  rvizHelper.mark(p2ds_to_p3ds(sac.criticals, mapInfo), "gvd_critical_vertices");
+
 }
 
 ///////////////////

@@ -23,7 +23,6 @@ inline std_msgs::ColorRGBA makeColorRGBA(float r, float g, float b, float a){
   ret.a = a;
   return ret;
 }
-
 inline geometry_msgs::Vector3 makeVector3(float x, float y, float z){
   geometry_msgs::Vector3 ret;
   ret.x = x;
@@ -31,6 +30,11 @@ inline geometry_msgs::Vector3 makeVector3(float x, float y, float z){
   ret.z = z;
   return ret;
 }
+
+inline geometry_msgs::Vector3 makeVector3(float x){
+  return makeVector3(x, x, x);
+}
+
 
 inline geometry_msgs::Quaternion makeQuaternion(float x, float y, float z, float w){
   geometry_msgs::Quaternion ret;
@@ -90,6 +94,7 @@ struct RvizHelper{
   string frame_id = "map";
   geometry_msgs::Vector3 scale = makeVector3(1,1,1);
   geometry_msgs::Quaternion orientation = makeQuaternion(0,0,0,1);
+  geometry_msgs::Vector3 position = makeVector3(0,0,0);
   unsigned int type = POINTS;
   unsigned int action = ADD;
 
