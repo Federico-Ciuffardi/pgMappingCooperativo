@@ -1,15 +1,42 @@
 <?xml version="1.0"?>
 <launch>  
-  <!-- set the args and params -->
+  <!--########-->
+  <!-- Config -->
+  <!--########-->
+
+  <!-- # Exploration (must set) -->
+
+  <!-- ## Set to the number of robots to be used in the exploration                                                      -->
+  <!--    Currently must be a value from 1 to 5, to add more check the end of this file and add more robots analogously) -->
   <arg name="starting_robot_number" default="3" />
   <param name="starting_robot_number" type="int" value="$(arg starting_robot_number)" />
 
+  <!-- ## Set to the name of the gazebo map to be used. The file "../worlds/map_name.world" must exist and be a valid gazebo world    -->
   <arg name="map_name" default="office" />
   <param name="map_name" type="string" value="$(arg map_name)" />  
 
-  <param name ="/use_sim_time" value="true"/>
+  <!-- ## Set to the size of the used map -->
+  <!--    TODO set this through a file near the .world file as is heavily dependent on the map -->
+  <arg name="map_size" default="5832" /> 
+  <param name="map_size" type="int" value="$(arg map_size)" />  
 
-  <!-- GVD lib config check '../src/lib/GVD/src/config.h' for help -->
+  <!-- ## Set to the robot speed  -->
+  <arg name="robot_speed" default="3" /> 
+  <param name="robot_speed" type="double" value="$(arg robot_speed)" />  
+
+  <!-- ## Set to the robot sensor ranges  -->
+  <arg name="robot_sensor_range" default="6" /> 
+  <param name="robot_sensor_range" type="double" value="$(arg robot_sensor_range)" />  
+
+  <!-- # Log -->
+  <arg name="file_log_dir" default="$(find pgmappingcooperativo)/logFiles/" /> 
+  <param name="file_log_dir" type="string" value="$(arg file_log_dir)" />  
+
+  <arg name="file_log_level" default="2" /> 
+  <param name="file_log_level" type="int" value="$(arg file_log_level)" />  
+
+  <!-- # GVD lib config. Check '../src/lib/GVD/src/config.h' for help (has defaults values on said file that can be overridden by the ros params) -->
+
   <!-- <arg name="gvd_connectivity_method" default="0" /> -->
   <!-- <param name="gvd_connectivity_method" type="int" value="$(arg gvd_connectivity_method)" /> -->
 
@@ -26,6 +53,8 @@
   <!-- <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" /> -->  
 
   <!-- start gazebo -->
+  <param name ="/use_sim_time" value="true"/>
+
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find pgmappingcooperativo)/worlds/$(arg map_name).world"/>
     <arg name="paused" value="false"/>

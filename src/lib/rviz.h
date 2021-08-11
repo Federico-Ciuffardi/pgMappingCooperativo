@@ -1,8 +1,8 @@
-#ifndef RVIZ_H
-#define RVIZ_H
+#pragma once
 
 #include "../lib/GVD/src/Gvd.h"
 #include "conversion.h"
+#include "std_msgs/ColorRGBA.h"
 
 #include <visualization_msgs/Marker.h>
 #include <pgmappingcooperativo/Point2D.h>
@@ -10,12 +10,35 @@
 #include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
 
+////////////////////////
+// Contruction helper //
+////////////////////////
 
-/* Publishes mark points `ps` on the namespace `ns` with the color `color` to be visualized on rviz
- */
-static visualization_msgs::Marker mark_points(string ns,
-                 visualization_msgs::Marker::_points_type ps,
-                 std_msgs::ColorRGBA color) {
+inline std_msgs::ColorRGBA makeColorRGBA(float r,float g, float b, float a){
+  std_msgs::ColorRGBA ret;
+  ret.r = r;
+  ret.g = g;
+  ret.b = b;
+  ret.a = a;
+  return ret;
+}
+
+///////////////
+// Constants //
+///////////////
+static const std_msgs::ColorRGBA RED     = makeColorRGBA(1,0,0,1);
+static const std_msgs::ColorRGBA YELLOW  = makeColorRGBA(1,1,0,1);
+static const std_msgs::ColorRGBA GREEN   = makeColorRGBA(0,1,0,1);
+static const std_msgs::ColorRGBA CYAN    = makeColorRGBA(0,1,1,1);
+static const std_msgs::ColorRGBA BLUE    = makeColorRGBA(0,0,1,1);
+static const std_msgs::ColorRGBA MAGENTA = makeColorRGBA(1,0,1,1);
+
+///////////////
+// Functions //
+///////////////
+
+/* Publishes mark points `ps` on the namespace `ns` with the color `color` to be visualized on rviz */
+static visualization_msgs::Marker mark_points(string ns, visualization_msgs::Marker::_points_type ps, std_msgs::ColorRGBA color) {
   visualization_msgs::Marker points;
   // ns & id
   points.ns = ns;
@@ -37,9 +60,7 @@ static visualization_msgs::Marker mark_points(string ns,
   return points;
 }
 
-/* Publishes mark lines `ls` on the namespace `ns` with the color `color` to be visualized on rviz
- */
-
+/* Publishes mark lines `ls` on the namespace `ns` with the color `color` to be visualized on rviz */
 static visualization_msgs::Marker mark_lines(string ns, visualization_msgs::Marker::_points_type ls, std_msgs::ColorRGBA color,float z,int type) {
   visualization_msgs::Marker lines;
   // ns & id
@@ -68,7 +89,6 @@ static visualization_msgs::Marker mark_lines(string ns, visualization_msgs::Mark
 }
 
 //delete
-
 static visualization_msgs::Marker delete_marks(string ns) {
   visualization_msgs::Marker lines;
   // ns & id
@@ -80,5 +100,3 @@ static visualization_msgs::Marker delete_marks(string ns) {
   lines.action = visualization_msgs::Marker::DELETE;
   return lines;
 }
-
-#endif

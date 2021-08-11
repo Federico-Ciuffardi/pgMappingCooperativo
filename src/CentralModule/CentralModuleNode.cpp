@@ -1,5 +1,5 @@
 #include "CentralModule.h"
-#include "../lib/GVD/src/config.h"
+#include "../lib/GVD/src/GvdConfig.h"
 
 using namespace std;
 
@@ -67,8 +67,6 @@ ros::Time firstAuction;
 ros::Duration gvdTime;
 ros::Duration gvdTimeIncrement(0);
 
-string mapName;
-
 string endMsg = "END";
 
 string gvdFileLog;
@@ -81,38 +79,27 @@ string coverageFileLog;
 
 // Publishes marks corresponding to the gvd to be visualized on rviz 
 static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
-  // Colors
-  std_msgs::ColorRGBA blue;
-  blue.b = 1.0f;
-  blue.a = 1.0;
-  std_msgs::ColorRGBA yellow;
-  yellow.r = 1.0f;
-  yellow.g = 1.0f;
-  yellow.a = 1.0;
-
   // set up critical points
   visualization_msgs::Marker::_points_type criticalPoints;
-  for (int i = 0; i < sac.criticals.size(); i++) {
-    criticalPoints.push_back(p2d_to_p3d(sac.criticals[i], mapInfo));
+  for (Point2D c : sac.criticals) {
+    criticalPoints.push_back(p2d_to_p3d(c, mapInfo));
   }
+  markerPub.publish(mark_points("gvd_critical_vertices", criticalPoints, YELLOW));
 
-  // set up vertices points
+  // vertices points
   visualization_msgs::Marker::_points_type points;
-  for (int i = 0; i < sac.gvd.vertices.size(); i++) {
-    points.push_back(p2d_to_p3d(sac.gvd.vertices[i], -0.1, mapInfo));
+  for (Point2D v : sac.gvd.vertices) {
+    points.push_back(p2d_to_p3d(v, -0.1, mapInfo));
   }
+  markerPub.publish(mark_points("gvd_vertices", points, BLUE));
 
   // edges
   visualization_msgs::Marker::_points_type edges;
-  for (int i = 0; i < sac.gvd.edges.size(); i++) {
-    edges.push_back(p2d_to_p3d(sac.gvd.edges[i].from, mapInfo));
-    edges.push_back(p2d_to_p3d(sac.gvd.edges[i].to, mapInfo));
+  for (auto e : sac.gvd.edges) {
+    edges.push_back(p2d_to_p3d(e.from, mapInfo));
+    edges.push_back(p2d_to_p3d(e.to, mapInfo));
   }
-
-  // publish
-  markerPub.publish(mark_points("gvd_vertices", points, blue));
-  markerPub.publish(mark_points("gvd_critical_vertices", criticalPoints, yellow));
-  markerPub.publish(mark_lines("gvd_edges", edges, blue));
+  markerPub.publish(mark_lines("gvd_edges", edges, BLUE));
 }
 
 ///////////////////
@@ -137,21 +124,20 @@ void startAuction() {
   drawGvd(segmentAuction, centralModule.getMap().info);
 
   // log gvd time
-  if (LOG >= 2) {
+  if (centralModule.fileLogLevel >= 2) {
     ros::Duration currentTime = ros::Time::now() - firstAuction;
     string time = to_string(currentTime.toSec());
-    string coveragePer = to_string(((float)centralModule.cellCount / MAP_SIZE) * 100);
+    string coveragePer = to_string(((float)centralModule.cellCount / centralModule.mapSize) * 100);
 
     if (coverageFileLog.empty()) {
       coverageFileLog = "covarage";
-      coverageFileLog = LOG_FILE_PATH + mapName + "_" + coverageFileLog +
-                          to_string(centralModule.getNumRobots());
+      coverageFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + coverageFileLog + to_string(centralModule.getNumRobots());
     }
 
     string data = coveragePer + " " + to_string(gvdTime.toSec());
     if (gvdFileLog.empty()) {
       gvdFileLog = "tiemposGVD";
-      gvdFileLog = LOG_FILE_PATH + mapName + "_" + gvdFileLog + to_string(centralModule.getNumRobots());
+      gvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + gvdFileLog + to_string(centralModule.getNumRobots());
     }
 
     log_data(data, gvdFileLog);
@@ -161,7 +147,7 @@ void startAuction() {
     data = coveragePer + "  " + to_string(increment.toSec());
     if (incrementGvdFileLog.empty()) {
       incrementGvdFileLog = "incrementoGVD";
-      incrementGvdFileLog = LOG_FILE_PATH + mapName + "_" + incrementGvdFileLog + to_string(centralModule.getNumRobots());
+      incrementGvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + incrementGvdFileLog + to_string(centralModule.getNumRobots());
     }
 
     log_data(data, incrementGvdFileLog);
@@ -219,7 +205,7 @@ void resolveAuction() {
     segmentAssignmentPubs[robot].publish(sa);
 
     // Calculate the estimated task completion time
-    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
+    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (centralModule.robotSpeed));
 
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
     minEstimatedTime = min(minEstimatedTime, estimatedTime);
@@ -239,7 +225,7 @@ void resolveAuction() {
     pgmappingcooperativo::SegmentAssignment sa = it.second;
     string robot = it.first;
 
-    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (ROBOT_SPEED));
+    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (centralModule.robotSpeed));
     if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
       expectedRobots--;
     }
@@ -385,7 +371,7 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
   if (!endFlag) return;
 
   // log data
-  if (LOG > 0) {
+  if (centralModule.fileLogLevel > 0) {
     ros::Duration currentTime = ros::Time::now() - firstAuction;
     string robotCount = to_string(centralModule.getNumRobots());
     string time = to_string(currentTime.toSec());
@@ -393,18 +379,18 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
     string data = "Cantidad Robots: " + robotCount + "\n";
     data += "Tiempo de ejecucion: " + time;
     string ejecucionFileLog = "tiemposEjecucion";
-    ejecucionFileLog = LOG_FILE_PATH + mapName + "_" + ejecucionFileLog;
+    ejecucionFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + ejecucionFileLog;
     log_data(data, ejecucionFileLog);
 
     ejecucionFileLog = "tiemposEjecucionG";
-    ejecucionFileLog = LOG_FILE_PATH + mapName + "_" + ejecucionFileLog;
+    ejecucionFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + ejecucionFileLog;
     string gData = robotCount + "  " + time;
     log_data(gData, ejecucionFileLog);
     log_data(time, (ejecucionFileLog + robotCount));
 
     gnuplot p;
     p.graph_file(ejecucionFileLog, "Numero de robots", "Tiempo de ejecucion");
-    if (LOG > 1) {
+    if (centralModule.fileLogLevel > 1) {
       p.graph_file(gvdFileLog, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
       p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
     }
@@ -440,12 +426,14 @@ int main(int argc, char* argv[]) {
   // Frontier
   n.param<int>("/frontier_simplification_method", centralModule.frontierSimplificationMethod, centralModule.frontierSimplificationMethod);
 
-  /// Current scenario
-  int startingRobotNumber;
-  n.param<int>("/starting_robot_number", startingRobotNumber, STARTING_ROBOT_NUMBER);
-  centralModule.setNumRobots(startingRobotNumber);
-
-  n.param<string>("/map_name", mapName, "");
+  /// Global params
+  assert(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
+  assert(n.param<string>("/map_name", centralModule.mapName, ""));
+  assert(n.param<int>   ("/map_size", centralModule.mapSize, 0));
+  assert(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
+  assert(n.param<float> ("/robot_sensor_range", centralModule.robotSpeed, 0));
+  assert(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
+  assert(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
 
   // Initilize timers
   auctionResolutionTimeoutTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimeoutTimerRoutine, true, false);

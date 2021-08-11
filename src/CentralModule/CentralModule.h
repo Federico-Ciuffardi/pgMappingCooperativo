@@ -24,7 +24,6 @@
 #include "../lib/rviz.h"
 #include "../lib/auction.h"
 #include "../lib/graph/gnuplot.h"
-#include "../GlobalParameters.h"
 
 typedef boost::unordered_map<int, list<int> > dict_clusters;
 
@@ -41,6 +40,19 @@ class CentralModule {
   // * 1: Frontier is clustered into significant frontiers considering the robot sensor range
   int frontierSimplificationMethod = 1;
 
+
+
+  // Global parameters (explained in ../../launch/multirobot.launch)
+  int robotNumber;
+  float sensorRange;
+  float robotSpeed;
+  int mapSize;
+  string mapName;
+
+  int fileLogLevel;
+  string fileLogDir;
+
+
  private:
   //////////
   // vars //
@@ -49,12 +61,8 @@ class CentralModule {
   // state
   centralMouleState state;
   int segmentAuctionId;
-  int lastSegmentAssignmentId;
+  int segmentAssignmentId;
   bool first;
-
-  // Problem parameters
-  int robotNumber;
-  int sensorRange;
 
   // Map related
   StateGrid gt;

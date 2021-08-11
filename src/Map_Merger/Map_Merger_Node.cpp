@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "map_merger");
   ros::NodeHandle n;
 
-  n.param<int>("/starting_robot_number", number_robots, STARTING_ROBOT_NUMBER);
+  n.param<int>("/starting_robot_number", number_robots, 0);
 
   // Publishers
   map_merged_pub = n.advertise<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1);

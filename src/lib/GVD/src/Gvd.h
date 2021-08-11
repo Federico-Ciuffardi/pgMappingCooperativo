@@ -8,7 +8,7 @@
 #include "Map.h"
 #include "DistMap.h"
 #include <boost/graph/adjacency_list.hpp>
-#include "config.h"
+#include "GvdConfig.h"
 
 using namespace boost;
 

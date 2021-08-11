@@ -6,9 +6,10 @@
 CentralModule::CentralModule() {
   state = WaitingAuction;
   first = true;
-  lastSegmentAssignmentId = 0;
+
+  segmentAssignmentId = 0;
   segmentAuctionId = 0;
-  sensorRange = 6.0;
+
   // dist_info_gain_obst = 1.0 / sqrt(2);
 }
 
@@ -105,69 +106,65 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
       break;
   }
 
-  // criticals_info cis_aux;
+  // Get the info for the auction (segments and frontiers), and the GVD as a subproduct
   cout << "debug :: gvd and cis" << endl;
-  
   if(!topoMap){
     topoMap = new TopoMap(gt);
   }
   topoMap->update();
-  cout << "debug :: topoMap updated" << endl;
 
   cis = topoMap->cis;
   GvdGraph& gvd = *topoMap->gvd->graphGvd;
 
+  // Turn the boost GVD to a ros message
   cout << "debug :: gvd to rosmsg" << endl;
-  GvdGraph::VertexIterator v_it, v_it_end;
-  for (boost::tie(v_it, v_it_end) = boost::vertices(gvd.g); v_it != v_it_end; v_it++) {
-    segment_auction.gvd.vertices.push_back(pos_to_p2d(gvd.g[*v_it].p));
-    segment_auction.vertex_segment.push_back(pos_to_p2d(gvd.g[*v_it].segment));
+  for (GvdGraph::Vertex v : gvd) {
+    segment_auction.gvd.vertices.push_back(pos_to_p2d(gvd.g[v].p));
+    segment_auction.vertex_segment.push_back(pos_to_p2d(gvd.g[v].segment));
+    for (GvdGraph::Vertex nv : gvd.adj(v)) {
+      pgmappingcooperativo::Edge e;
+      e.from = pos_to_p2d(gvd.g[v].p);
+      e.to = pos_to_p2d(gvd.g[nv].p);
+      segment_auction.gvd.edges.push_back(e);
+    }
   }
 
-  GvdGraph::EdgeIterator e_it, e_it_end;
-  for (boost::tie(e_it, e_it_end) = boost::edges(gvd.g); e_it != e_it_end; e_it++) {
-    pgmappingcooperativo::Edge e;
-    e.from = pos_to_p2d(gvd.g[(*e_it).m_source].p);
-    e.to = pos_to_p2d(gvd.g[(*e_it).m_target].p);
-    segment_auction.gvd.edges.push_back(e);
-  }
-
+  // Tunr the segment and frontiers info into a ros message
   cout << "debug :: cis to rosmsg" << endl;
-  for (auto it = cis.begin(); it != cis.end(); it++) {
-    Pos segment = it->first;
-    CriticalInfo segment_info = it->second;
+  for (auto it : cis) {
+    Pos segment = it.first;
+    CriticalInfo segment_info = it.second;
 
     segment_auction.criticals.push_back(pos_to_p2d(segment));
 
-    for (auto it_f = segment_info.frontiers.begin(); it_f != segment_info.frontiers.end(); ++it_f) {
-      segment_auction.frontiers.push_back(pos_to_p2d(*it_f));
+    for (Pos f : segment_info.frontiers) {
+      segment_auction.frontiers.push_back(pos_to_p2d(f));
       segment_auction.frontiers_segment.push_back(pos_to_p2d(segment));
     }
-    // ROS_INFO("critical: %d , %d", segment.first, segment.second);
     segment_auction.mind_f.push_back(segment_info.mindToF);
-    // segment_auction.minp_f.push_back(pos_to_p2d(segment_info.frontiers[0]));
-    /*for(int i = 0; i < segment_info.frontiers.size(); i++){
-      segment_auction.frontier.push_back(pos_to_p2d(segment_info.frontiers[i]));
-      segment_auction.frontier_segment.push_back(pos_to_p2d(segment));
-    }*/
   }
   segment_auction.id = segmentAuctionId;
+
+  // Increment the auction ID as a new auction will begin
   segmentAuctionId++;
+
+  // return the info of the auction (and the GVD) bundled as a ros message
   return segment_auction;
 }
 
 // Save the bid of a robot (name) for an ongoing auction
-bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid sb, string name) {
-  if (lastSegmentAssignmentId != sb.id) {
-    return false;
-  }
-  // segmentBids[name].clear();
-  for (int i = 0; i < sb.criticals.size(); i++) {
-    segmentBids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
+// Return true if the bid is valid (for the currently ongoing auction) and false otherwise
+bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid segmentBid, string name) {
+  // skip if old
+  if (segmentAssignmentId != segmentBid.id)  return false; 
 
-    Pos segment = p2d_to_pos(sb.criticals[i]);
+  // Store the bid of the robot 'name'
+  for (int i = 0; i < segmentBid.criticals.size(); i++) {
+    segmentBids[name][p2d_to_pos(segmentBid.criticals[i])] = segmentBid.values[i];
 
-    add_bid(bidsPQ, name, segment, sb.values[i]);
+    Pos segment = p2d_to_pos(segmentBid.criticals[i]);
+
+    add_bid(bidsPQ, name, segment, segmentBid.values[i]);
     auctionSegmentFrontiersNum[segment] = cis[segment].frontiers.size();
     auctionRobots.insert(name);
   }
@@ -176,11 +173,15 @@ bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid sb, string n
 
 // Resolve the auction given the current bids
 boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralModule::assignSegment() {
+  // Get values needed for the auction resolution
   int total_robots = auctionRobots.size();
   int total_segments = cis.size();
 
-  boost::unordered_map<string, Pos> robot_segment =
-      resolve_auction(bidsPQ, total_robots, total_segments, &auctionSegmentFrontiersNum);
+  // Resolve the auction
+  boost::unordered_map<string, Pos> robot_segment = resolve_auction(bidsPQ, total_robots, total_segments, &auctionSegmentFrontiersNum);
+
+  // Process the auction resolution and bundle it as a ros message
+  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> ret;
 
   boost::unordered_map<Pos, int> robots_nums;
   for (auto it = robot_segment.begin(); it != robot_segment.end(); it++) {
@@ -188,14 +189,10 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
     robots_nums[seg]++;
   }
 
-  // cout<<"termina la sasignacion"<<endl;
-  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> ret;
-
-  // boost::unordered_map<Pos,pgmappingcooperativo::Point2D> frontier2d;
   for (auto it = auctionRobots.begin(); it != auctionRobots.end(); it++) {
     string r_name = *it;
     pgmappingcooperativo::SegmentAssignment sa;
-    sa.id = lastSegmentAssignmentId;
+    sa.id = segmentAssignmentId;
     if (robot_segment.find(r_name) != robot_segment.end()) {
       Pos seg = robot_segment[r_name];
       sa.segment = pos_to_p2d(seg);
@@ -209,7 +206,11 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
     }
     ret[r_name] = sa;
   }
-  lastSegmentAssignmentId++;
+
+  // Increment the segment assignment ID to set to the next assignment
+  segmentAssignmentId++;
+
+  // return the info of the assignment bundled as a ros message
   return ret;
 }
 

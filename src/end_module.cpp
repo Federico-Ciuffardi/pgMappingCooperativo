@@ -23,7 +23,6 @@
 #include <ctime>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-#include "GlobalParameters.h"
 #include "lib/utils.h"
 #include "std_msgs/String.h"
 
@@ -79,7 +78,7 @@ void handleMap(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
 
 void handleRobotEnd(const std_msgs::StringConstPtr& msg) {
   robots_waiting += 1;
-  ROS_INFO("MURIO %s", msg->data);
+  ROS_INFO("MURIO %s", msg->data.c_str());
   bool FIN = (robots_waiting == NUM_ROBOTS);
   if (FIN) {
     std_msgs::String msg_request2;
@@ -98,7 +97,7 @@ int main(int argc, char* argv[]) {
 
   ros::NodeHandle n;
 
-  n.param<int>("/starting_robot_number", NUM_ROBOTS, STARTING_ROBOT_NUMBER);
+  n.param<int>("/starting_robot_number", NUM_ROBOTS, 0);
   string map_name;
   n.param<string>("/map_name", map_name, "");
   if (map_name == "office") {

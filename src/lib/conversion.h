@@ -8,6 +8,8 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include "utils.h"
 
+typedef pgmappingcooperativo::Point2D Point2D;
+
 static pgmappingcooperativo::Point2D pos_to_p2d(Pos p){
   pgmappingcooperativo::Point2D p2d;
   p2d.x = p.x;
