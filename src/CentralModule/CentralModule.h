@@ -21,7 +21,7 @@
 #include "../lib/GVD/src/TopoMap.h"
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
-#include "../lib/rviz.h"
+#include "../lib/RvizHelper.h"
 #include "../lib/auction.h"
 #include "../lib/graph/gnuplot.h"
 
@@ -46,8 +46,9 @@ class CentralModule {
   int robotNumber;
   float sensorRange;
   float robotSpeed;
-  int mapSize;
   string mapName;
+  int mapSize;
+  float cellSize;
 
   int fileLogLevel;
   string fileLogDir;

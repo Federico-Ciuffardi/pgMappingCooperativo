@@ -31,7 +31,7 @@
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/auction.h"
-#include "../lib/rviz.h"
+#include "../lib/RvizHelper.h"
 
 typedef boost::unordered_map<int, std::list<int> > dict_clusters;
 

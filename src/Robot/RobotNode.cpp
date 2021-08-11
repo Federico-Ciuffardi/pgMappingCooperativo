@@ -49,6 +49,7 @@ ros::Publisher marker_pub;
 
 // others
 Robot robot;
+RvizHelper rvizHelper;
 pgmappingcooperativo::goalList path;
 Pos f;
 
@@ -88,7 +89,7 @@ void publishPath(Pos frontier) {
   magenta.r = 1.0f;
   magenta.b = 1.0f;
   magenta.a = 1.0f;
-  marker_pub.publish(mark_points(robot.getNombre() + "objective", points, magenta));
+  marker_pub.publish(rvizHelper.mark_points(robot.getNombre() + "objective", points, magenta));
 
   // draw path to objective
   visualization_msgs::Marker::_points_type lines;
@@ -96,7 +97,7 @@ void publishPath(Pos frontier) {
   for (auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++) {
     lines.push_back(*it);
   }
-  marker_pub.publish(mark_lines(robot.getNombre() + "path", lines, magenta, 0.1,
+  marker_pub.publish(rvizHelper.mark_lines(robot.getNombre() + "path", lines, magenta, 0.1,
                                 visualization_msgs::Marker::LINE_STRIP));
 
   // send objective to move controller
@@ -159,7 +160,7 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
     p3d.y += 0.5;
 
     points.push_back(p3d);
-    marker_pub.publish(mark_points(robot.getNombre() + "objective", points, grey));
+    marker_pub.publish(rvizHelper.mark_points(robot.getNombre() + "objective", points, grey));
 
     // draw path to objective
     visualization_msgs::Marker::_points_type lines;
@@ -167,12 +168,11 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
     for (auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++) {
       lines.push_back(*it);
     }
-    marker_pub.publish(mark_lines(robot.getNombre() + "path", lines, grey, 0.1,
-                                  visualization_msgs::Marker::LINE_STRIP));
+    marker_pub.publish(rvizHelper.mark_lines(robot.getNombre() + "path", lines, grey, 0.1, visualization_msgs::Marker::LINE_STRIP));
   } else {
     ROS_INFO("%s :: Arrived to the objective, requesting objective", robot.getNombre().c_str());
-    marker_pub.publish(delete_marks(robot.getNombre() + "objective"));
-    marker_pub.publish(delete_marks(robot.getNombre() + "path"));
+    marker_pub.publish(rvizHelper.delete_marks(robot.getNombre() + "objective"));
+    marker_pub.publish(rvizHelper.delete_marks(robot.getNombre() + "path"));
   }
   /*if (!FIN) {
 

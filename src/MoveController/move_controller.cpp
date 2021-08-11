@@ -5,7 +5,6 @@
 #include <ctime>
 #include <sstream>
 #include <string>
-#include "../GlobalParameters.h"
 #include "../lib/GVD/src/Gvd.h"
 #include "../lib/conversion.h"
 #include "geometry_msgs/Point.h"

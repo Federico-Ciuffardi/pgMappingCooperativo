@@ -38,8 +38,8 @@ typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
    adjusting the latter with the `map_info` so it lands on it's correspoing map position */
 static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, mapInfoType map_info) {
   geometry_msgs::Point p3d;
-  p3d.x = p2d.x * map_info.resolution + map_info.origin.position.x + 0.5;
-  p3d.y = p2d.y * map_info.resolution + map_info.origin.position.y + 0.5;
+  p3d.x = (p2d.x + 0.5) * map_info.resolution + map_info.origin.position.x;
+  p3d.y = (p2d.y + 0.5) * map_info.resolution + map_info.origin.position.y;
   p3d.z = 0;
   return p3d;
 }
@@ -60,8 +60,8 @@ static pgmappingcooperativo::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
 
 static geometry_msgs::Point pos_to_p3d(Pos p, mapInfoType map_info) {
   geometry_msgs::Point p3d;
-  p3d.x = p.x * map_info.resolution + map_info.origin.position.x + 0.5;
-  p3d.y = p.y * map_info.resolution + map_info.origin.position.y + 0.5;
+  p3d.x = (p.x + 0.5) * map_info.resolution + map_info.origin.position.x;
+  p3d.y = (p.y + 0.5) * map_info.resolution + map_info.origin.position.y;
   p3d.z = 0;
   return p3d;
 }
@@ -152,3 +152,12 @@ static StateGrid og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector
   }
   return res;
 }
+
+inline vector<geometry_msgs::Point> p2ds_to_p3ds(vector<pgmappingcooperativo::Point2D> p2ds, mapInfoType mapInfo){
+  vector<geometry_msgs::Point> p3ds;
+  for (Point2D c : p2ds) {
+    p3ds.push_back(p2d_to_p3d(c, mapInfo));
+  }
+  return p3ds;
+}
+

@@ -35,7 +35,9 @@ ros::Subscriber requestObjetiveSub;
 ros::Publisher takeObjPub;
 ros::Publisher objetivePub;
 ros::Publisher objPub;
-ros::Publisher markerPub;
+ros::Publisher miscMarkerPub;
+ros::Publisher gvdMarkerPub;
+ros::Publisher topoMapMarkerPub;
 ros::Publisher segmentAuctionPub;
 map<string, ros::Publisher> segmentAssignmentPubs;
 
@@ -52,6 +54,7 @@ ros::Duration auctionStartTimeout;
 // others
 
 CentralModule centralModule;
+RvizHelper rvizHelper;
 
 int succesfulBids  = 0;
 int assignedRobots = 0;
@@ -79,27 +82,31 @@ string coverageFileLog;
 
 // Publishes marks corresponding to the gvd to be visualized on rviz 
 static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
-  // set up critical points
-  visualization_msgs::Marker::_points_type criticalPoints;
-  for (Point2D c : sac.criticals) {
-    criticalPoints.push_back(p2d_to_p3d(c, mapInfo));
-  }
-  markerPub.publish(mark_points("gvd_critical_vertices", criticalPoints, YELLOW));
+  rvizHelper.scale = makeVector3(centralModule.cellSize, centralModule.cellSize, 1);
 
+
+  rvizHelper.topic = &topoMapMarkerPub;
+  // set up critical points
+  rvizHelper.color  = YELLOW;
+  rvizHelper.type   = RvizHelper::POINTS;
+  rvizHelper.mark(p2ds_to_p3ds(sac.criticals, mapInfo), "gvd_critical_vertices");
+
+  rvizHelper.topic = &gvdMarkerPub;
   // vertices points
-  visualization_msgs::Marker::_points_type points;
-  for (Point2D v : sac.gvd.vertices) {
-    points.push_back(p2d_to_p3d(v, -0.1, mapInfo));
-  }
-  markerPub.publish(mark_points("gvd_vertices", points, BLUE));
+  rvizHelper.color  = BLUE;
+  rvizHelper.type   = RvizHelper::POINTS;
+  rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
 
   // edges
-  visualization_msgs::Marker::_points_type edges;
+  RvizHelper::MarkerPoints edges;
   for (auto e : sac.gvd.edges) {
     edges.push_back(p2d_to_p3d(e.from, mapInfo));
     edges.push_back(p2d_to_p3d(e.to, mapInfo));
   }
-  markerPub.publish(mark_lines("gvd_edges", edges, BLUE));
+  rvizHelper.color  = BLUE;
+  rvizHelper.type   = RvizHelper::LINE_LIST;
+  rvizHelper.scale = makeVector3(centralModule.cellSize*0.2, centralModule.cellSize, 1);
+  rvizHelper.mark(edges, "gvd_edges");
 }
 
 ///////////////////
@@ -235,7 +242,7 @@ void resolveAuction() {
   std_msgs::ColorRGBA green;
   green.g = 1.0f;
   green.a = 1.0f;
-  markerPub.publish(mark_points("Frontiers", points, green));
+  miscMarkerPub.publish(rvizHelper.mark_points("Frontiers", points, green));
 
   // Show the last gvd construction the estimated and the max estimated time 
   ROS_INFO_STREAM("GVD | estimated time "<<auctionStartTimeout.toSec()<<" | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<
@@ -430,6 +437,7 @@ int main(int argc, char* argv[]) {
   assert(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
   assert(n.param<string>("/map_name", centralModule.mapName, ""));
   assert(n.param<int>   ("/map_size", centralModule.mapSize, 0));
+  assert(n.param<float> ("/cell_size", centralModule.cellSize, 0));
   assert(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
   assert(n.param<float> ("/robot_sensor_range", centralModule.robotSpeed, 0));
   assert(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
@@ -446,7 +454,9 @@ int main(int argc, char* argv[]) {
   takeObjPub        = n.advertise<pgmappingcooperativo::takeobjetive>("/take_obj", 1);
   objetivePub       = n.advertise<pgmappingcooperativo::asignacion>("/objetive", 1);
   objPub            = n.advertise<nav_msgs::OccupancyGrid>("/debbi", 1);
-  markerPub         = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
+  miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
+  gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
+  topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
   segmentAuctionPub = n.advertise<pgmappingcooperativo::SegmentAuction>("/segment_auction", 1);
 
   // Initilize Subscribers
