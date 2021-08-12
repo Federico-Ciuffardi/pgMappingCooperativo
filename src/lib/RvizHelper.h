@@ -121,7 +121,6 @@ struct RvizHelper{
   ros::Publisher *topic = NULL;
   std_msgs::ColorRGBA color = BLUE;
   string ns = "default";
-  int id = 0;
   string frame_id = "map";
   geometry_msgs::Vector3 scale = makeVector3(1,1,1);
   geometry_msgs::Quaternion orientation = makeQuaternion(0,0,0,1);
@@ -130,7 +129,9 @@ struct RvizHelper{
   unsigned int action = ADD;
 
   Marker getMark(MarkerPoints markerPoints, string ns = "", int id = -1);
+  Marker getMark(MarkerPoints markerPoints, int id);
   void mark(MarkerPoints markerPoints, string ns = "", int id = -1 );
+  void mark(MarkerPoints markerPoints, int id);
   void deleteMark(string ns = "", int id = -1 );
 
   // old

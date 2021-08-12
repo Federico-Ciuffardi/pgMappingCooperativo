@@ -6,8 +6,6 @@ ConnectedComponents::ConnectedComponents(MapType& map, vector<CellType> nonTrave
   this->nonTraversables = nonTraversables;
 }
 
-
-
 void ConnectedComponents::add(Pos p, IdType id){
   idGrid[p] = id;
   connectedComponents[id].members.insert(p);

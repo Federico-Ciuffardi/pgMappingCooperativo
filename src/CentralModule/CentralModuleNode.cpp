@@ -114,22 +114,24 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
   // Topological map
   rvizHelper.topic = &topoMapMarkerPub;
 
-  /// segments and frontiers
+  /// segments
+  rvizHelper.ns = "segments";
 
   //// delete previous segments
-  rvizHelper.deleteMark("segments");
+  rvizHelper.deleteMark(); 
 
   //// Mark segments and load frontiers
+  rvizHelper.type     = cellMarkerType;
+  rvizHelper.scale    = makeVector3(centralModule.cellSize); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.position = makeVector3(0);
+
   RvizHelper::MarkerPoints frontierMarkerPoints;
   for(auto it : centralModule.topoMap->segmenter->connectedComponents){
     int id = it.first;
     ConnectedComponents::ConectedComponent segment = it.second;
 
     rvizHelper.color    = getColor(id);
-    rvizHelper.type     = cellMarkerType;
-    rvizHelper.scale    = makeVector3(centralModule.cellSize); rvizHelper.scale.z  = cubeHeight;
-    rvizHelper.position = makeVector3(0);
-    rvizHelper.mark(toMarkerPoint(segment.members, mapInfo), "segments", id);
+    rvizHelper.mark(toMarkerPoint(segment.members, mapInfo), id);
 
     accum(frontierMarkerPoints,toMarkerPoint(segment.typeMembers[Frontier],mapInfo));
 
@@ -137,7 +139,6 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
   }
 
   //// mark critical points and critical lines
-
   RvizHelper::MarkerPoints criticalMarkerPoints;
   RvizHelper::MarkerPoints criticalLinesMarkerPoints;
   for (auto it : centralModule.topoMap->criticalInfos) {

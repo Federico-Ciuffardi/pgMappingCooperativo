@@ -3,7 +3,6 @@
 #include "std_msgs/ColorRGBA.h"
 
 RvizHelper::Marker RvizHelper::getMark(MarkerPoints markerPoints, string ns, int id) {
-  if (id == -1) id = this->id;
   if (ns.empty()) ns = this->ns;
 
   Marker marker;
@@ -27,8 +26,16 @@ RvizHelper::Marker RvizHelper::getMark(MarkerPoints markerPoints, string ns, int
   return marker;
 }
 
+RvizHelper::Marker RvizHelper::getMark(MarkerPoints markerPoints, int id) {
+  return getMark(markerPoints, ns, id);
+}
+
 void RvizHelper::mark(MarkerPoints markerPoints, string ns, int id) {
   topic->publish(getMark(markerPoints, ns, id));
+}
+
+void RvizHelper::mark(MarkerPoints markerPoints, int id) {
+  topic->publish(getMark(markerPoints, id));
 }
 
 void RvizHelper::deleteMark(string ns, int id) {
