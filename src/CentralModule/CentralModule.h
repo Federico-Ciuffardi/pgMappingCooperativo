@@ -40,8 +40,6 @@ class CentralModule {
   // * 1: Frontier is clustered into significant frontiers considering the robot sensor range
   int frontierSimplificationMethod = 1;
 
-
-
   // Global parameters (explained in ../../launch/multirobot.launch)
   int robotNumber;
   float sensorRange;

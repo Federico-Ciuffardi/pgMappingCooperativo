@@ -85,6 +85,8 @@ float cubeHeight = 0.02;
 float layerSeparation = 0.175; // Height difference between to layers of marks 
                                // used to draw some marks in front of others
 
+unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
+
 // Publishes marks to be visualized on rviz 
 static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
   // Gvd
@@ -104,7 +106,7 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
 
   /// mark vertices
   rvizHelper.color    = BLUE;
-  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,1*layerSeparation);
   rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
@@ -124,14 +126,14 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
     ConnectedComponents::ConectedComponent segment = it.second;
 
     rvizHelper.color    = getColor(id);
-    rvizHelper.type     = RvizHelper::POINTS;
-    rvizHelper.scale    = makeVector3(centralModule.cellSize*1); rvizHelper.scale.z  = cubeHeight;
+    rvizHelper.type     = cellMarkerType;
+    rvizHelper.scale    = makeVector3(centralModule.cellSize); rvizHelper.scale.z  = cubeHeight;
     rvizHelper.position = makeVector3(0);
     rvizHelper.mark(toMarkerPoint(segment.members, mapInfo), "segments", id);
 
     accum(frontierMarkerPoints,toMarkerPoint(segment.typeMembers[Frontier],mapInfo));
 
-    ros::Duration(0.00001).sleep(); // small sleep becouse rviz skips markers otherwise
+    ros::Duration(0.00001).sleep(); // small sleep because rviz skips markers otherwise
   }
 
   //// mark critical points and critical lines
@@ -144,14 +146,14 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
     criticalMarkerPoints.push_back(toMarkerPoint(p, mapInfo));
     accum(criticalLinesMarkerPoints,toMarkerPoint(criticalInfo.criticalLines,mapInfo));
   }
-  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
 
   rvizHelper.color    = CYAN;
   rvizHelper.position = makeVector3(0,0,2*layerSeparation);
   rvizHelper.mark(criticalMarkerPoints, "critical_vertices");
 
-  rvizHelper.color    = makeColorRGBA(0.5); // grey
+  rvizHelper.color    = makeColorRGBA(0.9); // light gray
   rvizHelper.position = makeVector3(0,0,layerSeparation);
   rvizHelper.mark(criticalLinesMarkerPoints, "critical_lines");
 
@@ -160,7 +162,7 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
 
   /// Mark frontiers
   rvizHelper.color    = GREEN;
-  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,layerSeparation);
   rvizHelper.mark(frontierMarkerPoints, "frontiers");
@@ -172,20 +174,28 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
 
 void startAuction() {
   // get aution info (calculate gvd + mesure time of calculation)
-
-  lastGvdStart = ros::Time::now();
-
-  ROS_INFO("Computing the segment auction to publish");
-  pgmappingcooperativo::SegmentAuction segmentAuction;
-  segmentAuction = centralModule.getSegmentAuctionInfo();
-  ROS_INFO("Computed the segment auction to publish");
+  ROS_INFO("Computing segment auction information");
 
   ros::Duration lastGvdTime = gvdTime;
+  lastGvdStart = ros::Time::now();
+
+  pgmappingcooperativo::SegmentAuction segmentAuction = centralModule.getSegmentAuctionInfo();
+
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
 
   // set markers for rviz
   setRvizMarks(segmentAuction, centralModule.getMap().info);
+
+  // As the bid was started bids can be received
+  /// Reset auction variables
+  requests = 0;
+  /// Change state
+  centralModule.setState(WaitingFirstBid);
+
+  // Send auction info so the bids can be calculated
+  segmentAuctionPub.publish(segmentAuction);
+  ROS_INFO("Segment auction information broadcasted");
 
   // log gvd time
   if (centralModule.fileLogLevel >= 2) {
@@ -221,27 +231,19 @@ void startAuction() {
     p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
   }
 
-  // As the bid was started bids can be received
-  /// Reset auction variables
-  requests = 0;
-  /// Change state
-  centralModule.setState(WaitingFirstBid);
-
-  // Send auction info so the bids can be calculated
-  segmentAuctionPub.publish(segmentAuction);
-  ROS_INFO("Segment Auction published");
 }
 
 void resolveAuction() {
   // Change state to reolving auction
   centralModule.setState(Resolving);
 
-  // Show estimated auction resolution time (aution resolution timeout) and the real time
-  ros::Duration resolutionTime = ros::Time::now() - lastAuctionStart;
-  ROS_INFO_STREAM("Auction resolution | real time "<<resolutionTime.toSec()<<" | max estimated time "<<AuctionResolutionTimeout.toSec());
+  // auction resolution start timeout (timeout to wait for robot bids)
+  /// Show real auction resolution start time and the estimated time (aution resolution timeout)
+  ros::Duration resolutionStartTime = ros::Time::now() - lastAuctionStart;
+  ROS_INFO_STREAM("Auction resolution | real time "<<resolutionStartTime.toSec()<<" | max estimated time "<<AuctionResolutionTimeout.toSec());
 
-  // Set the auction resolution timeout
-  AuctionResolutionTimeout = max(ros::Duration(0.5) + resolutionTime * 2, AuctionResolutionTimeout);
+  /// Set the auction resolution timeout
+  AuctionResolutionTimeout = max(ros::Duration(0.5) + resolutionStartTime * 2, AuctionResolutionTimeout);
   auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
   // Get the robot-segment assignment
@@ -255,10 +257,8 @@ void resolveAuction() {
   centralModule.setState(WaitingAuction);
 
   // Parse the robot-segment assignment
-  mapInfoType mapInfo = centralModule.getMap().info;
-
-  float maxEstimatedTime = 0;
-  float minEstimatedTime = FLT_MAX;
+  float maxEstimatedTime = 0;       // max estimated task completion time
+  float minEstimatedTime = FLT_MAX; // min estimated task completion time
 
   for (auto it : assignment) {
     pgmappingcooperativo::SegmentAssignment sa = it.second;
@@ -272,14 +272,13 @@ void resolveAuction() {
 
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
     minEstimatedTime = min(minEstimatedTime, estimatedTime);
-
   }
 
   // Set the timeout to start the next auction
   auctionStartTimeout = gvdTime + gvdTimeIncrement + auctionStartDelayTimeout;
   auctionStartTimeoutTimer.setPeriod(auctionStartTimeout,false);
 
-  // Calculate the robots that are expected to complete the assigned task not long after the first auction request
+  /// Calculate the robots that are expected to complete the assigned task not long after the first auction request
   for (auto it : assignment) {
     pgmappingcooperativo::SegmentAssignment sa = it.second;
     string robot = it.first;
@@ -290,11 +289,13 @@ void resolveAuction() {
     }
   }
 
-  // Show the last gvd construction the estimated and the max estimated time 
-  ROS_INFO_STREAM("GVD | estimated time "<<auctionStartTimeout.toSec()<<" | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<
-                  " | last robot task completion estimated time "<<maxEstimatedTime);
+  // Show info about the auction
+  /// Show the last gvd construction the estimated and the max estimated time 
+  ROS_INFO_STREAM("GVD | estimated time+map update delay"<<auctionStartTimeout.toSec()<<
+                     " | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<
+                     " | last robot task completion estimated time "<<maxEstimatedTime);
 
-  // Show auction result 
+  /// Show resolution
   ROS_INFO_STREAM("Auction resoved, robots assigned = "<<assignedRobots<<" | robots expected "<<expectedRobots);
 }
 
