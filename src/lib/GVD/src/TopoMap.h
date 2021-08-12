@@ -12,6 +12,7 @@
 struct CriticalInfo{
   float mindToF; //min distance to frontier
   vector<Pos> frontiers;
+  PosSet criticalLines;
 };
 
 typedef PosMap<CriticalInfo>::type CriticalInfos;
@@ -31,6 +32,7 @@ struct TopoMap{
 
   // Results
   CriticalInfos cis;
+  CriticalInfos criticalInfos;
   
   // Sub results
   DistMap* distMap;
@@ -49,5 +51,11 @@ struct TopoMap{
 
   // Destructor
   ~TopoMap();
+
+ private:
+  // internal functions
+  void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap);
+  CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter);
+
 };
 

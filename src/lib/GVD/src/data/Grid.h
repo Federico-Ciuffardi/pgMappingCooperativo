@@ -8,28 +8,9 @@
 #include <iterator>
 
 #include "Pos.h"
+#include "../utils.h"
 
 using namespace std;
-
-//// vector
-template <typename T>
-inline bool is_elem(vector<T> v, T e) {
-  for(int i = 0; i < v.size() ; i++){
-    if(v[i] == e){
-      return true;
-    }
-  }
-  return false;
-}
-template <typename T>
-inline bool is_elem(T e,vector<T> v) {
-  for(int i = 0; i < v.size() ; i++){
-    if(v[i] == e){
-      return true;
-    }
-  }
-  return false;
-}
 
 template<typename cell_type>
 struct Grid{
@@ -182,3 +163,35 @@ ostream& operator<<(ostream& out, Grid<CellType>& grid){
   }
   return out;
 }
+
+
+///////////
+// Debug //
+///////////
+
+/// Print grid Property (the cells of gt present set)
+template <typename T>
+inline void print_property(PosSet& set, Grid<T>& gt) {
+  int mapWidth = gt.size();
+  int mapHeight = gt[0].size();
+  for (int x = 0; x < mapWidth; x++) {
+    for (int y = 0; y < mapHeight; y++) {
+      cout << "|" << is_elem(set, Pos(x, y));
+    }
+    cout << "|" << endl;
+  }
+}
+
+/// Print grid Property (the cells of grid present in the map)
+template <typename T>
+inline void print_property(boost::unordered_map<Pos, int>& map, Grid<T>& gt) {
+  int mapWidth = gt.size();
+  int mapHeight = gt[0].size();
+  for (int x = 0; x < mapWidth; x++) {
+    for (int y = 0; y < mapHeight; y++) {
+      cout << "|" << map[Pos(x, y)];
+    }
+    cout << "|" << endl;
+  }
+}
+

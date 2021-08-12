@@ -45,6 +45,24 @@ inline geometry_msgs::Quaternion makeQuaternion(float x, float y, float z, float
   return ret;
 }
 
+////////////////
+// Conversion //
+////////////////
+
+inline geometry_msgs::Point toMarkerPoint(Pos p, mapInfoType mapInfo){
+  geometry_msgs::Point p3d;
+  p3d.x = (p.x + 0.5) * mapInfo.resolution + mapInfo.origin.position.x;
+  p3d.y = (p.y + 0.5) * mapInfo.resolution + mapInfo.origin.position.y;
+  return p3d;
+}
+
+inline visualization_msgs::Marker::_points_type toMarkerPoint(PosSet posSet, mapInfoType mapInfo){
+  vector<geometry_msgs::Point> markerPoints;
+  for (Pos p : posSet) {
+    markerPoints.push_back(toMarkerPoint(p, mapInfo));
+  }
+  return markerPoints;
+}
 
 ///////////////
 // Constants //
@@ -60,6 +78,14 @@ static const std_msgs::ColorRGBA MAGENTA = makeColorRGBA(1,0,1,1);
 ///////////////
 // Functions //
 ///////////////
+
+// get a distinct color, 0<i<1024 
+// Visual representation of the colors here: https://i.stack.imgur.com/cuF3C.png
+std_msgs::ColorRGBA getColor(int i);
+
+////////////
+// Helper //
+////////////
 
 struct RvizHelper{
   enum {
@@ -98,10 +124,11 @@ struct RvizHelper{
   unsigned int type = POINTS;
   unsigned int action = ADD;
 
-  // old
   Marker getMark(MarkerPoints markerPoints, string ns = "", int id = -1);
   void mark(MarkerPoints markerPoints, string ns = "", int id = -1 );
+  void deleteMark(string ns = "", int id = -1 );
 
+  // old
   Marker mark_points(string ns, MarkerPoints ps,ColorRGBA color);
   Marker mark_lines(string ns, MarkerPoints ls, ColorRGBA color,float z,int type);
   Marker mark_lines(string ns, MarkerPoints ls, ColorRGBA color);

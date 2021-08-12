@@ -73,7 +73,7 @@ string get_frontier_auction_topic(pgmappingcooperativo::Point2D segment, int auc
   return "/frontier_aution_" + to_string(auction_id) + "_" + to_string(segment.x) + "_" +
          to_string(segment.y);
 }
-
+float layerSeparation = 0.175;
 void publishPath(Pos frontier) {
   f = frontier;
   path = robot.getPathToSegment(frontier);
@@ -89,7 +89,7 @@ void publishPath(Pos frontier) {
   magenta.r = 1.0f;
   magenta.b = 1.0f;
   magenta.a = 1.0f;
-  marker_pub.publish(rvizHelper.mark_points(robot.getNombre() + "objective", points, magenta));
+  /* marker_pub.publish(rvizHelper.mark_points(robot.getNombre() + "objective", points, magenta)); */
 
   // draw path to objective
   visualization_msgs::Marker::_points_type lines;
@@ -97,7 +97,7 @@ void publishPath(Pos frontier) {
   for (auto it = path.listaGoals.begin(); it != path.listaGoals.end(); it++) {
     lines.push_back(*it);
   }
-  marker_pub.publish(rvizHelper.mark_lines(robot.getNombre() + "path", lines, magenta, 0.1,
+  marker_pub.publish(rvizHelper.mark_lines(robot.getNombre() + "path", lines, magenta, layerSeparation*5,
                                 visualization_msgs::Marker::LINE_STRIP));
 
   // send objective to move controller
@@ -160,7 +160,7 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
     p3d.y += 0.5;
 
     points.push_back(p3d);
-    marker_pub.publish(rvizHelper.mark_points(robot.getNombre() + "objective", points, grey));
+    /* marker_pub.publish(rvizHelper.mark_points(robot.getNombre() + "objective", points, grey)); */
 
     // draw path to objective
     visualization_msgs::Marker::_points_type lines;

@@ -1,3 +1,4 @@
+#include <string>
 #include "CentralModule.h"
 #include "../lib/GVD/src/GvdConfig.h"
 
@@ -80,40 +81,81 @@ string coverageFileLog;
 // Rviz marks //
 ////////////////
 
+float cubeHeight = 0.02;
+float layerSeparation = 0.175;
 // Publishes marks corresponding to the gvd to be visualized on rviz 
 static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
 
 
   // gvd
   rvizHelper.topic = &gvdMarkerPub;
+
   /// edges
-  RvizHelper::MarkerPoints edges;
+  RvizHelper::MarkerPoints edgesMarkerPoints;
   for (auto e : sac.gvd.edges) {
-    edges.push_back(p2d_to_p3d(e.from, mapInfo));
-    edges.push_back(p2d_to_p3d(e.to, mapInfo));
+    edgesMarkerPoints.push_back(p2d_to_p3d(e.from, mapInfo));
+    edgesMarkerPoints.push_back(p2d_to_p3d(e.to, mapInfo));
   }
-  rvizHelper.color  = BLUE;
-  rvizHelper.type   = RvizHelper::LINE_LIST;
-  rvizHelper.scale = makeVector3(centralModule.cellSize*0.2, centralModule.cellSize, 1);
-  rvizHelper.position = makeVector3(0);
-  rvizHelper.mark(edges, "gvd_edges");
+  rvizHelper.color    = BLUE;
+  rvizHelper.type     = RvizHelper::LINE_LIST;
+  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.2, centralModule.cellSize, 1);
+  rvizHelper.position = makeVector3(0,0,3*layerSeparation);
+  rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
 
   /// vertices
-  rvizHelper.color  = BLUE;
-  rvizHelper.type   = RvizHelper::POINTS;
-  rvizHelper.scale = makeVector3(centralModule.cellSize*0.6);
-  rvizHelper.position = makeVector3(0,0,0.1);
+  rvizHelper.color    = BLUE;
+  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.position = makeVector3(0,0,1*layerSeparation);
   rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
 
   // topological map
   rvizHelper.topic = &topoMapMarkerPub;
-  /// set up critical points
-  rvizHelper.color  = YELLOW;
-  rvizHelper.type   = RvizHelper::POINTS;
-  rvizHelper.scale = makeVector3(centralModule.cellSize*0.75);
-  rvizHelper.position = makeVector3(0,0,0.2);
-  rvizHelper.mark(p2ds_to_p3ds(sac.criticals, mapInfo), "gvd_critical_vertices");
 
+  /// segments and frontiers
+
+  /// delete previous segments
+  rvizHelper.deleteMark("segments");
+
+  /// set up segments and frontiers
+  RvizHelper::MarkerPoints frontierMarkerPoints;
+  for(auto it : centralModule.topoMap->segmenter->connectedComponents){
+    int id = it.first;
+    ConnectedComponents::ConectedComponent segment = it.second;
+
+    rvizHelper.color    = getColor(id);
+    rvizHelper.type     = RvizHelper::POINTS;
+    rvizHelper.scale    = makeVector3(centralModule.cellSize*1); rvizHelper.scale.z  = cubeHeight;
+    rvizHelper.position = makeVector3(0);
+    rvizHelper.mark(toMarkerPoint(segment.members, mapInfo), "segments", id);
+
+    accum(frontierMarkerPoints,toMarkerPoint(segment.typeMembers[Frontier],mapInfo));
+
+    ros::Duration(0.00001).sleep(); // small sleep becouse rviz skips markers otherwise
+  }
+
+  /// set up critical points
+  rvizHelper.color    = CYAN;
+  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.position = makeVector3(0,0,2*layerSeparation);
+
+  RvizHelper::MarkerPoints criticalMarkerPoints;
+  for (auto it : centralModule.topoMap->criticalInfos) {
+    Pos p = it.first;
+    criticalMarkerPoints.push_back(toMarkerPoint(p, mapInfo));
+  }
+  rvizHelper.mark(criticalMarkerPoints, "gvd_critical_vertices");
+
+  // topological map
+  rvizHelper.topic = &miscMarkerPub;
+
+  /// Mark frontiers
+  rvizHelper.color    = GREEN;
+  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.position = makeVector3(0,0,layerSeparation);
+  rvizHelper.mark(frontierMarkerPoints, "frontiers");
 }
 
 ///////////////////
@@ -205,7 +247,6 @@ void resolveAuction() {
   centralModule.setState(WaitingAuction);
 
   // Parse the robot-segment assignment
-  visualization_msgs::Marker::_points_type points;
   mapInfoType mapInfo = centralModule.getMap().info;
 
   float maxEstimatedTime = 0;
@@ -224,10 +265,6 @@ void resolveAuction() {
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
     minEstimatedTime = min(minEstimatedTime, estimatedTime);
 
-    // Store all the objetives of the assigned segment to show on rviz
-    for (pgmappingcooperativo::Point2D p2d : sa.frontiers) {
-      points.push_back(p2d_to_p3d(p2d, 0.1, mapInfo));
-    }
   }
 
   // Set the timeout to start the next auction
@@ -244,12 +281,6 @@ void resolveAuction() {
       expectedRobots--;
     }
   }
-
-  // Mark frontiers
-  std_msgs::ColorRGBA green;
-  green.g = 1.0f;
-  green.a = 1.0f;
-  miscMarkerPub.publish(rvizHelper.mark_points("Frontiers", points, green));
 
   // Show the last gvd construction the estimated and the max estimated time 
   ROS_INFO_STREAM("GVD | estimated time "<<auctionStartTimeout.toSec()<<" | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<

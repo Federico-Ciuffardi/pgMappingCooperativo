@@ -205,26 +205,30 @@ CriticalInfos unknownDistConstraint(StateGrid& stateGrid, GvdGraph& gvd) {
   return res;
 }
 
-void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap){
-  // Set the critical points on the state grid
+// Set the critical points on the state grid, and on the criticalInfos var
+void TopoMap::setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap){
   for(Pos p : stateGrid){
     if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && !connectivityAux(p,stateGrid,distMap)){
+      // Set critical
       stateGrid[p] = Critical;
+
+      CriticalInfo criticalInfo;
+
       for(Pos bp : basisPoints(p,distMap)){
-        cout<< "line between " << p << " and " << bp << " : ";
+        // Set critical lines
         for(Pos linePos : discretizeLine(p,bp)){
-          cout<< linePos <<", ";
           if(stateGrid[linePos] == Free){
             stateGrid[linePos] = CriticalLine;
+            criticalInfo.criticalLines.insert(linePos);
           }
         }
-        cout<<endl;
       }
+      criticalInfos[p] = criticalInfo;
     }
   }
 }
 
-CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter) {
+CriticalInfos TopoMap::get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter) {
 
   cout << "debug :: setLocalMins" << endl;
   setLocalMins(distMap, gvd);
@@ -276,6 +280,7 @@ TopoMap::TopoMap(MapType& map) : map(map){
 void TopoMap::update(){
   // Clean old result
   cis.clear();
+  criticalInfos.clear();
 
   // Get new result / replace old
   this->gvd->update(); // also updates the shared distMap

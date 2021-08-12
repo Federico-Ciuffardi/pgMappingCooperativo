@@ -6,6 +6,7 @@
 #include <pgmappingcooperativo/SegmentAuction.h>
 #include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include "GVD/src/data/Pos.h"
 #include "utils.h"
 
 typedef pgmappingcooperativo::Point2D Point2D;
