@@ -121,7 +121,7 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
   rvizHelper.deleteMark(); 
 
   //// Mark segments and load frontiers
-  rvizHelper.type     = cellMarkerType;
+  rvizHelper.type     = RvizHelper::TRIANGLE_LIST;
   rvizHelper.scale    = makeVector3(centralModule.cellSize); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0);
 
@@ -131,7 +131,29 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
     ConnectedComponents::ConectedComponent segment = it.second;
 
     rvizHelper.color    = getColor(id);
-    rvizHelper.mark(toMarkerPoint(segment.members, mapInfo), id);
+
+    RvizHelper::MarkerPoints segmentMarkerPoints;
+    for (geometry_msgs::Point p : toMarkerPoint(segment.members, mapInfo)){ 
+      float squareLength = centralModule.cellSize*1.05;
+      p.x += squareLength/2.0;
+      p.y += squareLength/2.0;
+      geometry_msgs::Point uR = p;
+      p.y -= squareLength;
+      geometry_msgs::Point lR = p;
+      p.x -= squareLength;
+      geometry_msgs::Point lL = p;
+      p.y += squareLength;
+      geometry_msgs::Point uL = p;
+
+      segmentMarkerPoints.push_back(uL);
+      segmentMarkerPoints.push_back(lL);
+      segmentMarkerPoints.push_back(lR);
+
+      segmentMarkerPoints.push_back(lR);
+      segmentMarkerPoints.push_back(uR);
+      segmentMarkerPoints.push_back(uL);
+    }
+    rvizHelper.mark(segmentMarkerPoints, id);
 
     accum(frontierMarkerPoints,toMarkerPoint(segment.typeMembers[Frontier],mapInfo));
 
