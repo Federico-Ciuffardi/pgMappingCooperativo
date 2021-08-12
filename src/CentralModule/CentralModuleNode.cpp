@@ -82,15 +82,15 @@ string coverageFileLog;
 ////////////////
 
 float cubeHeight = 0.02;
-float layerSeparation = 0.175;
-// Publishes marks corresponding to the gvd to be visualized on rviz 
-static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
+float layerSeparation = 0.175; // Height difference between to layers of marks 
+                               // used to draw some marks in front of others
 
-
-  // gvd
+// Publishes marks to be visualized on rviz 
+static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
+  // Gvd
   rvizHelper.topic = &gvdMarkerPub;
 
-  /// edges
+  /// mark edges
   RvizHelper::MarkerPoints edgesMarkerPoints;
   for (auto e : sac.gvd.edges) {
     edgesMarkerPoints.push_back(p2d_to_p3d(e.from, mapInfo));
@@ -102,22 +102,22 @@ static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInf
   rvizHelper.position = makeVector3(0,0,3*layerSeparation);
   rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
 
-  /// vertices
+  /// mark vertices
   rvizHelper.color    = BLUE;
   rvizHelper.type     = RvizHelper::POINTS;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,1*layerSeparation);
   rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
 
-  // topological map
+  // Topological map
   rvizHelper.topic = &topoMapMarkerPub;
 
   /// segments and frontiers
 
-  /// delete previous segments
+  //// delete previous segments
   rvizHelper.deleteMark("segments");
 
-  /// set up segments and frontiers
+  //// Mark segments and load frontiers
   RvizHelper::MarkerPoints frontierMarkerPoints;
   for(auto it : centralModule.topoMap->segmenter->connectedComponents){
     int id = it.first;
@@ -134,20 +134,28 @@ static void drawGvd(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInf
     ros::Duration(0.00001).sleep(); // small sleep becouse rviz skips markers otherwise
   }
 
-  /// set up critical points
-  rvizHelper.color    = CYAN;
-  rvizHelper.type     = RvizHelper::POINTS;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
-  rvizHelper.position = makeVector3(0,0,2*layerSeparation);
+  //// mark critical points and critical lines
 
   RvizHelper::MarkerPoints criticalMarkerPoints;
+  RvizHelper::MarkerPoints criticalLinesMarkerPoints;
   for (auto it : centralModule.topoMap->criticalInfos) {
     Pos p = it.first;
+    CriticalInfo criticalInfo = it.second;
     criticalMarkerPoints.push_back(toMarkerPoint(p, mapInfo));
+    accum(criticalLinesMarkerPoints,toMarkerPoint(criticalInfo.criticalLines,mapInfo));
   }
-  rvizHelper.mark(criticalMarkerPoints, "gvd_critical_vertices");
+  rvizHelper.type     = RvizHelper::POINTS;
+  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
 
-  // topological map
+  rvizHelper.color    = CYAN;
+  rvizHelper.position = makeVector3(0,0,2*layerSeparation);
+  rvizHelper.mark(criticalMarkerPoints, "critical_vertices");
+
+  rvizHelper.color    = makeColorRGBA(0.5); // grey
+  rvizHelper.position = makeVector3(0,0,layerSeparation);
+  rvizHelper.mark(criticalLinesMarkerPoints, "critical_lines");
+
+  // misc
   rvizHelper.topic = &miscMarkerPub;
 
   /// Mark frontiers
@@ -176,8 +184,8 @@ void startAuction() {
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
 
-  // set markers for rviz gvd visualization
-  drawGvd(segmentAuction, centralModule.getMap().info);
+  // set markers for rviz
+  setRvizMarks(segmentAuction, centralModule.getMap().info);
 
   // log gvd time
   if (centralModule.fileLogLevel >= 2) {

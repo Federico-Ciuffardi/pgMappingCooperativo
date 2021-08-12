@@ -23,6 +23,10 @@ inline std_msgs::ColorRGBA makeColorRGBA(float r, float g, float b, float a){
   ret.a = a;
   return ret;
 }
+inline std_msgs::ColorRGBA makeColorRGBA(float r){
+  return makeColorRGBA(r,r,r,1);
+}
+
 inline geometry_msgs::Vector3 makeVector3(float x, float y, float z){
   geometry_msgs::Vector3 ret;
   ret.x = x;
@@ -74,6 +78,7 @@ static const std_msgs::ColorRGBA GREEN   = makeColorRGBA(0,1,0,1);
 static const std_msgs::ColorRGBA CYAN    = makeColorRGBA(0,1,1,1);
 static const std_msgs::ColorRGBA BLUE    = makeColorRGBA(0,0,1,1);
 static const std_msgs::ColorRGBA MAGENTA = makeColorRGBA(1,0,1,1);
+static const std_msgs::ColorRGBA GREY25  = makeColorRGBA(0.2,0,1,1);
 
 ///////////////
 // Functions //
