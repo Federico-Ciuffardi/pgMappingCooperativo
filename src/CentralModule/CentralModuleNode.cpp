@@ -208,7 +208,7 @@ void startAuction() {
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
 
   // set markers for rviz
-  setRvizMarks(segmentAuction, centralModule.map.info);
+  setRvizMarks(segmentAuction, centralModule.occupancyGrid.info);
 
   // As the bid was started bids can be received
   /// Reset auction variables
@@ -509,7 +509,7 @@ int main(int argc, char* argv[]) {
   assert(n.param<int>   ("/map_size", centralModule.mapSize, 0));
   assert(n.param<float> ("/cell_size", centralModule.cellSize, 0));
   assert(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
-  assert(n.param<float> ("/robot_sensor_range", centralModule.robotSpeed, 0));
+  assert(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
   assert(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
   assert(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
 

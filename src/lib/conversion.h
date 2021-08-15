@@ -6,6 +6,7 @@
 #include <pgmappingcooperativo/SegmentAuction.h>
 #include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <boost/unordered/unordered_set_fwd.hpp>
 #include <utility>
 #include "GVD/src/data/Pos.h"
 #include "utils.h"
@@ -136,7 +137,10 @@ inline Pos toPos(Point p3d){
 // StateGrid //
 ///////////////
 
-inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, vector<int> fronteras = vector<int>(), int* count = NULL) {
+// get stateGrid from occupancy grid, set the known cells count on the count attribute 
+inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, 
+                             boost::unordered_set<int> fronteras = boost::unordered_set<int>(),
+                             int* count = NULL) {
   pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
   StateGrid stateGrid(mapSize);
 

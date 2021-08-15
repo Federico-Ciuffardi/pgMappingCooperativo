@@ -27,6 +27,10 @@
 
 typedef boost::unordered_map<int, list<int> > dict_clusters;
 
+// aux func
+vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
+
+
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3,Resolving = 4 };
 
 class CentralModule {
@@ -64,12 +68,13 @@ class CentralModule {
   bool first;
 
   // Map related
-  StateGrid gt;
+  StateGrid stateGrid;
   boost::unordered_map<int, cv::Point2f> mapPoints;
 
   // frontier related
   boost::unordered_set<int> frontiers;
   vector<int> frontierCenters;
+  ConnectedComponents* frontierConComps = NULL;
 
   // Segment auction related
   CriticalInfos cis;
@@ -81,18 +86,6 @@ class CentralModule {
   // Functions //
   ///////////////
 
-  //k-means
-  int dividirFront(boost::unordered_set<int> f, dict_clusters& clusters);
-  pair<list<int>, vector<list<int> > > kmeans(int k, list<int> puntos, vector<cv::Point2f> centros, float dist_lim);
-  vector<list<int> > asignacionKmean(int k, list<int> puntos, vector<cv::Point2f> centros);
-  vector<cv::Point2f> actualizacionKmean(vector<list<int> > puntos_de_centros, int cant_centros);
-  bool finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos, vector<cv::Point2f> centros_nuevos, float dist_lim);
-  list<int> nearestPoint(vector<cv::Point2f> centros_nuevos, list<int> puntos);
-  bool esVecino(int celda, int vecino);
-  bool esVecinoDeSet(int celda, boost::unordered_set<int> lista_de_celdas);
-  float distanciaArecta(int inicio, int fin, int punto);
-  vector<int> aplicarKmeans(boost::unordered_set<int> frontiers);
-
  public:
 
   //////////
@@ -100,7 +93,7 @@ class CentralModule {
   //////////
 
   // map related
-  nav_msgs::OccupancyGrid map;
+  nav_msgs::OccupancyGrid occupancyGrid;
 
   // auction related
   TopoMap* topoMap = NULL;

@@ -1,4 +1,6 @@
 #include "CentralModule.h"
+#include <cstddef>
+#include <vector>
 
 //////////////////
 // Constructors //
@@ -9,8 +11,6 @@ CentralModule::CentralModule() {
 
   segmentAssignmentId = 0;
   segmentAuctionId = 0;
-
-  // dist_info_gain_obst = 1.0 / sqrt(2);
 }
 
 ///////////////
@@ -38,14 +38,14 @@ void CentralModule::setNumRobots(int newNumRobots) {
 
 void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
   // store occGrid
-  map = newMap->mapa;
+  occupancyGrid = newMap->mapa;
 
   // initialize strcuture
   if (first) {
-    uint width = map.info.width;
-    uint height = map.info.height;
-    int y_origin = map.info.origin.position.x;
-    int x_origin = map.info.origin.position.y;
+    uint width = occupancyGrid.info.width;
+    uint height = occupancyGrid.info.height;
+    int y_origin = occupancyGrid.info.origin.position.x;
+    int x_origin = occupancyGrid.info.origin.position.y;
     for (int i = 0; i < width * height; i++) {
       int fila = i % width;
       int columna = i / width;
@@ -74,23 +74,58 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // Get the map offset and set (where does the origin of the map on the world coordinate system)
   cout << "debug :: get offset" << endl;
   pgmappingcooperativo::SegmentAuction segment_auction;
-  segment_auction.offset = toPoint2D(map.info.origin.position);
+  segment_auction.offset = toPoint2D(occupancyGrid.info.origin.position);
+
+  // Convert a occupancyGrid and a frontier list to a stateGrid
+  cout << "debug :: get significant frontiers" << endl;
+  stateGrid = toStateGrid(occupancyGrid, frontiers, &cellCount);
 
   // Get the significant frontiers taking into account the vision range of the robots
-  cout << "debug :: get significant frontiers" << endl;
   switch (frontierSimplificationMethod) {
-    case 0:
-      gt = toStateGrid(map, toVec(frontiers), &cellCount);
-      break;
     case 1:
-      gt = toStateGrid(map, aplicarKmeans(frontiers), &cellCount);
+      // Calculate the connectedComponents of frontiers
+      if (!frontierConComps) {
+        frontierConComps = new ConnectedComponents(stateGrid, {Occupied, Unknown, Free, Critical, CriticalLine});
+      }
+      frontierConComps->update();
+
+      for ( auto it : frontierConComps->connectedComponents){
+        vector<Pos> frontiers = toVec(it.second.members);
+
+        // Calculate k y and execute kMeans
+        int k = ceil(frontiers.size()/(sensorRange*2.0));
+        vector<Pos> centroids = kMeans(frontiers,k,100);
+
+        // Embed the centroids into the frontiers
+        PosSet sigFrontiers;
+        for (Pos centroid : centroids) {
+          Pos sigFrontier = NULL_POS;
+          Float minDist = INF;
+
+          for (Pos frontier : frontiers) {
+            Float dist = centroid.distanceToSquared(frontier);
+            if (dist < minDist) {
+              sigFrontier = frontier;
+              minDist = dist;
+            }
+          }
+          sigFrontiers.insert(sigFrontier);
+        }
+
+        // unmark all the forntiers
+        for(Pos f : frontiers) stateGrid[f] = Free;
+       
+        // mark only the significant frontiers
+        for(Pos f : sigFrontiers) stateGrid[f] = Frontier;
+
+      }
       break;
   }
 
   // Get the info for the auction (segments and frontiers), and the GVD as a subproduct
   cout << "debug :: gvd and cis" << endl;
   if(!topoMap){
-    topoMap = new TopoMap(gt);
+    topoMap = new TopoMap(stateGrid);
   }
   topoMap->update();
 
@@ -196,260 +231,61 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
   return ret;
 }
 
-// TODO Refactor all the code below
+// modified version of: 
+// http://www.goldsborough.me/c++/python/cuda/2017/09/10/20-32-46-exploring_k-means_in_python,_c++_and_cuda/
+vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance) {
+  static random_device seed;
+  static mt19937 rng(seed());
+  uniform_int_distribution<size_t> indices(0, data.size() - 1);
 
-/*Funcion que clasifica los puntos de frontiers en clases de equivalencia*/
-int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clusters) {
-  int count = 1;
-  boost::unordered_set<int> f_copy = f;
-  list<int> vecinos;
-  boost::unordered_set<int>::iterator it;
-  list<int> aux;
-  while (!f_copy.empty()) {
-    it = f_copy.begin();
-    // obtengo el primer elemento de la lista de pendientes
-    int actual = *it;
-    // lo borro de mi lista de pendientes
-    f_copy.erase(it);
-    // lo agrego a un clusters
-    aux.push_back(actual);
-    // actualizo sus vecinos
-    for (int i = 1; i < 9; i += 2) {
-      int Pos = posicionRelativa(actual, i, map.info.width);
-      boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
-      if ((i != 4) && (itv != f_copy.end())) {
-        vecinos.push_back(*itv);
-        f_copy.erase(itv);
-      };
-    }
-    // mientras sus vecinos no sea vacio
-    while (!vecinos.empty()) {
-      int primero = vecinos.front();
-      for (int i = 1; i < 9; i += 2) {
-        int Pos = posicionRelativa(primero, i, map.info.width);
-        boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
-        if ((i != 4) && (itv != f_copy.end())) {
-          vecinos.push_back(*itv);
-          f_copy.erase(itv);
-        };
-      }
-      aux.push_back(primero);
-      vecinos.pop_front();
-    }
-    // if (aux.size() >= 3){
-    clusters[count] = aux;
-    // }
-    aux.clear();
-    count++;
+  // Pick centroids as random points from the dataset.
+  vector<Pos> means(k);
+  for (Pos& cluster : means) {
+    cluster = data[indices(rng)];
   }
-  return count - 1;
-}
 
-/*Funcion que realiza la asignacion del metodo k means*/
-vector<list<int> > CentralModule::asignacionKmean(int k, list<int> puntos, vector<cv::Point2f> centros) {
-  list<int>::iterator it_puntos;
-  vector<list<int> > puntos_de_centros(k);
-
-  for (it_puntos = puntos.begin(); it_puntos != puntos.end(); it_puntos++) {
-    int centro = -1;
-    float dist_a_centro = 1000.0;
-    /* ROS_DEBUG("Punto ---> (%f , %f) ", mapPoints[(*it_puntos)].x, mapPoints[(*it_puntos)].y); */
-    for (int i = 0; i < k; i++) {
-      float dist = distacia2Puntos(centros[i], mapPoints[(*it_puntos)]);
-      /* ROS_DEBUG("    Distancia a centro %d ---> %f ", i, dist); */
-      if (dist_a_centro > dist) {
-        centro = i;
-        dist_a_centro = dist;
-      }
-    }
-    /* ROS_DEBUG("    Asignado a %d ", centro); */
-    puntos_de_centros[centro].push_back(*it_puntos);
-  }
-  return puntos_de_centros;
-}
-
-/*Funcion que realiza la actualizacion de la posicion de los centrso en k-means*/
-vector<cv::Point2f> CentralModule::actualizacionKmean(vector<list<int> > puntos_de_centros,
-                                                      int cant_centros) {
-  list<int>::iterator it_puntos;
-  vector<cv::Point2f> centros_nuevos(cant_centros);
-  int cont = 0;
-  float sum_x = 0.0;
-  float sum_y = 0.0;
-
-  for (int i = 0; i < cant_centros; i++) {
-    cont = 0;
-    sum_x = 0.0;
-    sum_y = 0.0;
-    /* ROS_DEBUG("   X2 Puntos de %d ", i); */
-    for (it_puntos = puntos_de_centros[i].begin(); it_puntos != puntos_de_centros[i].end();
-         it_puntos++) {
-      /* ROS_DEBUG("      X ---> %f ", mapPoints[(*it_puntos)].x); */
-      /* ROS_DEBUG("      Y ---> %f ", mapPoints[(*it_puntos)].y); */
-      sum_x += mapPoints[(*it_puntos)].x;
-      sum_y += mapPoints[(*it_puntos)].y;
-      cont++;
-    }
-    centros_nuevos[i] = cv::Point2f(sum_x / cont, sum_y / cont);
-  }
-  return centros_nuevos;
-}
-
-/*Funcion que me determina cuando el error en k mean es lo suficientemente chico como para finalizar*/
-bool CentralModule::finalizarPorErrorKmean(vector<cv::Point2f> centros_viejos,
-                                           vector<cv::Point2f> centros_nuevos,
-                                           float dist_lim) {
-  bool ret = true;
-  int i = 0;
-  int lim = centros_viejos.size();
-  while ((i < lim) && (ret)) {
-    /* ROS_DEBUG("Lugar %d", i); */
-    /* ROS_DEBUG("   Diff ---> , %f", distacia2Puntos(centros_viejos[i], centros_nuevos[i])); */
-    ret = !(distacia2Puntos(centros_viejos[i], centros_nuevos[i]) >= dist_lim);
-    i++;
-  }
-  return ret;
-}
-
-/*Funcion que me lleva los centros obtenidos por kmeans a los puntos de mi frontiers mas cercanos*/
-list<int> CentralModule::nearestPoint(vector<cv::Point2f> centros_nuevos, list<int> puntos) {
-  list<int> points;
-
-  for (int j = 0; j < centros_nuevos.size(); j++) {
-    int te = -1;
-    float dist_a_centro = 100.0;
-    list<int>::iterator it_puntos;
-    for (it_puntos = puntos.begin(); it_puntos != puntos.end(); it_puntos++) {
-      float dist = distacia2Puntos(centros_nuevos[j], mapPoints[(*it_puntos)]);
-
-      if (dist_a_centro >= dist) {
-        te = (*it_puntos);
-        dist_a_centro = dist;
-      }
-    }
-    points.push_back(te);
-  }
-  return points;
-}
-
-/*Funcion que aplica kmean para un grupo de puntos*/
-pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k, list<int> puntos, vector<cv::Point2f> centros, float dist_lim) {
-  vector<cv::Point2f> centros_viejos;
-  vector<cv::Point2f> centros_nuevos = centros;
-  vector<list<int> > puntos_de_centros;
-  int i = 0;
-  do {
-    i++;
-    /* ROS_DEBUG("Cant. ciclos ---> %d !!", i); */
-    centros_viejos.clear();
-    centros_viejos = centros_nuevos;
-    centros_nuevos.clear();
-
-    puntos_de_centros.clear();
-    puntos_de_centros = asignacionKmean(k, puntos, centros_viejos);
-
-    centros_nuevos = actualizacionKmean(puntos_de_centros, centros_viejos.size());
-
-    if (i == 100) {
-      ROS_INFO(" nombreRobot :: Maxima cantidad de ciclos alcanzada");
-    }
-
-  } while ((i <= 100) && (!finalizarPorErrorKmean(centros_viejos, centros_nuevos, dist_lim)));
-  /* ROS_DEBUG(" Ciclos realizados %d", i); */
-
-  pair<list<int>, vector<list<int> > > retorno(nearestPoint(centros_nuevos, puntos),
-                                               puntos_de_centros);
-
-  return retorno;
-}
-
-/*dadas 2 celdas me indica si son vecinas o no*/
-bool CentralModule::esVecino(int celda, int vecino) {
-  return (
-      (vecino == celda - 1 - map.info.width) || (vecino == celda - map.info.width) ||
-      (vecino == celda + 1 - map.info.width) || (vecino == celda - 1) ||
-      (vecino == celda + 1) || (vecino == celda - 1 + map.info.width) ||
-      (vecino == celda + map.info.width) || (vecino == celda + 1 + map.info.width));
-}
-
-/*dada una celda y una lista de celdas, me dice si la celda es vecina de alguna
- * de las celdas de la lista.*/
-bool CentralModule::esVecinoDeSet(int celda, boost::unordered_set<int> lista_de_celdas) {
-  boost::unordered_set<int>::iterator it = lista_de_celdas.begin();
-  bool ret = false;
-  while (!ret && (it != lista_de_celdas.end())) {
-    ret = esVecino(celda, *it);
-    it++;
-  }
-  return ret;
-}
-
-/*Funcion que me devuelve la distancia de un punto p a una recta formada por i y f*/
-float CentralModule::distanciaArecta(int inicio, int fin, int punto) {
-  float dist = abs(
-      ((mapPoints[inicio].y - mapPoints[fin].y) / (mapPoints[inicio].x - mapPoints[fin].x)) * mapPoints[punto].x - mapPoints[punto].y +
-      (mapPoints[inicio].y - ((mapPoints[inicio].y - mapPoints[fin].y) / (mapPoints[inicio].x - mapPoints[fin].x)) * mapPoints[inicio].x));
-  dist = dist / sqrt(pow(((mapPoints[inicio].y - mapPoints[fin].y) / (mapPoints[inicio].x - mapPoints[fin].x)), 2) + 1);
-  return dist;
-}
-
-vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontiers) {
-  vector<int> frontierCenters;
-  // info_gain.clear();
-  dict_clusters clusters;
-  int cantidad_fronteras = dividirFront(frontiers, clusters);
-
-  for (int i = 1; i <= cantidad_fronteras; i++) {
-    int k = 1;
-
-    vector<cv::Point2f> centros;
-    vector<list<int> > puntos_de_centros;
-    list<int> centros_nuevo;
-    bool frontera_completa = false;
-    while (!frontera_completa) {
-      // Limpio informacion vieja
-      centros.clear();
-      centros_nuevo.clear();
-      puntos_de_centros.clear();
-      // Inicializo los cnetros con un elemento mas, de la misma forma que las
-      // inicializaciones anteriores
-      list<int>::iterator it = clusters[i].begin();
-      for (int pe = 0; pe < k; pe++) {
-        centros.push_back(mapPoints[*it]);
-        it++;
-      }
-      // Aplico kmeans
-      pair<list<int>, vector<list<int> > > retornoKmean = kmeans(k, clusters[i], centros, 0.1);
-      // Obtengo los nuevos centros y puntos de centos.
-      centros_nuevo = retornoKmean.first;
-      puntos_de_centros = retornoKmean.second;
-      list<int>::iterator it_centros = centros_nuevo.begin();
-      list<int>::reverse_iterator it_puntos;
-      int cont = 0;
-      bool fin_iteracion = false;
-      while (!fin_iteracion && (it_centros != centros_nuevo.end())) {
-        it_puntos = puntos_de_centros[cont].rbegin();
-        while (!fin_iteracion && (it_puntos != puntos_de_centros[cont].rend())) {
-          fin_iteracion = (distacia2Puntos(mapPoints[*it_puntos], mapPoints[*it_centros]) > 6.0);
-          it_puntos++;
-        }
-        cont++;
-        it_centros++;
-      }
-      if (fin_iteracion) {
-        k++;
-      } else {
-        frontera_completa = true;
-        for (it_puntos = centros_nuevo.rbegin(); it_puntos != centros_nuevo.rend(); it_puntos++) {
-          // cout<<"centro --->"<<*it_puntos<<endl;
-          // boost::unordered_set<int> infoGain = getGainInfo((*it_puntos));
-          // info_gain.insert(pair<int, boost::unordered_set<int> >((*it_puntos), infoGain));
-          frontierCenters.push_back((*it_puntos));
+  std::vector<size_t> assignments(data.size());
+  Float maxDistance;
+  size_t iteration = 0;
+  do{
+    // Find assignments.
+    for (size_t point = 0; point < data.size(); ++point) {
+      Float bestDistance = INF;
+      size_t bestCluster = 0;
+      for (size_t cluster = 0; cluster < k; ++cluster) {
+        const Float distance = data[point].distanceTo(means[cluster]);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestCluster = cluster;
         }
       }
+      assignments[point] = bestCluster;
     }
-  }
-  return frontierCenters;
+
+    // Sum up and count points for each cluster.
+    vector<Pos> newMeans(k);
+    std::vector<size_t> counts(k, 0);
+    for (size_t point = 0; point < data.size(); ++point) {
+      const size_t cluster = assignments[point];
+      newMeans[cluster] += data[point];
+      counts[cluster] += 1;
+    }
+
+    maxDistance = 0;
+    // Divide sums by counts to get new centroids.
+    for (size_t cluster = 0; cluster < k; ++cluster) {
+     
+      const size_t count = std::max<size_t>(1, counts[cluster]); // Avoid zero division.
+      newMeans[cluster] = newMeans[cluster] / count;
+
+      maxDistance = max(maxDistance,means[cluster].distanceTo(newMeans[cluster]));
+      means[cluster] = newMeans[cluster];
+    }
+
+    iteration++;
+  } while(maxDistance > tolerance  && iteration < maxIterations);
+
+  return means;
 }
 
 CentralModule::~CentralModule(){

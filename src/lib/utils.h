@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include <math.h>
 #include <ros/ros.h>
@@ -98,16 +97,3 @@ static string log_data(string s, string name_file) {
   outfile.close();
   return name_file;
 }
-
-
-
-
-
-/*vector<int> getNeighbors(int Pos, uint mapWidth){
-        vector<int> neighbors;
-        for(int i = 0; i<9; i++){
-                if(i!=4) neighbors.push_back(posicionRelativa(Pos,i,mapWidth));
-        }
-        return neighbors;
-}*/
-#endif
