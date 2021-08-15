@@ -95,8 +95,8 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
   /// mark edges
   RvizHelper::MarkerPoints edgesMarkerPoints;
   for (auto e : sac.gvd.edges) {
-    edgesMarkerPoints.push_back(p2d_to_p3d(e.from, mapInfo));
-    edgesMarkerPoints.push_back(p2d_to_p3d(e.to, mapInfo));
+    edgesMarkerPoints.push_back(toPoint(e.from, mapInfo));
+    edgesMarkerPoints.push_back(toPoint(e.to, mapInfo));
   }
   rvizHelper.color    = BLUE;
   rvizHelper.type     = RvizHelper::LINE_LIST;
@@ -109,7 +109,7 @@ static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType m
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,1*layerSeparation);
-  rvizHelper.mark(p2ds_to_p3ds(sac.gvd.vertices, mapInfo), "gvd_vertices");
+  rvizHelper.mark(toVecPoint3D(sac.gvd.vertices, mapInfo), "gvd_vertices");
 
   // Topological map
   rvizHelper.topic = &topoMapMarkerPub;
@@ -208,7 +208,7 @@ void startAuction() {
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
 
   // set markers for rviz
-  setRvizMarks(segmentAuction, centralModule.getMap().info);
+  setRvizMarks(segmentAuction, centralModule.map.info);
 
   // As the bid was started bids can be received
   /// Reset auction variables
@@ -291,7 +291,7 @@ void resolveAuction() {
     segmentAssignmentPubs[robot].publish(sa);
 
     // Calculate the estimated task completion time
-    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (centralModule.robotSpeed));
+    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][toPos(sa.segment)]) / (centralModule.robotSpeed));
 
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
     minEstimatedTime = min(minEstimatedTime, estimatedTime);
@@ -306,7 +306,7 @@ void resolveAuction() {
     pgmappingcooperativo::SegmentAssignment sa = it.second;
     string robot = it.first;
 
-    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][p2d_to_pos(sa.segment)]) / (centralModule.robotSpeed));
+    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][toPos(sa.segment)]) / (centralModule.robotSpeed));
     if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
       expectedRobots--;
     }

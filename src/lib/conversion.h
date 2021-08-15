@@ -6,159 +6,171 @@
 #include <pgmappingcooperativo/SegmentAuction.h>
 #include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <utility>
 #include "GVD/src/data/Pos.h"
 #include "utils.h"
 
 typedef pgmappingcooperativo::Point2D Point2D;
+typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
+typedef geometry_msgs::Point Point; 
 
-static pgmappingcooperativo::Point2D pos_to_p2d(Pos p){
-  pgmappingcooperativo::Point2D p2d;
+/////////////
+// Point2D //
+/////////////
+inline Point2D toPoint2D(Pos p){
+  Point2D p2d;
   p2d.x = p.x;
   p2d.y = p.y; 
   return p2d;
 }
 
-static Pos p2d_to_pos(pgmappingcooperativo::Point2D p2d){
-  Pos p;
-  p.x = p2d.x; 
-  p.y = p2d.y; 
-  return p;
+inline Point2D toPoint2D(Point p3d) {
+  Point2D p2d;
+  p2d.x = p3d.x;
+  p2d.y = p3d.y;
+  return p2d;
 }
 
-static vector<pgmappingcooperativo::Point2D> pos_to_p2d(vector<Pos> p){
-  vector<pgmappingcooperativo::Point2D> res;
-  for(auto it = p.begin(); it != p.end(); ++it){
-    res.push_back(pos_to_p2d(*it));
+inline vector<Point2D> toVecPoint2D(vector<Pos> ps){
+  vector<Point2D> res;
+  for( Pos p : ps ){
+    res.push_back(toPoint2D(p));
   }
-  return res;  
-} 
+  return res;
+}
 
-typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
+/////////////
+// Point3D //
+/////////////
 
-/* Converts from `Pos` (pair<int,int>) in a grid map to a point (geometry_msgs::Point)
-   adjusting the latter with the `map_info` so it lands on it's correspoing map position */
-static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d, mapInfoType map_info) {
-  geometry_msgs::Point p3d;
+inline Point toPoint(Point2D p2d, mapInfoType map_info) {
+  Point p3d;
   p3d.x = (p2d.x + 0.5) * map_info.resolution + map_info.origin.position.x;
   p3d.y = (p2d.y + 0.5) * map_info.resolution + map_info.origin.position.y;
   p3d.z = 0;
   return p3d;
 }
 
-static geometry_msgs::Point p2d_to_p3d(pgmappingcooperativo::Point2D p2d,float z, mapInfoType map_info){
-  geometry_msgs::Point p3d = p2d_to_p3d(p2d, map_info); 
+inline Point toPoint(Point2D p2d, float z, mapInfoType map_info){
+  Point p3d = toPoint(p2d, map_info); 
   p3d.z = z;
   return p3d;
 }
 
-static pgmappingcooperativo::Point2D p3d_to_p2d(geometry_msgs::Point p3d) {
-  pgmappingcooperativo::Point2D p2d;
-  p2d.x = p3d.x;
-  p2d.y = p3d.y;
-  return p2d;
-}
-
-
-static geometry_msgs::Point pos_to_p3d(Pos p, mapInfoType map_info) {
-  geometry_msgs::Point p3d;
+inline Point toPoint(Pos p, mapInfoType map_info) {
+  Point p3d;
   p3d.x = (p.x + 0.5) * map_info.resolution + map_info.origin.position.x;
   p3d.y = (p.y + 0.5) * map_info.resolution + map_info.origin.position.y;
   p3d.z = 0;
   return p3d;
 }
 
-static geometry_msgs::Point pos_to_p3d(Pos p) {
-  geometry_msgs::Point p3d;
+inline Point toPoint(Pos p) {
+  Point p3d;
   p3d.x = p.x;
   p3d.y = p.y;
   p3d.z = 0;
   return p3d;
 }
 
-static geometry_msgs::Point pos_to_p3d(Pos p,float z) {
-  geometry_msgs::Point p3d;
+inline Point toPoint(Pos p,float z) {
+  Point p3d;
   p3d.x = p.x;
   p3d.y = p.y;
   p3d.z = z;
   return p3d;
 }
 
-//this should be fila * width + columna
-static int pos_to_p1d(Pos p,int width){
-  return p.x + p.y*width;
-}
-
-static Pos p1d_to_pos(int p1d,int width){
-  return Pos(p1d%width,p1d/width);
-}
-
-static int p3d_to_p1d(geometry_msgs::Point p, int indice_origen, int width){
- return indice_origen + (((int)p.x) + ((int)p.y) * width);
-}
-
-static Pos p3d_to_pos(geometry_msgs::Point p, int indice_origen, int width){
-  return p1d_to_pos(p3d_to_p1d(p,indice_origen,width), width); //no sure if is the same width
-}
-
-static Pos p3d_to_pos(geometry_msgs::Point p3d){
-  return Pos(p3d.x,p3d.y);
-}
-
-static geometry_msgs::Point p2f_to_p3d(cv::Point2f ps){
-    geometry_msgs::Point p3d;
+inline Point toPoint(cv::Point2f ps){
+    Point p3d;
     p3d.y = ps.y;
     p3d.x = ps.x;
     p3d.z = 0.0;
     return p3d;
 }
 
-/* De ocupancy grid a state grid*/
-static StateGrid og2gt(nav_msgs::OccupancyGrid og, vector<int> frontera = vector<int>(), int* count = NULL) {
-  uint mapWidth = og.info.width;
-  uint mapHeight = og.info.height;
-  StateGrid res;
-  if(count) (*count) = 0;
-  cout<<"og2gt general"<<endl; 
-  for (int x = 0; x < mapWidth; x++) {
-    res.grid.push_back(StateGrid::ColType());
-    for (int y = 0; y < mapHeight; y++) {
-      CellState ct = Unknown;
-      switch (og.data[y * mapWidth + x]) {
-        case 0:
-          ct = Free;
-          if(count) (*count)++;
-          break;
-        case 100:
-          ct = Occupied;
-          if(count) (*count)++;
-          break;
-        case -1:
-          ct = Unknown;
-          break;
-        default:
-          ct = (CellState)-1;
-      }
-      res.grid[x].push_back(ct);
-    }
-  }
-  cout<<"og2gt Frontier"<<endl;
-  for (auto it = frontera.begin(); it != frontera.end(); it++) {
-    int p1d = *it;
-    if(p1d>=mapWidth*mapHeight){
-      cout<<"Warning: Frontier out of range"<<endl; //almost sure its a kmeans error happens some times in the office map
-    }else{
-      Pos p = p1d_to_pos(p1d, mapWidth);
-      res.grid[p.x][p.y] = Frontier;
-    }
-  }
-  return res;
-}
-
-inline vector<geometry_msgs::Point> p2ds_to_p3ds(vector<pgmappingcooperativo::Point2D> p2ds, mapInfoType mapInfo){
+inline vector<Point> toVecPoint3D(vector<pgmappingcooperativo::Point2D> p2ds, mapInfoType mapInfo){
   vector<geometry_msgs::Point> p3ds;
   for (Point2D c : p2ds) {
-    p3ds.push_back(p2d_to_p3d(c, mapInfo));
+    p3ds.push_back(toPoint(c, mapInfo));
   }
   return p3ds;
+}
+
+/////////
+// Int //
+/////////
+
+inline Int toInt(Pos p, Int width){
+  return p.x + p.y*width;
+}
+
+inline Int toInt(Point p, int indice_origen, int width){
+ return indice_origen + (((int)p.x) + ((int)p.y) * width);
+}
+
+/////////
+// Pos //
+/////////
+
+inline Pos toPos(Point2D p2d){
+  Pos p;
+  p.x = p2d.x; 
+  p.y = p2d.y; 
+  return p;
+}
+
+inline Pos toPos(int p1d,int width){
+  return Pos(p1d%width,p1d/width);
+}
+
+inline Pos toPos(Point p, int indice_origen, int width){
+  return toPos(toInt(p,indice_origen,width), width); //no sure if is the same width
+}
+
+inline Pos toPos(Point p3d){
+  return Pos(p3d.x,p3d.y);
+}
+
+///////////////
+// StateGrid //
+///////////////
+
+inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, vector<int> fronteras = vector<int>(), int* count = NULL) {
+  pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
+  StateGrid stateGrid(mapSize);
+
+  if(count) (*count) = 0;
+
+  for (Pos p : stateGrid) {
+    CellState ct = Unknown;
+    switch (og.data[toInt(p, mapSize.first)]) {
+      case 0:
+        ct = Free;
+        if(count) (*count)++;
+        break;
+      case 100:
+        ct = Occupied;
+        if(count) (*count)++;
+        break;
+      case -1:
+        ct = Unknown;
+        break;
+      default:
+        ct = (CellState)-1;
+    }
+    stateGrid[p] = ct;
+  }
+
+  for (Int fInt : fronteras) {
+    Pos fPos = toPos(fInt,mapSize.first);
+    if(stateGrid.inside(fPos)){
+      stateGrid[fPos] = Frontier;
+    }else{
+      cout<<"Warning: Frontier out of range"<<endl; //almost sure its a kmeans error happens some times in the office map
+    }
+  }
+
+  return stateGrid;
 }
 

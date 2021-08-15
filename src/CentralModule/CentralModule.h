@@ -65,7 +65,6 @@ class CentralModule {
 
   // Map related
   StateGrid gt;
-  nav_msgs::OccupancyGrid mapMerged;
   boost::unordered_map<int, cv::Point2f> mapPoints;
 
   // frontier related
@@ -100,6 +99,9 @@ class CentralModule {
   // vars //
   //////////
 
+  // map related
+  nav_msgs::OccupancyGrid map;
+
   // auction related
   TopoMap* topoMap = NULL;
   boost::unordered_map<string,boost::unordered_map<Pos,float>> segmentBids;
@@ -115,8 +117,6 @@ class CentralModule {
   CentralModule();
 
   // getters and setters
-  void setFrontiers(boost::unordered_set<int> newFrontiers);
-
   vector<int> getFrontierCenters();
   void setFrontierCenters(vector<int> newFrontierCenters);
 

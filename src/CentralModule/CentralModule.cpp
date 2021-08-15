@@ -16,28 +16,12 @@ CentralModule::CentralModule() {
 ///////////////
 // Get / Set //
 ///////////////
-void CentralModule::setFrontiers(boost::unordered_set<int> newFrontiers) {
-  frontiers = newFrontiers;
-};
-
-vector<int> CentralModule::getFrontierCenters() {
-  return frontierCenters;
-};
-
-void CentralModule::setFrontierCenters(vector<int> newFrontierCenters) {
-  frontierCenters = newFrontierCenters;
-};
-
 centralMouleState CentralModule::getEstado() {
   return state;
 };
 
 void CentralModule::setState(centralMouleState newState) {
   state = newState;
-};
-
-nav_msgs::OccupancyGrid CentralModule::getMap() {
-  return mapMerged;
 };
 
 int CentralModule::getNumRobots() {
@@ -54,12 +38,14 @@ void CentralModule::setNumRobots(int newNumRobots) {
 
 void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
   // store occGrid
-  nav_msgs::OccupancyGrid occGrid = newMap->mapa;
+  map = newMap->mapa;
+
+  // initialize strcuture
   if (first) {
-    uint width = occGrid.info.width;
-    uint height = occGrid.info.height;
-    int y_origin = occGrid.info.origin.position.x;
-    int x_origin = occGrid.info.origin.position.y;
+    uint width = map.info.width;
+    uint height = map.info.height;
+    int y_origin = map.info.origin.position.x;
+    int x_origin = map.info.origin.position.y;
     for (int i = 0; i < width * height; i++) {
       int fila = i % width;
       int columna = i / width;
@@ -69,13 +55,10 @@ void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr&
     }
     first = false;
   }
-  mapMerged.info   = occGrid.info;
-  mapMerged.header = occGrid.header;
-  mapMerged.data   = occGrid.data;
 
   // store frontiers
-  boost::unordered_set<int> set(newMap->frontera.begin(), newMap->frontera.end());
-  setFrontiers(set);
+  boost::unordered_set<int> newFrontiers(newMap->frontera.begin(), newMap->frontera.end());
+  frontiers = newFrontiers;
 }
 
 // Get the info to start an Auction
@@ -88,21 +71,19 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   auctionSegmentFrontiersNum.clear();
   auctionRobots.clear();
 
-  // Get the map offset (where does the origin of the map on the world coordinate system)
+  // Get the map offset and set (where does the origin of the map on the world coordinate system)
   cout << "debug :: get offset" << endl;
   pgmappingcooperativo::SegmentAuction segment_auction;
-  nav_msgs::OccupancyGrid map = getMap();
-  segment_auction.offset = p3d_to_p2d(map.info.origin.position);
+  segment_auction.offset = toPoint2D(map.info.origin.position);
 
   // Get the significant frontiers taking into account the vision range of the robots
   cout << "debug :: get significant frontiers" << endl;
   switch (frontierSimplificationMethod) {
     case 0:
-      gt = og2gt(map, toVec(frontiers), &cellCount);
+      gt = toStateGrid(map, toVec(frontiers), &cellCount);
       break;
     case 1:
-      aplicarKmeans(frontiers);
-      gt = og2gt(map, getFrontierCenters(), &cellCount);
+      gt = toStateGrid(map, aplicarKmeans(frontiers), &cellCount);
       break;
   }
 
@@ -119,28 +100,29 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
   // Turn the boost GVD to a ros message
   cout << "debug :: gvd to rosmsg" << endl;
   for (GvdGraph::Vertex v : gvd) {
-    segment_auction.gvd.vertices.push_back(pos_to_p2d(gvd.g[v].p));
-    segment_auction.vertex_segment.push_back(pos_to_p2d(gvd.g[v].segment));
+    segment_auction.gvd.vertices.push_back(toPoint2D(gvd.g[v].p));
+    segment_auction.vertex_segment.push_back(toPoint2D(gvd.g[v].segment));
     for (GvdGraph::Vertex nv : gvd.adj(v)) {
       pgmappingcooperativo::Edge e;
-      e.from = pos_to_p2d(gvd.g[v].p);
-      e.to = pos_to_p2d(gvd.g[nv].p);
+      e.from = toPoint2D(gvd.g[v].p);
+      e.to = toPoint2D(gvd.g[nv].p);
       segment_auction.gvd.edges.push_back(e);
     }
   }
 
-  // Tunr the segment and frontiers info into a ros message
+  // Turn the segment and frontiers info into a ros message
   cout << "debug :: cis to rosmsg" << endl;
   for (auto it : cis) {
     Pos segment = it.first;
     CriticalInfo segment_info = it.second;
 
-    segment_auction.criticals.push_back(pos_to_p2d(segment));
+    segment_auction.criticals.push_back(toPoint2D(segment));
 
     for (Pos f : segment_info.frontiers) {
-      segment_auction.frontiers.push_back(pos_to_p2d(f));
-      segment_auction.frontiers_segment.push_back(pos_to_p2d(segment));
+      segment_auction.frontiers.push_back(toPoint2D(f));
+      segment_auction.frontiers_segment.push_back(toPoint2D(segment));
     }
+
     segment_auction.mind_f.push_back(segment_info.mindToF);
   }
   segment_auction.id = segmentAuctionId;
@@ -160,9 +142,9 @@ bool CentralModule::saveSegmentBid(pgmappingcooperativo::SegmentBid segmentBid, 
 
   // Store the bid of the robot 'name'
   for (int i = 0; i < segmentBid.criticals.size(); i++) {
-    segmentBids[name][p2d_to_pos(segmentBid.criticals[i])] = segmentBid.values[i];
+    segmentBids[name][toPos(segmentBid.criticals[i])] = segmentBid.values[i];
 
-    Pos segment = p2d_to_pos(segmentBid.criticals[i]);
+    Pos segment = toPos(segmentBid.criticals[i]);
 
     add_bid(bidsPQ, name, segment, segmentBid.values[i]);
     auctionSegmentFrontiersNum[segment] = cis[segment].frontiers.size();
@@ -195,8 +177,8 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
     sa.id = segmentAssignmentId;
     if (robot_segment.find(r_name) != robot_segment.end()) {
       Pos seg = robot_segment[r_name];
-      sa.segment = pos_to_p2d(seg);
-      sa.frontiers = pos_to_p2d(cis[seg].frontiers);
+      sa.segment = toPoint2D(seg);
+      sa.frontiers = toVecPoint2D(cis[seg].frontiers);
       // data for frontier auction
       sa.robots_num = robots_nums[seg];
       sa.assigned = 1;
@@ -233,7 +215,7 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
     aux.push_back(actual);
     // actualizo sus vecinos
     for (int i = 1; i < 9; i += 2) {
-      int Pos = posicionRelativa(actual, i, mapMerged.info.width);
+      int Pos = posicionRelativa(actual, i, map.info.width);
       boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
       if ((i != 4) && (itv != f_copy.end())) {
         vecinos.push_back(*itv);
@@ -244,7 +226,7 @@ int CentralModule::dividirFront(boost::unordered_set<int> f, dict_clusters& clus
     while (!vecinos.empty()) {
       int primero = vecinos.front();
       for (int i = 1; i < 9; i += 2) {
-        int Pos = posicionRelativa(primero, i, mapMerged.info.width);
+        int Pos = posicionRelativa(primero, i, map.info.width);
         boost::unordered_set<int>::iterator itv = f_copy.find(Pos);
         if ((i != 4) && (itv != f_copy.end())) {
           vecinos.push_back(*itv);
@@ -384,10 +366,10 @@ pair<list<int>, vector<list<int> > > CentralModule::kmeans(int k, list<int> punt
 /*dadas 2 celdas me indica si son vecinas o no*/
 bool CentralModule::esVecino(int celda, int vecino) {
   return (
-      (vecino == celda - 1 - mapMerged.info.width) || (vecino == celda - mapMerged.info.width) ||
-      (vecino == celda + 1 - mapMerged.info.width) || (vecino == celda - 1) ||
-      (vecino == celda + 1) || (vecino == celda - 1 + mapMerged.info.width) ||
-      (vecino == celda + mapMerged.info.width) || (vecino == celda + 1 + mapMerged.info.width));
+      (vecino == celda - 1 - map.info.width) || (vecino == celda - map.info.width) ||
+      (vecino == celda + 1 - map.info.width) || (vecino == celda - 1) ||
+      (vecino == celda + 1) || (vecino == celda - 1 + map.info.width) ||
+      (vecino == celda + map.info.width) || (vecino == celda + 1 + map.info.width));
 }
 
 /*dada una celda y una lista de celdas, me dice si la celda es vecina de alguna
@@ -412,7 +394,7 @@ float CentralModule::distanciaArecta(int inicio, int fin, int punto) {
 }
 
 vector<int> CentralModule::aplicarKmeans(boost::unordered_set<int> frontiers) {
-  frontierCenters.clear();
+  vector<int> frontierCenters;
   // info_gain.clear();
   dict_clusters clusters;
   int cantidad_fronteras = dividirFront(frontiers, clusters);

@@ -23,7 +23,7 @@ Pos Robot::getGVDPos() {
   // Pos adjustment(signo((int)position.x), 0);
   Pos adjustment(0, 0);
 
-  return p3d_to_pos(p3d) - offset + adjustment;
+  return toPos(p3d) - offset + adjustment;
 }
 
 void Robot::setNombre(std::string nom) {
@@ -40,7 +40,7 @@ void Robot::savePose(const geometry_msgs::Pose msg) {
 }
 
 void Robot::set_grid() {
-  grid = og2gt(map_merged.mapa);
+  grid = toStateGrid(map_merged.mapa);
 }
 
 // this should be moved to gvd.h, this function could me sub by a smarter solution(using the fuction
@@ -135,7 +135,7 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
 
   // std::cout<<"Antes de agregar idVertexMap"<<g.idVertexMap.size()<<endl;
   for (int i = 0; i < g.vertices.size(); i++) {
-    v_pos = p2d_to_pos(g.vertices[i]);
+    v_pos = toPos(g.vertices[i]);
     boost::tie(v, inserted) = gvd.addV(v_pos);
 
     // min_aux = dist(r_pos, v_pos);
@@ -146,13 +146,13 @@ GvdVecGraph Robot::getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcoopera
       segment = i;
       // std::cout<<segment<<endl;
     }*/
-    gvd.g[v].segment = p2d_to_pos(vertex_segment[i]);
+    gvd.g[v].segment = toPos(vertex_segment[i]);
   }
   // std::cout<<"Antes de agregar aristas: "<<g.edges.size()<<endl;
   // auto weights = get(edge_weight,gvd.g);
   for (int i = 0; i < g.edges.size(); i++) {
-    Pos from_p = p2d_to_pos(g.edges[i].from);
-    Pos to_p = p2d_to_pos(g.edges[i].to);
+    Pos from_p = toPos(g.edges[i].from);
+    Pos to_p = toPos(g.edges[i].to);
     GvdVecGraph::Vertex from_v = gvd.idVertexMap[from_p];
     GvdVecGraph::Vertex to_v = gvd.idVertexMap[to_p];
 
@@ -175,7 +175,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   // std::cout << "declaracion de segment bid en la prox lienea" << endl;
   pgmappingcooperativo::SegmentBid segment_bid;
   // std::cout << "getGVDPOS en la prox lienea" << endl;
-  offset = p2d_to_pos(msg.offset);
+  offset = toPos(msg.offset);
   my_pos = getGVDPos();
   // std::cout << "Consegui my Pos: "<<endl;
   Pos r_pos = my_pos;
@@ -198,15 +198,15 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   PosSet frontiers;
   int my_segment_frontier_index;
   for (int i = 0, j = 0; i < msg.criticals.size(); i++) {
-    Pos c_pos = p2d_to_pos(msg.criticals[i]);
+    Pos c_pos = toPos(msg.criticals[i]);
     criticals_and_frontiers.insert(c_pos);
     bool first = true;
 
     for (; (j < msg.frontiers_segment.size()) && (msg.criticals[i] == msg.frontiers_segment[j]);
          j++) {
       // if is the closest frontier o a frontier of my segment
-      Pos f_segment = p2d_to_pos(msg.frontiers_segment[j]);
-      f_pos = p2d_to_pos(msg.frontiers[j]);
+      Pos f_segment = toPos(msg.frontiers_segment[j]);
+      f_pos = toPos(msg.frontiers[j]);
 
       if (first || r_segment == f_segment) {
         // if is in my segment and also the closest one to the critical
@@ -239,9 +239,9 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
   if (in_segment) {
     cost_my_segment_frontier = -1;
     for (int i = my_segment_frontier_index;
-         (i < msg.frontiers_segment.size()) && (r_segment == p2d_to_pos(msg.frontiers_segment[i]));
+         (i < msg.frontiers_segment.size()) && (r_segment == toPos(msg.frontiers_segment[i]));
          i++) {
-      f_pos = p2d_to_pos(msg.frontiers[i]);
+      f_pos = toPos(msg.frontiers[i]);
       float f_r_dist = paths_costs[f_pos];
       // get the closes frontier to the robot
       if ((cost_my_segment_frontier == -1) || (f_r_dist < cost_my_segment_frontier)) {
@@ -252,9 +252,9 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
 
   for (int i = 0; i < msg.criticals.size(); i++) {
     segment_bid.criticals.push_back(msg.criticals[i]);
-    c_pos = p2d_to_pos(msg.criticals[i]);
+    c_pos = toPos(msg.criticals[i]);
     float cost = msg.mind_f[i] + paths_costs[c_pos];
-    // float cost = paths_costs[p2d_to_pos(msg.minp_f[i])];
+    // float cost = paths_costs[toPos(msg.minp_f[i])];
 
     float in_seg = 0;
     if (in_segment && (r_segment == c_pos)) {
@@ -272,7 +272,7 @@ pgmappingcooperativo::SegmentBid Robot::getSegmentBid(pgmappingcooperativo::Segm
 }
 
 geometry_msgs::Point Robot::pos_to_real_p3d(Pos p) {
-  geometry_msgs::Point p3d = pos_to_p3d(p + offset);
+  geometry_msgs::Point p3d = toPoint(p + offset);
   p3d.x += 0.5;
   p3d.y += 0.5;
   return p3d;
@@ -282,7 +282,7 @@ geometry_msgs::Point Robot::pos_to_real_p3d(Pos p) {
 void Robot::set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> points) {
   PosSet f_set;
   for (int i = 0; i < points.size(); i++) {
-    Pos f_pos = p2d_to_pos(points[i]);
+    Pos f_pos = toPos(points[i]);
     // add_to_gvd(f_pos);
     // add_to_gvd(f_pos);
     f_set.insert(f_pos);
@@ -326,7 +326,7 @@ pgmappingcooperativo::FrontierBid Robot::getFrontierBid(vector<pgmappingcooperat
   pgmappingcooperativo::FrontierBid msg;
   for (auto it = frontiers.begin(); it != frontiers.end(); ++it) {
     msg.frontiers.push_back(*it);
-    msg.values.push_back(paths_costs[p2d_to_pos(*it)]);
+    msg.values.push_back(paths_costs[toPos(*it)]);
   }
   msg.robotId = getRobotId();
   msg.id = last_segment_assignment_id;
@@ -337,8 +337,8 @@ pgmappingcooperativo::FrontierBid Robot::getFrontierBid(vector<pgmappingcooperat
 bool Robot::saveFrontierBid(pgmappingcooperativo::FrontierBid fb) {
   // segment_bids[name].clear();
   for (int i = 0; i < fb.frontiers.size(); i++) {
-    // segment_bids[name][p2d_to_pos(sb.criticals[i])] = sb.values[i];
-    Pos f_pos = p2d_to_pos(fb.frontiers[i]);
+    // segment_bids[name][toPos(sb.criticals[i])] = sb.values[i];
+    Pos f_pos = toPos(fb.frontiers[i]);
     string name = to_string(fb.robotId);
     add_bid(bids_pq, name, f_pos, fb.values[i]);
     // auction_segment_frontiers_num[f_pos] = cis[segment].frontiers.size();
@@ -378,7 +378,7 @@ void Robot::add_intermidiate_points(Pos f_pos,
 
 pgmappingcooperativo::goalList Robot::getPathToSegment(Pos frontier) {
   // ROS_INFO("romi ENTREEEEEEEEEEEEEEEEEE");
-  // Pos f_pos = p2d_to_pos(frontier);
+  // Pos f_pos = toPos(frontier);
 
   // ROS_INFO("tiempos forntera al gvd");
   // add_to_gvd(f_pos);

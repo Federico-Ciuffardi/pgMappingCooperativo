@@ -80,7 +80,7 @@ void publishPath(Pos frontier) {
 
   // draw objective
   visualization_msgs::Marker::_points_type points;
-  geometry_msgs::Point p3d = pos_to_p3d(frontier + robot.offset, 0.2);
+  geometry_msgs::Point p3d = toPoint(frontier + robot.offset, 0.2);
   p3d.x += 0.5;
   p3d.y += 0.5;
 
@@ -155,7 +155,7 @@ void handlePathSucced(const std_msgs::String::ConstPtr& msg) {
     grey.a = 1.0f;
 
     visualization_msgs::Marker::_points_type points;
-    geometry_msgs::Point p3d = pos_to_p3d(f + robot.offset, 0.2);
+    geometry_msgs::Point p3d = toPoint(f + robot.offset, 0.2);
     p3d.x += 0.5;
     p3d.y += 0.5;
 
@@ -259,7 +259,7 @@ void handleSegmentAssignment(const pgmappingcooperativo::SegmentAssignmentConstP
   }
   ROS_INFO("%s :: A segment assingment arived", robot.getNombre().c_str());
   robot.last_segment_assignment_id = msg->id;
-  robot.assigned_segment = p2d_to_pos(msg->segment);
+  robot.assigned_segment = toPos(msg->segment);
 
   cout<<"Segment assigned: "<<robot.assigned_segment<<endl;
 
