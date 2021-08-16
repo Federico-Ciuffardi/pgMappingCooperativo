@@ -205,7 +205,7 @@ void Gvd::update(){
   cout << "debug :: Generate gridGVD" << endl;
   gridGvd = getGridGvd(*distMap, map, GvdConfig::get()->vertexSimplificationMethod);
   cout << "debug :: Generate graphGVD" << endl;
-  graphGvd = new GvdGraph(gridGvd);
+  graphGvd = new GvdGraph(gridGvd, map, {Occupied,Unknown});
   cout << "debug :: cleanUp" << endl;
 
   cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);

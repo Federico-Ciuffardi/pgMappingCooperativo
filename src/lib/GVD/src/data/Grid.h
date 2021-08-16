@@ -92,7 +92,7 @@ struct Grid{
   vector<Pos> adj(Pos p, vector<CellType> invalids) {
     vector<Pos> adjs = adj(p);
     filter(adjs, [this,invalids](Pos a){
-                   return is_elem(this->cell(a), invalids);
+                   return is_elem((CellType)this->cell(a), invalids);
                  });
     vector<Pos> copyAdjs = adjs;
     filter(adjs, [copyAdjs,p](Pos a){

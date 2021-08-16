@@ -7,6 +7,7 @@
 
 #include <boost/unordered_set.hpp>
 #include <iterator>
+#include <vector>
 
 #include "Grid.h"
 #include "Pos.h"
@@ -329,7 +330,8 @@ struct PosGraph : public Graph<graph,Pos> {
   }
 
   // construct graph based on al boolean grid (true = belongs to GvdGraph)
-  PosGraph(Grid<bool>& boolGrid){
+  template<typename CellType>
+  PosGraph(Grid<bool>& boolGrid, Grid<CellType> grid, vector<CellType> invalidTypes){
     // initialize grid_gvd
     for(Pos p : boolGrid){
       if (!boolGrid[p]) continue; // skip false
@@ -340,7 +342,7 @@ struct PosGraph : public Graph<graph,Pos> {
       tie(u, inserted) = this->addV(p);
 
       // for each neighbor (nx,ny) of (i,j)
-      for(Pos pN : boolGrid.adj(p)){
+      for(Pos pN : grid.adj(p, invalidTypes)){
         if (!boolGrid[pN]) continue; // skip false
 
         // add it to the graph
