@@ -94,29 +94,19 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
 
         // Calculate k y and execute kMeans
         int k = ceil(frontiers.size()/(sensorRange*2.0));
-        vector<Pos> centroids = kMeans(frontiers,k,100);
 
-        // Embed the centroids into the frontiers
-        PosSet sigFrontiers;
-        for (Pos centroid : centroids) {
-          Pos sigFrontier = NULL_POS;
-          Float minDist = INF;
+        bool embedIntermediate = false;
+        vector<Pos> centroids = kMeans(frontiers,k,10000,embedIntermediate);
 
-          for (Pos frontier : frontiers) {
-            Float dist = centroid.distanceToSquared(frontier);
-            if (dist < minDist) {
-              sigFrontier = frontier;
-              minDist = dist;
-            }
-          }
-          sigFrontiers.insert(sigFrontier);
+        if(!embedIntermediate){
+          centroids = embed(centroids, frontiers);
         }
 
         // unmark all the forntiers
         for(Pos f : frontiers) stateGrid[f] = Free;
        
         // mark only the significant frontiers
-        for(Pos f : sigFrontiers) stateGrid[f] = Frontier;
+        for(Pos f : centroids) stateGrid[f] = Frontier;
 
       }
       break;
@@ -231,9 +221,33 @@ boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> CentralMod
   return ret;
 }
 
+/////////
+// Aux //
+/////////
+
+// Embed the pos from `from` to pos on `to`
+vector<Pos> embed(vector<Pos> from, vector<Pos> to){
+  vector<Pos> res;
+  for (Pos f : from) {
+    Pos embedded = NULL_POS;
+    Float minDist = INF;
+
+    for (Pos t : to) {
+      Float dist = f.distanceToSquared(t);
+      if (dist < minDist) {
+        embedded = t;
+        minDist = dist;
+      }
+    }
+    res.push_back(embedded);
+  }
+  return res;
+}
+
+
 // modified version of: 
 // http://www.goldsborough.me/c++/python/cuda/2017/09/10/20-32-46-exploring_k-means_in_python,_c++_and_cuda/
-vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance) {
+vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance, bool embedOnData) {
   static random_device seed;
   static mt19937 rng(seed());
   uniform_int_distribution<size_t> indices(0, data.size() - 1);
@@ -280,6 +294,10 @@ vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Floa
 
       maxDistance = max(maxDistance,means[cluster].distanceTo(newMeans[cluster]));
       means[cluster] = newMeans[cluster];
+    }
+
+    if(embedOnData){
+      means = embed(means, data);
     }
 
     iteration++;

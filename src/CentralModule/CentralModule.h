@@ -28,7 +28,8 @@
 typedef boost::unordered_map<int, list<int> > dict_clusters;
 
 // aux func
-vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
+vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0, bool embedOnData = false);
+vector<Pos> embed(vector<Pos> from, vector<Pos> to);
 
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3,Resolving = 4 };
