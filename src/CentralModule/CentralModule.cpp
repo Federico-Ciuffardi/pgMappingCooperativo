@@ -7,7 +7,6 @@
 //////////////////
 CentralModule::CentralModule() {
   state = WaitingAuction;
-  first = true;
 
   segmentAssignmentId = 0;
   segmentAuctionId = 0;
@@ -39,22 +38,6 @@ void CentralModule::setNumRobots(int newNumRobots) {
 void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
   // store occGrid
   occupancyGrid = newMap->mapa;
-
-  // initialize strcuture
-  if (first) {
-    uint width = occupancyGrid.info.width;
-    uint height = occupancyGrid.info.height;
-    int y_origin = occupancyGrid.info.origin.position.x;
-    int x_origin = occupancyGrid.info.origin.position.y;
-    for (int i = 0; i < width * height; i++) {
-      int fila = i % width;
-      int columna = i / width;
-      float a = ((x_origin + fila) + 0.5);
-      float b = ((y_origin + columna) + 0.5);
-      mapPoints[i] = cv::Point2f(a, b);
-    }
-    first = false;
-  }
 
   // store frontiers
   boost::unordered_set<int> newFrontiers(newMap->frontera.begin(), newMap->frontera.end());
@@ -95,18 +78,13 @@ pgmappingcooperativo::SegmentAuction CentralModule::getSegmentAuctionInfo() {
         // Calculate k y and execute kMeans
         int k = ceil(frontiers.size()/(sensorRange*2.0));
 
-        bool embedIntermediate = false;
-        vector<Pos> centroids = kMeans(frontiers,k,10000,embedIntermediate);
-
-        if(!embedIntermediate){
-          centroids = embed(centroids, frontiers);
-        }
+        vector<Pos> centroids = kMeans(frontiers,k,10000);
 
         // unmark all the forntiers
         for(Pos f : frontiers) stateGrid[f] = Free;
        
         // mark only the significant frontiers
-        for(Pos f : centroids) stateGrid[f] = Frontier;
+        for(Pos f : embed(centroids, frontiers)) stateGrid[f] = Frontier;
 
       }
       break;
@@ -247,15 +225,24 @@ vector<Pos> embed(vector<Pos> from, vector<Pos> to){
 
 // modified version of: 
 // http://www.goldsborough.me/c++/python/cuda/2017/09/10/20-32-46-exploring_k-means_in_python,_c++_and_cuda/
-vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance, bool embedOnData) {
-  static random_device seed;
-  static mt19937 rng(seed());
-  uniform_int_distribution<size_t> indices(0, data.size() - 1);
+vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance) {
+
+  // Pick random centroids
+  /// initialize randomizer
+  /* static random_device seed; */
+  /* static mt19937 rng(seed()); */
+  /* uniform_int_distribution<size_t> indices(0, data.size() - 1); */
 
   // Pick centroids as random points from the dataset.
+  /* vector<Vector2<Float>> means(k); */
+  /* for (Vector2<Float>& cluster : means) { */
+  /*   cluster = data[indices(rng)]; */
+  /* } */
+
+  /// Pick centroids from the first k data points
   vector<Pos> means(k);
-  for (Pos& cluster : means) {
-    cluster = data[indices(rng)];
+  for (int i = 0; i < k; i++) {
+    means[i] = data[i];
   }
 
   std::vector<size_t> assignments(data.size());
@@ -296,12 +283,12 @@ vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Floa
       means[cluster] = newMeans[cluster];
     }
 
-    if(embedOnData){
-      means = embed(means, data);
-    }
-
     iteration++;
   } while(maxDistance > tolerance  && iteration < maxIterations);
+
+  if (iteration == maxIterations){
+    ROS_INFO_STREAM("Not enough iterations for k-means to converge, last error: "<<maxDistance);
+  }
 
   return means;
 }

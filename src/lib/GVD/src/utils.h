@@ -103,6 +103,20 @@ inline vector<Pos> discretizeLine(Pos p1, Pos p2){
 ///////////////////////
 
 ////
+/// unique delete duplicates
+//
+
+// from: https://stackoverflow.com/questions/1041620/whats-the-most-efficient-way-to-erase-duplicates-and-sort-a-vector
+template <typename T>
+vector<T> unique(vector<T> vec){
+  set<T> s;
+  unsigned size = vec.size();
+  for( unsigned i = 0; i < size; ++i ) s.insert( vec[i] );
+  vec.assign( s.begin(), s.end() );
+  return vec; 
+}
+
+////
 /// accum: accumulate all the elems of the second parameter into the first (no copies are made)
 //
 

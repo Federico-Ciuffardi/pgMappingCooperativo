@@ -25,12 +25,8 @@
 #include "../lib/auction.h"
 #include "../lib/graph/gnuplot.h"
 
-typedef boost::unordered_map<int, list<int> > dict_clusters;
-
-// aux func
-vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0, bool embedOnData = false);
+vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
 vector<Pos> embed(vector<Pos> from, vector<Pos> to);
-
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3,Resolving = 4 };
 
@@ -56,7 +52,6 @@ class CentralModule {
   int fileLogLevel;
   string fileLogDir;
 
-
  private:
   //////////
   // vars //
@@ -66,11 +61,9 @@ class CentralModule {
   centralMouleState state;
   int segmentAuctionId;
   int segmentAssignmentId;
-  bool first;
 
   // Map related
   StateGrid stateGrid;
-  boost::unordered_map<int, cv::Point2f> mapPoints;
 
   // frontier related
   boost::unordered_set<int> frontiers;
@@ -130,5 +123,4 @@ class CentralModule {
 
   // Destructor
   ~CentralModule();
-
 };
