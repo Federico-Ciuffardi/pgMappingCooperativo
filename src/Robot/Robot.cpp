@@ -48,15 +48,10 @@ void Robot::savePose(const geometry_msgs::Pose msg) {
 // traversability stablished on the stateGrid.
 //
 // Returns the set of points from where the graph is accesible. 
-PosSet Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid) {
-  PosSet retPosSet = posSet;
-
+void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid) {
   for (Pos p : posSet) {
-    if(!addToGraph(p, graph,stateGrid)){
-      retPosSet.erase(p);
-    }
+    addToGraph(p, graph,stateGrid);
   }
-  return retPosSet;
 }
 
 // Generates a path from p to the graph that complies with the traversability stablished
@@ -122,7 +117,7 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
 
   // add the frontiers to the gvd
   cout<<"Add frontiers to graph"<<endl;
-  frontiers = addToGraph(frontiers, gvd, stateGrid);
+  addToGraph(frontiers, gvd, stateGrid);
 
   // visuzlize map on std output
   /* stateGrid[robotPos] = Critical; */

@@ -94,7 +94,7 @@ class Robot {
   geometry_msgs::Point pos_to_real_p3d(Pos p);
 
   bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);
-  PosSet addToGraph(PosSet&, GvdVecGraph& graph, StateGrid&);
+  void addToGraph(PosSet&, GvdVecGraph& graph, StateGrid&);
 
   pgmappingcooperativo::goalList getPathTo(Pos p);
 };

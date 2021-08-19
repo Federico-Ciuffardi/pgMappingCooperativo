@@ -8,6 +8,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <boost/unordered/unordered_set_fwd.hpp>
 #include <utility>
+#include "GVD/src/Map.h"
 #include "GVD/src/data/Pos.h"
 #include "utils.h"
 
@@ -176,10 +177,25 @@ inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og,
 
   for (Int fInt : fronteras) {
     Pos fPos = toPos(fInt,mapSize.first);
-    if(stateGrid.inside(fPos)){
+
+    // skip if not inside the stateGrid (the map_merger delivers frontiers
+    // outside the map boundaries sometimes)
+    if ( !stateGrid.inside(fPos) ) continue;
+
+    // The frontiers must have a Unknown neighbor
+    /// Currently the frontiers can be detected despite of not having a unknow neighbor in two cases
+    ///  * The frontier is on the border of the grid (the current implementation of 
+    ///    the map_merger considers that "frontier"  I do not)
+    ///  * The only unknows cells neighbor of the "frontier" are diagonal but
+    //     the horizontal cells near that diagonal are /    not traversable, so the
+    //     unknow cell is not considered reachable from the "frontier"
+    bool hasUnknowNeighbor = false;
+    for( Pos fPosN : stateGrid.adj(fPos,{Occupied})){
+        hasUnknowNeighbor = stateGrid[fPosN] == Unknown;
+        if(hasUnknowNeighbor) break;
+    }
+    if(hasUnknowNeighbor){ 
       stateGrid[fPos] = Frontier;
-    }else{
-      cout<<"Warning: Frontier out of range"<<endl; //almost sure its a kmeans error happens some times in the office map
     }
   }
 

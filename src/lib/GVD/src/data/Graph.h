@@ -474,6 +474,7 @@ struct PosGraph : public Graph<graph,Pos> {
    private:
     PosSet m_goals;
   };
+
   //// get the shortestpath and the cost of reaching the goal
   boost::tuple<boost::unordered_map<Pos, list<Vertex>>, boost::unordered_map<Pos, float>>
   getMultiPath(Pos start, PosSet goals) {
@@ -488,39 +489,25 @@ struct PosGraph : public Graph<graph,Pos> {
                         predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, this->g)))
                             .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, this->g)))
                             .visitor(multi_astar_goal_visitor<Vertex>(goals)));
-    } catch (found_goals fg) {  // found a path to the goal
-      // cout<<"comienzo del termino!"<<endl;
-      for (auto it = goals.begin(); it != goals.end(); it++) {
-        list<Vertex> shortest_path;
-        Pos goal = *it;
-        Vertex goal_v = this->idVertexMap[goal];
+    } catch (found_goals fg) {} // found a path to the goal
 
-        for (Vertex v = goal_v;; v = p[v]) {
-          shortest_path.push_front(v);
-          if (p[v] == v)
-            break;
-        }
+    // cout<<"comienzo del termino!"<<endl;
+    for (Pos goal : goals) {
+      Vertex goalVertex = this->idVertexMap[goal];
 
-        shortest_paths[goal] = shortest_path;
-
-        shortest_paths_costs[goal] = d[goal_v];
+      list<Vertex> shortest_path;
+      for (Vertex v = goalVertex ; p[v] != v ; v = p[v]) {
+        shortest_path.push_front(v);
       }
 
-      /* for (auto it = goals.begin(); it != goals.end(); it++) { */
-        /* Pos goal = *it; */
-        // cout << "Shortest path from " << start << " to " << goal << ": ";
-
-        /* list<GvdVecGraph::Vertex>::iterator spi = shortest_paths[goal].begin(); */
-        /*cout << start;
-        for (++spi; spi != shortest_paths[goal].end(); ++spi)
-          cout << " -> " << gvd.g[*spi].p;
-
-        cout << endl << "Total travel time: " << d[gvd.idVertexMap[goal]] << endl;*/
-      /* } */
+      if(!shortest_path.empty()){
+        shortest_paths[goal] = shortest_path;
+        shortest_paths_costs[goal] = d[goalVertex];
+      }
     }
-    // cout<<"fin del termino!"<<endl;
     return boost::make_tuple(shortest_paths, shortest_paths_costs);
   }
+
   // Find path to Graph
   template<typename CellType>
   boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> &grid, vector<CellType> notTraversables) {

@@ -47,9 +47,10 @@ void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr&
 // Get the info to start an Auction
 pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
   // Convert a occupancyGrid and a frontier list to a stateGrid
-  cout << "debug :: get significant frontiers" << endl;
+  cout << "debug :: convert a occupancyGrid and a frontier list to a stateGrid" << endl;
   stateGrid = toStateGrid(occupancyGrid, frontiers, &cellCount);
 
+  cout << "debug :: get significant frontiers" << endl;
   // Get the significant frontiers taking into account the vision range of the robots
   switch (frontierSimplificationMethod) {
     case 1:
