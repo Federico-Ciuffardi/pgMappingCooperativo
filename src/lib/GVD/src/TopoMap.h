@@ -10,7 +10,6 @@
  *  critical info 
  */
 struct CriticalInfo{
-  float mindToF; //min distance to frontier
   vector<Pos> frontiers;
   PosSet criticalLines;
 };
@@ -31,7 +30,6 @@ struct TopoMap{
   typedef Grid<CellType> MapType; // could be set as template if needed
 
   // Results
-  CriticalInfos cis;
   CriticalInfos criticalInfos;
   
   // Sub results
@@ -55,7 +53,7 @@ struct TopoMap{
  private:
   // internal functions
   void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap);
-  CriticalInfos get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter);
+  void get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter);
 
 };
 

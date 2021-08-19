@@ -65,7 +65,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   goalList.msg
-  frontierReport.msg
   infoCentro.msg
   asignacion.msg
   asignacionCelda.msg
@@ -75,10 +74,9 @@ add_message_files(
   Point2D.msg
   Edge.msg
   Graph.msg
-  SegmentAuction.msg
-  SegmentBid.msg
-  SegmentAssignment.msg
-  FrontierBid.msg
+  Auction.msg
+  Bid.msg
+  Assignment.msg
 )
 
 ## Generate services in the 'srv' folder

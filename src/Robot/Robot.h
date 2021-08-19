@@ -14,9 +14,9 @@
 #include <pgmappingcooperativo/infoCentro.h>
 #include <pgmappingcooperativo/resumenInstancia.h>
 #include <pgmappingcooperativo/takeobjetive.h>
-#include <pgmappingcooperativo/SegmentAuction.h>
-#include <pgmappingcooperativo/SegmentBid.h>
-#include <pgmappingcooperativo/SegmentAssignment.h>
+#include <pgmappingcooperativo/Auction.h>
+#include <pgmappingcooperativo/Bid.h>
+#include <pgmappingcooperativo/Assignment.h>
 #include <pgmappingcooperativo/FrontierBid.h>
 #include <pgmappingcooperativo/mapMergedInfo.h>
 #include <cstdlib>
@@ -30,132 +30,71 @@
 #include <vector>
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
-#include "../lib/auction.h"
 #include "../lib/RvizHelper.h"
-
-typedef boost::unordered_map<int, std::list<int> > dict_clusters;
 
 class Robot {
  private:
-  // vars
-  ///Properties
+  ////////////////
+  // Parameters //
+  ////////////////
+
   float sensor_range;
   float lado;
+
+  //////////
+  // vars //
+  //////////
 
   // Segmentation relatied
   geometry_msgs::Point position;
   boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> paths;
-  boost::unordered_map<Pos,float> paths_costs;
+  boost::unordered_map<Pos,float> pathCosts;
 
-  //boost::tuple<boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> , boost::unordered_map<Pos,float>> multi_paths_with_cost;
   GvdVecGraph gvd;
   Pos my_pos;
   Pos my_segment;
 
+  ///////////////
+  // Functions //
+  ///////////////
+
  public:
-  Pos offset;
-  Robot();
+  //////////
+  // vars //
+  //////////
 
   std::string nombreRobot;
-  Pos assigned_segment;
-  int last_segment_assignment_id = -1;
-  int last_segment_auction_id = -1;
-  int last_frontier_auction_id = -1;
-  bids_priority_queue bids_pq;
-  int auction_robots = 0;
-
-  /// Map related
+  int lastAssignmentId = -1;
+  int lastAuctionId = -1;
   pgmappingcooperativo::mapMergedInfo map_merged;
   StateGrid grid;
 
+  ///////////////
+  // Functions //
+  ///////////////
+
+  // Constructor
+  Robot();
+
+  // getters and setters
   void setPosition(int x, int y);
   geometry_msgs::Point getPosition();
+  Pos getGVDPos();
+  void setNombre(std::string nom);
+  string getNombre();
+  int getRobotId();
+  Pos getOffset();
+  void getGrid();
+
+  pgmappingcooperativo::Bid getBid(pgmappingcooperativo::Auction msg);
+
+
   void savePose(const geometry_msgs::Pose msg);
 
-  Pos getGVDPos();
   geometry_msgs::Point pos_to_real_p3d(Pos p);
 
-  void setNombre(std::string nom);
-  std::string getNombre();
+  bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);
+  PosSet addToGraph(PosSet&, GvdVecGraph& graph, StateGrid&);
 
-  int getRobotId();
-
-  void set_my_paths_to_frontiers(vector<pgmappingcooperativo::Point2D> points);
-
-  void set_grid();
-
-  bool is_in_segment(Pos my_segment, Pos my_pos, Pos assigned_segment, Pos f_pos);
-  void add_intermidiate_points(Pos f_pos, Pos current_pos,pgmappingcooperativo::goalList & g_list, float min_dist);
-  void add_to_gvd(Pos f_pos);
-
-  void add_to_gvd(PosSet p_set);
-
-  //boost::tuple<int, GvdVecGraph> getGVD(pgmappingcooperativo::Graph g, Pos r_pos);
-  GvdVecGraph getGVD(pgmappingcooperativo::Graph g, vector<pgmappingcooperativo::Point2D> vertex_segment);
-
-  pgmappingcooperativo::SegmentBid getSegmentBid(pgmappingcooperativo::SegmentAuction msg);
-  pgmappingcooperativo::FrontierBid getFrontierBid(vector<pgmappingcooperativo::Point2D> frontiers);
-  bool saveFrontierBid(pgmappingcooperativo::FrontierBid fb);
-  Pos assignFrontier();
-  pgmappingcooperativo::goalList getPathToSegment(Pos p);
-  void reset_bid();
+  pgmappingcooperativo::goalList getPathTo(Pos p);
 };
-
-  //nav_msgs::OccupancyGrid global_map;
-  //nav_msgs::OccupancyGrid control_map;
-  //std::boost::unordered_map<int, cv::Point2f> map_points;
-  //std::list<int> centros_de_frontera;
-
-  //uint width;
-  //uint height;
-  //int y_origin;
-  //int x_origin;
-  //int indice_origen;
-
-  //float error_average;
-  //int errorCont;
-  //int cant_errors;
-  //float dist_info_gain_obst;
-  //std::vector<int> last_info_gain;
-  //bool first;
-  /*std::boost::unordered_map<int, std::vector<int> > crearOleadas(nav_msgs::OccupancyGrid msg,
-                                              int fin,
-                                              std::list<int> centros_def,
-                                              nav_msgs::OccupancyGrid& p);
-pgmappingcooperativo::frontierReport consultarCostosInfo(std::boost::unordered_map<int, std::vector<int> > oleadas,
-                                                      int posicionActual,
-                                                      nav_msgs::OccupancyGrid& p);*/
-
-  /*void ajustarParedes(int centro, nav_msgs::OccupancyGrid& p, std::vector<int> obstaculos);
-  std::list<int> caminoAfrontera(std::vector<int> oleada,
-                                 int obj,
-                                 int start,
-                                 nav_msgs::OccupancyGrid& p);
-  pgmappingcooperativo::goalList getGoalPath(std::list<int> list_camino, nav_msgs::OccupancyGrid& p);
-  std::boost::unordered_map<int, std::list<int> > obtenerCaminos(int& camino_mas_cercano,
-                                                std::boost::unordered_map<int, std::vector<int> > oleadas,
-                                                int posicionActual,
-                                                std::list<int> centros_def,
-                                                nav_msgs::OccupancyGrid& p);
-  void setLastInfoGain(std::vector<int> nom);
-  std::vector<int> getLastInfoGain();
-  std::string getRealInfoGain();
-  float getErrorAverage();
-  void setErrorAverage(float);
-  float addErrorAverage(int);
-  void resetCountError();
-  void setErrorCont(int);
-  bool isFinByError();*/
-
-
-  /*pgmappingcooperativo::goalList getPathToObjetive(int centro,
-                                               std::vector<int> obstaculos,
-                                               nav_msgs::OccupancyGrid& p);*/
-    //void saveGlobalMap(nav_msgs::OccupancyGrid msg);
-  //nav_msgs::OccupancyGrid getGlobalMap();
-  //nav_msgs::OccupancyGrid getControlMap();
-  //void saveControlMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
-  //pgmappingcooperativo::frontierReport processMap();
-  //int getobjetive(const pgmappingcooperativo::asignacionConstPtr& msg);
-   //void setCentrosF(std::vector<int> cdf);
-  //std::list<int> getCentrosF();

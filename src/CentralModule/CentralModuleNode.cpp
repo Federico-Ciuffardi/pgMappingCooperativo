@@ -27,7 +27,7 @@ float mapUpdateDelay = 2;
 // Topics
 /// Subscribers
 map<string, ros::Subscriber> bids;
-map<string, ros::Subscriber> segmentBidSubs;
+map<string, ros::Subscriber> bidSubs;
 ros::Subscriber endSub;
 ros::Subscriber mapMergedSub;
 ros::Subscriber requestObjetiveSub;
@@ -39,8 +39,8 @@ ros::Publisher objPub;
 ros::Publisher miscMarkerPub;
 ros::Publisher gvdMarkerPub;
 ros::Publisher topoMapMarkerPub;
-ros::Publisher segmentAuctionPub;
-map<string, ros::Publisher> segmentAssignmentPubs;
+ros::Publisher auctionPub;
+map<string, ros::Publisher> AssignmentPubs;
 
 // timers 
 ros::Timer auctionResolutionTimeoutTimer;
@@ -88,7 +88,7 @@ float layerSeparation = 0.175; // Height difference between to layers of marks
 unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
 
 // Publishes marks to be visualized on rviz 
-static void setRvizMarks(pgmappingcooperativo::SegmentAuction sac, mapInfoType mapInfo) {
+void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   // Gvd
   rvizHelper.topic = &gvdMarkerPub;
 
@@ -202,13 +202,13 @@ void startAuction() {
   ros::Duration lastGvdTime = gvdTime;
   lastGvdStart = ros::Time::now();
 
-  pgmappingcooperativo::SegmentAuction segmentAuction = centralModule.getSegmentAuctionInfo();
+  pgmappingcooperativo::Auction auction = centralModule.getAuctionInfo();
 
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
 
   // set markers for rviz
-  setRvizMarks(segmentAuction, centralModule.occupancyGrid.info);
+  setRvizMarks(auction, centralModule.occupancyGrid.info);
 
   // As the bid was started bids can be received
   /// Reset auction variables
@@ -217,7 +217,7 @@ void startAuction() {
   centralModule.setState(WaitingFirstBid);
 
   // Send auction info so the bids can be calculated
-  segmentAuctionPub.publish(segmentAuction);
+  auctionPub.publish(auction);
   ROS_INFO("Segment auction information broadcasted");
 
   // log gvd time
@@ -270,7 +270,7 @@ void resolveAuction() {
   auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
   // Get the robot-segment assignment
-  boost::unordered_map<string, pgmappingcooperativo::SegmentAssignment> assignment = centralModule.assignSegment();
+  boost::unordered_map<string, pgmappingcooperativo::Assignment> assignment = centralModule.assign();
   expectedRobots = assignedRobots = assignment.size();
 
   // As the assignment was calculated a new auction can be started
@@ -284,14 +284,14 @@ void resolveAuction() {
   float minEstimatedTime = FLT_MAX; // min estimated task completion time
 
   for (auto it : assignment) {
-    pgmappingcooperativo::SegmentAssignment sa = it.second;
+    pgmappingcooperativo::Assignment sa = it.second;
     string robot = it.first;
 
     // Let the robot know about it assigned segment
-    segmentAssignmentPubs[robot].publish(sa);
+    AssignmentPubs[robot].publish(sa);
 
     // Calculate the estimated task completion time
-    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][toPos(sa.segment)]) / (centralModule.robotSpeed));
+    float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(sa.frontier)]) / (centralModule.robotSpeed));
 
     maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
     minEstimatedTime = min(minEstimatedTime, estimatedTime);
@@ -303,10 +303,10 @@ void resolveAuction() {
 
   /// Calculate the robots that are expected to complete the assigned task not long after the first auction request
   for (auto it : assignment) {
-    pgmappingcooperativo::SegmentAssignment sa = it.second;
+    pgmappingcooperativo::Assignment sa = it.second;
     string robot = it.first;
 
-    float estimatedTime = max(0.f,(centralModule.segmentBids[robot][toPos(sa.segment)]) / (centralModule.robotSpeed));
+    float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(sa.frontier)]) / (centralModule.robotSpeed));
     if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
       expectedRobots--;
     }
@@ -414,10 +414,10 @@ void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
   }
 }
 
-void segmentBidCallBack(const pgmappingcooperativo::SegmentBidConstPtr& msg, string name) {
+void bidCallBack(const pgmappingcooperativo::BidConstPtr& msg, string name) {
   if (!is_elem(centralModule.getEstado(), {WaitingFirstBid, WaitingBids})) return;
 
-  bool successful = centralModule.saveSegmentBid(*msg, name);
+  bool successful = centralModule.saveBid(*msg, name);
 
   if (!successful) {
     ROS_DEBUG_STREAM("Segment bid ignored from "<<name.c_str()<<" (OLD)");
@@ -527,11 +527,11 @@ int main(int argc, char* argv[]) {
   miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
   gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
-  segmentAuctionPub = n.advertise<pgmappingcooperativo::SegmentAuction>("/segment_auction", 1);
+  auctionPub        = n.advertise<pgmappingcooperativo::Auction>("/auction", 1);
 
   // Initilize Subscribers
   mapMergedSub       = n.subscribe<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
-  endSub              = n.subscribe("/end", 1, endCallBack);
+  endSub             = n.subscribe("/end", 1, endCallBack);
   requestObjetiveSub = n.subscribe<std_msgs::String>("/request_objetive", 1, &requestObjectiveCallBack);
 
   // Initilize Publishers/Subscribers for each robot
@@ -564,8 +564,8 @@ int main(int argc, char* argv[]) {
       string topicName = publishedTopic.name;                                  // name = "/robot_name/..."
       string robotName = topicName.erase(0, 1).substr(0, topicName.find('/')); // name = "robot_name"
 
-      segmentBidSubs[robotName] = n.subscribe<pgmappingcooperativo::SegmentBid>("/"+robotName+"/segment_bid", 1, boost::bind(&segmentBidCallBack, _1, robotName));
-      segmentAssignmentPubs[robotName] = n.advertise<pgmappingcooperativo::SegmentAssignment>("/"+robotName+"/segment_assigment", 1);
+      bidSubs[robotName] = n.subscribe<pgmappingcooperativo::Bid>("/"+robotName+"/bid", 1, boost::bind(&bidCallBack, _1, robotName));
+      AssignmentPubs[robotName] = n.advertise<pgmappingcooperativo::Assignment>("/"+robotName+"/assigment", 1);
 
       ROS_DEBUG_STREAM("Extracted `robot_name = "<<robotName<<"` from `topic_name = "<<publishedTopic.name<<"`");
     }

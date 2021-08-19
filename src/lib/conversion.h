@@ -3,8 +3,8 @@
 #include "../lib/GVD/src/Gvd.h"
 #include "../lib/GVD/src/data/Vector2.h"
 #include <pgmappingcooperativo/Point2D.h>
-#include <pgmappingcooperativo/SegmentAuction.h>
 #include <pgmappingcooperativo/SegmentBid.h>
+#include <pgmappingcooperativo/Graph.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <boost/unordered/unordered_set_fwd.hpp>
 #include <utility>
@@ -110,9 +110,9 @@ inline Int toInt(Point p, int indice_origen, int width){
  return indice_origen + (((int)p.x) + ((int)p.y) * width);
 }
 
-/////////
-// Pos //
-/////////
+/////////////////////////////
+// Pos: GVD/src/data/Pos.h //
+/////////////////////////////
 
 inline Pos toPos(Point2D p2d){
   Pos p;
@@ -133,9 +133,17 @@ inline Pos toPos(Point p3d){
   return Pos(p3d.x,p3d.y);
 }
 
-///////////////
-// StateGrid //
-///////////////
+inline PosSet toPosSet(vector<Point2D> ps){
+  PosSet res;
+  for( Point2D p : ps ){
+    res.insert(toPos(p));
+  }
+  return res;
+}
+
+/////////////////////////////
+// StateGrid GVD/src/Map.h //
+/////////////////////////////
 
 // get stateGrid from occupancy grid, set the known cells count on the count attribute 
 inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, 
@@ -178,3 +186,24 @@ inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og,
   return stateGrid;
 }
 
+/////////////////////////////////
+// Graph: GVD/src/data/Graph.h //
+/////////////////////////////////
+
+template <typename Graph>
+inline Graph toGraph(pgmappingcooperativo::Graph gMsg) {
+  Graph g;
+
+  for (Point2D vPoint2D : gMsg.vertices) {
+    Pos vPos = toPos(vPoint2D);
+    g.addV(vPos);
+  }
+
+  for (int i = 0; i < gMsg.edges.size(); i++) {
+    Pos from_p = toPos(gMsg.edges[i].from);
+    Pos to_p = toPos(gMsg.edges[i].to);
+    g.addE(g.idVertexMap[from_p], g.idVertexMap[to_p], from_p.distanceTo(to_p));
+  }
+
+  return g;
+}

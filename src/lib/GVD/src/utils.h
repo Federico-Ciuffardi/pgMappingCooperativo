@@ -169,6 +169,10 @@ template <typename K, typename T>
 inline bool is_elem(K e, boost::unordered_map<K, T>& m) {
   return m.find(e) != m.end();
 }
+template <typename K, typename T>
+inline bool is_elem(T e, boost::unordered_map<K, boost::unordered_set<T>>& m, K k) {
+  return is_elem(k,m) && is_elem(e,m[k]);
+}
 
 // map
 template <typename K, typename T>

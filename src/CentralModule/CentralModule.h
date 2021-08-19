@@ -9,8 +9,9 @@
 #include <pgmappingcooperativo/infoCentro.h>
 #include <pgmappingcooperativo/mapMergedInfo.h>
 #include <pgmappingcooperativo/takeobjetive.h>
-#include <pgmappingcooperativo/SegmentAuction.h>
-#include <pgmappingcooperativo/SegmentAssignment.h>
+#include <pgmappingcooperativo/Auction.h>
+#include <pgmappingcooperativo/Bid.h>
+#include <pgmappingcooperativo/Assignment.h>
 
 #include <iostream>
 #include <list>
@@ -22,13 +23,16 @@
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/RvizHelper.h"
-#include "../lib/auction.h"
+#include "../lib/Auctioneer.h"
 #include "../lib/graph/gnuplot.h"
 
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
 vector<Pos> embed(vector<Pos> from, vector<Pos> to);
 
-enum centralMouleState { WaitingAuction = 1, WaitingBids = 2,WaitingFirstBid=3,Resolving = 4 };
+enum centralMouleState { WaitingAuction = 1, WaitingBids = 2, WaitingFirstBid=3, Resolving = 4 };
+
+typedef string RobotId;
+typedef int    SegmentId;
 
 class CentralModule {
  public:
@@ -59,8 +63,8 @@ class CentralModule {
 
   // state
   centralMouleState state;
-  int segmentAuctionId;
-  int segmentAssignmentId;
+  int auctionId;
+  int assignmentId;
 
   // Map related
   StateGrid stateGrid;
@@ -70,11 +74,10 @@ class CentralModule {
   vector<int> frontierCenters;
   ConnectedComponents* frontierConComps = NULL;
 
-  // Segment auction related
+  // Auction related
+  Auctioneer<RobotId, SegmentId, Pos> auctioneer;
+  boost::unordered_map<SegmentId,boost::unordered_set<Pos>> segmentsWithFrontiers;
   CriticalInfos cis;
-  bids_priority_queue bidsPQ;
-  boost::unordered_map<Pos,int> auctionSegmentFrontiersNum;
-  boost::unordered_set<string> auctionRobots;
 
   ///////////////
   // Functions //
@@ -89,9 +92,9 @@ class CentralModule {
   // map related
   nav_msgs::OccupancyGrid occupancyGrid;
 
-  // auction related
+  // Auction related
   TopoMap* topoMap = NULL;
-  boost::unordered_map<string,boost::unordered_map<Pos,float>> segmentBids;
+  boost::unordered_map<RobotId,boost::unordered_map<Pos,Float>> bids;
 
   //log related
   int cellCount = 0;
@@ -117,9 +120,9 @@ class CentralModule {
 
   // Other
   void updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr&);
-  pgmappingcooperativo::SegmentAuction getSegmentAuctionInfo();
-  boost::unordered_map<string,pgmappingcooperativo::SegmentAssignment> assignSegment();
-  bool saveSegmentBid( pgmappingcooperativo::SegmentBid msg, string name);
+  pgmappingcooperativo::Auction getAuctionInfo();
+  boost::unordered_map<string,pgmappingcooperativo::Assignment> assign();
+  bool saveBid(pgmappingcooperativo::Bid, RobotId);
 
   // Destructor
   ~CentralModule();

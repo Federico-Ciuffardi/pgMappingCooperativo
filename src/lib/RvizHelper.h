@@ -8,8 +8,6 @@
 
 #include <visualization_msgs/Marker.h>
 #include <pgmappingcooperativo/Point2D.h>
-#include <pgmappingcooperativo/SegmentAuction.h>
-#include <pgmappingcooperativo/SegmentBid.h>
 #include <nav_msgs/OccupancyGrid.h>
 
 //////////////////////////
