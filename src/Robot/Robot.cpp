@@ -44,7 +44,7 @@ void Robot::savePose(const geometry_msgs::Pose msg) {
   position.y = msg.position.y;
 }
 
-// Generates a path from each p in posSet to the graph that complies with the 
+// Generates a connection from each p in posSet to the graph that complies with the 
 // traversability stablished on the stateGrid.
 //
 // Returns the set of points from where the graph is accesible. 
@@ -54,7 +54,7 @@ void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid)
   }
 }
 
-// Generates a path from p to the graph that complies with the traversability stablished
+// Generates a connection from p to the graph that complies with the traversability stablished
 // on the stateGrid.
 //
 // Returns true if graph is accesible from p and false otherwise 
@@ -66,60 +66,75 @@ bool Robot::addToGraph(Pos p, GvdVecGraph& graph, StateGrid& stateGrid ) {
   boost::tie(predecessor, connection) = graph.findPath(p, stateGrid, {Unknown, Occupied});
 
   Pos currPos = connection;
+  GvdVecGraph::Vertex currVertex = gvd.idVertexMap[currPos];
+
+  if(currPos == NULL_POS){
+    ROS_INFO("No path to graph.");
+    return false;
+  }
 
   do{
-    if(currPos == NULL_POS){
-      ROS_INFO("No path to graph.");
-      return false;
-    }
-
+    // get the next position in the path from the graph to p
     Pos nextPos = predecessor[currPos];
 
-    if(currPos==nextPos){
+    // check for errors
+    if(nextPos == NULL_POS){
+      ROS_INFO("NULL_POS in the middle of a path to the graph. This is a Bug, halting execution.");
+      exit(1);
+    }
+
+    if(currPos == nextPos){
       cout<<"Loop on path to graph. This is a Bug, halting execution."<<endl;
       exit(1);
     }
 
     // add vertex to graph
-    GvdVecGraph::Vertex nextV;
+    GvdVecGraph::Vertex nextVertex;
     bool inserted;
-    boost::tie(nextV, inserted) = gvd.addV(nextPos);
-    gvd[nextV].segment = gvd[connection].segment;
+    boost::tie(nextVertex, inserted) = gvd.addV(nextPos);
 
     // add edge to graph
     float d = currPos.distanceTo(nextPos);
-    GvdVecGraph::Edge e;
-    boost::tie(e, inserted) = gvd.addE(gvd.idVertexMap[currPos], nextV, d);
-    boost::tie(e, inserted) = gvd.addE(nextV, gvd.idVertexMap[currPos], d);
+    gvd.addE(currVertex, nextVertex, d);
+    gvd.addE(nextVertex, currVertex, d);
 
+    // update for the next loop
+    currVertex = nextVertex;
     currPos = nextPos;
+
   } while (p != currPos);
 
   return true;
 }
 
 pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
-  // Get the current Robot pos on the occupancy map frame
-  Pos robotPos = getGVDPos();
-
-  // turn msg Graph to GVD lib Graph
+  // turn rosmsg Graph to GVD lib Graph
   gvd = toGraph<GvdVecGraph>(msg.gvd);
 
-  // Process occupancy grid (get offset and turn to stateGrid)
-  StateGrid  stateGrid = toStateGrid(map_merged.mapa);
+  // Convert the occupancy grid into stateGrid
+  StateGrid stateGrid = toStateGrid(map_merged.mapa);
 
-  // add the robot to the gvd
+  // Robot position
+  /// Get the current Robot pos on the occupancy map frame
+  Pos robotPos = getGVDPos();
+
+  /// add the robot to the gvd (if this is not possible, then add the robot as
+  /// the only vertex in the GVD, this is necesary due to the navigation taking
+  /// place on the GVD)
   cout<<"Add robotPos to graph"<<endl;
-  addToGraph(robotPos, gvd, stateGrid);
+  if(!addToGraph(robotPos, gvd, stateGrid)){
+    gvd.addV(robotPos);
+  }
 
-  // convert vector<Point2D> forntiers to PosSet
+  // Frontiers
+  /// convert vector<Point2D> forntiers to PosSet
   PosSet frontiers = toPosSet(msg.frontiers);
 
-  // add the frontiers to the gvd
+  /// add the frontiers to the gvd
   cout<<"Add frontiers to graph"<<endl;
   addToGraph(frontiers, gvd, stateGrid);
 
-  // visuzlize map on std output
+  // DEBUG: visuzlize map on std output
   /* stateGrid[robotPos] = Critical; */
   /* for( auto it : gvd.idVertexMap){ */
   /*   Pos vPos = it.first; */
@@ -132,11 +147,14 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
 
   // get the path from the robotPos to each frontier in frontiers
   boost::tie(paths, pathCosts) = gvd.getMultiPath(robotPos, frontiers);
-  cout<<"Path costs: "<<pathCosts<<endl;
+  cout<<"Calculated path costs: "<<pathCosts<<endl;
 
   // Construct bid rosmsg 
   pgmappingcooperativo::Bid bid;
-  for (Pos frontier : frontiers) {
+  for (auto &it : pathCosts) {
+    Pos frontier = it.first; 
+    Float cost = it.second;
+
     bid.frontiers.push_back(toPoint2D(frontier));
     bid.values.push_back(pathCosts[frontier]);
   }
@@ -159,7 +177,7 @@ pgmappingcooperativo::goalList Robot::getPathTo(Pos frontier) {
   pgmappingcooperativo::goalList goalList;
 
   if (paths[frontier].size() == 0) {
-    ROS_WARN("Empty path to frontier!");
+    ROS_WARN("Empty path!");
     return goalList;
   }
 

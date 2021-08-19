@@ -67,8 +67,6 @@ float layerSeparation = 0.175;
 void publishPath(Pos frontier) {
   f = frontier;
   path = robot.getPathTo(frontier);
-  cout<<"Current pos: "<<robot.getGVDPos()<<endl;
-  cout<<"Path to "<<frontier<<": "<<path<<endl;
 
   // draw objective
   visualization_msgs::Marker::_points_type points;
