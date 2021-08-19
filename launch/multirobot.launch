@@ -42,6 +42,10 @@
   <arg name="file_log_level" default="2" /> 
   <param name="file_log_level" type="int" value="$(arg file_log_level)" />  
 
+  <!-- # CentralModule Check '../src/CentralModule/CentralModule.h' for help (has defaults values on said file that can be overridden by the ros params)-->
+  <!-- <arg name="frontier_simplification_method" default="1" /> --> 
+  <!-- <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" /> -->  
+
   <!-- # GVD lib config. Check '../src/lib/GVD/src/config.h' for help (has defaults values on said file that can be overridden by the ros params) -->
 
   <!-- <arg name="gvd_connectivity_method" default="0" /> -->
