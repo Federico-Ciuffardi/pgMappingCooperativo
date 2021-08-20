@@ -108,7 +108,7 @@ inline Int toInt(Pos p, Int width){
 }
 
 inline Int toInt(Point p, int indice_origen, int width){
- return indice_origen + (((int)p.x) + ((int)p.y) * width);
+ return indice_origen + p.x + p.y * width;
 }
 
 /////////////////////////////

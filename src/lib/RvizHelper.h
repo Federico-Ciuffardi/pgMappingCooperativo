@@ -50,7 +50,6 @@ inline geometry_msgs::Quaternion makeQuaternion(float x, float y, float z, float
 ////////////////
 // Conversion //
 ////////////////
-
 inline geometry_msgs::Point toMarkerPoint(Pos p, mapInfoType mapInfo){
   geometry_msgs::Point p3d;
   p3d.x = (p.x + 0.5) * mapInfo.resolution + mapInfo.origin.position.x;

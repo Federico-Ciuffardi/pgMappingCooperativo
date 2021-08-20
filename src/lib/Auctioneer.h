@@ -38,11 +38,13 @@ class Auctioneer{
 
   BidPriorityQueue bidPriorityQueue;
   boost::unordered_set<string> remainingBidders;
+  boost::unordered_map<ItemId,boost::unordered_set<SubItemId>> remainingItemSubItems;
 
  public:
   void addBid(BidderId bidderId, ItemId itemId, SubItemId subItemId, Float value){
     remainingBidders.insert(bidderId);
     bidPriorityQueue.push(Bid(bidderId, itemId, subItemId, value));
+    remainingItemSubItems[itemId].insert(subItemId);
   }
 
   // Returns the assignments (bidders -> subItems) corresponding to the closest distribution to the uniform distribution that satisfies the restriction:
@@ -58,7 +60,7 @@ class Auctioneer{
   //
   // Resets all the information regarding the action to resolve including the parameter remainingItemSubItems
 
-  boost::unordered_map<BidderId, SubItemId> resolveAuction(boost::unordered_map<ItemId,boost::unordered_set<SubItemId>>& remainingItemSubItems){
+  boost::unordered_map<BidderId, SubItemId> resolveAuction(){
     // PART 1: calculate n
 
     /// Construct itemCapacityPQ (PQ of the subItem number of each item in ascending order)
@@ -115,7 +117,7 @@ class Auctioneer{
 
     /// while(bids remaining && bidders to assigned && items with subItems to assign){
     ///
-    /// `remainingItemSubItems.empty()` corresponds to: are there segments with remaining boundaries to be assigned?.
+    /// `remainingItemSubItems.empty()` corresponds to: are there items with remaining subItem to be assigned?.
     /// Meaning in remainingItemSubItems there are no idItems mapped to a empty subItemIds set.
     while (!remainingBidders.empty() && !remainingItemSubItems.empty()){ // !bidPriorityQueue.empty() &&  
       Bid bid = bidPriorityQueue.top();
@@ -170,7 +172,7 @@ class Auctioneer{
     }
 
     // DEBUG
-    /* cout<<"Assignments"<<endl; */
+    /* cout<<"Assignments: "<<endl; */
     /* cout<<assignments<<endl; */
 
     // Reset auction data

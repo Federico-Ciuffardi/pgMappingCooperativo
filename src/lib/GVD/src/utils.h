@@ -4,6 +4,10 @@
 #include <boost/unordered_set.hpp>
 #include "data/Pos.h"
 
+
+// improved assert
+#define FAIL(cause) { std::cerr << "FAIL: " << #cause << " @ " << __FILE__ << " (" << __LINE__ << ")" << std::endl; exit(1);  }
+
 using namespace std;
 
 /////////////////////////
@@ -214,6 +218,29 @@ inline bool is_elem(T e,vector<T> v) {
 template<typename T, typename F>
 inline void filter(vector<T> &collection, F f){
     collection.erase(remove_if(collection.begin(), collection.end(), f), collection.end());
+}
+
+template<typename T, typename F>
+inline void filter(boost::unordered_set<T> &collection, F f){
+  for(auto it = collection.begin(); it != collection.end();) {
+    if (f(*it)) {
+      it = collection.erase(it++); 
+    } else {
+      ++it;  
+    }
+  }
+}
+
+// map (untested)
+template<typename T, typename K, typename F>
+inline void filter(boost::unordered_map<K,T> &map, F f){
+  for(auto it = map.begin(); it != map.end();) {
+    if (f((*it).first, (*it).second)) {
+      it = map.erase(it++); 
+    } else {
+      ++it;  
+    }
+  }
 }
 
 ////

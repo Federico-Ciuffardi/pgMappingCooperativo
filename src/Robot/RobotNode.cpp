@@ -59,10 +59,20 @@ bool first_frontier = true;
 Pos last_frontier;
 Pos current_frontier;
 
+////////////////
+// Rviz marks //
+////////////////
+
+float cubeHeight = 0.02;
+float layerSeparation = 0.175; // Height difference between to layers of marks 
+                               // used to draw some marks in front of others
+
+unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
+
+float cellSize = 1;
 ///////////////////
 // Aux Functions //
 ///////////////////
-float layerSeparation = 0.175;
 
 void publishPath(Pos frontier) {
   f = frontier;
@@ -107,6 +117,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   ps.pose = odom->pose.pose;
 
   pose_pub.publish(ps);
+
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
@@ -163,6 +174,20 @@ void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
   ROS_INFO("%s :: Sending my bids", robot.getNombre().c_str());
   segment_bid.id = msg->id;
   segment_bid_pub.publish(segment_bid);
+
+  rvizHelper.topic = &marker_pub;
+
+  RvizHelper::MarkerPoints posMarkerPoint;
+  posMarkerPoint.push_back(toMarkerPoint(robot.getGVDPos(), robot.map_merged.mapa.info));
+
+  rvizHelper.color    = makeColorRGBA(0.75);
+  rvizHelper.type     = cellMarkerType;
+  rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.position = makeVector3(0,0,layerSeparation);
+  rvizHelper.mark(posMarkerPoint, "gvd_edges");
+
+  rvizHelper.mark(posMarkerPoint, robot.getNombre() + "pos");
+
 }
 
 boost::unordered_map<int, pgmappingcooperativo::FrontierBid> frontierBids;

@@ -25,8 +25,15 @@ geometry_msgs::Point Robot::getPosition() {
 Pos Robot::getGVDPos() {
   geometry_msgs::Point p3d = getPosition();
 
-  // Pos adjustment(signo((int)position.x), 0);
-  Pos adjustment(0, 0);
+  Pos adjustment;
+
+  if(p3d.x < 0){
+    adjustment.x = -1;
+  }
+
+  if(p3d.y < 0){
+    adjustment.y = -1;
+  }
 
   return toPos(p3d) - getOffset() + adjustment;
 }
@@ -69,7 +76,7 @@ bool Robot::addToGraph(Pos p, GvdVecGraph& graph, StateGrid& stateGrid ) {
   GvdVecGraph::Vertex currVertex = gvd.idVertexMap[currPos];
 
   if(currPos == NULL_POS){
-    ROS_INFO("No path to graph.");
+    /* cout<<"No path from "<<p<<" to the graph"<<endl; // DEGUG */
     return false;
   }
 
@@ -79,13 +86,11 @@ bool Robot::addToGraph(Pos p, GvdVecGraph& graph, StateGrid& stateGrid ) {
 
     // check for errors
     if(nextPos == NULL_POS){
-      ROS_INFO("NULL_POS in the middle of a path to the graph. This is a Bug, halting execution.");
-      exit(1);
+      FAIL("NULL_POS in the middle of a path to the graph. This is a Bug, halting execution.");
     }
 
     if(currPos == nextPos){
-      cout<<"Loop on path to graph. This is a Bug, halting execution."<<endl;
-      exit(1);
+      FAIL("Loop on path to graph. This is a Bug, halting execution.");
     }
 
     // add vertex to graph
@@ -121,7 +126,6 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
   /// place on the GVD)
-  cout<<"Add robotPos to graph"<<endl;
   if(!addToGraph(robotPos, gvd, stateGrid)){
     gvd.addV(robotPos);
   }
@@ -131,7 +135,6 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
   PosSet frontiers = toPosSet(msg.frontiers);
 
   /// add the frontiers to the gvd
-  cout<<"Add frontiers to graph"<<endl;
   addToGraph(frontiers, gvd, stateGrid);
 
   // DEBUG: visuzlize map on std output
@@ -147,7 +150,7 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
 
   // get the path from the robotPos to each frontier in frontiers
   boost::tie(paths, pathCosts) = gvd.getMultiPath(robotPos, frontiers);
-  cout<<"Calculated path costs: "<<pathCosts<<endl;
+  /* cout<<"Calculated path costs: "<<pathCosts<<endl; //DEBUG */
 
   // Construct bid rosmsg 
   pgmappingcooperativo::Bid bid;
@@ -175,6 +178,10 @@ int Robot::getRobotId() {
 
 pgmappingcooperativo::goalList Robot::getPathTo(Pos frontier) {
   pgmappingcooperativo::goalList goalList;
+
+  if(!is_elem(frontier,paths)){
+    FAIL("No path to assigned objective. This is a bug, halting execution");
+  }
 
   if (paths[frontier].size() == 0) {
     ROS_WARN("Empty path!");

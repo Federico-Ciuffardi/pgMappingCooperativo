@@ -88,17 +88,9 @@ pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
   }
   topoMap->update();
 
-  GvdGraph& gvd = *(topoMap->gvd->graphGvd);
-
-  for(auto it : topoMap->segmenter->connectedComponents){
-    SegmentId segmentId = it.first;
-    PosSet frontiers = it.second.typeMembers[Frontier];
-    if(!frontiers.empty()){
-      segmentsWithFrontiers[segmentId] = frontiers;
-    }
-  }
 
   // Turn the boost GVD to a ros message
+  GvdGraph& gvd = *(topoMap->gvd->graphGvd);
   cout << "debug :: gvd to rosmsg" << endl;
   for (GvdGraph::Vertex v : gvd) {
     auctionInfo.gvd.vertices.push_back(toPoint2D(gvd.g[v].p));
@@ -112,16 +104,15 @@ pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
   }
 
   // Turn the segment and frontiers info into a ros message
-  cout << "debug :: cis to rosmsg" << endl;
-   for (auto it : segmentsWithFrontiers) {
-     SegmentId segmentId = it.first;
-     PosSet frontiers = it.second;
- 
-     for (Pos frontier : frontiers) {
-       auctionInfo.frontiers.push_back(toPoint2D(frontier));
-       auctionInfo.frontiers_segment.push_back(segmentId);
-     }
-   }
+  cout << "debug :: turn segments and frontiers to rosmsg" << endl;
+  for (auto it : topoMap->segmenter->connectedComponents) {
+    SegmentId segmentId = it.first;
+    PosSet frontiers = it.second.typeMembers[Frontier];
+
+    for (Pos frontier : frontiers) {
+      auctionInfo.frontiers.push_back(toPoint2D(frontier));
+    }
+  }
   auctionInfo.id = auctionId;
 
   // Increment the auction ID as a new auction will begin
@@ -152,7 +143,7 @@ bool CentralModule::saveBid(pgmappingcooperativo::Bid bid, RobotId robotId) {
 // Resolve the auction given the current bids
 boost::unordered_map<string, pgmappingcooperativo::Assignment> CentralModule::assign() {
   // Resolve the auction
-  boost::unordered_map<RobotId, Pos> resolution = auctioneer.resolveAuction(segmentsWithFrontiers);
+  boost::unordered_map<RobotId, Pos> resolution = auctioneer.resolveAuction();
 
   // Process the auction resolution and bundle it as a ros message
   boost::unordered_map<string, pgmappingcooperativo::Assignment> resolutionRosMessages;

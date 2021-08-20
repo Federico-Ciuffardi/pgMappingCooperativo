@@ -478,13 +478,22 @@ struct PosGraph : public Graph<graph,Pos> {
   //// get the shortestpath and the cost of reaching the goal
   boost::tuple<boost::unordered_map<Pos, list<Vertex>>, boost::unordered_map<Pos, float>>
   getMultiPath(Pos start, PosSet goals) {
-    vector<Vertex> p(num_vertices(this->g));
-    vector<float> d(num_vertices(this->g));
+
+    filter(goals,[this](Pos goal){
+                   return !is_elem(goal, this->idVertexMap);
+                 });
+
     boost::unordered_map<Pos, list<Vertex>> shortest_paths;
     boost::unordered_map<Pos, float> shortest_paths_costs;
+
+    vector<Vertex> p(num_vertices(this->g));
+    vector<float>  d(num_vertices(this->g));
+
+    Vertex startVertex = this->idVertexMap[start];
+
     try {
       // call astar named parameter interface
-      astar_search_tree(this->g, this->idVertexMap[start],
+      astar_search_tree(this->g, startVertex,
                         multi_astar_distance_heuristic<GraphType, float>(this->g, goals),
                         predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, this->g)))
                             .distance_map(make_iterator_property_map(d.begin(), get(vertex_index, this->g)))
@@ -501,6 +510,7 @@ struct PosGraph : public Graph<graph,Pos> {
       }
 
       if(!shortest_path.empty()){
+        shortest_path.push_front(startVertex);
         shortest_paths[goal] = shortest_path;
         shortest_paths_costs[goal] = d[goalVertex];
       }

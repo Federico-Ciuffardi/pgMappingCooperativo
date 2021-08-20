@@ -76,7 +76,6 @@ class CentralModule {
 
   // Auction related
   Auctioneer<RobotId, SegmentId, Pos> auctioneer;
-  boost::unordered_map<SegmentId,boost::unordered_set<Pos>> segmentsWithFrontiers;
   CriticalInfos cis;
 
   ///////////////
