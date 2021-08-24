@@ -20,6 +20,30 @@ int auctionStartTimeoutMode = -1;
 /// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
 float mapUpdateDelay = 2;
 
+
+// Rviz params
+
+/// Markers used to represent cells
+unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
+
+/// Markers dimensions
+float cubeHeight = 0.02;
+
+/// Layers (planes orthogonal to the z axis)
+//// Separation between each layer
+float layerSeparation = cubeHeight;
+
+//// Assign markers to layers
+float frontierZ      = 5*layerSeparation;
+
+float gvdVertexZ     = 4*layerSeparation;
+
+float criticalPointZ = 3*layerSeparation;
+
+float gvdEdgeZ       = 2*layerSeparation;
+
+float criticalLineZ  = 1*layerSeparation;
+
 ///////////////
 // Variables //
 ///////////////
@@ -35,7 +59,6 @@ ros::Subscriber requestObjetiveSub;
 /// Publishers
 ros::Publisher takeObjPub;
 ros::Publisher objetivePub;
-ros::Publisher objPub;
 ros::Publisher miscMarkerPub;
 ros::Publisher gvdMarkerPub;
 ros::Publisher topoMapMarkerPub;
@@ -53,7 +76,6 @@ ros::Timer auctionStartTimeoutTimer;
 ros::Duration auctionStartTimeout;
 
 // others
-
 CentralModule centralModule;
 RvizHelper rvizHelper;
 
@@ -61,8 +83,6 @@ int succesfulBids  = 0;
 int assignedRobots = 0;
 int expectedRobots = 0;
 int requests       = 0;
-
-bool endFlag = false;
 
 ros::Time lastAuctionStart;
 ros::Time lastGvdStart;
@@ -81,12 +101,6 @@ string coverageFileLog;
 // Rviz marks //
 ////////////////
 
-float cubeHeight = 0.02;
-float layerSeparation = 0.175; // Height difference between to layers of marks 
-                               // used to draw some marks in front of others
-
-unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
-
 // Publishes marks to be visualized on rviz 
 void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   // Gvd
@@ -100,15 +114,15 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   }
   rvizHelper.color    = BLUE;
   rvizHelper.type     = RvizHelper::LINE_LIST;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.2, centralModule.cellSize, 1);
-  rvizHelper.position = makeVector3(0,0,3*layerSeparation);
+  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.25, centralModule.cellSize, 1);
+  rvizHelper.position = makeVector3(0,0,gvdEdgeZ);
   rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
 
   /// mark vertices
   rvizHelper.color    = BLUE;
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
-  rvizHelper.position = makeVector3(0,0,1*layerSeparation);
+  rvizHelper.position = makeVector3(0,0,gvdVertexZ);
   rvizHelper.mark(toVecPoint3D(sac.gvd.vertices, mapInfo), "gvd_vertices");
 
   // Topological map
@@ -172,12 +186,12 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
 
-  rvizHelper.color    = CYAN;
-  rvizHelper.position = makeVector3(0,0,2*layerSeparation);
+  rvizHelper.color    = YELLOW;
+  rvizHelper.position = makeVector3(0,0,criticalPointZ);
   rvizHelper.mark(criticalMarkerPoints, "critical_vertices");
 
   rvizHelper.color    = makeColorRGBA(0.9); // light gray
-  rvizHelper.position = makeVector3(0,0,layerSeparation);
+  rvizHelper.position = makeVector3(0,0,criticalLineZ);
   rvizHelper.mark(criticalLinesMarkerPoints, "critical_lines");
 
   // misc
@@ -187,7 +201,7 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   rvizHelper.color    = GREEN;
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(centralModule.cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
-  rvizHelper.position = makeVector3(0,0,layerSeparation);
+  rvizHelper.position = makeVector3(0,0,frontierZ);
   rvizHelper.mark(frontierMarkerPoints, "frontiers");
 }
 
@@ -443,7 +457,7 @@ void bidCallBack(const pgmappingcooperativo::BidConstPtr& msg, string name) {
 }
 
 void endCallBack(const std_msgs::StringConstPtr& msg) {
-  endFlag = msg->data.compare(endMsg) == 0;
+  bool endFlag = msg->data.compare(endMsg) == 0;
 
   if (!endFlag) return;
 
@@ -480,9 +494,9 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
 
 int main(int argc, char* argv[]) {
   // Change log level to debug
-  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
-     ros::console::notifyLoggerLevelsChanged();
-  }
+  /* if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { */
+  /*    ros::console::notifyLoggerLevelsChanged(); */
+  /* } */
 
   // Init node
   ros::init(argc, argv, "central_module");
@@ -523,7 +537,6 @@ int main(int argc, char* argv[]) {
   // Initilize Publishers
   takeObjPub        = n.advertise<pgmappingcooperativo::takeobjetive>("/take_obj", 1);
   objetivePub       = n.advertise<pgmappingcooperativo::asignacion>("/objetive", 1);
-  objPub            = n.advertise<nav_msgs::OccupancyGrid>("/debbi", 1);
   miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
   gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
@@ -571,8 +584,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  // spin
   ROS_INFO_STREAM("Initilized");
-
   ros::spin();
 
   return 0;
