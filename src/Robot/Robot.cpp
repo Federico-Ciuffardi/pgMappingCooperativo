@@ -16,7 +16,7 @@ int Robot::getRobotId() {
 /////////
 // API //
 /////////
-pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
+Bid Robot::getBid(Auction msg) {
   // turn rosmsg Graph to GVD lib Graph
   gvd = toGraph<GvdVecGraph>(msg.gvd);
 
@@ -57,7 +57,7 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
   /* cout<<"Calculated path costs: "<<pathCosts<<endl; //DEBUG */
 
   // Construct bid rosmsg 
-  pgmappingcooperativo::Bid bid;
+  Bid bid;
   for (auto &it : pathCosts) {
     Pos frontier = it.first; 
     Float cost = it.second;
@@ -69,8 +69,8 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
   return bid;
 }
 
-pgmappingcooperativo::goalList Robot::getPathTo(Pos frontier) {
-  pgmappingcooperativo::goalList goalList;
+goalList Robot::getPathTo(Pos frontier) {
+  goalList goalList;
 
   if(!is_elem(frontier,paths)){
     FAIL("No path to assigned objective. This is a bug, halting execution");
@@ -84,7 +84,7 @@ pgmappingcooperativo::goalList Robot::getPathTo(Pos frontier) {
   goalList.indice = 1;  // TODO poner bien el indice
 
   for (GvdVecGraph::Vertex v : paths[frontier]) {
-    geometry_msgs::Point p3d = toPoint(gvd[v].p,map_merged.mapa.info);
+    Point p3d = toPoint(gvd[v].p,map_merged.mapa.info);
 
     goalList.listaGoals.push_back(p3d);
   }

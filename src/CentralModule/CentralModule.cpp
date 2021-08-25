@@ -35,7 +35,7 @@ void CentralModule::setNumRobots(int newNumRobots) {
 // API //
 /////////
 
-void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
+void CentralModule::updateMap(const mapMergedInfoConstPtr& newMap) {
   // store occGrid
   occupancyGrid = newMap->mapa;
 
@@ -45,7 +45,7 @@ void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr&
 }
 
 // Get the info to start an Auction
-pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
+Auction CentralModule::getAuctionInfo() {
   // Convert a occupancyGrid and a frontier list to a stateGrid
   cout << "debug :: convert a occupancyGrid and a frontier list to a stateGrid" << endl;
   stateGrid = toStateGrid(occupancyGrid, frontiers, &cellCount);
@@ -79,7 +79,7 @@ pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
   }
 
   // Construct the acution rosmsg
-  pgmappingcooperativo::Auction auctionInfo;
+  Auction auctionInfo;
 
   // Get the info for the auction (segments and frontiers), and the GVD as a subproduct
   cout << "debug :: gvd and cis" << endl;
@@ -96,7 +96,7 @@ pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
     auctionInfo.gvd.vertices.push_back(toPoint2D(gvd.g[v].p));
     auctionInfo.vertex_segment.push_back(toPoint2D(gvd.g[v].segment));
     for (GvdGraph::Vertex nv : gvd.adj(v)) {
-      pgmappingcooperativo::Edge e;
+      Edge e;
       e.from = toPoint2D(gvd.g[v].p);
       e.to = toPoint2D(gvd.g[nv].p);
       auctionInfo.gvd.edges.push_back(e);
@@ -124,7 +124,7 @@ pgmappingcooperativo::Auction CentralModule::getAuctionInfo() {
 
 // Save the bid of a robot (name) for an ongoing auction
 // Return true if the bid is valid (for the currently ongoing auction) and false otherwise
-bool CentralModule::saveBid(pgmappingcooperativo::Bid bid, RobotId robotId) {
+bool CentralModule::saveBid(Bid bid, RobotId robotId) {
   // skip if old
   if (assignmentId != bid.id)  return false; 
 
@@ -141,18 +141,18 @@ bool CentralModule::saveBid(pgmappingcooperativo::Bid bid, RobotId robotId) {
 }
 
 // Resolve the auction given the current bids
-boost::unordered_map<string, pgmappingcooperativo::Assignment> CentralModule::assign() {
+boost::unordered_map<string, Assignment> CentralModule::assign() {
   // Resolve the auction
   boost::unordered_map<RobotId, Pos> resolution = auctioneer.resolveAuction();
 
   // Process the auction resolution and bundle it as a ros message
-  boost::unordered_map<string, pgmappingcooperativo::Assignment> resolutionRosMessages;
+  boost::unordered_map<string, Assignment> resolutionRosMessages;
 
   for (auto it : resolution) {
     RobotId robotId = it.first;
     Pos frontier = it.second;
 
-    pgmappingcooperativo::Assignment assignment;
+    Assignment assignment;
     assignment.id = assignmentId;
     assignment.frontier = toPoint2D(frontier);
 

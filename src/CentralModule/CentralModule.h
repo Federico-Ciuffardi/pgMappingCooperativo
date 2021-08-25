@@ -117,10 +117,10 @@ class CentralModule {
   nav_msgs::OccupancyGrid getMap();
 
   // API 
-  void updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr&);
-  pgmappingcooperativo::Auction getAuctionInfo();
-  boost::unordered_map<string,pgmappingcooperativo::Assignment> assign();
-  bool saveBid(pgmappingcooperativo::Bid, RobotId);
+  void updateMap(const mapMergedInfoConstPtr&);
+  Auction getAuctionInfo();
+  boost::unordered_map<string,Assignment> assign();
+  bool saveBid(Bid, RobotId);
 
   // Destructor
   ~CentralModule();

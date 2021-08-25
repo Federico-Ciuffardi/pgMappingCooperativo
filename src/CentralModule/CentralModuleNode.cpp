@@ -99,7 +99,7 @@ string coverageFileLog;
 ////////////////
 
 // Publishes marks to be visualized on rviz 
-void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
+void setRvizMarks(Auction sac, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -147,17 +147,17 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
     rvizHelper.color    = getColor(id);
 
     RvizHelper::MarkerPoints segmentMarkerPoints;
-    for (geometry_msgs::Point p : toMarkerPoint(segment.members, mapInfo)){ 
+    for (Point p : toMarkerPoint(segment.members, mapInfo)){ 
       float squareLength = cellSize*1.05;
       p.x += squareLength/2.0;
       p.y += squareLength/2.0;
-      geometry_msgs::Point uR = p;
+      Point uR = p;
       p.y -= squareLength;
-      geometry_msgs::Point lR = p;
+      Point lR = p;
       p.x -= squareLength;
-      geometry_msgs::Point lL = p;
+      Point lL = p;
       p.y += squareLength;
-      geometry_msgs::Point uL = p;
+      Point uL = p;
 
       segmentMarkerPoints.push_back(uL);
       segmentMarkerPoints.push_back(lL);
@@ -216,7 +216,7 @@ void startAuction() {
   ros::Duration lastGvdTime = gvdTime;
   lastGvdStart = ros::Time::now();
 
-  pgmappingcooperativo::Auction auction = centralModule.getAuctionInfo();
+  Auction auction = centralModule.getAuctionInfo();
 
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
@@ -284,7 +284,7 @@ void resolveAuction() {
   auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
   // Get the robot-segment assignment
-  boost::unordered_map<string, pgmappingcooperativo::Assignment> assignment = centralModule.assign();
+  boost::unordered_map<string, Assignment> assignment = centralModule.assign();
   expectedRobots = assignedRobots = assignment.size();
 
   // As the assignment was calculated a new auction can be started
@@ -298,7 +298,7 @@ void resolveAuction() {
   float minEstimatedTime = FLT_MAX; // min estimated task completion time
 
   for (auto it : assignment) {
-    pgmappingcooperativo::Assignment sa = it.second;
+    Assignment sa = it.second;
     string robot = it.first;
 
     // Let the robot know about it assigned segment
@@ -317,7 +317,7 @@ void resolveAuction() {
 
   /// Calculate the robots that are expected to complete the assigned task not long after the first auction request
   for (auto it : assignment) {
-    pgmappingcooperativo::Assignment sa = it.second;
+    Assignment sa = it.second;
     string robot = it.first;
 
     float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(sa.frontier)]) / (centralModule.robotSpeed));
@@ -367,7 +367,7 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 
 int maps = 0;
 bool first = true;
-void mapMergedCallBack(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
+void mapMergedCallBack(const mapMergedInfoConstPtr& msg) {
   centralModule.updateMap(msg);
   maps++;
   if (first && maps >= 15){
@@ -428,7 +428,7 @@ void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
   }
 }
 
-void bidCallBack(const pgmappingcooperativo::BidConstPtr& msg, string name) {
+void bidCallBack(const BidConstPtr& msg, string name) {
   if (!is_elem(centralModule.getState(), {WaitingFirstBid, WaitingBids})) return;
 
   bool successful = centralModule.saveBid(*msg, name);
@@ -537,10 +537,10 @@ int main(int argc, char* argv[]) {
   miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
   gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
-  auctionPub        = n.advertise<pgmappingcooperativo::Auction>("/auction", 1);
+  auctionPub        = n.advertise<Auction>("/auction", 1);
 
   // Initilize Subscribers
-  mapMergedSub       = n.subscribe<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  mapMergedSub       = n.subscribe<mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
   endSub             = n.subscribe("/end", 1, endCallBack);
   requestObjetiveSub = n.subscribe<std_msgs::String>("/request_objetive", 1, &requestObjectiveCallBack);
 
@@ -574,8 +574,8 @@ int main(int argc, char* argv[]) {
       string topicName = publishedTopic.name;                                  // name = "/robot_name/..."
       string robotName = topicName.erase(0, 1).substr(0, topicName.find('/')); // name = "robot_name"
 
-      bidSubs[robotName] = n.subscribe<pgmappingcooperativo::Bid>("/"+robotName+"/bid", 1, boost::bind(&bidCallBack, _1, robotName));
-      AssignmentPubs[robotName] = n.advertise<pgmappingcooperativo::Assignment>("/"+robotName+"/assigment", 1);
+      bidSubs[robotName] = n.subscribe<Bid>("/"+robotName+"/bid", 1, boost::bind(&bidCallBack, _1, robotName));
+      AssignmentPubs[robotName] = n.advertise<Assignment>("/"+robotName+"/assigment", 1);
 
       ROS_DEBUG_STREAM("Extracted `robot_name = "<<robotName<<"` from `topic_name = "<<publishedTopic.name<<"`");
     }

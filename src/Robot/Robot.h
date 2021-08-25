@@ -67,9 +67,9 @@ class Robot {
   string name;
   int lastAssignmentId = -1;
   int lastAuctionId = -1;
-  pgmappingcooperativo::mapMergedInfo map_merged;
+  mapMergedInfo map_merged;
   StateGrid grid;
-  geometry_msgs::Point position;
+  Point position;
 
   ///////////////
   // Functions //
@@ -82,8 +82,8 @@ class Robot {
   int getRobotId();
 
   // API
-  pgmappingcooperativo::Bid getBid(pgmappingcooperativo::Auction msg);
-  pgmappingcooperativo::goalList getPathTo(Pos p);
+  Bid getBid(Auction msg);
+  goalList getPathTo(Pos p);
 
   // Aux
   bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);

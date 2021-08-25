@@ -62,7 +62,7 @@ string endMsg("END");
 // Rviz marks //
 ////////////////
 
-void setPathRvizMarks(Robot &r, pgmappingcooperativo::goalList &path, mapInfoType mapInfo) {
+void setPathRvizMarks(Robot &r, goalList &path, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -99,7 +99,7 @@ void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
 
 void publishPath(Pos frontier) {
   // Get path
-  pgmappingcooperativo::goalList path = robot.getPathTo(frontier);
+  goalList path = robot.getPathTo(frontier);
 
   // Publish the path
   goalPath_pub.publish(path);
@@ -130,7 +130,7 @@ void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
   rvizHelper.deleteMark(robot.name + "_pos", 0);
 }
 
-void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
+void auctionCallBack(const AuctionConstPtr& msg) {
   // Validate
   if (robot.lastAuctionId >= msg->id) {
     ROS_INFO_STREAM("An old auction arrived: last_id >= id | "<<robot.lastAuctionId<<" >= "<<msg->id);
@@ -142,7 +142,7 @@ void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
   robot.lastAuctionId = msg->id;
 
   ROS_INFO("Calculate bids");
-  pgmappingcooperativo::Bid segment_bid = robot.getBid(*msg);
+  Bid segment_bid = robot.getBid(*msg);
 
   ROS_INFO("Publish bids");
   segment_bid.id = msg->id;
@@ -152,7 +152,7 @@ void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
   setPositionRvizMarks(robot, robot.map_merged.mapa.info);
 }
 
-void assignmentCallback(const pgmappingcooperativo::AssignmentConstPtr& msg) {
+void assignmentCallback(const AssignmentConstPtr& msg) {
   // Validate
   if (robot.lastAssignmentId >= msg->id) {
     ROS_INFO_STREAM("An old assingment arrived: last_id >= id | "<<robot.lastAssignmentId<<" >= "<<msg->id);
@@ -167,7 +167,7 @@ void assignmentCallback(const pgmappingcooperativo::AssignmentConstPtr& msg) {
   publishPath(toPos(msg->frontier));
 }
 
-void mapMergedCallBack(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
+void mapMergedCallBack(const mapMergedInfoConstPtr& msg) {
   robot.map_merged = (*msg);
 }
 
@@ -197,8 +197,8 @@ int main(int argc, char* argv[]) {
   robot.name = nameSpace.erase(0, 1);
 
   // Initilize Publishers
-  bid_pub      = n.advertise<pgmappingcooperativo::Bid>("bid", 1);
-  goalPath_pub         = n.advertise<pgmappingcooperativo::goalList>("goalPath", 1, true);
+  bid_pub              = n.advertise<Bid>("bid", 1);
+  goalPath_pub         = n.advertise<goalList>("goalPath", 1, true);
   request_objetive_pub = n.advertise<std_msgs::String>("/request_objetive", 1);
   marker_pub           = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
   auction_sub     = n.subscribe("/auction", 1, auctionCallBack);
   assignment_sub  = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
   path_result_sub = n.subscribe("path_result", 1, pathSucceedCallback);
-  map_merged_sub  = n.subscribe<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  map_merged_sub  = n.subscribe<mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
   end_sub         = n.subscribe("/end", 1, handleEnd);
 
   // spin

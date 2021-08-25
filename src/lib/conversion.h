@@ -15,9 +15,10 @@
 #include "utils.h"
 #include "nav_msgs/Odometry.h"
 
-typedef pgmappingcooperativo::Point2D Point2D;
+using namespace pgmappingcooperativo;
+using namespace geometry_msgs;
+
 typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
-typedef geometry_msgs::Point Point; 
 
 /////////////
 // Point2D //
@@ -94,8 +95,8 @@ inline Point toPoint(cv::Point2f ps){
     return p3d;
 }
 
-inline vector<Point> toVecPoint3D(vector<pgmappingcooperativo::Point2D> p2ds, mapInfoType mapInfo){
-  vector<geometry_msgs::Point> p3ds;
+inline vector<Point> toVecPoint3D(vector<Point2D> p2ds, mapInfoType mapInfo){
+  vector<Point> p3ds;
   for (Point2D c : p2ds) {
     p3ds.push_back(toPoint(c, mapInfo));
   }
@@ -106,8 +107,8 @@ inline vector<Point> toVecPoint3D(vector<pgmappingcooperativo::Point2D> p2ds, ma
 // PoseStamped //
 /////////////////
 
-inline geometry_msgs::PoseStamped toPoseStamped(nav_msgs::Odometry odom){
-  geometry_msgs::PoseStamped ps;
+inline PoseStamped toPoseStamped(nav_msgs::Odometry odom){
+  PoseStamped ps;
   ps.header = odom.header;
   ps.pose = odom.pose.pose;
   return ps;
