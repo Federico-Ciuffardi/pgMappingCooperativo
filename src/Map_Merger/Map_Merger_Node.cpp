@@ -45,13 +45,10 @@ void handleNewMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name) 
 }
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom, std::string name) {
-  geometry_msgs::PoseStamped ps;
-  ps.header = odom->header;
-  ps.pose = odom->pose.pose;
 
   // ROS_INFO(" Obtengo nueva pose de  %s", name.c_str());
   if (!FIN) {
-    map_merger.updatePose(ps, name);
+    map_merger.updatePose(toPoseStamped(*odom), name);
   }
   // ROS_INFO(" Nueva pose de %s agregada", name.c_str());
 }

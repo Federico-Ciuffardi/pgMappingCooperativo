@@ -31,9 +31,9 @@ void CentralModule::setNumRobots(int newNumRobots) {
   robotNumber = newNumRobots;
 };
 
-///////////
-// Other //
-///////////
+/////////
+// API //
+/////////
 
 void CentralModule::updateMap(const pgmappingcooperativo::mapMergedInfoConstPtr& newMap) {
   // store occGrid

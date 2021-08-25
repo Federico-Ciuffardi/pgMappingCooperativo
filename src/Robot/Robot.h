@@ -80,15 +80,13 @@ class Robot {
 
   // getters and setters
   int getRobotId();
-  void getGrid();
 
+  // API
   pgmappingcooperativo::Bid getBid(pgmappingcooperativo::Auction msg);
+  pgmappingcooperativo::goalList getPathTo(Pos p);
 
-
-  void savePose(const geometry_msgs::Pose msg);
-
+  // Aux
   bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);
   void addToGraph(PosSet&, GvdVecGraph& graph, StateGrid&);
 
-  pgmappingcooperativo::goalList getPathTo(Pos p);
 };

@@ -10,7 +10,10 @@
 #include <utility>
 #include "GVD/src/Map.h"
 #include "GVD/src/data/Pos.h"
+#include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "utils.h"
+#include "nav_msgs/Odometry.h"
 
 typedef pgmappingcooperativo::Point2D Point2D;
 typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
@@ -99,6 +102,17 @@ inline vector<Point> toVecPoint3D(vector<pgmappingcooperativo::Point2D> p2ds, ma
   return p3ds;
 }
 
+/////////////////
+// PoseStamped //
+/////////////////
+
+inline geometry_msgs::PoseStamped toPoseStamped(nav_msgs::Odometry odom){
+  geometry_msgs::PoseStamped ps;
+  ps.header = odom.header;
+  ps.pose = odom.pose.pose;
+  return ps;
+}
+
 /////////
 // Int //
 /////////
@@ -140,7 +154,6 @@ inline Pos toPos(Point p3d, mapInfoType mapInfo) {
 
   return toPos(p3d) - toPos(mapInfo.origin.position) + adjustment;
 }
-
 
 inline PosSet toPosSet(vector<Point2D> ps){
   PosSet res;

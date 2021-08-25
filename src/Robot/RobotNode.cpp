@@ -62,7 +62,7 @@ string endMsg("END");
 // Rviz marks //
 ////////////////
 
-void setRvizMarks(Robot &r, pgmappingcooperativo::goalList &path, mapInfoType mapInfo) {
+void setPathRvizMarks(Robot &r, pgmappingcooperativo::goalList &path, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -74,6 +74,11 @@ void setRvizMarks(Robot &r, pgmappingcooperativo::goalList &path, mapInfoType ma
   rvizHelper.scale    = makeVector3(cellSize*0.15, cellSize, 1);
   rvizHelper.position = makeVector3(0,0,pathLineZ);
   rvizHelper.mark(path.listaGoals, robot.name + "_path");
+}
+
+void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
+
+  float cellSize = mapInfo.resolution;
 
   // Mark Current position on rviz
   rvizHelper.topic = &marker_pub;
@@ -99,8 +104,8 @@ void publishPath(Pos frontier) {
   // Publish the path
   goalPath_pub.publish(path);
   
-  // Mark path info on gvd
-  setRvizMarks(robot, path,  robot.map_merged.mapa.info);
+  // Mark path info
+  setPathRvizMarks(robot, path,  robot.map_merged.mapa.info);
 }
 
 ///////////////
@@ -108,8 +113,8 @@ void publishPath(Pos frontier) {
 ///////////////
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
-  // Save current pose
-  robot.savePose(odom->pose.pose);
+  // Store current position
+  robot.position = odom->pose.pose.position;
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
@@ -120,7 +125,9 @@ void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
   request_objetive_pub.publish(msg_request);
 
   // Delete the path mark
+  rvizHelper.topic = &marker_pub;
   rvizHelper.deleteMark(robot.name + "_path", 0);
+  rvizHelper.deleteMark(robot.name + "_pos", 0);
 }
 
 void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
@@ -140,6 +147,9 @@ void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
   ROS_INFO("Publish bids");
   segment_bid.id = msg->id;
   bid_pub.publish(segment_bid);
+
+  // Mark position
+  setPositionRvizMarks(robot, robot.map_merged.mapa.info);
 }
 
 void assignmentCallback(const pgmappingcooperativo::AssignmentConstPtr& msg) {

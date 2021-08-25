@@ -125,9 +125,9 @@ struct RvizHelper{
   unsigned int type = POINTS;
   unsigned int action = ADD;
 
-  Marker getMark(MarkerPoints markerPoints, string ns = "", int id = -1);
+  Marker getMark(MarkerPoints markerPoints, string ns = "", int id = 0);
   Marker getMark(MarkerPoints markerPoints, int id);
-  void mark(MarkerPoints markerPoints, string ns = "", int id = -1 );
+  void mark(MarkerPoints markerPoints, string ns = "", int id = 0);
   void mark(MarkerPoints markerPoints, int id);
   void deleteMark(string ns = "", int id = -1 );
 

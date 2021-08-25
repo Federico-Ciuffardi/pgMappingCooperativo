@@ -191,7 +191,7 @@ int MapMerger::updateFrontera(nav_msgs::OccupancyGrid map, std::string name) {
   return frontera_aux_nueva.size();
 }
 
-void MapMerger::updatePose(geometry_msgs::PoseStamped& newPose, std::string name) {
+void MapMerger::updatePose(geometry_msgs::PoseStamped newPose, std::string name) {
   positions[name].header = newPose.header;
   positions[name].pose = newPose.pose;
 }

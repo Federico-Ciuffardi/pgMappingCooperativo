@@ -104,11 +104,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   position_old = position;
 
-  geometry_msgs::PoseStamped ps;
-  ps.header = odom->header;
-  ps.pose = odom->pose.pose;
-
-  position = ps;
+  position = toPoseStamped(*odom);
 }
 
 pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
