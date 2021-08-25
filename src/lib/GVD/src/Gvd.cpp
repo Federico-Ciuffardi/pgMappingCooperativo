@@ -91,10 +91,12 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg, Int simplification) {
         gridGvd[p] = true;
         break;
       case 1:
-        gridGvd[p] =  (!connectivityAux(p,sg,distMap) && distMap[p].sources.size() > 1) 
-                   || disconnectsOnRemoval(p, gridGvd);
+        gridGvd[p] =  distMap[p].sources.size() > 1 || disconnectsOnRemoval(p, gridGvd);
         break;
       case 2:
+        gridGvd[p] =  (!connectivityAux(p,sg,distMap) && distMap[p].sources.size() > 1) || disconnectsOnRemoval(p, gridGvd);
+        break;
+      case 3:
         gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 
         break;
     }

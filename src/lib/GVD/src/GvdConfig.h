@@ -15,15 +15,19 @@ public:
   // GVD vertex simplification: how hard are the GVD vercices eroded/deleted to
   // simplify or thin the GVD:
   // 0: no simplification (only for debugging)
-  // 1: the cells that are considered auxiliar [*] (for connectivity) are discarded
-  //    if they can be safely discarded without disconnecting the GVD.
-  // 2: All cells  will be discarded if they can be safely discarded without
+  // 1: A vertex is deleted if it is not needed for connectivity and it does not have
+  //    two or more sources (basis points at minumun distance)
+  // 2: A vertex is deleted if it is not needed for connectivity and it does not have
+  //    two or more sources (basis points at minumun distance). 
+  //    Some vertices are added just to keep the connectivity in the regions that are
+  //    beeing expored [*], those vertices are deleted if they are not  needed for connectivity
+  // 3: All vertices will be discarded if they can be safely discarded without
   //    disconnecting the GVD.
-  // [*] The cells that are considered auxiliar depends on the connectivity method used:
-  //       0: Cells that have less than 2 obstacles as basis points  are auxiliar
-  //       (are a products of unknown cells)
-  //       1 and 2: Cells that are unknown or are close to unknown
-  int vertexSimplificationMethod = 1;
+  // [*] Depends on the connectivityMethod used:
+  //       0:  that have less than 2 obstacles as basis points  are auxiliar
+  //       (are a products of unknown vertices)
+  //       1 and 2: vertices that are unknown or are close to unknown
+  int vertexSimplificationMethod = 2;
 
 
   // GVD edge simplification: how hard are the GVD edges deleted to simplify the GVD:
