@@ -6,7 +6,7 @@
 
 
 // improved assert
-#define FAIL(cause) { std::cerr << "FAIL: " << #cause << " @ " << __FILE__ << " (" << __LINE__ << ")" << std::endl; exit(1);  }
+#define FAIL(cause) { std::cerr << "FAIL: " << cause << " @ " << __FILE__ << " (" << __LINE__ << ")" << std::endl; exit(1);  }
 
 using namespace std;
 

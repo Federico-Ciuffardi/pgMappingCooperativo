@@ -52,8 +52,6 @@ class Robot {
   boost::unordered_map<Pos,float> pathCosts;
 
   GvdVecGraph gvd;
-  Pos my_pos;
-  Pos my_segment;
 
   ///////////////
   // Functions //
@@ -67,7 +65,7 @@ class Robot {
   string name;
   int lastAssignmentId = -1;
   int lastAuctionId = -1;
-  mapMergedInfo map_merged;
+  mapMergedInfo mapMerged;
   StateGrid grid;
   Point position;
 

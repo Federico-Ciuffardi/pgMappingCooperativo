@@ -34,23 +34,23 @@ float posZ      = 10*layerSeparation;
 
 // Topics
 /// Subscribers
-ros::Subscriber odom_sub;
+ros::Subscriber odomSub;
 
-ros::Subscriber auction_sub;
-ros::Subscriber assignment_sub;
+ros::Subscriber auctionSub;
+ros::Subscriber assignmentSub;
 
-ros::Subscriber path_result_sub;
-ros::Subscriber end_sub;
+ros::Subscriber pathResultSub;
+ros::Subscriber endSub;
 
-ros::Subscriber map_merged_sub;
+ros::Subscriber mapMergedSub;
 
 /// Publishers
-ros::Publisher end_pub;
-ros::Publisher bid_pub;
+ros::Publisher endPub;
+ros::Publisher bidPub;
 
-ros::Publisher request_objetive_pub;
-ros::Publisher goalPath_pub;
-ros::Publisher marker_pub;
+ros::Publisher requestObjetivePub;
+ros::Publisher goalPathPub;
+ros::Publisher markerPub;
 
 // others
 Robot robot;
@@ -67,7 +67,7 @@ void setPathRvizMarks(Robot &r, goalList &path, mapInfoType mapInfo) {
   float cellSize = mapInfo.resolution;
 
   // draw path to objective
-  rvizHelper.topic = &marker_pub;
+  rvizHelper.topic = &markerPub;
 
   rvizHelper.color    = MAGENTA;
   rvizHelper.type     = RvizHelper::LINE_STRIP;
@@ -81,10 +81,10 @@ void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
   float cellSize = mapInfo.resolution;
 
   // Mark Current position on rviz
-  rvizHelper.topic = &marker_pub;
+  rvizHelper.topic = &markerPub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
-  posMarkerPoint.push_back(toMarkerPoint(toPos(robot.position, robot.map_merged.mapa.info), robot.map_merged.mapa.info));
+  posMarkerPoint.push_back(toMarkerPoint(toPos(robot.position, robot.mapMerged.mapa.info), robot.mapMerged.mapa.info));
 
   rvizHelper.color    = makeColorRGBA(0.75);
   rvizHelper.type     = cellMarkerType;
@@ -102,10 +102,10 @@ void publishPath(Pos frontier) {
   goalList path = robot.getPathTo(frontier);
 
   // Publish the path
-  goalPath_pub.publish(path);
+  goalPathPub.publish(path);
   
   // Mark path info
-  setPathRvizMarks(robot, path,  robot.map_merged.mapa.info);
+  setPathRvizMarks(robot, path,  robot.mapMerged.mapa.info);
 }
 
 ///////////////
@@ -120,12 +120,12 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
 
   ROS_INFO("Arrived to the objective, requesting objective");
-  std_msgs::String msg_request;
-  msg_request.data = "signal";
-  request_objetive_pub.publish(msg_request);
+  std_msgs::String msgRequest;
+  msgRequest.data = "signal";
+  requestObjetivePub.publish(msgRequest);
 
   // Delete the path mark
-  rvizHelper.topic = &marker_pub;
+  rvizHelper.topic = &markerPub;
   rvizHelper.deleteMark(robot.name + "_path", 0);
   rvizHelper.deleteMark(robot.name + "_pos", 0);
 }
@@ -142,14 +142,14 @@ void auctionCallBack(const AuctionConstPtr& msg) {
   robot.lastAuctionId = msg->id;
 
   ROS_INFO("Calculate bids");
-  Bid segment_bid = robot.getBid(*msg);
+  Bid segmentBid = robot.getBid(*msg);
 
   ROS_INFO("Publish bids");
-  segment_bid.id = msg->id;
-  bid_pub.publish(segment_bid);
+  segmentBid.id = msg->id;
+  bidPub.publish(segmentBid);
 
   // Mark position
-  setPositionRvizMarks(robot, robot.map_merged.mapa.info);
+  setPositionRvizMarks(robot, robot.mapMerged.mapa.info);
 }
 
 void assignmentCallback(const AssignmentConstPtr& msg) {
@@ -168,7 +168,7 @@ void assignmentCallback(const AssignmentConstPtr& msg) {
 }
 
 void mapMergedCallBack(const mapMergedInfoConstPtr& msg) {
-  robot.map_merged = (*msg);
+  robot.mapMerged = (*msg);
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
@@ -197,18 +197,18 @@ int main(int argc, char* argv[]) {
   robot.name = nameSpace.erase(0, 1);
 
   // Initilize Publishers
-  bid_pub              = n.advertise<Bid>("bid", 1);
-  goalPath_pub         = n.advertise<goalList>("goalPath", 1, true);
-  request_objetive_pub = n.advertise<std_msgs::String>("/request_objetive", 1);
-  marker_pub           = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
+  bidPub             = n.advertise<Bid>("bid", 1);
+  goalPathPub        = n.advertise<goalList>("goalPath", 1, true);
+  requestObjetivePub = n.advertise<std_msgs::String>("/request_objetive", 1);
+  markerPub          = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 
   // Initilize Subscribers
-  odom_sub        = n.subscribe("odom", 1, odomCallback);
-  auction_sub     = n.subscribe("/auction", 1, auctionCallBack);
-  assignment_sub  = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
-  path_result_sub = n.subscribe("path_result", 1, pathSucceedCallback);
-  map_merged_sub  = n.subscribe<mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
-  end_sub         = n.subscribe("/end", 1, handleEnd);
+  odomSub       = n.subscribe("odom", 1, odomCallback);
+  auctionSub    = n.subscribe("/auction", 1, auctionCallBack);
+  assignmentSub = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
+  pathResultSub = n.subscribe("path_result", 1, pathSucceedCallback);
+  mapMergedSub  = n.subscribe<mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  endSub        = n.subscribe("/end", 1, handleEnd);
 
   // spin
   ROS_INFO("Initialized");
