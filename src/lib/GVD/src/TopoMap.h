@@ -16,14 +16,8 @@ struct CriticalInfo{
 
 typedef PosMap<CriticalInfo>::type CriticalInfos;
 
-struct Segment{
-  Int id;
-  PosSet members;
-  PosMap<PosSet>::type typeMembers;
-  Pos center;
-};
-
-typedef boost::unordered_map<Int, Segment> segments;
+typedef ConnectedComponents::Component Segment;
+typedef ConnectedComponents::Components Segments;
 
 struct TopoMap{
   typedef CellState      CellType; // could be set as template if needed
@@ -49,11 +43,5 @@ struct TopoMap{
 
   // Destructor
   ~TopoMap();
-
- private:
-  // internal functions
-  void setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap);
-  void get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter);
-
 };
 

@@ -6,7 +6,9 @@
 #include "Map.h"
 #include "utils.h"
 
-// TopoMap utils functions
+/////////
+// Aux //
+/////////
 
 // Sets to true the isLocalMin attribute of all the distance local minimum vertices.
 //
@@ -151,62 +153,11 @@ void degreeConstraint(GvdGraph& gvd) {
   if(maxPos != NULL_POS){
      gvd[maxPos].degreeConstrain = true;
   }
-
 }
 
-// Set the critical points on the state grid, and on the criticalInfos var
-void TopoMap::setCriticals(StateGrid& stateGrid, GvdGraph& gvd, DistMap& distMap){
-  for(Pos p : stateGrid){
-    if(gvd.has(p) && gvd[p].isLocalMin && gvd[p].degreeConstrain && !connectivityAux(p,stateGrid,distMap)){
-      // Set critical
-      stateGrid[p] = Critical;
-
-      CriticalInfo criticalInfo;
-
-      for(Pos bp : basisPoints(p,distMap)){
-        // Set critical lines
-        for(Pos linePos : discretizeLine(p,bp)){
-          if(stateGrid[linePos] == Free){
-            stateGrid[linePos] = CriticalLine;
-            criticalInfo.criticalLines.insert(linePos);
-          }
-        }
-      }
-      criticalInfos[p] = criticalInfo;
-    }
-  }
-}
-
-void TopoMap::get_critical_points(StateGrid& stateGrid, DistMap& distMap, GvdGraph& gvd, ConnectedComponents& segmenter) {
-  cout << "debug :: setLocalMins" << endl;
-  setLocalMins(distMap, gvd);
-
-  // collapsedGvd graph (used to save some time on the degreeConstrain
-  cout << "debug :: copy gvd" << endl;
-  GvdGraph collapsedGvd(gvd);
-
-  cout << "debug :: collapseVertices" << endl;
-  collapseVertices(collapsedGvd);
-
-  cout << "debug :: degreeConstraint" << endl;
-  degreeConstraint(collapsedGvd);
-
-  // pass info to complete gvd 
-  // collapsedGvd ⊂ gvd
-  for(auto it : collapsedGvd.idVertexMap){
-    Pos p = it.first;
-    GvdGraph::Vertex v = it.second;
-    gvd[p] = collapsedGvd[v]; 
-  }
-
-
-  cout << "debug :: setCriticals" << endl;
-  setCriticals(stateGrid,gvd,distMap);
-
-  segmenter.update();
-}
-
-// TopoMap class definition
+/////////////
+// TopoMap //
+/////////////
 TopoMap::TopoMap(Gvd* gvd) : map(gvd->map){
   this->gvd = gvd;
   this->distMap = gvd->distMap;
@@ -219,16 +170,60 @@ TopoMap::TopoMap(MapType& map) : map(map){
   this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
 }
 
-/* boost::tuple<criticals_info, GvdGraph> get_points_of_interest(StateGrid stateGrid) { */
+// also updates its distMap and gvd
 void TopoMap::update(){
   // Clean old result
   criticalInfos.clear();
 
   // Get new result / replace old
+
+  cout << "debug :: Update gvd" << endl;
   this->gvd->update(); // also updates the shared distMap
 
-  cout << "debug :: Calculate ciritical points" << endl;
-  get_critical_points(map, *distMap, *gvd->graphGvd, *segmenter);
+  cout << "debug :: Check local min constrain" << endl;
+  setLocalMins(*distMap, *gvd->graphGvd);
+
+  // Check degree constraint: optimize this using a collapsedGvd
+  cout << "debug :: Check degree constraint" << endl;
+
+  GvdGraph collapsedGvd(*gvd->graphGvd); // copy graph to collapse to avoid modifying the original
+
+  collapseVertices(collapsedGvd); // collapse the copy
+
+  degreeConstraint(collapsedGvd); // check the degree constrain in the collapsed gvd
+
+  // set the collapsedGvd info in the complete gvd 
+  // the following makes use of the fact that: collapsedGvd ⊂ gvd
+  for(auto it : collapsedGvd.idVertexMap){
+    Pos p = it.first;
+    GvdGraph::Vertex v = it.second;
+    (*gvd->graphGvd)[p] = collapsedGvd[v]; 
+  }
+
+  cout << "debug :: Set the critical vertices and its information" << endl;
+  for(Pos p : map){
+    // skip non critical vertices
+    if(!(*gvd->graphGvd).has(p) || !(*gvd->graphGvd)[p].isLocalMin || !(*gvd->graphGvd)[p].degreeConstrain || connectivityAux(p,map,*distMap))
+      continue;
+
+    // Set critical in map
+    map[p] = Critical;
+
+    // Set criticals info
+    CriticalInfo criticalInfo;
+    for(Pos bp : basisPoints(p,*distMap)){
+      // Set critical lines
+      for(Pos linePos : discretizeLine(p,bp)){
+        if(map[linePos] == Free){
+          map[linePos] = CriticalLine;
+          criticalInfo.criticalLines.insert(linePos);
+        }
+      }
+    }
+    criticalInfos[p] = criticalInfo;
+  }
+
+  segmenter->update();
 }
 
 TopoMap::~TopoMap(){

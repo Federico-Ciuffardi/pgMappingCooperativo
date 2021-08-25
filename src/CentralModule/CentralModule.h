@@ -27,7 +27,7 @@ vector<Pos> embed(vector<Pos> from, vector<Pos> to);
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2, WaitingFirstBid=3, Resolving = 4 };
 
 typedef string RobotId;
-typedef int    SegmentId;
+typedef Int SegmentId;
 
 class CentralModule {
  public:

@@ -15,14 +15,15 @@ public:
   typedef Int IdType;
   static const IdType firstId = 0;
 
-  struct ConectedComponent{
+  struct Component{
     PosSet members;
     boost::unordered_map<CellType, PosSet> typeMembers;
-    Pos center;
   };
 
+  typedef std::map<IdType, Component> Components;
+
   // Results
-  std::map<Int, ConectedComponent> connectedComponents;
+  Components connectedComponents;
   Grid<IdType> idGrid;
 
   // Info

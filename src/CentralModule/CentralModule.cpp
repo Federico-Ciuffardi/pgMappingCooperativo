@@ -73,8 +73,8 @@ Auction CentralModule::getAuctionInfo() {
   // Construct the acution rosmsg
   Auction auctionInfo;
 
-  // Get the info for the auction (segments and frontiers), and the GVD as a subproduct
-  cout << "debug :: gvd and cis" << endl;
+  // Get the info for the auction (topological map), and the GVD as a subproduct
+  cout << "debug :: get topoMap" << endl;
   if(!topoMap){
     topoMap = new TopoMap(stateGrid);
   }
@@ -94,8 +94,8 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
 
-  // Turn the segment and frontiers info into a ros message
-  cout << "debug :: turn segments and frontiers to rosmsg" << endl;
+  // Turn the frontiers info into a ros message
+  cout << "debug :: turn frontiers to rosmsg" << endl;
   for (auto it : topoMap->segmenter->connectedComponents) {
     PosSet frontiers = it.second.typeMembers[Frontier];
 
@@ -149,7 +149,7 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
     resolutionRosMessages[robotId] = assignment;
   }
 
-  // Increment the segment assignment ID to set to the next assignment
+  // Increment the assignment ID to set to the next assignment
   assignmentId++;
 
   // return the info of the assignment bundled as a ros message

@@ -7,7 +7,9 @@
 #include "Map.h"
 #include "data/Pos.h"
 
-// Gvd class utils functions
+/////////
+// Aux //
+/////////
 
 /* If removing `p` from  disconects the graph represented with the Grid then  */
 template<typename CellType>
@@ -166,7 +168,9 @@ void cleanUp(GvdGraph& gvd, Int simplification, Int vertexRemoval) {
   }
 }
 
-// Gvd class definition
+/////////
+// Gvd //
+/////////
 Gvd::Gvd(DistMap* distMap) : map(distMap->map){
   this->distMap = distMap;
 }
@@ -184,6 +188,7 @@ Gvd::Gvd(MapType& map) : map(map){
   }
 }
 
+// also updates its distMap
 void Gvd::update(){
   // if connectivityMethod is 1 fill boders with obstacles
   if(GvdConfig::get()->connectivityMethod == 1){

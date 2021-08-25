@@ -10,7 +10,9 @@
 // Parameters //
 ////////////////
 
-// Rviz params
+/////////////////
+// Rviz params //
+/////////////////
 
 /// Markers used to represent cells
 unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
@@ -142,11 +144,11 @@ void auctionCallBack(const AuctionConstPtr& msg) {
   robot.lastAuctionId = msg->id;
 
   ROS_INFO("Calculate bids");
-  Bid segmentBid = robot.getBid(*msg);
+  Bid bid = robot.getBid(*msg);
 
   ROS_INFO("Publish bids");
-  segmentBid.id = msg->id;
-  bidPub.publish(segmentBid);
+  bid.id = msg->id;
+  bidPub.publish(bid);
 
   // Mark position
   setPositionRvizMarks(robot, robot.occupancyGrid.info);

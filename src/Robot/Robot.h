@@ -40,7 +40,7 @@ class Robot {
   // vars //
   //////////
 
-  // Segmentation relatied
+  // auction related
   boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> paths;
   boost::unordered_map<Pos,float> pathCosts;
 

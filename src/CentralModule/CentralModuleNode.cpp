@@ -20,7 +20,9 @@ int auctionStartTimeoutMode = -1;
 // mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
 float mapUpdateDelay = 2;
 
-// Rviz params
+/////////////////
+// Rviz params //
+/////////////////
 
 /// Markers used to represent cells
 unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
@@ -99,7 +101,7 @@ string coverageFileLog;
 ////////////////
 
 // Publishes marks to be visualized on rviz 
-void setRvizMarks(Auction sac, mapInfoType mapInfo) {
+void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -108,7 +110,7 @@ void setRvizMarks(Auction sac, mapInfoType mapInfo) {
 
   /// mark edges
   RvizHelper::MarkerPoints edgesMarkerPoints;
-  for (auto e : sac.gvd.edges) {
+  for (auto e : auction.gvd.edges) {
     edgesMarkerPoints.push_back(toPoint(e.from, mapInfo));
     edgesMarkerPoints.push_back(toPoint(e.to, mapInfo));
   }
@@ -123,7 +125,7 @@ void setRvizMarks(Auction sac, mapInfoType mapInfo) {
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,gvdVertexZ);
-  rvizHelper.mark(toVecPoint3D(sac.gvd.vertices, mapInfo), "gvd_vertices");
+  rvizHelper.mark(toVecPoint3D(auction.gvd.vertices, mapInfo), "gvd_vertices");
 
   // Topological map
   rvizHelper.topic = &topoMapMarkerPub;
@@ -142,13 +144,13 @@ void setRvizMarks(Auction sac, mapInfoType mapInfo) {
   RvizHelper::MarkerPoints frontierMarkerPoints;
   for(auto it : centralModule.topoMap->segmenter->connectedComponents){
     int id = it.first;
-    ConnectedComponents::ConectedComponent segment = it.second;
+    ConnectedComponents::Component segment = it.second;
 
     rvizHelper.color    = getColor(id);
 
     RvizHelper::MarkerPoints segmentMarkerPoints;
     for (Point p : toMarkerPoint(segment.members, mapInfo)){ 
-      float squareLength = cellSize*1.05;
+      float squareLength = cellSize;
       p.x += squareLength/2.0;
       p.y += squareLength/2.0;
       Point uR = p;
@@ -211,7 +213,7 @@ void setRvizMarks(Auction sac, mapInfoType mapInfo) {
 
 void startAuction() {
   // get aution info (calculate gvd + mesure time of calculation)
-  ROS_INFO("Computing segment auction information");
+  ROS_INFO("Computing Auction information");
 
   ros::Duration lastGvdTime = gvdTime;
   lastGvdStart = ros::Time::now();
@@ -232,7 +234,7 @@ void startAuction() {
 
   // Send auction info so the bids can be calculated
   auctionPub.publish(auction);
-  ROS_INFO("Segment auction information broadcasted");
+  ROS_INFO("Auction information broadcasted");
 
   // log gvd time
   if (centralModule.fileLogLevel >= 2) {
@@ -283,7 +285,7 @@ void resolveAuction() {
   AuctionResolutionTimeout = max(ros::Duration(0.5) + resolutionStartTime * 2, AuctionResolutionTimeout);
   auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
-  // Get the robot-segment assignment
+  // Get the robot-frontier assignment
   boost::unordered_map<string, Assignment> assignment = centralModule.assign();
   expectedRobots = assignedRobots = assignment.size();
 
@@ -293,7 +295,7 @@ void resolveAuction() {
   /// Change state
   centralModule.setState(WaitingAuction);
 
-  // Parse the robot-segment assignment
+  // Parse the robot-frontier assignment
   float maxEstimatedTime = 0;       // max estimated task completion time
   float minEstimatedTime = FLT_MAX; // min estimated task completion time
 
@@ -301,7 +303,7 @@ void resolveAuction() {
     Assignment sa = it.second;
     string robot = it.first;
 
-    // Let the robot know about it assigned segment
+    // Let the robot know about it assigned frontier
     AssignmentPubs[robot].publish(sa);
 
     // Calculate the estimated task completion time
@@ -351,13 +353,13 @@ void auctionResolutionTimeoutTimerRoutine(const ros::TimerEvent&) {
 
 void auctionStartTimeoutTimerRoutine(const ros::TimerEvent&) {
   auctionStartTimeoutTimer.stop();
-  ROS_DEBUG("Segment Auction triggered BECOUSE of timeout");
+  ROS_DEBUG("Auction triggered BECOUSE of timeout");
   startAuction();
 }
 
 void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
   auctionStartDelayTimer.stop();
-  ROS_DEBUG("Segment Auction triggered BEFORE timeout");
+  ROS_DEBUG("Auction triggered BEFORE timeout");
   startAuction();
 }
 
@@ -434,11 +436,11 @@ void bidCallBack(const BidConstPtr& msg, string name) {
   bool successful = centralModule.saveBid(*msg, name);
 
   if (!successful) {
-    ROS_DEBUG_STREAM("Segment bid ignored from "<<name.c_str()<<" (OLD)");
+    ROS_DEBUG_STREAM("Bid ignored from "<<name.c_str()<<" (OLD)");
     return;
   }
 
-  ROS_INFO_STREAM("Segment bid from "<<name.c_str()<<" , id "<<msg->id);
+  ROS_INFO_STREAM("Bid from "<<name.c_str()<<" , id "<<msg->id);
 
   succesfulBids++;
 
