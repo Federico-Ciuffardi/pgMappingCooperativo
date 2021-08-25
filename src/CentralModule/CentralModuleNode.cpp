@@ -8,7 +8,7 @@ using namespace std;
 // Parameters //
 ////////////////
 
-/// auctionStartTimeoutMode:
+// auctionStartTimeoutMode:
 ///   * -1 : disabled, no timeout, starts the auction immediately after the first robot request 
 ///   *  0 : disabled, no timeout, starts the auction immediately after a little timeout to wait for the map update of that first robot
 ///   *  1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
@@ -17,9 +17,8 @@ using namespace std;
 ///          after the first robot request. Reset and decrease the delay on new requests.
 int auctionStartTimeoutMode = -1;
 
-/// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
+// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
 float mapUpdateDelay = 2;
-
 
 // Rviz params
 
@@ -30,6 +29,7 @@ unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
 float cubeHeight = 0.02;
 
 /// Layers (planes orthogonal to the z axis)
+
 //// Separation between each layer
 float layerSeparation = cubeHeight;
 
@@ -50,15 +50,12 @@ float criticalLineZ  = 1*layerSeparation;
 
 // Topics
 /// Subscribers
-map<string, ros::Subscriber> bids;
 map<string, ros::Subscriber> bidSubs;
 ros::Subscriber endSub;
 ros::Subscriber mapMergedSub;
 ros::Subscriber requestObjetiveSub;
 
 /// Publishers
-ros::Publisher takeObjPub;
-ros::Publisher objetivePub;
 ros::Publisher miscMarkerPub;
 ros::Publisher gvdMarkerPub;
 ros::Publisher topoMapMarkerPub;
@@ -103,6 +100,9 @@ string coverageFileLog;
 
 // Publishes marks to be visualized on rviz 
 void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
+
+  float cellSize = mapInfo.resolution;
+
   // Gvd
   rvizHelper.topic = &gvdMarkerPub;
 
@@ -114,14 +114,14 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   }
   rvizHelper.color    = BLUE;
   rvizHelper.type     = RvizHelper::LINE_LIST;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.25, centralModule.cellSize, 1);
+  rvizHelper.scale    = makeVector3(cellSize*0.25, cellSize, 1);
   rvizHelper.position = makeVector3(0,0,gvdEdgeZ);
   rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
 
   /// mark vertices
   rvizHelper.color    = BLUE;
   rvizHelper.type     = cellMarkerType;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.scale    = makeVector3(cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,gvdVertexZ);
   rvizHelper.mark(toVecPoint3D(sac.gvd.vertices, mapInfo), "gvd_vertices");
 
@@ -136,7 +136,7 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
 
   //// Mark segments and load frontiers
   rvizHelper.type     = RvizHelper::TRIANGLE_LIST;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.scale    = makeVector3(cellSize); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0);
 
   RvizHelper::MarkerPoints frontierMarkerPoints;
@@ -148,7 +148,7 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
 
     RvizHelper::MarkerPoints segmentMarkerPoints;
     for (geometry_msgs::Point p : toMarkerPoint(segment.members, mapInfo)){ 
-      float squareLength = centralModule.cellSize*1.05;
+      float squareLength = cellSize*1.05;
       p.x += squareLength/2.0;
       p.y += squareLength/2.0;
       geometry_msgs::Point uR = p;
@@ -184,7 +184,7 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
     accum(criticalLinesMarkerPoints,toMarkerPoint(criticalInfo.criticalLines,mapInfo));
   }
   rvizHelper.type     = cellMarkerType;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.scale    = makeVector3(cellSize*0.75); rvizHelper.scale.z  = cubeHeight;
 
   rvizHelper.color    = YELLOW;
   rvizHelper.position = makeVector3(0,0,criticalPointZ);
@@ -200,7 +200,7 @@ void setRvizMarks(pgmappingcooperativo::Auction sac, mapInfoType mapInfo) {
   /// Mark frontiers
   rvizHelper.color    = GREEN;
   rvizHelper.type     = cellMarkerType;
-  rvizHelper.scale    = makeVector3(centralModule.cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,frontierZ);
   rvizHelper.mark(frontierMarkerPoints, "frontiers");
 }
@@ -342,7 +342,7 @@ void resolveAuction() {
 
 void auctionResolutionTimeoutTimerRoutine(const ros::TimerEvent&) {
   auctionResolutionTimeoutTimer.stop();
-  if (centralModule.getEstado() == WaitingBids) {
+  if (centralModule.getState() == WaitingBids) {
     resolveAuction();
   } else {
     ROS_WARN_STREAM("Auction AuctionResolutionTimeout with no bids");
@@ -378,7 +378,7 @@ void mapMergedCallBack(const pgmappingcooperativo::mapMergedInfoConstPtr& msg) {
 }
 
 void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
-  if (centralModule.getEstado() != WaitingAuction) {
+  if (centralModule.getState() != WaitingAuction) {
     ROS_DEBUG_STREAM("Auction request ignored, already one on course");
     return;
   }
@@ -429,7 +429,7 @@ void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
 }
 
 void bidCallBack(const pgmappingcooperativo::BidConstPtr& msg, string name) {
-  if (!is_elem(centralModule.getEstado(), {WaitingFirstBid, WaitingBids})) return;
+  if (!is_elem(centralModule.getState(), {WaitingFirstBid, WaitingBids})) return;
 
   bool successful = centralModule.saveBid(*msg, name);
 
@@ -442,7 +442,7 @@ void bidCallBack(const pgmappingcooperativo::BidConstPtr& msg, string name) {
 
   succesfulBids++;
 
-  if (centralModule.getEstado() == WaitingFirstBid) {
+  if (centralModule.getState() == WaitingFirstBid) {
     ROS_DEBUG_STREAM("Is the first one, starting the auction resolution timeout");
     centralModule.setState(WaitingBids);
     lastAuctionStart = ros::Time::now();
@@ -521,7 +521,6 @@ int main(int argc, char* argv[]) {
   assert(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
   assert(n.param<string>("/map_name", centralModule.mapName, ""));
   assert(n.param<int>   ("/map_size", centralModule.mapSize, 0));
-  assert(n.param<float> ("/cell_size", centralModule.cellSize, 0));
   assert(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
   assert(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
   assert(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
@@ -535,8 +534,6 @@ int main(int argc, char* argv[]) {
   auctionStartDelayTimer        = n.createTimer(auctionStartDelayTimeout, auctionStartDelayTimerRoutine       , true, false);
 
   // Initilize Publishers
-  takeObjPub        = n.advertise<pgmappingcooperativo::takeobjetive>("/take_obj", 1);
-  objetivePub       = n.advertise<pgmappingcooperativo::asignacion>("/objetive", 1);
   miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
   gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
@@ -555,7 +552,7 @@ int main(int argc, char* argv[]) {
     ros::master::V_TopicInfo topicInfos;
     ros::master::getTopics(topicInfos);
     for (ros::master::TopicInfo& publishedTopic : topicInfos) {
-      if (publishedTopic.name.find("/pose") != string::npos) {
+      if (publishedTopic.name.find("/odom") != string::npos) {
         contP3dx++;
       }
     }
@@ -573,7 +570,7 @@ int main(int argc, char* argv[]) {
   ros::master::V_TopicInfo topicInfos;
   ros::master::getTopics(topicInfos);
   for (ros::master::TopicInfo& publishedTopic : topicInfos) {
-    if (publishedTopic.name.find("/pose") != string::npos) {
+    if (publishedTopic.name.find("/odom") != string::npos) {
       string topicName = publishedTopic.name;                                  // name = "/robot_name/..."
       string robotName = topicName.erase(0, 1).substr(0, topicName.find('/')); // name = "robot_name"
 

@@ -101,9 +101,14 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
   /* } */
 }
 
-void poseCallback(const geometry_msgs::PoseStamped& msg) {
+void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   position_old = position;
-  position = msg;
+
+  geometry_msgs::PoseStamped ps;
+  ps.header = odom->header;
+  ps.pose = odom->pose.pose;
+
+  position = ps;
 }
 
 pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
@@ -262,7 +267,7 @@ int main(int argc, char** argv) {
   ROS_DEBUG("Initializing node %s", name_space.c_str());
 
   goalPath_sub = n.subscribe("goalPath", /*1*/ 10, setPath);
-  pose_sub = n.subscribe("pose", 1, poseCallback);
+  pose_sub = n.subscribe("odom", 1, odomCallback);
   // map_sub = n.subscribe<nav_msgs::OccupancyGrid>("map", 1, saveMap);
   scan_sub = n.subscribe<sensor_msgs::LaserScan>("scan", 1, saveScan);
   end_sub = n.subscribe("/end", 1, handleEnd);

@@ -1,54 +1,13 @@
 #include "Robot.h"
 
-
-///////////////////
-// Aux functions //
-///////////////////
-Pos Robot::getOffset(){
- return toPos(map_merged.mapa.info.origin.position);
-}
-
 /////////////////////
 // Robot functions //
 /////////////////////
 
-
-Robot::Robot() {
-  sensor_range = 6.0;
-  lado = 1;
-}
-
-geometry_msgs::Point Robot::getPosition() {
-  return position;
-};
-
-Pos Robot::getGVDPos() {
-  geometry_msgs::Point p3d = getPosition();
-
-  Pos adjustment;
-
-  if(p3d.x < 0){
-    adjustment.x = -1;
-  }
-
-  if(p3d.y < 0){
-    adjustment.y = -1;
-  }
-
-  return toPos(p3d) - getOffset() + adjustment;
-}
-
-void Robot::setNombre(std::string nom) {
-  nombreRobot = nom;
-};
-
-std::string Robot::getNombre() {
-  return nombreRobot;
-};
+Robot::Robot() { }
 
 void Robot::savePose(const geometry_msgs::Pose msg) {
-  position.x = msg.position.x;
-  position.y = msg.position.y;
+  position = msg.position;
 }
 
 // Generates a connection from each p in posSet to the graph that complies with the 
@@ -121,7 +80,7 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
 
   // Robot position
   /// Get the current Robot pos on the occupancy map frame
-  Pos robotPos = getGVDPos();
+  Pos robotPos = toPos(position, map_merged.mapa.info);
 
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
@@ -165,15 +124,8 @@ pgmappingcooperativo::Bid Robot::getBid(pgmappingcooperativo::Auction msg) {
   return bid;
 }
 
-geometry_msgs::Point Robot::pos_to_real_p3d(Pos p) {
-  geometry_msgs::Point p3d = toPoint(p + getOffset());
-  p3d.x += 0.5;
-  p3d.y += 0.5;
-  return p3d;
-}
-
 int Robot::getRobotId() {
-  return stoi(nombreRobot.substr(5));
+  return stoi(name.substr(5));
 }
 
 pgmappingcooperativo::goalList Robot::getPathTo(Pos frontier) {
@@ -191,7 +143,7 @@ pgmappingcooperativo::goalList Robot::getPathTo(Pos frontier) {
   goalList.indice = 1;  // TODO poner bien el indice
 
   for (GvdVecGraph::Vertex v : paths[frontier]) {
-    geometry_msgs::Point p3d = pos_to_real_p3d(gvd[v].p);
+    geometry_msgs::Point p3d = toPoint(gvd[v].p,map_merged.mapa.info);
 
     goalList.listaGoals.push_back(p3d);
   }

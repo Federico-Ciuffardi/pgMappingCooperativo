@@ -15,7 +15,7 @@ CentralModule::CentralModule() {
 ///////////////
 // Get / Set //
 ///////////////
-centralMouleState CentralModule::getEstado() {
+centralMouleState CentralModule::getState() {
   return state;
 };
 

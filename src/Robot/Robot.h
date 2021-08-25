@@ -33,20 +33,21 @@
 #include "../lib/RvizHelper.h"
 
 class Robot {
- private:
+ public:
   ////////////////
   // Parameters //
   ////////////////
 
-  float sensor_range;
-  float lado;
+  // Global parameters (explained in ../../launch/multirobot.launch)
+  float sensorRange;
+  float robotSpeed;
 
+ private:
   //////////
   // vars //
   //////////
 
   // Segmentation relatied
-  geometry_msgs::Point position;
   boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> paths;
   boost::unordered_map<Pos,float> pathCosts;
 
@@ -63,11 +64,12 @@ class Robot {
   // vars //
   //////////
 
-  std::string nombreRobot;
+  string name;
   int lastAssignmentId = -1;
   int lastAuctionId = -1;
   pgmappingcooperativo::mapMergedInfo map_merged;
   StateGrid grid;
+  geometry_msgs::Point position;
 
   ///////////////
   // Functions //
@@ -77,21 +79,13 @@ class Robot {
   Robot();
 
   // getters and setters
-  void setPosition(int x, int y);
-  geometry_msgs::Point getPosition();
-  Pos getGVDPos();
-  void setNombre(std::string nom);
-  string getNombre();
   int getRobotId();
-  Pos getOffset();
   void getGrid();
 
   pgmappingcooperativo::Bid getBid(pgmappingcooperativo::Auction msg);
 
 
   void savePose(const geometry_msgs::Pose msg);
-
-  geometry_msgs::Point pos_to_real_p3d(Pos p);
 
   bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);
   void addToGraph(PosSet&, GvdVecGraph& graph, StateGrid&);

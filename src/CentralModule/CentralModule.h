@@ -51,7 +51,6 @@ class CentralModule {
   float robotSpeed;
   string mapName;
   int mapSize;
-  float cellSize;
 
   int fileLogLevel;
   string fileLogDir;
@@ -109,7 +108,7 @@ class CentralModule {
   vector<int> getFrontierCenters();
   void setFrontierCenters(vector<int> newFrontierCenters);
 
-  centralMouleState getEstado();
+  centralMouleState getState();
   void setState(centralMouleState newState);
 
   int getNumRobots();

@@ -134,6 +134,14 @@ inline Pos toPos(Point p3d){
   return Pos(p3d.x,p3d.y);
 }
 
+inline Pos toPos(Point p3d, mapInfoType mapInfo) {
+
+  Pos adjustment(-(p3d.x < 0),-(p3d.y < 0));
+
+  return toPos(p3d) - toPos(mapInfo.origin.position) + adjustment;
+}
+
+
 inline PosSet toPosSet(vector<Point2D> ps){
   PosSet res;
   for( Point2D p : ps ){

@@ -1,4 +1,5 @@
 #include "MapMerger.h"
+
 /*
  *  Variables
  */
@@ -6,7 +7,7 @@
 // Topics
 /// Subscribers
 boost::unordered_map<std::string, ros::Subscriber> map_sub;
-boost::unordered_map<std::string, ros::Subscriber> pose_sub;
+boost::unordered_map<std::string, ros::Subscriber> odom_sub;
 ros::Subscriber end_sub;
 
 /// Publishers
@@ -43,10 +44,14 @@ void handleNewMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name) 
   }
 }
 
-void handlePose(const geometry_msgs::PoseStamped::ConstPtr& msg, std::string name) {
+void odomCallback(const nav_msgs::Odometry::ConstPtr &odom, std::string name) {
+  geometry_msgs::PoseStamped ps;
+  ps.header = odom->header;
+  ps.pose = odom->pose.pose;
+
   // ROS_INFO(" Obtengo nueva pose de  %s", name.c_str());
   if (!FIN) {
-    map_merger.updatePose(msg, name);
+    map_merger.updatePose(ps, name);
   }
   // ROS_INFO(" Nueva pose de %s agregada", name.c_str());
 }
@@ -82,7 +87,7 @@ int main(int argc, char* argv[]) {
     for (ros::master::V_TopicInfo::const_iterator it_topic = topic_infos.begin();
          it_topic != topic_infos.end(); ++it_topic) {
       const ros::master::TopicInfo& published_topic = *it_topic;
-      if (published_topic.name.find("/pose") != std::string::npos ) {
+      if (published_topic.name.find("/odom") != std::string::npos ) {
         cont_p3dx_pos++;
       }
       /* if (published_topic.name.find("/map") != std::string::npos ) { */
@@ -105,13 +110,13 @@ int main(int argc, char* argv[]) {
   for (ros::master::V_TopicInfo::const_iterator it_topic = topic_infos.begin();
        it_topic != topic_infos.end(); ++it_topic) {
     const ros::master::TopicInfo& published_topic = *it_topic;
-    if (published_topic.name.find("/pose") != std::string::npos) {
+    if (published_topic.name.find("/odom") != std::string::npos) {
       std::string nombre = published_topic.name;
       nombre.erase(0, 1);
       int pos = nombre.find('/');
       nombre = nombre.substr(0, pos);
-      pose_sub[nombre] = n.subscribe<geometry_msgs::PoseStamped>(
-          published_topic.name, 1, boost::bind(&handlePose, _1, nombre));
+      odom_sub[nombre] = n.subscribe<nav_msgs::Odometry>(
+          published_topic.name, 1, boost::bind(&odomCallback, _1, nombre));
       /* std::string map_topic = "/" + nombre + "/map"; */
       std::string map_topic = "/" + nombre + "/move_base/global_costmap/costmap";
       map_initialization[nombre] = false;

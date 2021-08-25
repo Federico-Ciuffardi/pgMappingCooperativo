@@ -1,10 +1,10 @@
 #include <ros/ros.h>
 #include <cstdlib>
 #include <ctime>
-#include "geometry_msgs/PoseStamped.h"
 #include "nav_msgs/Odometry.h"
 #include "Robot.h"
 #include "ros/init.h"
+#include "ros/this_node.h"
 
 ////////////////
 // Parameters //
@@ -19,6 +19,7 @@ unsigned int cellMarkerType = RvizHelper::CUBE_LIST;
 float cubeHeight = 0.02;
 
 /// Layers (planes orthogonal to the z axis)
+
 //// Separation between each layer
 float layerSeparation = cubeHeight;
 
@@ -35,8 +36,8 @@ float posZ      = 10*layerSeparation;
 /// Subscribers
 ros::Subscriber odom_sub;
 
-ros::Subscriber segment_auction_sub;
-ros::Subscriber segment_assignment_sub;
+ros::Subscriber auction_sub;
+ros::Subscriber assignment_sub;
 
 ros::Subscriber path_result_sub;
 ros::Subscriber end_sub;
@@ -45,7 +46,6 @@ ros::Subscriber map_merged_sub;
 
 /// Publishers
 ros::Publisher end_pub;
-ros::Publisher pose_pub;
 ros::Publisher bid_pub;
 
 ros::Publisher request_objetive_pub;
@@ -73,19 +73,19 @@ void setRvizMarks(Robot &r, pgmappingcooperativo::goalList &path, mapInfoType ma
   rvizHelper.type     = RvizHelper::LINE_STRIP;
   rvizHelper.scale    = makeVector3(cellSize*0.15, cellSize, 1);
   rvizHelper.position = makeVector3(0,0,pathLineZ);
-  rvizHelper.mark(path.listaGoals, robot.getNombre() + "_path");
+  rvizHelper.mark(path.listaGoals, robot.name + "_path");
 
   // Mark Current position on rviz
   rvizHelper.topic = &marker_pub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
-  posMarkerPoint.push_back(toMarkerPoint(robot.getGVDPos(), robot.map_merged.mapa.info));
+  posMarkerPoint.push_back(toMarkerPoint(toPos(robot.position, robot.map_merged.mapa.info), robot.map_merged.mapa.info));
 
   rvizHelper.color    = makeColorRGBA(0.75);
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,posZ);
-  rvizHelper.mark(posMarkerPoint, robot.getNombre() + "_pos");
+  rvizHelper.mark(posMarkerPoint, robot.name + "_pos");
 }
 
 ///////////////////
@@ -110,23 +110,17 @@ void publishPath(Pos frontier) {
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   // Save current pose
   robot.savePose(odom->pose.pose);
-
-  // Publish pose stamped
-  geometry_msgs::PoseStamped ps;
-  ps.header = odom->header;
-  ps.pose = odom->pose.pose;
-
-  pose_pub.publish(ps);
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
+
   ROS_INFO("Arrived to the objective, requesting objective");
   std_msgs::String msg_request;
   msg_request.data = "signal";
   request_objetive_pub.publish(msg_request);
 
   // Delete the path mark
-  rvizHelper.deleteMark(robot.getNombre() + "_path");
+  rvizHelper.deleteMark(robot.name + "_path", 0);
 }
 
 void auctionCallBack(const pgmappingcooperativo::AuctionConstPtr& msg) {
@@ -182,24 +176,29 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "robot");
   ros::NodeHandle n;
 
+  // Load params
+
+  /// Global params
+  assert(n.param<float> ("/robot_speed", robot.robotSpeed, 0));
+  assert(n.param<float> ("/robot_sensor_range", robot.sensorRange, 0));
+
   // Get namespace
-  std::string nom = ros::this_node::getNamespace();
-  robot.setNombre(nom.erase(0, 1));
+  string nameSpace = ros::this_node::getNamespace();
+  robot.name = nameSpace.erase(0, 1);
 
   // Initilize Publishers
-  pose_pub             = n.advertise<geometry_msgs::PoseStamped>("pose", 1);
   bid_pub      = n.advertise<pgmappingcooperativo::Bid>("bid", 1);
   goalPath_pub         = n.advertise<pgmappingcooperativo::goalList>("goalPath", 1, true);
   request_objetive_pub = n.advertise<std_msgs::String>("/request_objetive", 1);
   marker_pub           = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 
   // Initilize Subscribers
-  odom_sub               = n.subscribe("odom", 1, odomCallback);
-  segment_auction_sub    = n.subscribe("/auction", 1, auctionCallBack);
-  segment_assignment_sub = n.subscribe("/" + nom + "/assigment", 1, assignmentCallback);
-  path_result_sub        = n.subscribe("path_result", 1, pathSucceedCallback);
-  map_merged_sub         = n.subscribe<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
-  end_sub                = n.subscribe("/end", 1, handleEnd);
+  odom_sub        = n.subscribe("odom", 1, odomCallback);
+  auction_sub     = n.subscribe("/auction", 1, auctionCallBack);
+  assignment_sub  = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
+  path_result_sub = n.subscribe("path_result", 1, pathSucceedCallback);
+  map_merged_sub  = n.subscribe<pgmappingcooperativo::mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  end_sub         = n.subscribe("/end", 1, handleEnd);
 
   // spin
   ROS_INFO("Initialized");

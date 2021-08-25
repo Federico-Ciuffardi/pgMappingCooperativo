@@ -16,6 +16,7 @@
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include "../lib/utils.h"
+#include "nav_msgs/Odometry.h"
 
 class MapMerger {
  private:
@@ -60,7 +61,7 @@ class MapMerger {
   void setObstaculos(boost::unordered_set<int> newObstaculos);
   nav_msgs::OccupancyGrid updateMap(const nav_msgs::OccupancyGridConstPtr& newMap,
                                     std::string name);
-  void updatePose(const geometry_msgs::PoseStampedConstPtr& newPose, std::string name);
+  void updatePose(geometry_msgs::PoseStamped& newPose, std::string name);
   int updateFrontera(nav_msgs::OccupancyGrid map, std::string name);
   nav_msgs::OccupancyGrid getMap();
   cv::Point2f getPoint2f(int ind);

@@ -51,22 +51,57 @@ Visualization Manager:
       Plane Cell Count: 128
       Reference Frame: <Fixed Frame>
       Value: true
+    - Angle Tolerance: 0.0010000000474974513
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 1
+      Name: ----- ROBOT 0 -----
+      Position Tolerance: 0.0010000000474974513
+      Queue Size: 1
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.4000000059604645
+        Head Radius: 0.5
+        Shaft Length: 0.6000000238418579
+        Shaft Radius: 0.25
+        Value: Arrow
+      Topic: /p3dx_0/odom
+      Unreliable: false
+      Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.4000000059604645
       Head Radius: 0.5
-      Name: -----pose_0-----
+      Name: pose_0
       Queue Size: 10
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
       Topic: /p3dx_0/pose
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -203,22 +238,57 @@ Visualization Manager:
       Topic: /p3dx_0/move_base/NavfnROS/plan
       Unreliable: false
       Value: true
+    - Angle Tolerance: 0.0010000000474974513
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 1
+      Name: ----- ROBOT 1 -----
+      Position Tolerance: 0.0010000000474974513
+      Queue Size: 1
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.4000000059604645
+        Head Radius: 0.5
+        Shaft Length: 0.6000000238418579
+        Shaft Radius: 0.25
+        Value: Arrow
+      Topic: /p3dx_1/odom
+      Unreliable: false
+      Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.4000000059604645
       Head Radius: 0.5
-      Name: -----pose_1-----
+      Name: pose_1
       Queue Size: 10
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
       Topic: /p3dx_1/pose
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -355,22 +425,57 @@ Visualization Manager:
       Topic: /p3dx_1/move_base/NavfnROS/plan
       Unreliable: false
       Value: true
+    - Angle Tolerance: 0.0010000000474974513
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 1
+      Name: ----- ROBOT 2 -----
+      Position Tolerance: 0.0010000000474974513
+      Queue Size: 1
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.4000000059604645
+        Head Radius: 0.5
+        Shaft Length: 0.6000000238418579
+        Shaft Radius: 0.25
+        Value: Arrow
+      Topic: /p3dx_2/odom
+      Unreliable: false
+      Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.4000000059604645
       Head Radius: 0.5
-      Name: -----pose_2-----
+      Name: pose_2
       Queue Size: 10
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
       Topic: /p3dx_2/pose
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -507,22 +612,57 @@ Visualization Manager:
       Topic: /p3dx_2/move_base/NavfnROS/plan
       Unreliable: false
       Value: true
+    - Angle Tolerance: 0.0010000000474974513
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 1
+      Name: ----- ROBOT 3 -----
+      Position Tolerance: 0.0010000000474974513
+      Queue Size: 1
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.4000000059604645
+        Head Radius: 0.5
+        Shaft Length: 0.6000000238418579
+        Shaft Radius: 0.25
+        Value: Arrow
+      Topic: /p3dx_3/odom
+      Unreliable: false
+      Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.4000000059604645
       Head Radius: 0.5
-      Name: -----pose_3-----
+      Name: pose_3
       Queue Size: 10
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
       Topic: /p3dx_3/pose
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -659,22 +799,57 @@ Visualization Manager:
       Topic: /p3dx_3/move_base/NavfnROS/plan
       Unreliable: false
       Value: true
+    - Angle Tolerance: 0.0010000000474974513
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 1
+      Name: ----- ROBOT 4 -----
+      Position Tolerance: 0.0010000000474974513
+      Queue Size: 1
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.4000000059604645
+        Head Radius: 0.5
+        Shaft Length: 0.6000000238418579
+        Shaft Radius: 0.25
+        Value: Arrow
+      Topic: /p3dx_4/odom
+      Unreliable: false
+      Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.4000000059604645
       Head Radius: 0.5
-      Name: -----pose_4-----
+      Name: pose_4
       Queue Size: 10
       Shaft Length: 0.6000000238418579
       Shaft Radius: 0.25
       Shape: Arrow
       Topic: /p3dx_4/pose
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -902,10 +1077,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 7.522578716278076
+      Scale: 9.06736946105957
       Target Frame: <Fixed Frame>
-      X: -2.713618040084839
-      Y: 3.917576313018799
+      X: -12.968366622924805
+      Y: 14.734519958496094
     Saved: ~
 Window Geometry:
   Displays:
