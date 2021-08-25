@@ -65,12 +65,10 @@ class CentralModule {
 
   // frontier related
   boost::unordered_set<int> frontiers;
-  vector<int> frontierCenters;
   ConnectedComponents* frontierConComps = NULL;
 
   // Auction related
   Auctioneer<RobotId, SegmentId, Pos> auctioneer;
-  CriticalInfos cis;
 
   ///////////////
   // Functions //
@@ -100,16 +98,8 @@ class CentralModule {
   CentralModule();
 
   // getters and setters
-  vector<int> getFrontierCenters();
-  void setFrontierCenters(vector<int> newFrontierCenters);
-
   centralMouleState getState();
   void setState(centralMouleState newState);
-
-  int getNumRobots();
-  void setNumRobots(int newNumRobots);
-
-  nav_msgs::OccupancyGrid getMap();
 
   // API 
   void updateMap(const MapMergedInfoConstPtr&);

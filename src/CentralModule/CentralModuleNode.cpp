@@ -242,13 +242,13 @@ void startAuction() {
 
     if (coverageFileLog.empty()) {
       coverageFileLog = "covarage";
-      coverageFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + coverageFileLog + to_string(centralModule.getNumRobots());
+      coverageFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + coverageFileLog + to_string(centralModule.robotNumber);
     }
 
     string data = coveragePer + " " + to_string(gvdTime.toSec());
     if (gvdFileLog.empty()) {
       gvdFileLog = "tiemposGVD";
-      gvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + gvdFileLog + to_string(centralModule.getNumRobots());
+      gvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + gvdFileLog + to_string(centralModule.robotNumber);
     }
 
     log_data(data, gvdFileLog);
@@ -258,7 +258,7 @@ void startAuction() {
     data = coveragePer + "  " + to_string(increment.toSec());
     if (incrementGvdFileLog.empty()) {
       incrementGvdFileLog = "incrementoGVD";
-      incrementGvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + incrementGvdFileLog + to_string(centralModule.getNumRobots());
+      incrementGvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + incrementGvdFileLog + to_string(centralModule.robotNumber);
     }
 
     log_data(data, incrementGvdFileLog);
@@ -449,7 +449,7 @@ void bidCallBack(const BidConstPtr& msg, string name) {
     auctionResolutionTimeoutTimer.start(); // Start the timeout to wait for the other working robots
   }
 
-  if (succesfulBids == centralModule.getNumRobots()) {
+  if (succesfulBids == centralModule.robotNumber) {
     ROS_DEBUG_STREAM("Is the last one, starting the auction resultion before timeout");
     auctionResolutionTimeoutTimer.stop(); // Stop the timeout as it was not necessary
     resolveAuction();                     // Resolve the auction
@@ -464,7 +464,7 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
   // log data
   if (centralModule.fileLogLevel > 0) {
     ros::Duration currentTime = ros::Time::now() - firstAuction;
-    string robotCount = to_string(centralModule.getNumRobots());
+    string robotCount = to_string(centralModule.robotNumber);
     string time = to_string(currentTime.toSec());
 
     string data = "Cantidad Robots: " + robotCount + "\n";
@@ -557,9 +557,9 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    int remaining = centralModule.getNumRobots() - contP3dx;
+    int remaining = centralModule.robotNumber - contP3dx;
 
-    ROS_INFO_STREAM("Waiting for "<<remaining<<" out of "<<centralModule.getNumRobots()<<" robots");
+    ROS_INFO_STREAM("Waiting for "<<remaining<<" out of "<<centralModule.robotNumber<<" robots");
 
     if(remaining==0) break;
 

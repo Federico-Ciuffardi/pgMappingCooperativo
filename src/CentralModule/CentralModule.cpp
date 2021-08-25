@@ -23,14 +23,6 @@ void CentralModule::setState(centralMouleState newState) {
   state = newState;
 };
 
-int CentralModule::getNumRobots() {
-  return robotNumber;
-};
-
-void CentralModule::setNumRobots(int newNumRobots) {
-  robotNumber = newNumRobots;
-};
-
 /////////
 // API //
 /////////
@@ -105,7 +97,6 @@ Auction CentralModule::getAuctionInfo() {
   // Turn the segment and frontiers info into a ros message
   cout << "debug :: turn segments and frontiers to rosmsg" << endl;
   for (auto it : topoMap->segmenter->connectedComponents) {
-    SegmentId segmentId = it.first;
     PosSet frontiers = it.second.typeMembers[Frontier];
 
     for (Pos frontier : frontiers) {
@@ -127,7 +118,7 @@ bool CentralModule::saveBid(Bid bid, RobotId robotId) {
   // skip if old
   if (assignmentId != bid.id)  return false; 
 
-  // Store the bid of the robot 'name'
+  // Store the bid
   for (int i = 0; i < bid.frontiers.size(); i++) {
     Float value = bid.values[i];
     Pos frontier = toPos(bid.frontiers[i]);

@@ -62,7 +62,7 @@ string endMsg("END");
 // Rviz marks //
 ////////////////
 
-void setPathRvizMarks(Robot &r, GoalList &path, mapInfoType mapInfo) {
+void setPathRvizMarks(GoalList &path, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -84,7 +84,7 @@ void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
   rvizHelper.topic = &markerPub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
-  posMarkerPoint.push_back(toMarkerPoint(toPos(robot.position, robot.mapMerged.occupancyGrid.info), robot.mapMerged.occupancyGrid.info));
+  posMarkerPoint.push_back(toMarkerPoint(toPos(r.position, mapInfo), mapInfo));
 
   rvizHelper.color    = makeColorRGBA(0.75);
   rvizHelper.type     = cellMarkerType;
@@ -105,7 +105,7 @@ void publishPath(Pos frontier) {
   goalPathPub.publish(path);
   
   // Mark path info
-  setPathRvizMarks(robot, path,  robot.mapMerged.occupancyGrid.info);
+  setPathRvizMarks(path,  robot.occupancyGrid.info);
 }
 
 ///////////////
@@ -149,7 +149,7 @@ void auctionCallBack(const AuctionConstPtr& msg) {
   bidPub.publish(segmentBid);
 
   // Mark position
-  setPositionRvizMarks(robot, robot.mapMerged.occupancyGrid.info);
+  setPositionRvizMarks(robot, robot.occupancyGrid.info);
 }
 
 void assignmentCallback(const AssignmentConstPtr& msg) {
@@ -168,7 +168,7 @@ void assignmentCallback(const AssignmentConstPtr& msg) {
 }
 
 void mapMergedCallBack(const MapMergedInfoConstPtr& msg) {
-  robot.mapMerged = (*msg);
+  robot.occupancyGrid = (*msg).occupancyGrid;
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {

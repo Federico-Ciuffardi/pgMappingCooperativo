@@ -58,7 +58,7 @@ class Robot {
   string name;
   int lastAssignmentId = -1;
   int lastAuctionId = -1;
-  MapMergedInfo mapMerged;
+  nav_msgs::OccupancyGrid occupancyGrid;
   StateGrid grid;
   Point position;
 
