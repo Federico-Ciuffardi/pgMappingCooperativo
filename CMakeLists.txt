@@ -64,19 +64,14 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 add_message_files(
   FILES
-  goalList.msg
-  infoCentro.msg
-  asignacion.msg
-  asignacionCelda.msg
-  resumenInstancia.msg
-  mapMergedInfo.msg
-  takeobjetive.msg
-  Point2D.msg
-  Edge.msg
-  Graph.msg
+  Assignment.msg
   Auction.msg
   Bid.msg
-  Assignment.msg
+  Edge.msg
+  GoalList.msg
+  Graph.msg
+  MapMergedInfo.msg
+  Point2D.msg
 )
 
 ## Generate services in the 'srv' folder

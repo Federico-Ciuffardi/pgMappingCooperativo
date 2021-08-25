@@ -3,12 +3,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <stdio.h>
-#include <pgmappingcooperativo/asignacion.h>
-#include <pgmappingcooperativo/asignacionCelda.h>
-#include <pgmappingcooperativo/frontierReport.h>
-#include <pgmappingcooperativo/infoCentro.h>
-#include <pgmappingcooperativo/mapMergedInfo.h>
-#include <pgmappingcooperativo/takeobjetive.h>
+#include <pgmappingcooperativo/MapMergedInfo.h>
 #include <pgmappingcooperativo/Auction.h>
 #include <pgmappingcooperativo/Bid.h>
 #include <pgmappingcooperativo/Assignment.h>
@@ -117,7 +112,7 @@ class CentralModule {
   nav_msgs::OccupancyGrid getMap();
 
   // API 
-  void updateMap(const mapMergedInfoConstPtr&);
+  void updateMap(const MapMergedInfoConstPtr&);
   Auction getAuctionInfo();
   boost::unordered_map<string,Assignment> assign();
   bool saveBid(Bid, RobotId);

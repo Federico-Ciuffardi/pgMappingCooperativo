@@ -3,7 +3,6 @@
 #include "../lib/GVD/src/Gvd.h"
 #include "../lib/GVD/src/data/Vector2.h"
 #include <pgmappingcooperativo/Point2D.h>
-#include <pgmappingcooperativo/SegmentBid.h>
 #include <pgmappingcooperativo/Graph.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <boost/unordered/unordered_set_fwd.hpp>

@@ -367,7 +367,7 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 
 int maps = 0;
 bool first = true;
-void mapMergedCallBack(const mapMergedInfoConstPtr& msg) {
+void mapMergedCallBack(const MapMergedInfoConstPtr& msg) {
   centralModule.updateMap(msg);
   maps++;
   if (first && maps >= 15){
@@ -540,7 +540,7 @@ int main(int argc, char* argv[]) {
   auctionPub        = n.advertise<Auction>("/auction", 1);
 
   // Initilize Subscribers
-  mapMergedSub       = n.subscribe<mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  mapMergedSub       = n.subscribe<MapMergedInfo>("/map_merged", 1, mapMergedCallBack);
   endSub             = n.subscribe("/end", 1, endCallBack);
   requestObjetiveSub = n.subscribe<std_msgs::String>("/request_objetive", 1, &requestObjectiveCallBack);
 

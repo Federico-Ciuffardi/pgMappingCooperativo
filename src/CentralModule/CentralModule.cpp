@@ -35,7 +35,7 @@ void CentralModule::setNumRobots(int newNumRobots) {
 // API //
 /////////
 
-void CentralModule::updateMap(const mapMergedInfoConstPtr& newMap) {
+void CentralModule::updateMap(const MapMergedInfoConstPtr& newMap) {
   // store occGrid
   occupancyGrid = newMap->mapa;
 

@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h>
-#include <pgmappingcooperativo/mapMergedInfo.h>
 #include <ctime>
 #include <sstream>
 #include <string>
@@ -14,7 +13,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/String.h"
 #include "tf/transform_datatypes.h"
-#include "pgmappingcooperativo/goalList.h"
+#include "pgmappingcooperativo/GoalList.h"
 
 // Constantes
 
@@ -33,10 +32,10 @@ ros::Subscriber goalPath_sub;
 ros::Subscriber pose_sub;
 // ros::Subscriber map_sub;
 ros::Subscriber scan_sub;
-pgmappingcooperativo::goalList path;
-pgmappingcooperativo::goalList path_saved;
-geometry_msgs::PoseStamped position;
-geometry_msgs::PoseStamped position_old;
+GoalList path;
+GoalList path_saved;
+PoseStamped position;
+PoseStamped position_old;
 // nav_msgs::OccupancyGrid odometry_map;
 ros::Subscriber end_sub;
 
@@ -65,7 +64,7 @@ float getDistance(int target) {
   return sqrt(pow(dx, 2) + pow(dy, 2));
 }
 
-float getDistance(geometry_msgs::Point p3d) {
+float getDistance(Point p3d) {
   float dx, dy;
   dx = position.pose.position.x - p3d.x;
   dy = position.pose.position.y - p3d.y;
@@ -107,7 +106,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   position = toPoseStamped(*odom);
 }
 
-pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
+GoalList trim_path(GoalList msg) {
   int path_start = 0;
   for (int i = 0; i < msg.listaGoals.size(); i++) {
     float dist_to_target = getDistance(msg.listaGoals[i]);
@@ -115,12 +114,12 @@ pgmappingcooperativo::goalList trim_path(pgmappingcooperativo::goalList msg) {
       path_start = i;
     }
   }
-  msg.listaGoals = std::vector<geometry_msgs::Point, std::allocator<geometry_msgs::Point>>(
+  msg.listaGoals = std::vector<Point, std::allocator<Point>>(
       msg.listaGoals.begin() + path_start, msg.listaGoals.end());
   return msg;
 }
 
-void setPath(const pgmappingcooperativo::goalList& msg) {
+void setPath(const GoalList& msg) {
   if (msg.listaGoals.size() != 0) {
     path_saved = trim_path(msg);
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",
@@ -129,7 +128,7 @@ void setPath(const pgmappingcooperativo::goalList& msg) {
   }
 }
 
-void send_point(geometry_msgs::Point next_point) {
+void send_point(Point next_point) {
   // ROS_INFO("Creating path step to (%d,%d)",next_point.x,next_point.y);
   // ROS_INFO("Sending path step ---> X = %f , Y = %f , Z = %f", next_point.x,
   // next_point.y, next_point.z );
@@ -154,7 +153,7 @@ int last_unsafe_index = -1;
 /*// -1 if is safe else the first obstacle index is returned
 int safePath(int from_index, int lookahead){
   int safe = -1;
-  geometry_msgs::Point origin_p3d  = odometry_map.info.origin.position;
+  Point origin_p3d  = odometry_map.info.origin.position;
   origin_p3d.x = -origin_p3d.x-1;
   origin_p3d.y = -origin_p3d.y;
   int origin_p1d = toInt(origin_p3d,0,odometry_map.info.height);
@@ -169,7 +168,7 @@ int safePath(int from_index, int lookahead){
   return safe;
 }*/
 
-double getAngle(geometry_msgs::Quaternion q) {
+double getAngle(Quaternion q) {
   tf::Quaternion quat_tf;
 
   tf::quaternionMsgToTF(q, quat_tf);
@@ -188,7 +187,7 @@ double normalize(double angle) {
 }
 
 bool isSafe(float target_angle, float safe_distance = 2.5) {
-  geometry_msgs::Point current_pos = position.pose.position;
+  Point current_pos = position.pose.position;
 
   double robot_angle = getAngle(position.pose.orientation);
   // ROS_INFO("angulo del robotitio %f, dir objetivo (%f, %f), angulo del objetivo
@@ -210,16 +209,16 @@ bool isSafe(float target_angle, float safe_distance = 2.5) {
 }
 
 float getTargetAngle(int index) {
-  geometry_msgs::Point current_pos = position.pose.position;
-  geometry_msgs::Point target_pos = path.listaGoals[index];
+  Point current_pos = position.pose.position;
+  Point target_pos = path.listaGoals[index];
   target_pos.x -= current_pos.x;
   target_pos.y -= current_pos.y;
   return atan2(target_pos.y, target_pos.x);
 }
 
 /*bool isSafe(int index){
-  geometry_msgs::Point current_pos = position.pose.position;
-  geometry_msgs::Point target_pos = path.listaGoals[index];
+  Point current_pos = position.pose.position;
+  Point target_pos = path.listaGoals[index];
   target_pos.x -= current_pos.x;
   target_pos.y -= current_pos.y;
 
@@ -269,7 +268,7 @@ int main(int argc, char** argv) {
   end_sub = n.subscribe("/end", 1, handleEnd);
   path_result_pub = n.advertise<std_msgs::String>("path_result", 10);
   path_info_pub = n.advertise<std_msgs::String>("path_info", 10);
-  waypoint_pub = n.advertise<geometry_msgs::Point>("waypoint", 1);
+  waypoint_pub = n.advertise<Point>("waypoint", 1);
 
   ros::AsyncSpinner spinner(2);
   spinner.start();

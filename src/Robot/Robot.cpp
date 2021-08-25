@@ -69,8 +69,8 @@ Bid Robot::getBid(Auction msg) {
   return bid;
 }
 
-goalList Robot::getPathTo(Pos frontier) {
-  goalList goalList;
+GoalList Robot::getPathTo(Pos frontier) {
+  GoalList goalList;
 
   if(!is_elem(frontier,paths)){
     FAIL("No path to assigned objective. This is a bug, halting execution");

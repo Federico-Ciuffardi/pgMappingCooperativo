@@ -62,7 +62,7 @@ string endMsg("END");
 // Rviz marks //
 ////////////////
 
-void setPathRvizMarks(Robot &r, goalList &path, mapInfoType mapInfo) {
+void setPathRvizMarks(Robot &r, GoalList &path, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -99,7 +99,7 @@ void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
 
 void publishPath(Pos frontier) {
   // Get path
-  goalList path = robot.getPathTo(frontier);
+  GoalList path = robot.getPathTo(frontier);
 
   // Publish the path
   goalPathPub.publish(path);
@@ -167,7 +167,7 @@ void assignmentCallback(const AssignmentConstPtr& msg) {
   publishPath(toPos(msg->frontier));
 }
 
-void mapMergedCallBack(const mapMergedInfoConstPtr& msg) {
+void mapMergedCallBack(const MapMergedInfoConstPtr& msg) {
   robot.mapMerged = (*msg);
 }
 
@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
 
   // Initilize Publishers
   bidPub             = n.advertise<Bid>("bid", 1);
-  goalPathPub        = n.advertise<goalList>("goalPath", 1, true);
+  goalPathPub        = n.advertise<GoalList>("goalPath", 1, true);
   requestObjetivePub = n.advertise<std_msgs::String>("/request_objetive", 1);
   markerPub          = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
 
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
   auctionSub    = n.subscribe("/auction", 1, auctionCallBack);
   assignmentSub = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
   pathResultSub = n.subscribe("path_result", 1, pathSucceedCallback);
-  mapMergedSub  = n.subscribe<mapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  mapMergedSub  = n.subscribe<MapMergedInfo>("/map_merged", 1, mapMergedCallBack);
   endSub        = n.subscribe("/end", 1, handleEnd);
 
   // spin

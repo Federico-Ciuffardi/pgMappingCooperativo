@@ -7,18 +7,11 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <stdio.h>
-#include <pgmappingcooperativo/asignacion.h>
-#include <pgmappingcooperativo/asignacionCelda.h>
-#include <pgmappingcooperativo/frontierReport.h>
-#include <pgmappingcooperativo/goalList.h>
-#include <pgmappingcooperativo/infoCentro.h>
-#include <pgmappingcooperativo/resumenInstancia.h>
-#include <pgmappingcooperativo/takeobjetive.h>
+#include <pgmappingcooperativo/GoalList.h>
 #include <pgmappingcooperativo/Auction.h>
 #include <pgmappingcooperativo/Bid.h>
 #include <pgmappingcooperativo/Assignment.h>
-#include <pgmappingcooperativo/FrontierBid.h>
-#include <pgmappingcooperativo/mapMergedInfo.h>
+#include <pgmappingcooperativo/MapMergedInfo.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -65,7 +58,7 @@ class Robot {
   string name;
   int lastAssignmentId = -1;
   int lastAuctionId = -1;
-  mapMergedInfo mapMerged;
+  MapMergedInfo mapMerged;
   StateGrid grid;
   Point position;
 
@@ -81,7 +74,7 @@ class Robot {
 
   // API
   Bid getBid(Auction msg);
-  goalList getPathTo(Pos p);
+  GoalList getPathTo(Pos p);
 
   // Aux
   bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);
