@@ -70,7 +70,6 @@ class Robot {
   Robot();
 
   // getters and setters
-  int getRobotId();
 
   // API
   Bid getBid(Auction msg);

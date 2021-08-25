@@ -1,5 +1,3 @@
-nav_msgs/OccupancyGrid mapa
-int32[] frontera
-int32 sizef
-int32[] obstaculos
-int32 sizeo
+nav_msgs/OccupancyGrid occupancyGrid 
+int32[] frontiers 
+int32[] obstacles

@@ -29,20 +29,20 @@ int MapMerger::getIndicePosicionActual(float x_ahora, float y_ahora) {
           (((int)x_ahora + signo((int)x_ahora)) + ((int)y_ahora) * MapMerger::width));
 }
 
-/*Guardo la informaci[on del mapa particular para cada rovot]*/
+/*Guardo la informaci[on del map particular para cada rovot]*/
 void MapMerger::saveRobotMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name) {
   MapMerger::maps_by_robots[name].info = msg->info;
   MapMerger::maps_by_robots[name].header = msg->header;
   MapMerger::maps_by_robots[name].data = msg->data;
 }
 
-/*inicializa el mapa mergeado y toda la info*/
+/*inicializa el map mergeado y toda la info*/
 void MapMerger::initMapMerger(const nav_msgs::OccupancyGridConstPtr& msg) {
   MapMerger::map_merged.info = msg->info;
   MapMerger::map_merged.header = msg->header;
   MapMerger::map_merged.data = msg->data;
 
-  /*Guardo informacion sobre el oigen y el largo y ancho del mapa QUE ASUMO SON
+  /*Guardo informacion sobre el oigen y el largo y ancho del map QUE ASUMO SON
    * SIEMPRE IGUALES*/
   MapMerger::y_origin = MapMerger::map_merged.info.origin.position.x;
   MapMerger::x_origin = MapMerger::map_merged.info.origin.position.y;
@@ -50,8 +50,8 @@ void MapMerger::initMapMerger(const nav_msgs::OccupancyGridConstPtr& msg) {
   MapMerger::height = MapMerger::map_merged.info.height;
   MapMerger::indice_origen =
       (abs(MapMerger::y_origin) * MapMerger::width) + abs(MapMerger::x_origin);
-  /*inicializo un mapa de puntos donde para cada indice me devuelve el punto
-   * (x,y) que le corresponde en un mapa.*/
+  /*inicializo un map de puntos donde para cada indice me devuelve el punto
+   * (x,y) que le corresponde en un map.*/
   for (int i = 0; i < MapMerger::width * MapMerger::height; i++) {
     int fila = i % MapMerger::width;
     ;
@@ -82,7 +82,7 @@ bool MapMerger::isAnyRobotCloser(float dist, int ind, std::string name) {
   return hay_mas_cerca;
 }
 
-/*Actualizo el mapa mergeado*/
+/*Actualizo el map mergeado*/
 nav_msgs::OccupancyGrid MapMerger::updateMap(const nav_msgs::OccupancyGridConstPtr& msg,
                                              std::string name) {
   saveRobotMap(msg, name);
@@ -114,7 +114,7 @@ nav_msgs::OccupancyGrid MapMerger::updateMap(const nav_msgs::OccupancyGridConstP
   return MapMerger::map_merged;
 }
 
-/*Funcion que indica si un punto e frontera o no, ademas calcula su fila y
+/*Funcion que indica si un punto e frontiers o no, ademas calcula su fila y
  * columna.*/
 bool MapMerger::esFrontera(int indice, const nav_msgs::OccupancyGrid msg) {
   bool ret = false;
@@ -170,12 +170,12 @@ int MapMerger::updateFrontera(nav_msgs::OccupancyGrid map, std::string name) {
   // p.data[posicionActual] = 100;
 
   boost::unordered_set<int>::iterator f;
-  for (f = MapMerger::frontera.begin(); f != MapMerger::frontera.end(); f++) {
+  for (f = MapMerger::frontiers.begin(); f != MapMerger::frontiers.end(); f++) {
     if (MapMerger::esFrontera((*f), map)) {
       frontera_aux_nueva.insert(*f);
     }
   }
-  MapMerger::frontera.clear();
+  MapMerger::frontiers.clear();
   for (int i = -8; i < 9; i++) {
     for (int j = posicionActual - 8 * MapMerger::width; j < posicionActual + 9 * MapMerger::width;
          j += MapMerger::width) {
@@ -183,11 +183,11 @@ int MapMerger::updateFrontera(nav_msgs::OccupancyGrid map, std::string name) {
       if (MapMerger::esFrontera(ind, map)) {
         frontera_aux_nueva.insert(ind);
       } else if (map.data[ind] == 100) {
-        MapMerger::obstaculos.insert(ind);
+        MapMerger::obstacles.insert(ind);
       }
     }
   }
-  MapMerger::frontera = frontera_aux_nueva;
+  MapMerger::frontiers = frontera_aux_nueva;
   return frontera_aux_nueva.size();
 }
 
@@ -211,27 +211,27 @@ void MapMerger::setRange(int newRange) {
 std::vector<int> MapMerger::getFrontera() {
   std::vector<int> ret;
   boost::unordered_set<int>::iterator f;
-  for (f = MapMerger::frontera.begin(); f != MapMerger::frontera.end(); f++) {
+  for (f = MapMerger::frontiers.begin(); f != MapMerger::frontiers.end(); f++) {
     ret.push_back(*f);
   }
   return ret;
 };
 
 void MapMerger::setFrontera(boost::unordered_set<int> newFrontera) {
-  MapMerger::frontera = newFrontera;
+  MapMerger::frontiers = newFrontera;
 };
 
 std::vector<int> MapMerger::getObstaculos() {
   std::vector<int> ret;
   boost::unordered_set<int>::iterator f;
-  for (f = MapMerger::obstaculos.begin(); f != MapMerger::obstaculos.end(); f++) {
+  for (f = MapMerger::obstacles.begin(); f != MapMerger::obstacles.end(); f++) {
     ret.push_back(*f);
   }
   return ret;
 };
 
 void MapMerger::setObstaculos(boost::unordered_set<int> newObstaculos) {
-  MapMerger::obstaculos = newObstaculos;
+  MapMerger::obstacles = newObstaculos;
 };
 
 nav_msgs::OccupancyGrid MapMerger::getMap() {

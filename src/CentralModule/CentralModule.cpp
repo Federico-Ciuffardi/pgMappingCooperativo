@@ -37,10 +37,10 @@ void CentralModule::setNumRobots(int newNumRobots) {
 
 void CentralModule::updateMap(const MapMergedInfoConstPtr& newMap) {
   // store occGrid
-  occupancyGrid = newMap->mapa;
+  occupancyGrid = newMap->occupancyGrid;
 
   // store frontiers
-  boost::unordered_set<int> newFrontiers(newMap->frontera.begin(), newMap->frontera.end());
+  boost::unordered_set<int> newFrontiers(newMap->frontiers.begin(), newMap->frontiers.end());
   frontiers = newFrontiers;
 }
 
@@ -94,7 +94,6 @@ Auction CentralModule::getAuctionInfo() {
   cout << "debug :: gvd to rosmsg" << endl;
   for (GvdGraph::Vertex v : gvd) {
     auctionInfo.gvd.vertices.push_back(toPoint2D(gvd.g[v].p));
-    auctionInfo.vertex_segment.push_back(toPoint2D(gvd.g[v].segment));
     for (GvdGraph::Vertex nv : gvd.adj(v)) {
       Edge e;
       e.from = toPoint2D(gvd.g[v].p);

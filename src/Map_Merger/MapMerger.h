@@ -28,8 +28,8 @@ class MapMerger {
   uint width;
   uint height;
   int indice_origen;
-  boost::unordered_set<int> frontera;
-  boost::unordered_set<int> obstaculos;
+  boost::unordered_set<int> frontiers;
+  boost::unordered_set<int> obstacles;
 
   nav_msgs::OccupancyGrid map_merged;
   boost::unordered_map<int, cv::Point2f> map_points;
@@ -42,14 +42,14 @@ class MapMerger {
   bool sonIgualesCeldas(int ind);
   /*obtengo el indice de la gridmap de la posiion actual*/
   int getIndicePosicionActual(float x_ahora, float y_ahora);
-  /*Guardo la informacion del mapa particular para cada rovot]*/
+  /*Guardo la informacion del map particular para cada rovot]*/
   void saveRobotMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name);
-  /*inicializa el mapa mergeado y toda la info*/
+  /*inicializa el map mergeado y toda la info*/
   void initMapMerger(const nav_msgs::OccupancyGridConstPtr& msg);
   /*Funcion que dado un punto me dice si existe un robot a una distancia menor a
    * la que se le pasa.*/
   bool isAnyRobotCloser(float dist, int ind, std::string name);
-  /*Determina si una celda es frontera*/
+  /*Determina si una celda es frontiers*/
   bool esFrontera(int indice, const nav_msgs::OccupancyGrid msg);
 
  public:

@@ -9,9 +9,6 @@ Robot::Robot() { }
 ///////////////
 // Get / Set //
 ///////////////
-int Robot::getRobotId() {
-  return stoi(name.substr(5));
-}
 
 /////////
 // API //
@@ -21,11 +18,11 @@ Bid Robot::getBid(Auction msg) {
   gvd = toGraph<GvdVecGraph>(msg.gvd);
 
   // Convert the occupancy grid into stateGrid
-  StateGrid stateGrid = toStateGrid(mapMerged.mapa);
+  StateGrid stateGrid = toStateGrid(mapMerged.occupancyGrid);
 
   // Robot position
   /// Get the current Robot pos on the occupancy map frame
-  Pos robotPos = toPos(position, mapMerged.mapa.info);
+  Pos robotPos = toPos(position, mapMerged.occupancyGrid.info);
 
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
@@ -81,12 +78,12 @@ GoalList Robot::getPathTo(Pos frontier) {
     return goalList;
   }
 
-  goalList.indice = 1;  // TODO poner bien el indice
+  goalList.id = 1;  // TODO poner bien el id
 
   for (GvdVecGraph::Vertex v : paths[frontier]) {
-    Point p3d = toPoint(gvd[v].p, mapMerged.mapa.info);
+    Point p3d = toPoint(gvd[v].p, mapMerged.occupancyGrid.info);
 
-    goalList.listaGoals.push_back(p3d);
+    goalList.goals.push_back(p3d);
   }
 
   return goalList;

@@ -59,8 +59,8 @@ float angleToTarget;
 // aux funcs
 float getDistance(int target) {
   float dx, dy;
-  dx = position.pose.position.x - path.listaGoals[target].x;
-  dy = position.pose.position.y - path.listaGoals[target].y;
+  dx = position.pose.position.x - path.goals[target].x;
+  dy = position.pose.position.y - path.goals[target].y;
   return sqrt(pow(dx, 2) + pow(dy, 2));
 }
 
@@ -73,8 +73,8 @@ float getDistance(Point p3d) {
 
 float getNextDistance(int target) {
   float dx, dy;
-  dx = path.listaGoals[target - 1].x - path.listaGoals[target].x;
-  dy = path.listaGoals[target - 1].y - path.listaGoals[target].y;
+  dx = path.goals[target - 1].x - path.goals[target].x;
+  dy = path.goals[target - 1].y - path.goals[target].y;
   return sqrt(pow(dx, 2) + pow(dy, 2));
 }
 
@@ -93,7 +93,7 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
     /* std_msgs::String msg_info; */
     /* std::stringstream ss9; */
     /* int sed = (clock() - startTime); */
-    /* ss9 << "SUCCES: " << metros << " " << sed << " " << path.indice; */
+    /* ss9 << "SUCCES: " << metros << " " << sed << " " << path.id; */
     /* msg_info.data = ss9.str(); */
     /* path_info_pub.publish(msg_info); */
     // ROS_INFO("%s :: RECORRIO %f METROS", name_space.c_str(), metros);
@@ -108,22 +108,22 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 
 GoalList trim_path(GoalList msg) {
   int path_start = 0;
-  for (int i = 0; i < msg.listaGoals.size(); i++) {
-    float dist_to_target = getDistance(msg.listaGoals[i]);
+  for (int i = 0; i < msg.goals.size(); i++) {
+    float dist_to_target = getDistance(msg.goals[i]);
     if (dist_to_target <= TOLERANCE_WAYPOINTS) {
       path_start = i;
     }
   }
-  msg.listaGoals = std::vector<Point, std::allocator<Point>>(
-      msg.listaGoals.begin() + path_start, msg.listaGoals.end());
+  msg.goals = std::vector<Point, std::allocator<Point>>(
+      msg.goals.begin() + path_start, msg.goals.end());
   return msg;
 }
 
 void setPath(const GoalList& msg) {
-  if (msg.listaGoals.size() != 0) {
+  if (msg.goals.size() != 0) {
     path_saved = trim_path(msg);
     // ROS_INFO("MOVE CONTROLLER :: Saving new path. Long -> %lu",
-    // msg.listaGoals.size());
+    // msg.goals.size());
     pathflag = 1;
   }
 }
@@ -158,8 +158,8 @@ int safePath(int from_index, int lookahead){
   origin_p3d.y = -origin_p3d.y;
   int origin_p1d = toInt(origin_p3d,0,odometry_map.info.height);
   //ROS_INFO("origin = %d",origin_p1d);
-  for(int i = from_index; i< from_index + lookahead && i<path.listaGoals.size(); i++){
-    int final_p1d = toInt(path.listaGoals[i],origin_p1d,odometry_map.info.height);
+  for(int i = from_index; i< from_index + lookahead && i<path.goals.size(); i++){
+    int final_p1d = toInt(path.goals[i],origin_p1d,odometry_map.info.height);
     ROS_INFO("final_p1d = %d, is -> %d ",final_p1d,odometry_map.data[final_p1d]);
     if(odometry_map.data[final_p1d] == 100){
       return i;
@@ -201,7 +201,7 @@ bool isSafe(float target_angle, float safe_distance = 2.5) {
   // ROS_INFO("%s :: pos objetivo (%f,%f), angulo del objetivo %f, angulo del robot
   // %f",name_space.c_str(), target_pos.x,target_pos.y, target_angle,robot_angle);
 
-  // ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f,
+  // ROS_INFO("%s :: angulo del objetivo ajustado %f, id %d, representa %f, valor laser %f,
   // umbral %f",name_space.c_str(), target_angle_adjusted, laser_index,
   // laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
 
@@ -210,7 +210,7 @@ bool isSafe(float target_angle, float safe_distance = 2.5) {
 
 float getTargetAngle(int index) {
   Point current_pos = position.pose.position;
-  Point target_pos = path.listaGoals[index];
+  Point target_pos = path.goals[index];
   target_pos.x -= current_pos.x;
   target_pos.y -= current_pos.y;
   return atan2(target_pos.y, target_pos.x);
@@ -218,7 +218,7 @@ float getTargetAngle(int index) {
 
 /*bool isSafe(int index){
   Point current_pos = position.pose.position;
-  Point target_pos = path.listaGoals[index];
+  Point target_pos = path.goals[index];
   target_pos.x -= current_pos.x;
   target_pos.y -= current_pos.y;
 
@@ -240,7 +240,7 @@ normalize(target_angle-robot_angle);
 %f",name_space.c_str(), target_pos.x,target_pos.y, target_angle,robot_angle);
 
   double safe_distance =  1 + getDistance(index);
-  //ROS_INFO("%s :: angulo del objetivo ajustado %f, indice %d, representa %f, valor laser %f,
+  //ROS_INFO("%s :: angulo del objetivo ajustado %f, id %d, representa %f, valor laser %f,
 umbral %f",name_space.c_str(), target_angle_adjusted, laser_index,
 laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_distance);
 
@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
       /* std_msgs::String msg_info; */
       /* std::stringstream ss9; */
       /* int sed = (clock() - startTime); */
-      /* ss9 << "SUCCES: " << metros << " " << sed << " " << path.indice; */
+      /* ss9 << "SUCCES: " << metros << " " << sed << " " << path.id; */
       /* msg_info.data = ss9.str(); */
       /* path_info_pub.publish(msg_info); */
       start = true;
@@ -303,17 +303,17 @@ int main(int argc, char** argv) {
     cout<<"state: "<<estado<<endl;
     switch (estado) {
       case 0: {
-        if (path_step != path.listaGoals.size()) {
+        if (path_step != path.goals.size()) {
           estado = 1;
         }
         break;
       }
       case 1: {  // AVANZANDO A UN PUNTO
-        send_point(path.listaGoals[path_step]);
+        send_point(path.goals[path_step]);
         angleToTarget = getTargetAngle(path_step);
         cout<<"got angle"<<endl;
         path_step++;
-        if (path_step != path.listaGoals.size()) {
+        if (path_step != path.goals.size()) {
           metros = metros + getNextDistance(path_step);
         }
         cout<<"distance updated"<<endl;
@@ -335,7 +335,7 @@ int main(int argc, char** argv) {
     /*   } */
     /* } else { */
     /*   if (last_unsafe_index == path_step) { */
-    /*     send_point(path.listaGoals[path_step]); */
+    /*     send_point(path.goals[path_step]); */
     /*   } */
     /* } */
     /* cout<<"safety check done"<<endl; */
@@ -346,7 +346,7 @@ int main(int argc, char** argv) {
         float dist_to_target = getDistance(path_step - 1);
         if (dist_to_target <= TOLERANCE_WAYPOINTS) {
           cout<<"Arriving"<<endl;
-          if (path_step == path.listaGoals.size()) {  // if wait_last_point
+          if (path_step == path.goals.size()) {  // if wait_last_point
             estado = 4;
           } else {
             estado = 1;

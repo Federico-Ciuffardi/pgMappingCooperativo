@@ -40,14 +40,14 @@ int robots_waiting = 0;
 int NUM_ROBOTS;
 
 void handleMap(const pgmappingcooperativo::MapMergedInfoConstPtr& msg) {
-  int y_origin = msg->mapa.info.origin.position.x;
-  int x_origin = msg->mapa.info.origin.position.y;
-  uint width = msg->mapa.info.width;
-  uint height = msg->mapa.info.height;
+  int y_origin = msg->occupancyGrid.info.origin.position.x;
+  int x_origin = msg->occupancyGrid.info.origin.position.y;
+  uint width = msg->occupancyGrid.info.width;
+  uint height = msg->occupancyGrid.info.height;
   int indice_origen = (abs(y_origin) * width) + abs(x_origin);
   int cont = 0;
   for (int i = 0; i < width * height; i++) {
-    if (msg->mapa.data[i] != -1) {
+    if (msg->occupancyGrid.data[i] != -1) {
       cont++;
     }
   }
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     TOTALCOVER = 81 * 81;
   }
   ROS_INFO("Map size = %d ", TOTALCOVER);
-  // Recibir mapa
+  // Recibir map
   map_sub = n.subscribe("/map_merged", 1, handleMap);
   end_robot_sub = n.subscribe("/end_robots", 1, handleRobotEnd);
   // Retroalimentacion de el navegador

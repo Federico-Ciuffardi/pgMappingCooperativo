@@ -73,7 +73,7 @@ void setPathRvizMarks(Robot &r, GoalList &path, mapInfoType mapInfo) {
   rvizHelper.type     = RvizHelper::LINE_STRIP;
   rvizHelper.scale    = makeVector3(cellSize*0.15, cellSize, 1);
   rvizHelper.position = makeVector3(0,0,pathLineZ);
-  rvizHelper.mark(path.listaGoals, robot.name + "_path");
+  rvizHelper.mark(path.goals, robot.name + "_path");
 }
 
 void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
@@ -84,7 +84,7 @@ void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
   rvizHelper.topic = &markerPub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
-  posMarkerPoint.push_back(toMarkerPoint(toPos(robot.position, robot.mapMerged.mapa.info), robot.mapMerged.mapa.info));
+  posMarkerPoint.push_back(toMarkerPoint(toPos(robot.position, robot.mapMerged.occupancyGrid.info), robot.mapMerged.occupancyGrid.info));
 
   rvizHelper.color    = makeColorRGBA(0.75);
   rvizHelper.type     = cellMarkerType;
@@ -105,7 +105,7 @@ void publishPath(Pos frontier) {
   goalPathPub.publish(path);
   
   // Mark path info
-  setPathRvizMarks(robot, path,  robot.mapMerged.mapa.info);
+  setPathRvizMarks(robot, path,  robot.mapMerged.occupancyGrid.info);
 }
 
 ///////////////
@@ -149,7 +149,7 @@ void auctionCallBack(const AuctionConstPtr& msg) {
   bidPub.publish(segmentBid);
 
   // Mark position
-  setPositionRvizMarks(robot, robot.mapMerged.mapa.info);
+  setPositionRvizMarks(robot, robot.mapMerged.occupancyGrid.info);
 }
 
 void assignmentCallback(const AssignmentConstPtr& msg) {

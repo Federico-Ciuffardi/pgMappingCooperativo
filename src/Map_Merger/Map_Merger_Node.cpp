@@ -34,12 +34,11 @@ bool FIN = false;
 void handleNewMap(const nav_msgs::OccupancyGridConstPtr& msg, std::string name) {
   if (!FIN) {
     pgmappingcooperativo::MapMergedInfo info;
-    info.mapa = map_merger.updateMap(msg, name);
-    info.sizef = map_merger.updateFrontera(map_merger.getMap(), name);
-    info.frontera = map_merger.getFrontera();
-    info.obstaculos = map_merger.getObstaculos();
-    info.sizeo = map_merger.getObstaculos().size();
-    map_controller_pub.publish(info.mapa);
+    info.occupancyGrid = map_merger.updateMap(msg, name);
+    map_merger.updateFrontera(map_merger.getMap(), name);
+    info.frontiers = map_merger.getFrontera();
+    info.obstacles = map_merger.getObstaculos();
+    map_controller_pub.publish(info.occupancyGrid);
     map_merged_pub.publish(info);
   }
 }

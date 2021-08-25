@@ -1,2 +1,2 @@
-geometry_msgs/Point[] listaGoals
-int32 indice
+geometry_msgs/Point[] goals 
+int32 id 

@@ -264,8 +264,8 @@ void startAuction() {
     log_data(data, incrementGvdFileLog);
 
     gnuplot p;
-    p.graph_file(gvdFileLog, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
-    p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
+    p.graph_file(gvdFileLog, "Cubrimiento del map(%)", "Tiempo de GvdGraph(s)");
+    p.graph_file(incrementGvdFileLog, "Cubrimiento del map(%)", "Incremento de tiempo de GvdGraph(s)");
   }
 
 }
@@ -482,8 +482,8 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
     gnuplot p;
     p.graph_file(ejecucionFileLog, "Numero de robots", "Tiempo de ejecucion");
     if (centralModule.fileLogLevel > 1) {
-      p.graph_file(gvdFileLog, "Cubrimiento del mapa(%)", "Tiempo de GvdGraph(s)");
-      p.graph_file(incrementGvdFileLog, "Cubrimiento del mapa(%)", "Incremento de tiempo de GvdGraph(s)");
+      p.graph_file(gvdFileLog, "Cubrimiento del map(%)", "Tiempo de GvdGraph(s)");
+      p.graph_file(incrementGvdFileLog, "Cubrimiento del map(%)", "Incremento de tiempo de GvdGraph(s)");
     }
   }
 
