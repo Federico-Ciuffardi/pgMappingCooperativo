@@ -78,20 +78,13 @@ Auction CentralModule::getAuctionInfo() {
       for ( auto it : frontierConComps->connectedComponents){
         vector<Pos> frontiers = toVec(it.second.members);
 
-        vector<Pos> centroids;
         int estimatedK = ceil(frontiers.size()/(sensorRange*2.0));
-        int k = estimatedK-1; // +1 will be added later
+        int k = estimatedK;
 
-        // increment k until the kMeans result covers all the frontiers
-        do {
-          k++;
-          // execute kMeans
-          centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
-        }while( !contains(centroids, sensorRange, frontiers) );
+        vector<Pos> centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
 
-        // if kmin is equal to the estimated k get the min
-        // decrement k until the kMeans result does not cover all the frontiers (and keep the result of the previous k)
-        if( k == estimatedK){
+        if(contains(centroids, sensorRange, frontiers)){
+          // decrement k until the kMeans result does not cover all the frontiers (and keep the result of the previous k)
           vector<Pos> oldCentroids;
           do {
             oldCentroids = centroids;
@@ -101,6 +94,13 @@ Auction CentralModule::getAuctionInfo() {
             centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
           }while( contains(centroids, sensorRange, frontiers) );
           centroids = oldCentroids;
+        }else{
+          // increment k until the kMeans result covers all the frontiers
+          do {
+            k++;
+            centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+            // execute kMeans
+          }while( !contains(centroids, sensorRange, frontiers) );
         }
 
         // unmark all the forntiers
