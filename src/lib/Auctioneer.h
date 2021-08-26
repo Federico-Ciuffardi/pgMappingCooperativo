@@ -21,7 +21,7 @@ class Auctioneer{
     Float value;
     
     bool operator> (const Bid& b) const {
-        return (value > b.value);
+        return (value > b.value) || (value == b.value && bidderId > b.bidderId);
     }
 
     Bid(BidderId bidderId, ItemId itemId, SubItemId subItemId, Float value){
