@@ -92,14 +92,47 @@ GoalList Robot::getPathTo(Pos frontier) {
 /////////
 // Aux //
 /////////
+  
+bool addToGraphBase(list<Pos> &path, GvdVecGraph &graph) {
+  if(path.empty()) return false;
+
+  // get first pos
+  Pos pos = *path.begin();
+  GvdVecGraph::Vertex vertex = graph.idVertexMap[pos];
+
+  // Construct path 
+  for(auto it = ++path.begin(); it != path.end(); it++){
+    Pos nextPos = *it;
+
+    // add vertex
+    GvdVecGraph::Vertex nextVertex;
+    bool inserted;
+    boost::tie(nextVertex, inserted) = graph.addV(nextPos);
+
+    float d = pos.distanceTo(nextPos);
+    // add edge to graph
+    graph.addE(vertex, nextVertex, d);
+    graph.addE(nextVertex, vertex, d);
+
+    // go to next in the path 
+    pos = nextPos;
+    vertex = nextVertex;
+  }
+
+  return true;
+}
 
 // Generates a connection from each p in posSet to the graph that complies with the 
 // traversability stablished on the stateGrid.
 //
 // Returns the set of points from where the graph is accesible. 
 void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid) {
+  list<list<Pos>> paths;
   for (Pos p : posSet) {
-    addToGraph(p, graph,stateGrid);
+    paths.push_back(graph.findPath(p, stateGrid, {Unknown, Occupied}));
+  }
+  for (list<Pos> path : paths){
+    addToGraphBase(path, graph);
   }
 }
 
@@ -108,48 +141,7 @@ void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid)
 //
 // Returns true if graph is accesible from p and false otherwise 
 bool Robot::addToGraph(Pos p, GvdVecGraph& graph, StateGrid& stateGrid ) {
-  if (is_elem(p, gvd.idVertexMap)) return true;
+  list<Pos> path = graph.findPath(p, stateGrid, {Unknown, Occupied});
 
-  boost::unordered_map<Pos, Pos> predecessor;
-  Pos connection;
-  boost::tie(predecessor, connection) = graph.findPath(p, stateGrid, {Unknown, Occupied});
-
-  Pos currPos = connection;
-  GvdVecGraph::Vertex currVertex = gvd.idVertexMap[currPos];
-
-  if(currPos == NULL_POS){
-    /* cout<<"No path from "<<p<<" to the graph"<<endl; // DEGUG */
-    return false;
-  }
-
-  do{
-    // get the next position in the path from the graph to p
-    Pos nextPos = predecessor[currPos];
-
-    // check for errors
-    if(nextPos == NULL_POS){
-      FAIL("NULL_POS in the middle of a path to the graph. This is a Bug, halting execution.");
-    }
-
-    if(currPos == nextPos){
-      FAIL("Loop on path to graph. This is a Bug, halting execution.");
-    }
-
-    // add vertex to graph
-    GvdVecGraph::Vertex nextVertex;
-    bool inserted;
-    boost::tie(nextVertex, inserted) = gvd.addV(nextPos);
-
-    // add edge to graph
-    float d = currPos.distanceTo(nextPos);
-    gvd.addE(currVertex, nextVertex, d);
-    gvd.addE(nextVertex, currVertex, d);
-
-    // update for the next loop
-    currVertex = nextVertex;
-    currPos = nextPos;
-
-  } while (p != currPos);
-
-  return true;
+  return addToGraphBase(path, graph);
 }

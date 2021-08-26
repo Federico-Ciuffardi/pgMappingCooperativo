@@ -520,7 +520,7 @@ struct PosGraph : public Graph<graph,Pos> {
 
   // Find path to Graph
   template<typename CellType>
-  boost::tuple<boost::unordered_map<Pos, Pos>, Pos> findPath(Pos source, Grid<CellType> &grid, vector<CellType> notTraversables) {
+  list<Pos> findPath(Pos source, Grid<CellType> &grid, vector<CellType> notTraversables) {
     // Initialize the distance grid
     Grid<Float> distGrid(grid.size(),INF);
     distGrid[source] = 0;
@@ -533,26 +533,53 @@ struct PosGraph : public Graph<graph,Pos> {
     boost::unordered_map<Pos, Pos> predecessor;
     predecessor[source] = NULL_POS;
 
+    // Initialize empty path 
+    list<Pos> path;
+
     // Find path from p to graph
     while (!openQueue.empty()) {
-      Pos p = openQueue.top().second;
+      Pos pos = openQueue.top().second;
       openQueue.pop();
 
       // if np is on the graph then a path to the graph was found!
-      if (is_elem(p, this->idVertexMap)) {
-        return boost::make_tuple(predecessor, p);
+      if (is_elem(pos, this->idVertexMap)) {
+
+        // construct a vector with the nodes of the path
+        Pos prevPos;
+        do{
+          // store the current position in the path list
+          path.push_back(pos);
+
+          // get the next position in the path from the graph to source
+          prevPos = pos;
+          pos = predecessor[pos];
+
+          // check for error
+          if(prevPos == pos)  FAIL("Loop on path. This is a Bug, halting execution.");
+
+        } while (pos != NULL_POS);
+
+        // check for error
+        if(prevPos != source) FAIL("Path does not reach the source. This is a Bug, halting execution.");
+
+        return path;
       }
+
       // Update neighbors distances
-      for (Pos np : grid.adj(p,notTraversables)) {
+      for (Pos np : grid.adj(pos,notTraversables)) {
         // Compute np distance
-        float d = distGrid[p] + p.distanceTo(np);
+        float d = distGrid[pos] + pos.distanceTo(np);
         if (d < distGrid[np]) {
           distGrid[np] = d;
-          predecessor[np] = p;
+          predecessor[np] = pos;
           openQueue.push(DistPos(distGrid[np], np));
         }
       }
+
     }
-    return boost::make_tuple(predecessor, NULL_POS);
+   
+    // return empty pos
+    return path;
   }
+
 };

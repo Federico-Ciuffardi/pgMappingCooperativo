@@ -24,24 +24,11 @@ struct GvdVertexProperty {
   bool isLocalMin = false;
   bool degreeConstrain = false;
 
-  bool is_critical = false;
-
-  Int segmentId = -1;
-
-  Pos segment = NULL_POS;
-
   GvdVertexProperty(){};
 
-  GvdVertexProperty(Pos p, bool is_critical, Pos segment) {
+  GvdVertexProperty(Pos p) {
     this->p = p;
-    this->is_critical = is_critical;
-    this->segment = Pos(-1,-1);
   }
-  GvdVertexProperty(Pos p){
-    this->p = p;
-    this->is_critical = false;
-    this->segment = Pos(-1, -1);
-  };
 };
 
 typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdGraph;
