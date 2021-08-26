@@ -23,6 +23,7 @@
 
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
 vector<Pos> embed(vector<Pos> from, vector<Pos> to);
+bool contains(vector<Pos> &centers, Float radius, vector<Pos> points);
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2, WaitingFirstBid=3, Resolving = 4 };
 
@@ -37,8 +38,14 @@ class CentralModule {
 
   // frontierSimplificationMethod:
   // * 0: No frontier simplification
-  // * 1: Frontier is clustered into significant frontiers considering the robot sensor range
-  int frontierSimplificationMethod = 1;
+  // * 1: Frontier are clustered into k significant frontiers using kMeans; k is estimated through the robot sensor range
+  // * 2: Frontier are clustered into k significant frontiers using kMeans; k is the minimun so that the circles defined
+  //      with the significant frontiers as centers and the robot sensor range as the radius contains all the frontiers 
+  int frontierSimplificationMethod = 2;
+
+  // kMeans parameters
+  Float kMeansMaxIter = 10000;
+  Float kMeansTolerance = 0;
 
   // Global parameters (explained in ../../launch/multirobot.launch)
   int robotNumber;

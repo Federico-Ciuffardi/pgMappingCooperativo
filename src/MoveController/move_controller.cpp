@@ -300,7 +300,7 @@ int main(int argc, char** argv) {
 
     loop_rate.sleep();
 
-    cout<<"state: "<<estado<<endl;
+    /* cout<<"state: "<<estado<<endl; */
     switch (estado) {
       case 0: {
         if (path_step != path.goals.size()) {
@@ -311,12 +311,12 @@ int main(int argc, char** argv) {
       case 1: {  // AVANZANDO A UN PUNTO
         send_point(path.goals[path_step]);
         angleToTarget = getTargetAngle(path_step);
-        cout<<"got angle"<<endl;
+        /* cout<<"got angle"<<endl; */
         path_step++;
         if (path_step != path.goals.size()) {
           metros = metros + getNextDistance(path_step);
         }
-        cout<<"distance updated"<<endl;
+        /* cout<<"distance updated"<<endl; */
         estado = 2;
         break;
       }
@@ -345,7 +345,7 @@ int main(int argc, char** argv) {
       case 2: {
         float dist_to_target = getDistance(path_step - 1);
         if (dist_to_target <= TOLERANCE_WAYPOINTS) {
-          cout<<"Arriving"<<endl;
+          /* cout<<"Arriving"<<endl; */
           if (path_step == path.goals.size()) {  // if wait_last_point
             estado = 4;
           } else {

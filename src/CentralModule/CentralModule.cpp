@@ -58,13 +58,56 @@ Auction CentralModule::getAuctionInfo() {
         // Calculate k y and execute kMeans
         int k = ceil(frontiers.size()/(sensorRange*2.0));
 
-        vector<Pos> centroids = kMeans(frontiers,k,10000);
+        vector<Pos> centroids = kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance);
 
         // unmark all the forntiers
         for(Pos f : frontiers) stateGrid[f] = Free;
        
         // mark only the significant frontiers
         for(Pos f : embed(centroids, frontiers)) stateGrid[f] = Frontier;
+
+      }
+      break;
+    case 2:
+      // Calculate the connectedComponents of frontiers
+      if (!frontierConComps) {
+        frontierConComps = new ConnectedComponents(stateGrid, {Occupied, Unknown, Free, Critical, CriticalLine});
+      }
+      frontierConComps->update();
+
+      for ( auto it : frontierConComps->connectedComponents){
+        vector<Pos> frontiers = toVec(it.second.members);
+
+        vector<Pos> centroids;
+        int estimatedK = ceil(frontiers.size()/(sensorRange*2.0));
+        int k = estimatedK-1; // +1 will be added later
+
+        // increment k until the kMeans result covers all the frontiers
+        do {
+          k++;
+          // execute kMeans
+          centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+        }while( !contains(centroids, sensorRange, frontiers) );
+
+        // if kmin is equal to the estimated k get the min
+        // decrement k until the kMeans result does not cover all the frontiers (and keep the result of the previous k)
+        if( k == estimatedK){
+          vector<Pos> oldCentroids;
+          do {
+            oldCentroids = centroids;
+            if( k == 1 ) break; // k = 1 is the minimum value possible
+            k--;
+            // execute kMeans
+            centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+          }while( contains(centroids, sensorRange, frontiers) );
+          centroids = oldCentroids;
+        }
+
+        // unmark all the forntiers
+        for(Pos f : frontiers) stateGrid[f] = Free;
+       
+        // mark only the significant frontiers
+        for(Pos f : centroids) stateGrid[f] = Frontier;
 
       }
       break;
@@ -160,6 +203,21 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
 // Aux //
 /////////
 
+// true if the circles defined by the centrers and the radius, contains all the points
+bool contains(vector<Pos> &centers, Float radius, vector<Pos> points) {
+  Float radiusSquared = radius*radius;
+
+  for(Pos point : points){
+    // search for a circle that contains the point
+    int i = 0;
+    for(; i < centers.size() && point.distanceToSquared(centers[i]) > radiusSquared; i++);
+    // if no circle contains the point (i is an invalid index)
+    if( i == centers.size() ) return false;
+  }
+
+  return true;
+}
+
 // Embed the pos from `from` to pos on `to`
 vector<Pos> embed(vector<Pos> from, vector<Pos> to){
   vector<Pos> res;
@@ -178,7 +236,6 @@ vector<Pos> embed(vector<Pos> from, vector<Pos> to){
   }
   return res;
 }
-
 
 // modified version of: 
 // http://www.goldsborough.me/c++/python/cuda/2017/09/10/20-32-46-exploring_k-means_in_python,_c++_and_cuda/

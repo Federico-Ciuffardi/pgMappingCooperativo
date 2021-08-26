@@ -28,22 +28,9 @@ struct Grid{
 
   Grid(){}
 
-  Grid(pair<Int,Int> size){
-    for (Int x = 0; x < size.first; x++) {
-      grid.push_back(ColType());
-      for (Int y = 0; y < size.second; y++) {
-        grid.at(x).push_back(CellType());
-      }
-    }
-  }
-  Grid(pair<Int,Int> size, CellType def){
-    for (Int x = 0; x < size.first; x++) {
-      grid.push_back(ColType());
-      for (Int y = 0; y < size.second; y++) {
-        grid.at(x).push_back(def);
-      }
-    }
-  }
+  Grid(pair<Int,Int> size) : grid(GridType(size.first,ColType(size.second))){}
+
+  Grid(pair<Int,Int> size, CellType def) : grid(GridType(size.first,ColType(size.second,def))){}
 
   // returns grid size
   pair<Int, Int> size() {
