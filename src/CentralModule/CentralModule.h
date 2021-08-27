@@ -38,10 +38,13 @@ class CentralModule {
 
   // frontierSimplificationMethod:
   // * 0: No frontier simplification
-  // * 1: Frontier are clustered into k significant frontiers using kMeans; k is estimated through the robot sensor range
-  // * 2: Frontier are clustered into k significant frontiers using kMeans; k is the minimun so that the circles defined
-  //      with the significant frontiers as centers and the robot sensor range as the radius contains all the frontiers 
-  int frontierSimplificationMethod = 2;
+  // * 1: Frontiers are clustered into k significant frontiers using kMeans (the centroids are the significant frontiers).
+  //      k is estimated through the robot sensor range
+  // * 2: Frontiers are clustered into k significant frontiers using kMeans (the centroids are the significant frontiers).
+  //      k is the minimun so that the circles defined with the significant frontiers as centers and the robot sensor range
+  //      as the radius contains all the frontiers 
+  // * 3: Frontiers are clustered using affinity propagation (the centroids are the significant frontiers).
+  int frontierSimplificationMethod = 3;
 
   // kMeans parameters
   Float kMeansMaxIter = 10000;

@@ -1,4 +1,5 @@
 #include "CentralModule.h"
+#include "../lib/affinity_propagation.h"
 #include <cstddef>
 #include <vector>
 
@@ -58,14 +59,13 @@ Auction CentralModule::getAuctionInfo() {
         // Calculate k y and execute kMeans
         int k = ceil(frontiers.size()/(sensorRange*2.0));
 
-        vector<Pos> centroids = kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance);
+        vector<Pos> centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
 
         // unmark all the forntiers
         for(Pos f : frontiers) stateGrid[f] = Free;
        
         // mark only the significant frontiers
-        for(Pos f : embed(centroids, frontiers)) stateGrid[f] = Frontier;
-
+        for(Pos f : centroids) stateGrid[f] = Frontier;
       }
       break;
     case 2:
@@ -108,9 +108,26 @@ Auction CentralModule::getAuctionInfo() {
        
         // mark only the significant frontiers
         for(Pos f : centroids) stateGrid[f] = Frontier;
-
       }
       break;
+    case 3:
+      // Calculate the connectedComponents of frontiers
+      if (!frontierConComps) {
+        frontierConComps = new ConnectedComponents(stateGrid, {Occupied, Unknown, Free, Critical, CriticalLine});
+      }
+      frontierConComps->update();
+
+      for ( auto it : frontierConComps->connectedComponents){
+        vector<Pos> frontiers = toVec(it.second.members);
+
+        vector<Pos> centroids = affinityPropagation(frontiers, sensorRange);
+
+        // unmark all the forntiers
+        for(Pos f : frontiers) stateGrid[f] = Free;
+       
+        // mark only the significant frontiers
+        for(Pos f : centroids) stateGrid[f] = Frontier;
+      }
   }
 
   // Construct the acution rosmsg
