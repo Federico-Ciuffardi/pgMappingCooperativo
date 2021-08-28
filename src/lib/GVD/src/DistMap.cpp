@@ -44,7 +44,6 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 // the boolean value indicates if the pseudo sources are modified
 bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
 
-
   PosSet pseudoSources;
   /* for ( Pos candidatePseudoSource : basisPoints(waveP, distMap)){ */
   for ( Pos candidatePseudoSource : distMap[waveP].sources){

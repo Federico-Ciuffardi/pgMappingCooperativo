@@ -163,14 +163,28 @@ inline PosSet toPosSet(vector<Point2D> ps){
   return res;
 }
 
+inline PosSet toPosSet(boost::unordered_set<int> ps, int width){
+  PosSet res;
+  for( int p : ps ){
+    res.insert(toPos(p,width));
+  }
+  return res;
+}
+
+inline PosSet toPosSet(vector<int> ps, int width){
+  PosSet res;
+  for( int p : ps ){
+    res.insert(toPos(p,width));
+  }
+  return res;
+}
+
 /////////////////////////////
 // StateGrid GVD/src/Map.h //
 /////////////////////////////
 
 // get stateGrid from occupancy grid, set the known cells count on the count attribute 
-inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, 
-                             boost::unordered_set<int> fronteras = boost::unordered_set<int>(),
-                             int* count = NULL) {
+inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, int* count = NULL) {
   pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
   StateGrid stateGrid(mapSize);
 
@@ -194,30 +208,6 @@ inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og,
         ct = (CellState)-1;
     }
     stateGrid[p] = ct;
-  }
-
-  for (Int fInt : fronteras) {
-    Pos fPos = toPos(fInt,mapSize.first);
-
-    // skip if not inside the stateGrid (the map_merger delivers frontiers
-    // outside the map boundaries sometimes)
-    if ( !stateGrid.inside(fPos) ) continue;
-
-    // The frontiers must have a Unknown neighbor
-    /// Currently the frontiers can be detected despite of not having a unknow neighbor in two cases
-    ///  * The frontier is on the border of the grid (the current implementation of 
-    ///    the map_merger considers that "frontier"  I do not)
-    ///  * The only unknows cells neighbor of the "frontier" are diagonal but
-    //     the horizontal cells near that diagonal are /    not traversable, so the
-    //     unknow cell is not considered reachable from the "frontier"
-    bool hasUnknowNeighbor = false;
-    for( Pos fPosN : stateGrid.adj(fPos,{Occupied})){
-        hasUnknowNeighbor = stateGrid[fPosN] == Unknown;
-        if(hasUnknowNeighbor) break;
-    }
-    if(hasUnknowNeighbor){ 
-      stateGrid[fPos] = Frontier;
-    }
   }
 
   return stateGrid;

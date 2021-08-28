@@ -22,8 +22,9 @@
 #include "../lib/graph/gnuplot.h"
 
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
-vector<Pos> embed(vector<Pos> from, vector<Pos> to);
-bool contains(vector<Pos> &centers, Float radius, vector<Pos> points);
+vector<Pos> embed(vector<Pos> &from, vector<Pos> &to);
+bool contains(vector<Pos> &centers, Float radius, vector<Pos> &points);
+PosSet getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables);
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2, WaitingFirstBid=3, Resolving = 4 };
 
@@ -44,7 +45,7 @@ class CentralModule {
   //      k is the minimun so that the circles defined with the significant frontiers as centers and the robot sensor range
   //      as the radius contains all the frontiers 
   // * 3: Frontiers are clustered using affinity propagation (the centroids are the significant frontiers).
-  int frontierSimplificationMethod = 3;
+  int frontierSimplificationMethod = 4;
 
   // kMeans parameters
   Float kMeansMaxIter = 10000;
@@ -74,7 +75,7 @@ class CentralModule {
   StateGrid stateGrid;
 
   // frontier related
-  boost::unordered_set<int> frontiers;
+  boost::unordered_set<Pos> frontiers;
   ConnectedComponents* frontierConComps = NULL;
 
   // Auction related

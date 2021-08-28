@@ -15,7 +15,7 @@ using namespace std;
 //iter is the maximum number of iterations
 //lambda is the damping factor
 
-inline vector<Pos> affinityPropagation(vector<Pos> dataPos, Float radius) {
+inline vector<Pos> affinityPropagation(vector<Pos> &dataPos, Float radius) {
   // pre computations
   int N = dataPos.size();
 

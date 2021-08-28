@@ -16,13 +16,47 @@
 
 using namespace std;
 
-static float distacia2Puntos(cv::Point2f a, cv::Point2f b) {
+inline string get_current_date_and_time(){
+  time_t rawtime;
+  struct tm * timeinfo;
+  char buffer[80];
+
+  time (&rawtime);
+  timeinfo = localtime(&rawtime);
+
+  strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+  std::string str(buffer);
+  return str;
+}
+
+inline string get_file_log_name(){
+  return "log"+get_current_date_and_time();
+}
+
+inline string log_data(string s, string name_file) {
+  //struct passwd *pw = getpwuid(getuid());
+  // char *homedir = pw->pw_dir;
+  //string path = getenv("HOME");
+  ofstream outfile;
+  //if(name_file.size() == 0) name_file = get_file_log_name();
+  outfile.open(name_file +".dat",
+               ios::out | std::ofstream::app);
+  outfile << s << endl;
+  outfile.close();
+  return name_file;
+}
+
+/////////
+// old // TODO remove
+/////////
+
+inline float distacia2Puntos(cv::Point2f a, cv::Point2f b) {
   float dx = a.x - b.x;
   float dy = a.y - b.y;
   return sqrt(pow(dx, 2) + pow(dy, 2));
 }
 
-static int signo(int i) {
+inline int signo(int i) {
   int ret = 0;
   if (i < 0) {
     ret = -1;
@@ -37,7 +71,7 @@ i-1+width		i+width		i+1+width
         i-1					i
 i+1 i-1-width 	i-width		i+1-width
 */
-static int posicionRelativa(int indice, int Pos, uint ancho) {
+inline int posicionRelativa(int indice, int Pos, uint ancho) {
   int ret = indice;
   switch (Pos) {
     case 0:
@@ -68,32 +102,3 @@ static int posicionRelativa(int indice, int Pos, uint ancho) {
   return ret;
 }
 
-static string get_current_date_and_time(){
-  time_t rawtime;
-  struct tm * timeinfo;
-  char buffer[80];
-
-  time (&rawtime);
-  timeinfo = localtime(&rawtime);
-
-  strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
-  std::string str(buffer);
-  return str;
-}
-
-static string get_file_log_name(){
-  return "log"+get_current_date_and_time();
-}
-
-static string log_data(string s, string name_file) {
-  //struct passwd *pw = getpwuid(getuid());
-  // char *homedir = pw->pw_dir;
-  //string path = getenv("HOME");
-  ofstream outfile;
-  //if(name_file.size() == 0) name_file = get_file_log_name();
-  outfile.open(name_file +".dat",
-               ios::out | std::ofstream::app);
-  outfile << s << endl;
-  outfile.close();
-  return name_file;
-}

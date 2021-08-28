@@ -129,7 +129,7 @@ bool addToGraphBase(list<Pos> &path, GvdVecGraph &graph) {
 void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid) {
   list<list<Pos>> paths;
   for (Pos p : posSet) {
-    paths.push_back(graph.findPath(p, stateGrid, {Unknown, Occupied}));
+    paths.push_back(graph.findPath(p, stateGrid, {Occupied}));
   }
   for (list<Pos> path : paths){
     addToGraphBase(path, graph);
@@ -141,7 +141,7 @@ void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid)
 //
 // Returns true if graph is accesible from p and false otherwise 
 bool Robot::addToGraph(Pos p, GvdVecGraph& graph, StateGrid& stateGrid ) {
-  list<Pos> path = graph.findPath(p, stateGrid, {Unknown, Occupied});
+  list<Pos> path = graph.findPath(p, stateGrid, {Occupied});
 
   return addToGraphBase(path, graph);
 }

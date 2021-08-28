@@ -3,6 +3,11 @@
 #include <cstddef>
 #include <vector>
 
+///////////////
+// Variables //
+///////////////
+vector<CellState> notFrontier = {Occupied, Unknown, Free, Critical, CriticalLine};
+
 //////////////////
 // Constructors //
 //////////////////
@@ -33,15 +38,39 @@ void CentralModule::updateMap(const MapMergedInfoConstPtr& newMap) {
   occupancyGrid = newMap->occupancyGrid;
 
   // store frontiers
-  boost::unordered_set<int> newFrontiers(newMap->frontiers.begin(), newMap->frontiers.end());
-  frontiers = newFrontiers;
+  frontiers = toPosSet(newMap->frontiers, newMap->occupancyGrid.info.width);
 }
 
 // Get the info to start an Auction
 Auction CentralModule::getAuctionInfo() {
   // Convert a occupancyGrid and a frontier list to a stateGrid
   cout << "debug :: convert a occupancyGrid and a frontier list to a stateGrid" << endl;
-  stateGrid = toStateGrid(occupancyGrid, frontiers, &cellCount);
+  stateGrid = toStateGrid(occupancyGrid, &cellCount);
+  /// frontiers
+  PosSet filteredFrontiers;
+  for(Pos fPos : frontiers){
+    // skip if not inside the stateGrid (the map_merger delivers frontiers
+    // outside the map boundaries sometimes)
+    if ( !stateGrid.inside(fPos) ) continue;
+
+    // The frontiers must have a Unknown neighbor
+    /// Currently the frontiers can be detected despite of not having a unknow neighbor in two cases
+    ///  * The frontier is on the border of the grid (the current implementation of 
+    ///    the map_merger considers that "frontier"  I do not)
+    ///  * The only unknows cells neighbor of the "frontier" are diagonal but
+    //     the horizontal cells near that diagonal are /    not traversable, so the
+    //     unknow cell is not considered reachable from the "frontier"
+    bool hasUnknowNeighbor = false;
+    for( Pos fPosN : stateGrid.adj(fPos,{Occupied})){
+        hasUnknowNeighbor = stateGrid[fPosN] == Unknown;
+        if(hasUnknowNeighbor) break;
+    }
+    if(hasUnknowNeighbor){ 
+      stateGrid[fPos] = Frontier;
+      filteredFrontiers.insert(fPos);
+    }
+  }
+  frontiers = filteredFrontiers;
 
   cout << "debug :: get significant frontiers" << endl;
   // Get the significant frontiers taking into account the vision range of the robots
@@ -49,7 +78,7 @@ Auction CentralModule::getAuctionInfo() {
     case 1:
       // Calculate the connectedComponents of frontiers
       if (!frontierConComps) {
-        frontierConComps = new ConnectedComponents(stateGrid, {Occupied, Unknown, Free, Critical, CriticalLine});
+        frontierConComps = new ConnectedComponents(stateGrid, notFrontier);
       }
       frontierConComps->update();
 
@@ -59,7 +88,8 @@ Auction CentralModule::getAuctionInfo() {
         // Calculate k y and execute kMeans
         int k = ceil(frontiers.size()/(sensorRange*2.0));
 
-        vector<Pos> centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+        vector<Pos> nonEmbeddedCentroids = kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance);
+        vector<Pos> centroids = embed(nonEmbeddedCentroids, frontiers);
 
         // unmark all the forntiers
         for(Pos f : frontiers) stateGrid[f] = Free;
@@ -81,7 +111,8 @@ Auction CentralModule::getAuctionInfo() {
         int estimatedK = ceil(frontiers.size()/(sensorRange*2.0));
         int k = estimatedK;
 
-        vector<Pos> centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+        vector<Pos> nonEmbeddedCentroids = kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance);
+        vector<Pos> centroids = embed(nonEmbeddedCentroids, frontiers);
 
         if(contains(centroids, sensorRange, frontiers)){
           // decrement k until the kMeans result does not cover all the frontiers (and keep the result of the previous k)
@@ -91,14 +122,16 @@ Auction CentralModule::getAuctionInfo() {
             if( k == 1 ) break; // k = 1 is the minimum value possible
             k--;
             // execute kMeans
-            centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+            vector<Pos> nonEmbeddedCentroids = kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance);
+            centroids = embed(nonEmbeddedCentroids, frontiers);
           }while( contains(centroids, sensorRange, frontiers) );
           centroids = oldCentroids;
         }else{
           // increment k until the kMeans result covers all the frontiers
           do {
             k++;
-            centroids = embed(kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance), frontiers);
+            vector<Pos> nonEmbeddedCentroids = kMeans(frontiers, k, kMeansMaxIter, kMeansTolerance);
+            centroids = embed(nonEmbeddedCentroids, frontiers);
             // execute kMeans
           }while( !contains(centroids, sensorRange, frontiers) );
         }
@@ -128,6 +161,36 @@ Auction CentralModule::getAuctionInfo() {
         // mark only the significant frontiers
         for(Pos f : centroids) stateGrid[f] = Frontier;
       }
+      break;
+    case 4: 
+      // Calculate the connectedComponents of frontiers
+      if (!frontierConComps) {
+        frontierConComps = new ConnectedComponents(stateGrid, {Occupied, Unknown, Free, Critical, CriticalLine});
+      }
+      frontierConComps->update();
+
+      for ( auto it : frontierConComps->connectedComponents){
+        PosSet frontiers = it.second.members;
+
+        PosSet significativeFrontiers = getRandomSignificativeFroniers(frontiers, sensorRange, stateGrid, {Occupied});
+
+        // unmark all the forntiers
+        for(Pos f : frontiers) stateGrid[f] = Free;
+       
+        // mark only the significant frontiers
+        for(Pos f : significativeFrontiers) stateGrid[f] = Frontier;
+      }
+      break;
+    case 5: {
+      // From int set to Pos set
+      PosSet significativeFrontiers = getRandomSignificativeFroniers(frontiers, sensorRange, stateGrid, {Occupied});
+
+      // unmark all the forntiers
+      for(Pos f : frontiers) stateGrid[f] = Free;
+     
+      // mark only the significant frontiers
+      for(Pos f : significativeFrontiers) stateGrid[f] = Frontier;
+      break;}
   }
 
   // Construct the acution rosmsg
@@ -220,8 +283,73 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
 // Aux //
 /////////
 
+bool unobstructedLine(Pos p1, Pos p2, StateGrid &sg, vector<CellState> obstructedTypes){
+  for ( Pos p : discretizeLine(p1,p2)){
+    if(is_elem(sg[p], obstructedTypes)) return false;
+  }
+  return true;
+}
+
+void accumCircleCells(PosSet &coveredCells, Pos c, Float radius, PosSet &toCover, StateGrid &sg, vector<CellState> nonTraversables){
+  PosSet visited;
+
+  list<Pos> toVisit; 
+  toVisit.push_back(c);
+
+  while (!toVisit.empty()) {
+    Pos p = toVisit.front();
+    toVisit.pop_front();
+
+    if(is_elem(p,visited)) continue;
+
+    if(is_elem(p,toCover) && unobstructedLine(c, p, sg, nonTraversables)) coveredCells.insert(p);
+
+    visited.insert(p);
+
+    Float pDist = p.distanceTo(c);
+
+    for (Pos pN : sg.adj(p,nonTraversables)) {
+      Float pNDist = pN.distanceTo(c);
+
+      if (pDist < pNDist && pNDist <= radius) {
+        toVisit.push_back(pN);
+      }
+    }
+  }
+}
+
+  
+PosSet getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
+
+  vector<Pos> frontiersVec = toVec(frontiersSet);
+
+  /* sort(frontiersVec.begin(), frontiersVec.end()); */
+  shuffle(std::begin(frontiersVec), std::end(frontiersVec), default_random_engine(2021));
+  int i = 0;
+
+  PosSet significativeFrontiers;
+
+  PosSet coveredFrontiers;
+
+  while(coveredFrontiers.size() < frontiersVec.size()){
+    if(i>=frontiersVec.size()) FAIL("Out of index: "<<coveredFrontiers.size()<<"/"<<i<<"/"<<frontiersVec.size());
+
+    Pos significativeFrontier = frontiersVec[i];
+    i++;
+
+    if(is_elem(significativeFrontier,coveredFrontiers)) continue;
+
+    significativeFrontiers.insert(significativeFrontier);
+
+    accumCircleCells(coveredFrontiers, significativeFrontier, radius, frontiersSet, sg, nonTraversables);
+  }
+
+  return significativeFrontiers;
+}
+
+
 // true if the circles defined by the centrers and the radius, contains all the points
-bool contains(vector<Pos> &centers, Float radius, vector<Pos> points) {
+bool contains(vector<Pos> &centers, Float radius, vector<Pos> &points) {
   Float radiusSquared = radius*radius;
 
   for(Pos point : points){
@@ -236,7 +364,7 @@ bool contains(vector<Pos> &centers, Float radius, vector<Pos> points) {
 }
 
 // Embed the pos from `from` to pos on `to`
-vector<Pos> embed(vector<Pos> from, vector<Pos> to){
+vector<Pos> embed(vector<Pos> &from, vector<Pos> &to){
   vector<Pos> res;
   for (Pos f : from) {
     Pos embedded = NULL_POS;
@@ -253,6 +381,10 @@ vector<Pos> embed(vector<Pos> from, vector<Pos> to){
   }
   return res;
 }
+
+/////////////
+// k-means //
+/////////////
 
 // modified version of: 
 // http://www.goldsborough.me/c++/python/cuda/2017/09/10/20-32-46-exploring_k-means_in_python,_c++_and_cuda/
