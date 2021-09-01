@@ -42,7 +42,7 @@ class Robot {
 
   // auction related
   boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> paths;
-  boost::unordered_map<Pos,float> pathCosts;
+  boost::unordered_map<Pos,float> pathLenght;
 
   GvdVecGraph gvd;
 

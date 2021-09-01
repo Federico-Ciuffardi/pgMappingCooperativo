@@ -46,6 +46,12 @@
   <!-- <arg name="frontier_simplification_method" default="1" /> --> 
   <!-- <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" /> -->  
 
+  <!-- <arg name="bid_segment_value_component_coefficient" default="10" /> --> 
+  <!-- <param name="bid_segment_value_component_coefficient" type="double" value="$(arg bid_segment_value_component_coefficient)" /> -->  
+
+  <!-- <arg name="bid_segment_value_component_mode" default="1" /> --> 
+  <!-- <param name="bid_segment_value_component_mode" type="double" value="$(arg bid_segment_value_component_mode)" /> -->  
+
   <!-- # GVD lib config. Check '../src/lib/GVD/src/config.h' for help (has defaults values on said file that can be overridden by the ros params) -->
 
   <!-- <arg name="gvd_connectivity_method" default="0" /> -->

@@ -50,18 +50,21 @@ Bid Robot::getBid(Auction msg) {
   /* cout<<stateGrid<<endl; */
 
   // get the path from the robotPos to each frontier in frontiers
-  boost::tie(paths, pathCosts) = gvd.getMultiPath(robotPos, frontiers);
-  /* cout<<"Calculated path costs: "<<pathCosts<<endl; //DEBUG */
+  boost::tie(paths, pathLenght) = gvd.getMultiPath(robotPos, frontiers);
+  /* cout<<"Calculated path costs: "<<pathLenght<<endl; //DEBUG */
 
   // Construct bid rosmsg 
   Bid bid;
-  for (auto &it : pathCosts) {
+  for (auto &it : pathLenght) {
     Pos frontier = it.first; 
     Float cost = it.second;
 
     bid.frontiers.push_back(toPoint2D(frontier));
-    bid.values.push_back(pathCosts[frontier]);
+    bid.pathLength.push_back(pathLenght[frontier]);
   }
+
+  // Set the robot position
+  bid.robotPosition = toPoint2D(robotPos);
 
   return bid;
 }

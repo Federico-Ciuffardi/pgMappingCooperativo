@@ -39,13 +39,35 @@ class CentralModule {
 
   // frontierSimplificationMethod:
   // * 0: No frontier simplification
-  // * 1: Frontiers are clustered into k significant frontiers using kMeans (the centroids are the significant frontiers).
+  // * 1: Apply kMeans to each connected component of the frontier set, only the frontiers closest to a k-means centroid are used.
   //      k is estimated through the robot sensor range
-  // * 2: Frontiers are clustered into k significant frontiers using kMeans (the centroids are the significant frontiers).
+  // * 2: Apply kMeans to each connected component of the frontier set,, only the frontiers closest to a k-means centroid are used.
   //      k is the minimun so that the circles defined with the significant frontiers as centers and the robot sensor range
   //      as the radius contains all the frontiers 
-  // * 3: Frontiers are clustered using affinity propagation (the centroids are the significant frontiers).
+  // * 3: Apply affinity propagation to each connected component of the frontier set, only the frontiers closest to a affinity
+  //      propagation centroid are used.
+  // * 4: Use a custom method to get the frontiers to use from the frontier set. (to each connected component of the frontier set)
+  // * 5: Use a custom method to get the frontiers to use from the frontier set. (to the frontier set as a whole)
   int frontierSimplificationMethod = 4;
+
+  // bidSegmentValueComponentCoefficient: 
+  // Used it the bidSegmentValueComponent to calculate bid values for forntiers. Check below for what this parameter means for
+  // each bidSegmentValueComponent value.
+  Float bidSegmentValueComponentCoefficient = 10;
+
+  // bidSegmentValueComponentMode: 
+  // The bidSegmentValueComponentMode especifies how the bidSegmentValueComponent is calculated. Then the frontierValue is calculated
+  // as `frontierValue = baseValue + bidSegmentValueComponent`, for each frontier. This the bid segment value component, is intended
+  // to modify the frontier values so the auction resolution is influenced to keep the robots in their current segment.
+  // * 0: No penalization:
+  //      bidSegmentValueComponent = 0
+  // * 1: Constant penalization:
+  //      bidSegmentValueComponent = 0                                   ; if robot inside of the frontier segment
+  //                               | bidSegmentValueComponentCoefficient ; otherwise
+  // * 2: Constant discount:
+  //      bidSegmentValueComponent = -bidSegmentValueComponentCoefficient ; if robot inside of the frontier segment
+  //                               |  0                                   ; otherwise
+  int bidSegmentValueComponentMode = 2;
 
   // kMeans parameters
   Float kMeansMaxIter = 10000;

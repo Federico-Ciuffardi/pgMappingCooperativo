@@ -243,11 +243,31 @@ bool CentralModule::saveBid(Bid bid, RobotId robotId) {
 
   // Store the bid
   for (int i = 0; i < bid.frontiers.size(); i++) {
-    Float value = bid.values[i];
-    Pos frontier = toPos(bid.frontiers[i]);
+    Pos frontierPos = toPos(bid.frontiers[i]);
+    Pos robotPos = toPos(bid.robotPosition);
 
-    auctioneer.addBid(robotId, topoMap->segmenter->idGrid[frontier] , frontier, value);
-    bids[robotId][frontier] = value;
+    // Calculate bid segmentValueComponent
+    float segmentValueComponent = 0;
+    bool sameSegment = topoMap->segmenter->idGrid[frontierPos] == topoMap->segmenter->idGrid[robotPos];
+    switch (bidSegmentValueComponentMode) {
+      case 1:
+        if(!sameSegment){
+          segmentValueComponent = bidSegmentValueComponentCoefficient;
+        }
+        break;
+      case 2:
+        if(sameSegment){
+          segmentValueComponent = -bidSegmentValueComponentCoefficient;
+        }
+        break;
+    }
+
+    // Calculate bid value
+    Float value = bid.pathLength[i] + segmentValueComponent;
+
+    // Store frontier bid
+    auctioneer.addBid(robotId, topoMap->segmenter->idGrid[frontierPos] , frontierPos, value);
+    bids[robotId][frontierPos] = value;
   }
 
   return true;
@@ -282,6 +302,8 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
 /////////
 // Aux //
 /////////
+
+// custom
 
 bool unobstructedLine(Pos p1, Pos p2, StateGrid &sg, vector<CellState> obstructedTypes){
   for ( Pos p : discretizeLine(p1,p2)){
@@ -347,6 +369,7 @@ PosSet getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateG
   return significativeFrontiers;
 }
 
+// kMeans
 
 // true if the circles defined by the centrers and the radius, contains all the points
 bool contains(vector<Pos> &centers, Float radius, vector<Pos> &points) {
