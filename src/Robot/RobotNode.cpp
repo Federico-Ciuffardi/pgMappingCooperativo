@@ -97,10 +97,10 @@ void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
   rvizHelper.mark(posMarkerPoint, robot.name + "_pos");
 }
 
-Vector2<Float> lastRtPos;
+Pos lastRtPos = NULL_POS;
 void setRealTimePositionRvizMarks(Pose pose) {
 
-  Vector2<Float> currRtPos;
+  Pos currRtPos;
   currRtPos.x = pose.position.x ;
   currRtPos.y = pose.position.y ;
   if(currRtPos.distanceToSquared(lastRtPos) < 1) return; // pos not different enough

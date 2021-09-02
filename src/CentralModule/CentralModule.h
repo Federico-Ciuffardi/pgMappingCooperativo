@@ -64,7 +64,7 @@ class CentralModule {
   // * 1: Constant penalization:
   //      bidSegmentValueComponent = 0                                   ; if robot inside of the frontier segment
   //                               | bidSegmentValueComponentCoefficient ; otherwise
-  // * 2: Constant discount:
+  // * 2: Constant discount: (the same as 1, more efficient, but could lead to negative values)
   //      bidSegmentValueComponent = -bidSegmentValueComponentCoefficient ; if robot inside of the frontier segment
   //                               |  0                                   ; otherwise
   int bidSegmentValueComponentMode = 2;

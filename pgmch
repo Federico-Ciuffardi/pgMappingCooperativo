@@ -57,6 +57,8 @@ function clean_ros(){
   pkill rviz            || true
   pkill rqt_console     || true
   pkill roscore         || true
+  killall -9 roscore    || true
+  killall -9 rosmaster  || true
 }
 
 function init_generic_ros(){
@@ -66,14 +68,16 @@ function init_generic_ros(){
   printf "> Starting roscore\n\n"
   roscore &>/dev/null &
 
+  sleep 2
+
   rosparam set /use_sim_time true # use gazebo time
 
   printf "> Starting rqt_console\n\n"
-  sleep 2
   rqt_console &>/dev/null &
 
-  printf "> Starting rqt_console\n\n"
   sleep 2
+
+  printf "> Starting rqt_console\n\n"
   rviz -d "${rviz_dir}/${map_name}".rviz &>/dev/null &
 }
 
@@ -103,7 +107,21 @@ function test(){
   printf "> Simulation on ${map_name} with ${starting_robot_number}\n\n"
   roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} || true
 
+  ## Post process the replay
+
+  ### end rosbag
   rosnode kill /rosbag &>/dev/null || true
+
+  ### repair the bag
+  if [ -f "${this_log_dir}/rviz_replay.bag.active" ] ; then
+    mv "${this_log_dir}/rviz_replay.bag.active" "${this_log_dir}/rviz_replay.bag"
+    rosbag reindex "${this_log_dir}/rviz_replay.bag"
+    rm "${this_log_dir}/rviz_replay.orig.bag"
+  fi
+
+  ### compress the bag
+  rosbag compress --bz2 "${this_log_dir}/rviz_replay.bag"
+  rm "${this_log_dir}/rviz_replay.orig.bag"
 }
 
 function replay() {
@@ -129,7 +147,6 @@ function compile(){
   catkin_make -DCMAKE_EXPORT_COMPILE_COMMANDS=1 || exit 1
   printf "\n"
 }
-
 
 ########
 # Main #
