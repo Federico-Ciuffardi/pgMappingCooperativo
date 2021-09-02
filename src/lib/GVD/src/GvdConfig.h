@@ -27,7 +27,7 @@ public:
   //       0:  that have less than 2 obstacles as basis points  are auxiliar
   //       (are a products of unknown vertices)
   //       1 and 2: vertices that are unknown or are close to unknown
-  int vertexSimplificationMethod = 2;
+  int vertexSimplificationMethod = 1;
 
 
   // GVD edge simplification: how hard are the GVD edges deleted to simplify the GVD:

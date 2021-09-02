@@ -51,6 +51,8 @@ struct Gvd {
   Gvd(MapType&);
 
   // Functions
+  bool isConnectivityAux(Pos p);
+
   void update();
 
   // Destructor

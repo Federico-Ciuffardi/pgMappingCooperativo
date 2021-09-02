@@ -106,26 +106,55 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
   float cellSize = mapInfo.resolution;
 
   // Gvd
+  Gvd& gvd = *centralModule.topoMap->gvd;
+  GvdGraph& gvdGraph = *centralModule.topoMap->gvd->graphGvd;
+
   rvizHelper.topic = &gvdMarkerPub;
 
-  /// mark edges
+  /// get edges and vertices (vertices are disabled) marker points 
   RvizHelper::MarkerPoints edgesMarkerPoints;
-  for (auto e : auction.gvd.edges) {
-    edgesMarkerPoints.push_back(toPoint(e.from, mapInfo));
-    edgesMarkerPoints.push_back(toPoint(e.to, mapInfo));
+  RvizHelper::MarkerPoints connectivityEdgesMarkerPoints;
+  /* RvizHelper::MarkerPoints verticesMarkerPoints; */
+  /* RvizHelper::MarkerPoints connectivityVerticesMarkerPoints; */
+  for (GvdGraph::Vertex v : gvdGraph) {
+    Pos vPos = gvdGraph[v].p;
+    bool isVPosConnectivityAux = gvd.isConnectivityAux(vPos);
+    /* if(isVPosConnectivityAux){ */
+    /*   connectivityVerticesMarkerPoints.push_back(toPoint(vPos,mapInfo)); */
+    /* }else{ */
+    /*   verticesMarkerPoints.push_back(toPoint(vPos,mapInfo)); */
+    /* } */
+    for (GvdGraph::Vertex nv : gvdGraph.adj(v)) {
+      Pos nvPos = gvdGraph[nv].p;
+      if(isVPosConnectivityAux || gvd.isConnectivityAux(nvPos)){
+        connectivityEdgesMarkerPoints.push_back(toPoint(vPos,mapInfo));
+        connectivityEdgesMarkerPoints.push_back(toPoint(nvPos,mapInfo));
+      }else{
+        edgesMarkerPoints.push_back(toPoint(vPos,mapInfo));
+        edgesMarkerPoints.push_back(toPoint(nvPos,mapInfo));
+      }
+    }
   }
-  rvizHelper.color    = BLUE;
+
+  // mark edges
   rvizHelper.type     = RvizHelper::LINE_LIST;
   rvizHelper.scale    = makeVector3(cellSize*0.25, cellSize, 1);
   rvizHelper.position = makeVector3(0,0,gvdEdgeZ);
-  rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
 
-  /// mark vertices
-  rvizHelper.color    = BLUE;
-  rvizHelper.type     = cellMarkerType;
-  rvizHelper.scale    = makeVector3(cellSize*0.6); rvizHelper.scale.z  = cubeHeight;
-  rvizHelper.position = makeVector3(0,0,gvdVertexZ);
-  rvizHelper.mark(toVecPoint3D(auction.gvd.vertices, mapInfo), "gvd_vertices");
+  rvizHelper.color = BLUE;
+  rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
+  rvizHelper.color = makeColorRGBA(0.2, 0.505, 1,0.5);
+  rvizHelper.mark(connectivityEdgesMarkerPoints, "gvd_conntivity_aux_edges");
+
+  /// mark vertices (DISABLED)
+  /* rvizHelper.type     = cellMarkerType; */
+  /* rvizHelper.scale    = makeVector3(cellSize*0.6); rvizHelper.scale.z  = cubeHeight; */
+  /* rvizHelper.position = makeVector3(0,0,gvdVertexZ); */
+
+  /* rvizHelper.color    = BLUE; */
+  /* rvizHelper.mark(verticesMarkerPoints, "gvd_vertices"); */
+  /* rvizHelper.color    = makeColorRGBA(0.2, 0.505, 1,0.5); */
+  /* rvizHelper.mark(connectivityVerticesMarkerPoints, "gvd_connectivity_aux_vertices"); */
 
   // Topological map
   rvizHelper.topic = &topoMapMarkerPub;

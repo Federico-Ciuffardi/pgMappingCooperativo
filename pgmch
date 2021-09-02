@@ -34,7 +34,7 @@ function set_id(){
   # set id
   if [ $# -gt 0 ] ; then
     # old id
-    id="$(basename "$(realpath $1)")"
+    id="$(basename "$(realpath ${log_dir}/$1)")"
   else
     # new id
     id="$(date +%Y_%m_%d__%H_%M_%S)"
@@ -103,7 +103,7 @@ function test(){
   printf "> Simulation on ${map_name} with ${starting_robot_number}\n\n"
   roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} || true
 
-  clean_ros &> /dev/null
+  rosnode kill /rosbag &>/dev/null || true
 }
 
 function replay() {
@@ -117,11 +117,9 @@ function replay() {
   local map_name=$(ruby -r yaml -e 'puts YAML.load_file(ARGV[0])["map_name"]' "${this_settings_file}")
 
   # execute replay
-  init_generic_ros "${map_name}"
+  init_generic_ros "${map_name}_replay"
 
   rosbag play --clock "${this_log_dir}/rviz_replay.bag" || true
-
-  clean_ros &> /dev/null
 }
 
 function compile(){

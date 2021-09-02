@@ -11,6 +11,7 @@
 #include "GVD/src/data/Pos.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/Vector3.h"
 #include "utils.h"
 #include "nav_msgs/Odometry.h"
 
@@ -113,6 +114,18 @@ inline PoseStamped toPoseStamped(nav_msgs::Odometry odom){
   ps.header = odom.header;
   ps.pose = odom.pose.pose;
   return ps;
+}
+
+/////////////
+// Vector3 //
+/////////////
+
+inline Vector3 toVector3(Point point){
+  Vector3 vector3;
+  vector3.x = point.x;
+  vector3.y = point.y;
+  vector3.z = point.z;
+  return vector3;
 }
 
 /////////

@@ -97,28 +97,39 @@ void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
   rvizHelper.mark(posMarkerPoint, robot.name + "_pos");
 }
 
-Pos lastRtPos = NULL_POS;
-void setRealTimePositionRvizMarks(Point &position, mapInfoType mapInfo) {
+Vector2<Float> lastRtPos;
+void setRealTimePositionRvizMarks(Pose pose) {
 
-  Pos currRtPos = toPos(position, mapInfo);
-
-  if(currRtPos == lastRtPos) return; // pos not changed no need to update marker
-
+  Vector2<Float> currRtPos;
+  currRtPos.x = pose.position.x ;
+  currRtPos.y = pose.position.y ;
+  if(currRtPos.distanceToSquared(lastRtPos) < 1) return; // pos not different enough
   lastRtPos = currRtPos;
 
-  float cellSize = mapInfo.resolution;
-
   // Mark Current position on rviz
-  rvizHelper.topic = &markerPub;
+  rvizHelper.topic = &posMarkerPub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
-  posMarkerPoint.push_back(toMarkerPoint(currRtPos, mapInfo));
+  Point marker;
+  posMarkerPoint.push_back(marker);
+  marker.x=1;
+  posMarkerPoint.push_back(marker);
 
   rvizHelper.color    = RED;
-  rvizHelper.type     = cellMarkerType;
-  rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
-  rvizHelper.position = makeVector3(0,0,rtPosZ);
+  rvizHelper.type     = RvizHelper::ARROW;
+
+  rvizHelper.scale    = makeVector3(0.25,0.5,0.4);
+
+  rvizHelper.position = toVector3(pose.position); 
+  rvizHelper.position.z = rtPosZ;
+
+  rvizHelper.orientation = pose.orientation;
+
   rvizHelper.mark(posMarkerPoint, robot.name + "_rt_pos");
+
+  // reset rvizHelper state
+  rvizHelper.orientation = Quaternion(); rvizHelper.orientation.w = 1;
+  rvizHelper.position = Vector3();
 }
 
 ///////////////////
@@ -147,7 +158,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   // Mark Current position on rviz
   rvizHelper.topic = &markerPub;
 
-  setRealTimePositionRvizMarks(robot.position, robot.occupancyGrid.info);
+  setRealTimePositionRvizMarks(odom->pose.pose);
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
@@ -235,7 +246,8 @@ int main(int argc, char* argv[]) {
   bidPub             = n.advertise<Bid>("bid", 1);
   goalPathPub        = n.advertise<GoalList>("goalPath", 1, true);
   requestObjetivePub = n.advertise<std_msgs::String>("/request_objetive", 1);
-  markerPub          = n.advertise<visualization_msgs::Marker>("/visualization_marker", 10);
+  markerPub          = n.advertise<visualization_msgs::Marker>("/robot_path_marker", 1);
+  posMarkerPub       = n.advertise<visualization_msgs::Marker>("/robot_pos_marker", 1);
 
   // Initilize Subscribers
   odomSub       = n.subscribe("odom", 1, odomCallback);
