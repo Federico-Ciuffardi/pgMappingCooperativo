@@ -1,0 +1,185 @@
+#! /usr/bin/env bash
+
+EXE_NAME="pgmch"
+
+NAME="pg mapping cooperativo helper"
+
+VERSION="0.0.0"
+
+HELP_MSG="$NAME $VERSION
+
+Usage: $EXE_NAME [<flags>] <command>
+
+Flags:
+  -v, --version  output version information and exit
+  -h, --help     display this help and exit
+
+Commands: command {arg_name:default} ...
+
+   compile                                      compile the workspace '~/catkin_ws'
+   test    {map_name:office} {robot_number:5}   run a single test in {map_name} with {robot_number}
+   replay  {id:last}                            replay the test with the given {id}
+"
+
+# Variables
+pkg_dir="${HOME}/catkin_ws/src/pgmappingcooperativo"
+rviz_dir="${pkg_dir}/rviz"
+config_dir="${pkg_dir}/config"
+log_dir="${pkg_dir}/log"
+
+# funcions
+
+## set or create id, and also the varaibles depending on the id
+function set_id(){
+  # set id
+  if [ $# -gt 0 ] ; then
+    # old id
+    id="$(basename "$(realpath $1)")"
+  else
+    # new id
+    id="$(date +%Y_%m_%d__%H_%M_%S)"
+  fi
+  # set variables
+  this_log_dir="${log_dir}/${id}"
+  this_settings_file="${this_log_dir}/settings.yaml"
+
+  # create new stuff if id was new
+  if [ $# -le 0 ] ; then
+    mkdir -p "$this_log_dir"
+    ln -sfn "$this_log_dir" "$log_dir/latest"
+  fi
+
+}
+
+## kill all ros related
+function clean_ros(){
+  rosnode kill /rosbag  || true
+  pkill rviz            || true
+  pkill rqt_console     || true
+  pkill roscore         || true
+}
+
+function init_generic_ros(){
+  local map_name="$1"
+
+  # Prepare for launch
+  printf "> Starting roscore\n\n"
+  roscore &>/dev/null &
+
+  rosparam set /use_sim_time true # use gazebo time
+
+  printf "> Starting rqt_console\n\n"
+  sleep 2
+  rqt_console &>/dev/null &
+
+  printf "> Starting rqt_console\n\n"
+  sleep 2
+  rviz -d "${rviz_dir}/${map_name}".rviz &>/dev/null &
+}
+
+function test(){
+  # load args
+  local map_name="${1:-office}"
+  local starting_robot_number="${2:-5}"
+
+  # get new id
+  set_id
+
+  # save the settings
+  echo "starting_robot_number: ${starting_robot_number}" >  ${this_settings_file}
+  echo "map_name:              ${map_name}"              >> ${this_settings_file}
+
+  #  execute test
+  ## init ros 
+  init_generic_ros "${map_name}"
+
+  ## link the ros log
+  ln -s "$(realpath "$HOME/.ros/log/latest")" ${this_log_dir}/ros_log
+
+  ## start rosbag recording
+  rosbag record -O "${this_log_dir}/rviz_replay" $(cat "${config_dir}/rosbagtopics" | sed -Ez '$ s/\n+$/ /')  __name:=rosbag &>/dev/null &
+
+  ## start the sim
+  printf "> Simulation on ${map_name} with ${starting_robot_number}\n\n"
+  roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} || true
+
+  clean_ros &> /dev/null
+}
+
+function replay() {
+  # load args
+  local in_id="${1:-latest}"
+
+  # set id
+  set_id "${in_id}"
+
+  # load settings
+  local map_name=$(ruby -r yaml -e 'puts YAML.load_file(ARGV[0])["map_name"]' "${this_settings_file}")
+
+  # execute replay
+  init_generic_ros "${map_name}"
+
+  rosbag play --clock "${this_log_dir}/rviz_replay.bag" || true
+
+  clean_ros &> /dev/null
+}
+
+function compile(){
+  printf "> Compiling\n\n"
+
+  cd $HOME/catkin_ws
+  catkin_make -DCMAKE_EXPORT_COMPILE_COMMANDS=1 || exit 1
+  printf "\n"
+}
+
+
+########
+# Main #
+########
+if [[ ${DEBUG-} =~ ^1|yes|true$ ]]; then
+    set -o xtrace       # Trace the execution of the script (debug)
+fi
+
+set -o errexit      # Exit on most errors (see the manual)
+set -o nounset      # Disallow expansion of unset variables
+set -o pipefail     # Use last non-zero exit code in a pipeline
+set -o errtrace     # Ensure the error trap handler is inherited
+
+clean_ros &> /dev/null
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      echo "$HELP_MSG"
+      exit 0
+      ;;
+
+    -v|--version)
+      echo "$NAME $VERSION"
+      exit 0
+      ;;
+
+    test)
+      compile
+      $@  
+      exit $?
+      ;;
+
+    replay|compile)
+      $@  
+      exit $?
+      ;;
+
+    -*)
+      echo "'$1' is not a $EXE_NAME flag. See '$EXE_NAME --help'."
+      exit 2
+      ;;
+
+    *)
+      echo "'$1' is not a $EXE_NAME command. See '$EXE_NAME --help'."
+      exit 2
+      ;;
+  esac
+done
+
+printf "missing command\nTry '$EXE_NAME --help' for more information.\n"

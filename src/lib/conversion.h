@@ -38,6 +38,7 @@ inline Point2D toPoint2D(Point p3d) {
 
 inline vector<Point2D> toVecPoint2D(vector<Pos> ps){
   vector<Point2D> res;
+  res.reserve(ps.size());
   for( Pos p : ps ){
     res.push_back(toPoint2D(p));
   }
@@ -96,6 +97,7 @@ inline Point toPoint(cv::Point2f ps){
 
 inline vector<Point> toVecPoint3D(vector<Point2D> p2ds, mapInfoType mapInfo){
   vector<Point> p3ds;
+  p3ds.reserve(p2ds.size());
   for (Point2D c : p2ds) {
     p3ds.push_back(toPoint(c, mapInfo));
   }
@@ -155,7 +157,7 @@ inline Pos toPos(Point p3d, mapInfoType mapInfo) {
   return toPos(p3d) - toPos(mapInfo.origin.position) + adjustment;
 }
 
-inline PosSet toPosSet(vector<Point2D> ps){
+inline PosSet toPosSet(vector<Point2D> &ps){
   PosSet res;
   for( Point2D p : ps ){
     res.insert(toPos(p));
@@ -184,7 +186,7 @@ inline PosSet toPosSet(vector<int> ps, int width){
 /////////////////////////////
 
 // get stateGrid from occupancy grid, set the known cells count on the count attribute 
-inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, int* count = NULL) {
+inline StateGrid toStateGrid(nav_msgs::OccupancyGrid &og, int* count = NULL) {
   pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
   StateGrid stateGrid(mapSize);
 
@@ -218,7 +220,7 @@ inline StateGrid toStateGrid(nav_msgs::OccupancyGrid og, int* count = NULL) {
 /////////////////////////////////
 
 template <typename Graph>
-inline Graph toGraph(pgmappingcooperativo::Graph gMsg) {
+inline Graph toGraph(pgmappingcooperativo::Graph &gMsg) {
   Graph g;
 
   for (Point2D vPoint2D : gMsg.vertices) {

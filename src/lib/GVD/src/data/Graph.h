@@ -427,7 +427,7 @@ struct PosGraph : public Graph<graph,Pos> {
   class multi_astar_distance_heuristic : public astar_heuristic<GraphType, CostType> {
    public:
     typedef typename graph_traits<GraphType>::vertex_descriptor Vertex;
-    multi_astar_distance_heuristic(GraphType g, PosSet goals) : m_graph(g), m_goals(goals) {}
+    multi_astar_distance_heuristic(GraphType &g, PosSet goals) : m_graph(g), m_goals(goals) {}
     CostType operator()(Vertex u) {
       // cout<<"heuristica antes"<<m_goals.size()<<endl;
       Pos current_target = *(m_goals.begin());
@@ -455,7 +455,7 @@ struct PosGraph : public Graph<graph,Pos> {
    public:
     multi_astar_goal_visitor(PosSet goals) : m_goals(goals) {}
     template <class GraphType>
-    void examine_vertex(Vertex u, GraphType g) {
+    void examine_vertex(Vertex u, GraphType &g) {
       // cout<<"visitor antess"<<m_goals.size()<<endl;
       auto it = m_goals.find(g[u].p);
       if (it != m_goals.end()) {

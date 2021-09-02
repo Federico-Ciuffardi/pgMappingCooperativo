@@ -10,3 +10,4 @@ build
 CTestTestfile.cmake
 libMAIN_SOURCES.a
 logFiles
+log

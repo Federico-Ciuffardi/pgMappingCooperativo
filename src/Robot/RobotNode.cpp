@@ -5,6 +5,7 @@
 #include "Robot.h"
 #include "ros/init.h"
 #include "ros/this_node.h"
+#include "ros/time.h"
 
 ////////////////
 // Parameters //
@@ -26,9 +27,9 @@ float cubeHeight = 0.02;
 float layerSeparation = cubeHeight;
 
 //// Assign markers to layers
-float pathLineZ = 11*layerSeparation;
+float pathLineZ = 12*layerSeparation;
+float rtPosZ    = 11*layerSeparation;
 float posZ      = 10*layerSeparation;
-
 
 ///////////////
 // Variables //
@@ -53,6 +54,7 @@ ros::Publisher bidPub;
 ros::Publisher requestObjetivePub;
 ros::Publisher goalPathPub;
 ros::Publisher markerPub;
+ros::Publisher posMarkerPub;
 
 // others
 Robot robot;
@@ -78,7 +80,7 @@ void setPathRvizMarks(GoalList &path, mapInfoType mapInfo) {
   rvizHelper.mark(path.goals, robot.name + "_path");
 }
 
-void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
+void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
 
   float cellSize = mapInfo.resolution;
 
@@ -86,13 +88,37 @@ void setPositionRvizMarks(Robot &r, mapInfoType mapInfo) {
   rvizHelper.topic = &markerPub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
-  posMarkerPoint.push_back(toMarkerPoint(toPos(r.position, mapInfo), mapInfo));
+  posMarkerPoint.push_back(toMarkerPoint(toPos(position, mapInfo), mapInfo));
 
   rvizHelper.color    = makeColorRGBA(0.75);
   rvizHelper.type     = cellMarkerType;
   rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,posZ);
   rvizHelper.mark(posMarkerPoint, robot.name + "_pos");
+}
+
+Pos lastRtPos = NULL_POS;
+void setRealTimePositionRvizMarks(Point &position, mapInfoType mapInfo) {
+
+  Pos currRtPos = toPos(position, mapInfo);
+
+  if(currRtPos == lastRtPos) return; // pos not changed no need to update marker
+
+  lastRtPos = currRtPos;
+
+  float cellSize = mapInfo.resolution;
+
+  // Mark Current position on rviz
+  rvizHelper.topic = &markerPub;
+
+  RvizHelper::MarkerPoints posMarkerPoint;
+  posMarkerPoint.push_back(toMarkerPoint(currRtPos, mapInfo));
+
+  rvizHelper.color    = RED;
+  rvizHelper.type     = cellMarkerType;
+  rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.position = makeVector3(0,0,rtPosZ);
+  rvizHelper.mark(posMarkerPoint, robot.name + "_rt_pos");
 }
 
 ///////////////////
@@ -117,6 +143,11 @@ void publishPath(Pos frontier) {
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   // Store current position
   robot.position = odom->pose.pose.position;
+
+  // Mark Current position on rviz
+  rvizHelper.topic = &markerPub;
+
+  setRealTimePositionRvizMarks(robot.position, robot.occupancyGrid.info);
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
@@ -143,15 +174,17 @@ void auctionCallBack(const AuctionConstPtr& msg) {
   ROS_INFO("Auction message arrived");
   robot.lastAuctionId = msg->id;
 
+  /* ros::Time bidStart = ros::Time::now(); */
   ROS_INFO("Calculate bids");
   Bid bid = robot.getBid(*msg);
+  /* ROS_INFO_STREAM("Bids calculated in "<<(ros::Time::now()-bidStart).toSec()<<" secs"); */
 
   ROS_INFO("Publish bids");
   bid.id = msg->id;
   bidPub.publish(bid);
 
   // Mark position
-  setPositionRvizMarks(robot, robot.occupancyGrid.info);
+  setPositionRvizMarks(robot.position, robot.occupancyGrid.info);
 }
 
 void assignmentCallback(const AssignmentConstPtr& msg) {
