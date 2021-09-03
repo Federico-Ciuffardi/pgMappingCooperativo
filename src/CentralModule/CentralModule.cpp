@@ -256,11 +256,10 @@ bool unobstructedLine(Pos p1, Pos p2, StateGrid &sg, vector<CellState> obstructe
   return true;
 }
 
-PosSet accumCircleCells(PosSet &coveredCells, Pos c, Float radius, PosSet &toCover, StateGrid &sg, vector<CellState> nonTraversables){
+PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, StateGrid &sg, vector<CellState> nonTraversables){
   Float radiusSquared = radius*radius;
 
   PosSet circumference;
-
   PosSet visited;
 
   std::queue<Pos> toVisit; 
@@ -271,17 +270,18 @@ PosSet accumCircleCells(PosSet &coveredCells, Pos c, Float radius, PosSet &toCov
 
     if(is_elem(p,visited)) continue;
 
-    if(is_elem(p,toCover) && unobstructedLine(c, p, sg, {Occupied})) coveredCells.insert(p);
-
     visited.insert(p);
 
-    Float pDist = p.distanceToSquared(c);
+    if(is_elem(p,toCover) && unobstructedLine(c, p, sg, {Occupied})){
+      interior.insert(p);
+    }
 
+    Float pDist = p.distanceToSquared(c);
     for (Pos pN : sg.adj(p,nonTraversables)) {
       Float pNDist = pN.distanceToSquared(c);
 
       if (pDist < pNDist){
-        if(pNDist <= radiusSquared) {
+        if(pNDist < radiusSquared) {
           toVisit.push(pN);
         }else{
           if(is_elem(pN,toCover)) circumference.insert(pN);
@@ -293,17 +293,13 @@ PosSet accumCircleCells(PosSet &coveredCells, Pos c, Float radius, PosSet &toCov
 }
 
 vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
-
   vector<Pos> frontiersVec = toVec(frontiersSet);
-
-  /* sort(frontiersVec.begin(), frontiersVec.end()); */
   shuffle(std::begin(frontiersVec), std::end(frontiersVec), default_random_engine(2021));
-  int i = 0;
 
   vector<Pos> significativeFrontiers;
-
   PosSet coveredFrontiers;
 
+  int i = 0;
   while(coveredFrontiers.size() < frontiersVec.size()){
     if(i>=frontiersVec.size()) FAIL("Out of index: "<<coveredFrontiers.size()<<"/"<<i<<"/"<<frontiersVec.size());
 
@@ -314,19 +310,16 @@ vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, S
 
     significativeFrontiers.push_back(significativeFrontier);
 
-    accumCircleCells(coveredFrontiers, significativeFrontier, radius, frontiersSet, sg, nonTraversables);
+    accumCircle(coveredFrontiers, significativeFrontier, radius, frontiersSet, sg, nonTraversables);
   }
 
   return significativeFrontiers;
 }
 
 vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
-  PosSet remainingFrontiers = frontiersSet;
-  cout<<"getSignificativeFroniers"<<endl;
-  cout<<"frontiersSet: "<<frontiersSet<<endl;
   vector<Pos> significativeFrontiers;
 
-  //  extremos = Fronteras adyacentes a obstáculos;
+  // Set the frontiers adjacent to obstacles as the first endPoints
   std::queue<Pos> endPoints;
   for(Pos frontier : frontiersSet){
     bool hasObstructedNeighbor = false;
@@ -339,64 +332,71 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
     }
   }
 
+  // It remains to cover all frontiers 
+  PosSet remainingFrontiers = frontiersSet;
+
+  // if there is no endPoint yet, set the first significativeFrontier to get the first endPoints
   if(endPoints.empty()){
+    // Get the first candidate (TODO get the candidate that has max information gain)
     Pos significativeFrontier = *frontiersSet.begin();
+    // set the significativeFrontier
     significativeFrontiers.push_back(significativeFrontier);
     PosSet coveredFrontiers;
     PosSet newEndPoints;
-    newEndPoints = accumCircleCells(coveredFrontiers, significativeFrontier, radius, remainingFrontiers, sg, nonTraversables);
+    /// set the new coveredFrontiers
+    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius, remainingFrontiers, sg, nonTraversables);
     substract(remainingFrontiers,coveredFrontiers);
+    /// get new end points
     for(Pos p : newEndPoints){
       endPoints.push(p);
     }
   }
 
+  // Cover current endPoints and discover new ones, until all the frontiers are covered
   while ( !endPoints.empty() ) {
-
-    // obtener siguiente extremo sin cubrir
+    // Get the oldest endPoint and cover it 
     Pos uncoveredFrontier = endPoints.front(); endPoints.pop();
      
+    // skip if already covered
     if (!is_elem(uncoveredFrontier, remainingFrontiers)) continue;
 
+    // get the distance to from the uncoveredFrontier to it farthest frontier (no further than radius*2)
     PosSet circle;
-    accumCircleCells(circle, uncoveredFrontier, radius*2, remainingFrontiers, sg, notFrontier);
+    accumCircle(circle, uncoveredFrontier, radius*2, remainingFrontiers, sg, notFrontier);
 
-    Pos maxDistPos = NULL_POS;
     Float maxDist = -INF;
     for(Pos p : circle){
       Float dist = p.distanceTo(uncoveredFrontier);
-      if(maxDist < dist){
-        maxDistPos = p;
-        maxDist = dist;
-      }
+      maxDist = max(maxDist,dist);
     }
     maxDist = min(maxDist,radius*2);
-    cout<<"circle:            "<<circle<<endl;
-    cout<<"uncoveredFrontier: "<<uncoveredFrontier<<endl;
-    cout<<"maxDistPos:        "<<maxDistPos<<endl;
-    cout<<"maxDist:           "<<maxDist<<endl;
 
-
-    PosSet candidates;
+    // get significativeFrontier candidates
     circle.clear();
-    candidates = accumCircleCells(circle, uncoveredFrontier, maxDist/2 - 1, remainingFrontiers, sg, nonTraversables);
+    PosSet candidates = accumCircle(circle, uncoveredFrontier, maxDist/2 - 1, remainingFrontiers, sg, nonTraversables);
 
-    /* fronteraSignificativa = argMax(candidatos, "ganancia de info") */
-    if(candidates.empty()) candidates.insert(uncoveredFrontier);
-    Pos significativeFrontier = *candidates.begin();
+    // get the significativeFrontier
+    Pos significativeFrontier;
+    if(candidates.empty()){
+      // if candidates is empty then the uncoveredFrontier is the only remainingFrontier frontier 
+      significativeFrontier = uncoveredFrontier;
+    }else{
+      // else get the first candidate (TODO get the candidate that has max information gain)
+      significativeFrontier = *candidates.begin();
+    }
     
+    // set the significativeFrontier
     significativeFrontiers.push_back(significativeFrontier);
+    /// set the new coveredFrontiers
     PosSet newEndPoints;
     PosSet coveredFrontiers;
-    newEndPoints = accumCircleCells(coveredFrontiers, significativeFrontier, radius+0.5, remainingFrontiers, sg, nonTraversables);
-    cout<<"presub"<<endl;
+    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius+0.5, remainingFrontiers, sg, nonTraversables);
     substract(remainingFrontiers,coveredFrontiers);
-    cout<<"newEndPoints: "<<newEndPoints<<endl;
+    /// get new end points
     for(Pos p : newEndPoints){
       endPoints.push(p);
     }
   }
-  cout<<"significativeFrontiers: "<<significativeFrontiers<<endl;
   return significativeFrontiers;
 }
 
