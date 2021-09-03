@@ -121,6 +121,22 @@ vector<T> unique(vector<T> vec){
 }
 
 ////
+/// substract: delete all the elems of the second parameter from the first (no copies are made)
+//
+
+// unordered_set
+
+template <typename T>
+void substract(boost::unordered_set<T>& s1, boost::unordered_set<T> s2) {
+  for( T t : s2){
+    s1.erase(t);
+  }
+  /* if(!s2.empty()) */
+  /*   s1.erase(s2.begin(),s2.end()); */
+}
+
+
+////
 /// accum: accumulate all the elems of the second parameter into the first (no copies are made)
 //
 

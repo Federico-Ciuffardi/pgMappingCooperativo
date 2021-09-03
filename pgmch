@@ -127,6 +127,7 @@ function test(){
 function replay() {
   # load args
   local in_id="${1:-latest}"
+  local rate="${2:-1}"
 
   # set id
   set_id "${in_id}"
@@ -137,7 +138,7 @@ function replay() {
   # execute replay
   init_generic_ros "${map_name}_replay"
 
-  rosbag play --clock "${this_log_dir}/rviz_replay.bag" || true
+  rosbag play --clock "${this_log_dir}/rviz_replay.bag" --rate ${rate} || true
 }
 
 function compile(){

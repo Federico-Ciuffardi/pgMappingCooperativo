@@ -24,7 +24,8 @@
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
 vector<Pos> embed(vector<Pos> &from, vector<Pos> &to);
 bool contains(vector<Pos> &centers, Float radius, vector<Pos> &points);
-PosSet getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables);
+vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables);
+vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables);
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2, WaitingFirstBid=3, Resolving = 4 };
 
@@ -47,8 +48,7 @@ class CentralModule {
   // * 3: Apply affinity propagation to each connected component of the frontier set, only the frontiers closest to a affinity
   //      propagation centroid are used.
   // * 4: Use a custom method to get the frontiers to use from the frontier set. (to each connected component of the frontier set)
-  // * 5: Use a custom method to get the frontiers to use from the frontier set. (to the frontier set as a whole)
-  int frontierSimplificationMethod = 4;
+  int frontierSimplificationMethod = 5;
 
   // bidSegmentValueComponentCoefficient: 
   // Used it the bidSegmentValueComponent to calculate bid values for forntiers. Check below for what this parameter means for
