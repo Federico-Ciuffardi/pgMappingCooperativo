@@ -249,6 +249,8 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
 // custom frontier simplification //
 ////////////////////////////////////
 
+// aux
+
 bool unobstructedLine(Pos p1, Pos p2, StateGrid &sg, vector<CellState> obstructedTypes){
   for ( Pos p : discretizeLine(p1,p2)){
     if(is_elem(sg[p], obstructedTypes)) return false;
@@ -292,6 +294,8 @@ PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, State
   return circumference;
 }
 
+// frontier simplification
+
 vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
   vector<Pos> frontiersVec = toVec(frontiersSet);
   shuffle(std::begin(frontiersVec), std::end(frontiersVec), default_random_engine(2021));
@@ -317,10 +321,26 @@ vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, S
 }
 
 vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
+  PosSet remainingFrontiers = frontiersSet;
   vector<Pos> significativeFrontiers;
+  std::queue<Pos> endPoints;
+
+  // define local function to add a significativeFrontier
+  auto addSignificativeFrontier = [&](Pos significativeFrontier) { 
+    // set the significativeFrontier
+    significativeFrontiers.push_back(significativeFrontier);
+    PosSet coveredFrontiers;
+    PosSet newEndPoints;
+    /// set the new coveredFrontiers
+    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius + 0.5, remainingFrontiers, sg, nonTraversables);
+    substract(remainingFrontiers,coveredFrontiers);
+    /// get new end points
+    for(Pos p : newEndPoints){
+      endPoints.push(p);
+    }
+  };
 
   // Set the frontiers adjacent to obstacles as the first endPoints
-  std::queue<Pos> endPoints;
   for(Pos frontier : frontiersSet){
     bool hasObstructedNeighbor = false;
     for(Pos frontierNeighbor : sg.adj(frontier)){
@@ -332,24 +352,9 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
     }
   }
 
-  // It remains to cover all frontiers 
-  PosSet remainingFrontiers = frontiersSet;
-
   // if there is no endPoint yet, set the first significativeFrontier to get the first endPoints
   if(endPoints.empty()){
-    // Get the first candidate (TODO get the candidate that has max information gain)
-    Pos significativeFrontier = *frontiersSet.begin();
-    // set the significativeFrontier
-    significativeFrontiers.push_back(significativeFrontier);
-    PosSet coveredFrontiers;
-    PosSet newEndPoints;
-    /// set the new coveredFrontiers
-    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius, remainingFrontiers, sg, nonTraversables);
-    substract(remainingFrontiers,coveredFrontiers);
-    /// get new end points
-    for(Pos p : newEndPoints){
-      endPoints.push(p);
-    }
+    addSignificativeFrontier(*frontiersSet.begin());
   }
 
   // Cover current endPoints and discover new ones, until all the frontiers are covered
@@ -366,10 +371,9 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
 
     Float maxDist = -INF;
     for(Pos p : circle){
-      Float dist = p.distanceTo(uncoveredFrontier);
-      maxDist = max(maxDist,dist);
+      maxDist = max(maxDist,p.distanceTo(uncoveredFrontier));
     }
-    maxDist = min(maxDist,radius*2);
+    maxDist = min(maxDist,radius*2 - 1);
 
     // get significativeFrontier candidates
     circle.clear();
@@ -386,16 +390,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
     }
     
     // set the significativeFrontier
-    significativeFrontiers.push_back(significativeFrontier);
-    /// set the new coveredFrontiers
-    PosSet newEndPoints;
-    PosSet coveredFrontiers;
-    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius+0.5, remainingFrontiers, sg, nonTraversables);
-    substract(remainingFrontiers,coveredFrontiers);
-    /// get new end points
-    for(Pos p : newEndPoints){
-      endPoints.push(p);
-    }
+    addSignificativeFrontier(significativeFrontier);
   }
   return significativeFrontiers;
 }
