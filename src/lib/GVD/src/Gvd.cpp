@@ -52,11 +52,11 @@ bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){
 // filter condition specific to the connectivity method applied
 bool connectivityAux(Pos p, StateGrid &map, DistMap &distMap){
   switch (GvdConfig::get()->connectivityMethod) {
-    case 0:
+    case 1:
       return !isObstacleGenerated(p,distMap,map);
       break;
-    case 1:
     case 2:
+    case 3:
       // p is not unknown or a neighbor of unknown
       if (map[p] == Unknown) return true;
       for (Pos pn : map.adj(p)){
@@ -183,10 +183,13 @@ Gvd::Gvd(MapType& map) : map(map){
   cout<<"connectivityMethod: "<<GvdConfig::get()->connectivityMethod<<endl;
   switch (GvdConfig::get()->connectivityMethod) {
     case 0:
-      this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
+      this->distMap = new DistMap(map,{Occupied},{Occupied,Unknown});
       break;
     case 1:
+      this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
+      break;
     case 2:
+    case 3:
       this->distMap = new DistMap(map,{Occupied},{Occupied});
       break;
   }
@@ -194,8 +197,8 @@ Gvd::Gvd(MapType& map) : map(map){
 
 // also updates its distMap
 void Gvd::update(){
-  // if connectivityMethod is 1 fill boders with obstacles
-  if(GvdConfig::get()->connectivityMethod == 1){
+  // if connectivityMethod is 2 fill boders with obstacles
+  if(GvdConfig::get()->connectivityMethod == 2){
     pair<Int,Int> size = map.size();
     for(int x = 0; x < size.first; x++){
       map[x][0] = Occupied;

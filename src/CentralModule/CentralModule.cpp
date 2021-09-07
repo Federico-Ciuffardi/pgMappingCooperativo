@@ -373,7 +373,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
     for(Pos p : circle){
       maxDist = max(maxDist,p.distanceTo(uncoveredFrontier));
     }
-    maxDist = min(maxDist,radius*2 - 1);
+    maxDist = min(maxDist,radius*2 - 0.5f);
 
     // get significativeFrontier candidates
     circle.clear();

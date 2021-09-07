@@ -7,10 +7,11 @@
 class GvdConfig {
 public:
   // connectivityMethod: how connectivity is guaranteed
-  // 0: unknown cell generate waves (suitable for indoor)
-  // 1: unknown cells are considered unobstructed and map is surrounded with obstacles (suitable for indoor and outdoor)
-  // 2: unknown cells are considered unobstructed (suitable for indoor)
-  int connectivityMethod = 0;
+  // 0: connectivity is not guaranteed
+  // 1: unknown cell generate waves (suitable for indoor)
+  // 2: unknown cells are considered unobstructed and map is surrounded with obstacles (suitable for indoor and outdoor)
+  // 3: unknown cells are considered unobstructed (suitable for indoor)
+  int connectivityMethod = 1;
 
   // GVD vertex simplification: how hard are the GVD vercices eroded/deleted to
   // simplify or thin the GVD:
