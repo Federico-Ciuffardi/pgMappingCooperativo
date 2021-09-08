@@ -197,10 +197,10 @@ inline Int toInt(Point p, int width, int originIndex = 0){
 }
 
 inline Int toInt(Point p, mapInfoType mapInfo){
-  int originX = mapInfo.origin.position.x;
-  int originY = mapInfo.origin.position.y;
-  return toInt(p,mapInfo.width,abs(originX) * mapInfo.width) + abs(originY);
-  /* return toInt(toPos(p,mapInfo),mapInfo.width); */
+  /* int originX = mapInfo.origin.position.x; */
+  /* int originY = mapInfo.origin.position.y; */
+  /* return toInt(p,mapInfo.width,abs(originX) * mapInfo.width) + abs(originY); */
+  return toInt(toPos(p,mapInfo),mapInfo.width);
 }
 
 /////////////////////////////

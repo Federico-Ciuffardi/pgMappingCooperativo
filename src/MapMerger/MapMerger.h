@@ -13,6 +13,7 @@
 #include <iostream>
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <string>
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "nav_msgs/Odometry.h"
@@ -33,7 +34,7 @@ class MapMerger {
   ///////////////
 
   void initMapMerger(const OccupancyGridConstPtr& msg);
-  bool isAnyRobotCloser(float dist, int ind, string name);
+  bool isAnyRobotCloser(Pos pos, string name);
 
  public:
   //////////

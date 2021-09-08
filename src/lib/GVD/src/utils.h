@@ -108,7 +108,35 @@ inline vector<Pos> discretizeLine(Pos p1, Pos p2){
 ///////////////////////
 
 ////
-/// unique delete duplicates
+/// arg_min: get the arg that minimizes the map
+//  PRECOND: map not empty
+
+// unordered_map
+/* template <typename K, typename T> */
+/* inline T is_elem(T e, boost::unordered_map<K, boost::unordered_set<T>>& m, K k) { */
+/*   bool first = true; */
+/*   T minT; */
+/*   K minK; */
+
+/*   for(auto &it : m){ */
+/*     if(first){ */
+/*       minK = it.first; */
+/*       minT = it.second; */
+/*     }else{ */
+/*       K k = it.first; */
+/*       T t = it.first; */
+/*       if(t < minT){ */
+/*         minK = k; */
+/*         minT = t; */
+/*       } */
+/*     } */
+/*   } */
+
+/*   return k; */
+/* } */
+
+////
+/// unique: delete duplicates
 //
 
 // from: https://stackoverflow.com/questions/1041620/whats-the-most-efficient-way-to-erase-duplicates-and-sort-a-vector

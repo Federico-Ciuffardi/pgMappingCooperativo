@@ -22,21 +22,24 @@ void MapMerger::initMapMerger(const OccupancyGridConstPtr& msg) {
   init = true;
 }
 
-bool MapMerger::isAnyRobotCloser(float minDist, int ind, string name) {
+bool MapMerger::isAnyRobotCloser(Pos pos, string name) {
+
+  Pos robotPos = toPos(positions[name].pose.position, mapMerged.info);
+  float minDistSqrt = pos.distanceToSquared(robotPos);
+
   for( auto it : positions){
     string robotName = it.first;
     Point robotPosition = (it.second).pose.position;
 
-    if (((robotName).compare(name) != 0) && !isUnknown(robotMaps[robotName].data[ind])) {
+    if (robotName == name && isUnknown(robotMaps[robotName].data[toInt(pos,mapMerged.info.width)])) continue; 
 
-      int otherRobotPosition = toInt(robotPosition, mapMerged.info);
+    Pos otherRobotPos = toPos(robotPosition, mapMerged.info);
+    float distSqrt = pos.distanceToSquared(otherRobotPos);
 
-      float dist = toPos(ind, mapMerged.info.width).distanceTo(toPos(otherRobotPosition,mapMerged.info.width));
-
-      if(minDist > dist) return true;
-    }
+    if(minDistSqrt > distSqrt) return true;
 
   }
+
   return false;
 }
 
@@ -61,20 +64,16 @@ void MapMerger::updateMap(const OccupancyGridConstPtr& msg, string name) {
     int robotIntPos = toInt(positions[name].pose.position, mapMerged.info);
 
     for (int i = -sensorRange; i < (sensorRange + 1); i++) {
-      for (int j = robotIntPos - sensorRange * mapMerged.info.width; j < robotIntPos + sensorRange * mapMerged.info.width; j += mapMerged.info.width) {
-        int ind = i + j;
+      for (int j = -sensorRange; j < (sensorRange + 1); j++) {
+        int ind = robotIntPos + i + j * mapMerged.info.width;
 
-        if (isUnknown(msg->data[ind])) continue; 
+        if (ind >= msg->data.size() || isUnknown(msg->data[ind])) continue; 
 
         if (isUnknown(mapMerged.data[ind])) {
-          mapMerged.data[ind] = robotMaps[name].data[ind];
-        } else {
-          float dist = toPos(ind,mapMerged.info.width).distanceTo(toPos(robotIntPos,mapMerged.info.width));
-          if (!isAnyRobotCloser(dist, ind, name)) {
-            mapMerged.data[ind] = robotMaps[name].data[ind];
-          }
+          mapMerged.data[ind] = msg->data[ind];
+        } else if (!isAnyRobotCloser(toPos(ind, mapMerged.info.width), name)) {
+            mapMerged.data[ind] = msg->data[ind];
         }
-
       }
     }
 
