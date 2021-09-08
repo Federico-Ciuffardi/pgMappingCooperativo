@@ -19,7 +19,6 @@ int numberRobots;
 
 MapMerger mapMerger;
 
-boost::unordered_map<string, bool> mapInitialization;
 boost::unordered_map<string, OccupancyGrid> maps;
 
 string end_msg("END");
@@ -33,11 +32,9 @@ bool FIN = false;
 void mapCallBack(const OccupancyGridConstPtr& msg, string name) {
   if (FIN) return;
 
-  pgmappingcooperativo::MapMergedInfo mapMergedInfo;
+  mapMerger.updateMap(msg, name);
 
-  mapMergedInfo.occupancyGrid = mapMerger.updateMap(msg, name);
-
-  mapControllerPub.publish(mapMergedInfo.occupancyGrid);
+  mapControllerPub.publish(mapMerger.mapMerged);
 }
 
 void odomCallback(const Odometry::ConstPtr &odom, string name) {
@@ -106,14 +103,14 @@ int main(int argc, char* argv[]) {
     ROS_INFO(" MAP MERGER :: waiting for %d robots ", numberRobots - max(readyRobotPos,readyRobotMap));
   }
 
+  ros::Duration(5.0).sleep();
+
   /// Subscribe to robot specific topics
   ros::master::V_TopicInfo topicInfos; ros::master::getTopics(topicInfos);
   for (ros::master::TopicInfo& publishedTopic : topicInfos) {
     if (publishedTopic.name.find("/odom") != string::npos) {
       string topicName = publishedTopic.name;                                  // name = "/robot_name/..."
       string robotName = topicName.erase(0, 1).substr(0, topicName.find('/')); // name = "robot_name"
-
-      mapInitialization[robotName] = false;
 
       odomSub[robotName] = n.subscribe<Odometry>( publishedTopic.name, 1, boost::bind(&odomCallback, _1, robotName));
 

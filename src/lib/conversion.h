@@ -129,18 +129,6 @@ inline Vector3 toVector3(Point point){
   return vector3;
 }
 
-/////////
-// Int //
-/////////
-
-inline Int toInt(Pos p, Int width){
-  return p.x + p.y*width;
-}
-
-inline Int toInt(Point p, int indice_origen, int width){
- return indice_origen + p.x + p.y * width;
-}
-
 /////////////////////////////
 // Pos: GVD/src/data/Pos.h //
 /////////////////////////////
@@ -154,10 +142,6 @@ inline Pos toPos(Point2D p2d){
 
 inline Pos toPos(int p1d,int width){
   return Pos(p1d%width,p1d/width);
-}
-
-inline Pos toPos(Point p, int indice_origen, int width){
-  return toPos(toInt(p,indice_origen,width), width); //no sure if is the same width
 }
 
 inline Pos toPos(Point p3d){
@@ -193,6 +177,30 @@ inline PosSet toPosSet(vector<int> ps, int width){
     res.insert(toPos(p,width));
   }
   return res;
+}
+
+/////////
+// Int //
+/////////
+
+inline Int toInt(Pos p, Int width){
+  return p.x + p.y*width;
+}
+
+inline Int toInt(Point p, int width, int originIndex = 0){
+ int x = p.x;
+ int y = p.y;
+
+ Pos adjustment(-(p.x < 0),-(p.y < 0));
+
+ return originIndex + x + adjustment.x + (y + adjustment.y) * width;
+}
+
+inline Int toInt(Point p, mapInfoType mapInfo){
+  int originX = mapInfo.origin.position.x;
+  int originY = mapInfo.origin.position.y;
+  return toInt(p,mapInfo.width,abs(originX) * mapInfo.width) + abs(originY);
+  /* return toInt(toPos(p,mapInfo),mapInfo.width); */
 }
 
 /////////////////////////////

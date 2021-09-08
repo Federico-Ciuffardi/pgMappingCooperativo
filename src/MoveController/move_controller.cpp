@@ -150,23 +150,6 @@ void saveScan(const sensor_msgs::LaserScanConstPtr& msg) {
 
 // int last_safe_index = -1;
 int last_unsafe_index = -1;
-/*// -1 if is safe else the first obstacle index is returned
-int safePath(int from_index, int lookahead){
-  int safe = -1;
-  Point origin_p3d  = odometry_map.info.origin.position;
-  origin_p3d.x = -origin_p3d.x-1;
-  origin_p3d.y = -origin_p3d.y;
-  int origin_p1d = toInt(origin_p3d,0,odometry_map.info.height);
-  //ROS_INFO("origin = %d",origin_p1d);
-  for(int i = from_index; i< from_index + lookahead && i<path.goals.size(); i++){
-    int final_p1d = toInt(path.goals[i],origin_p1d,odometry_map.info.height);
-    ROS_INFO("final_p1d = %d, is -> %d ",final_p1d,odometry_map.data[final_p1d]);
-    if(odometry_map.data[final_p1d] == 100){
-      return i;
-    }
-  }
-  return safe;
-}*/
 
 double getAngle(Quaternion q) {
   tf::Quaternion quat_tf;
