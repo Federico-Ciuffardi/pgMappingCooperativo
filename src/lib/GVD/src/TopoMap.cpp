@@ -203,7 +203,7 @@ void TopoMap::update(){
   cout << "debug :: Set the critical vertices and its information" << endl;
   for(Pos p : map){
     // skip non critical vertices
-    if(!(*gvd->graphGvd).has(p) || !(*gvd->graphGvd)[p].isLocalMin || !(*gvd->graphGvd)[p].degreeConstrain || connectivityAux(p,map,*distMap))
+    if(map[p] != Free || !(*gvd->graphGvd).has(p) || !(*gvd->graphGvd)[p].isLocalMin || !(*gvd->graphGvd)[p].degreeConstrain || connectivityAux(p,map,*distMap))
       continue;
 
     // Set critical in map

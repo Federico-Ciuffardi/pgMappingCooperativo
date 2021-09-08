@@ -14,6 +14,14 @@ bool isUnknown(int8_t data){
   return data == -1;
 }
 
+bool unobstructedLine(Pos p1, Pos p2, const OccupancyGridConstPtr& occupancyGrid){
+  for (Pos p : discretizeLine(p1,p2)){
+    if(p == p2 || p == p1) continue;
+    if(occupancyGrid->data[toInt(p,occupancyGrid->info.width)] == 100) return false;
+  }
+  return true;
+}
+
 /////////
 // API //
 /////////
@@ -33,6 +41,7 @@ void MapMerger::updateMap(const OccupancyGridConstPtr& msg, string name) {
   }
 
   int robotIntPos = toInt(positions[name].pose.position, mapMerged.info);
+  Pos robotPos = toPos(robotIntPos,mapMerged.info.width);
 
   int windowLenght = sensorRange; 
   for (int i = -windowLenght; i < (windowLenght + 1); i++) {
@@ -40,6 +49,9 @@ void MapMerger::updateMap(const OccupancyGridConstPtr& msg, string name) {
       int ind = robotIntPos + i + j * mapMerged.info.width;
 
       if (ind >= msg->data.size() || isUnknown(msg->data[ind])) continue; 
+
+      Pos indPos = toPos(ind,mapMerged.info.width); 
+      if(!unobstructedLine(robotPos, indPos, msg)) continue;
 
       if (isUnknown(mapMerged.data[ind])) {
         mapMerged.data[ind] = round(decay*msg->data[ind] + (1-decay)*50);
