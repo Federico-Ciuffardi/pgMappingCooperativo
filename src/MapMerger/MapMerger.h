@@ -20,22 +20,21 @@
 #include "nav_msgs/Odometry.h"
 
 class MapMerger {
+ public:
+  float sensorRange;
  private:
-  int range;
   bool init;
   int y_origin;
   int x_origin;
   uint width;
   uint height;
   int indice_origen;
-  boost::unordered_set<int> frontiers;
-  boost::unordered_set<int> obstacles;
 
   nav_msgs::OccupancyGrid map_merged;
   boost::unordered_map<int, cv::Point2f> map_points;
   boost::unordered_map<std::string, geometry_msgs::PoseStamped> positions;
-  boost::unordered_map<std::string, bool> map_initialization;
-  boost::unordered_map<std::string, nav_msgs::OccupancyGrid> maps_by_robots;
+  boost::unordered_map<std::string, bool> mapInitialization;
+  boost::unordered_map<std::string, nav_msgs::OccupancyGrid> robotMaps;
 
   /*Funcion que establece si todos los mapas de los distintos robots son
    * desconocidos o concuerdan en la misma celda.*/
@@ -49,21 +48,10 @@ class MapMerger {
   /*Funcion que dado un punto me dice si existe un robot a una distancia menor a
    * la que se le pasa.*/
   bool isAnyRobotCloser(float dist, int ind, std::string name);
-  /*Determina si una celda es frontiers*/
-  bool esFrontera(int indice, const nav_msgs::OccupancyGrid msg);
 
  public:
   MapMerger();
-  int getRange();
-  void setRange(int newRange);
-  std::vector<int> getFrontera();
-  void setFrontera(boost::unordered_set<int> newFrontera);
-  std::vector<int> getObstaculos();
-  void setObstaculos(boost::unordered_set<int> newObstaculos);
-  nav_msgs::OccupancyGrid updateMap(const nav_msgs::OccupancyGridConstPtr& newMap,
-                                    std::string name);
+  nav_msgs::OccupancyGrid updateMap(const nav_msgs::OccupancyGridConstPtr& newMap, std::string name);
   void updatePose(geometry_msgs::PoseStamped newPose, std::string name);
-  int updateFrontera(nav_msgs::OccupancyGrid map, std::string name);
-  nav_msgs::OccupancyGrid getMap();
   cv::Point2f getPoint2f(int ind);
 };

@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <cstdlib>
 #include <ctime>
+#include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "Robot.h"
 #include "ros/init.h"
@@ -213,8 +214,8 @@ void assignmentCallback(const AssignmentConstPtr& msg) {
   publishPath(toPos(msg->frontier));
 }
 
-void mapMergedCallBack(const MapMergedInfoConstPtr& msg) {
-  robot.occupancyGrid = (*msg).occupancyGrid;
+void mapMergedCallBack(const OccupancyGridConstPtr& msg) {
+  robot.occupancyGrid = *msg;
 }
 
 void handleEnd(const std_msgs::StringConstPtr& msg) {
@@ -227,6 +228,10 @@ void handleEnd(const std_msgs::StringConstPtr& msg) {
 
 }
 
+//////////
+// main //
+//////////
+
 int main(int argc, char* argv[]) {
   // Init node
   ros::init(argc, argv, "robot");
@@ -235,8 +240,8 @@ int main(int argc, char* argv[]) {
   // Load params
 
   /// Global params
-  assert(n.param<float> ("/robot_speed", robot.robotSpeed, 0));
-  assert(n.param<float> ("/robot_sensor_range", robot.sensorRange, 0));
+  FAIL_IFN(n.param<float> ("/robot_speed", robot.robotSpeed, 0));
+  FAIL_IFN(n.param<float> ("/robot_sensor_range", robot.sensorRange, 0));
 
   // Get namespace
   string nameSpace = ros::this_node::getNamespace();
@@ -254,7 +259,7 @@ int main(int argc, char* argv[]) {
   auctionSub    = n.subscribe("/auction", 1, auctionCallBack);
   assignmentSub = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
   pathResultSub = n.subscribe("path_result", 1, pathSucceedCallback);
-  mapMergedSub  = n.subscribe<MapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  mapMergedSub  = n.subscribe<OccupancyGrid>("/map", 1, mapMergedCallBack);
   endSub        = n.subscribe("/end", 1, handleEnd);
 
   // spin

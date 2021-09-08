@@ -33,12 +33,8 @@ void CentralModule::setState(centralMouleState newState) {
 // API //
 /////////
 
-void CentralModule::updateMap(const MapMergedInfoConstPtr& newMap) {
-  // store occGrid
-  occupancyGrid = newMap->occupancyGrid;
-
-  // store frontiers
-  frontiers = toPosSet(newMap->frontiers, newMap->occupancyGrid.info.width);
+void CentralModule::updateMap(const OccupancyGrid& newOccupancyGrid) {
+  this->occupancyGrid = newOccupancyGrid;
 }
 
 // Get the info to start an Auction
@@ -46,31 +42,27 @@ Auction CentralModule::getAuctionInfo() {
   // Convert a occupancyGrid and a frontier list to a stateGrid
   cout << "debug :: convert a occupancyGrid and a frontier list to a stateGrid" << endl;
   stateGrid = toStateGrid(occupancyGrid, &cellCount);
-  /// frontiers
-  PosSet filteredFrontiers;
-  for(Pos fPos : frontiers){
-    // skip if not inside the stateGrid (the map_merger delivers frontiers
-    // outside the map boundaries sometimes)
-    if ( !stateGrid.inside(fPos) ) continue;
 
-    // The frontiers must have a Unknown neighbor
-    /// Currently the frontiers can be detected despite of not having a unknow neighbor in two cases
-    ///  * The frontier is on the border of the grid (the current implementation of 
-    ///    the map_merger considers that "frontier"  I do not)
-    ///  * The only unknows cells neighbor of the "frontier" are diagonal but
-    //     the horizontal cells near that diagonal are /    not traversable, so the
-    //     unknow cell is not considered reachable from the "frontier"
+  /// frontiers
+  frontiers.clear();
+  for(Pos pos : stateGrid){
+
+    // is Free?
+    if(stateGrid[pos] != Free) continue;
+
+    // hasUnknowNeighbor?
     bool hasUnknowNeighbor = false;
-    for( Pos fPosN : stateGrid.adj(fPos,{Occupied})){
-        hasUnknowNeighbor = stateGrid[fPosN] == Unknown;
+    for( Pos posN : stateGrid.adj(pos,{Occupied})){
+        hasUnknowNeighbor = stateGrid[posN] == Unknown;
         if(hasUnknowNeighbor) break;
     }
-    if(hasUnknowNeighbor){ 
-      stateGrid[fPos] = Frontier;
-      filteredFrontiers.insert(fPos);
-    }
+    if(!hasUnknowNeighbor) continue;
+
+    // all conditions passed
+    stateGrid[pos] = Frontier;
+    frontiers.insert(pos);
+    
   }
-  frontiers = filteredFrontiers;
 
   cout << "debug :: get significant frontiers" << endl;
   if(frontierSimplificationMethod>0){

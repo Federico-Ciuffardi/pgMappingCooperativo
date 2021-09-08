@@ -398,8 +398,8 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 
 int maps = 0;
 bool first = true;
-void mapMergedCallBack(const MapMergedInfoConstPtr& msg) {
-  centralModule.updateMap(msg);
+void mapMergedCallBack(const OccupancyGridConstPtr& msg) {
+  centralModule.updateMap(*msg);
   maps++;
   if (first && maps >= 15){
     firstAuction = ros::Time::now();
@@ -523,6 +523,10 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
   ros::shutdown();
 }
 
+//////////
+// main //
+//////////
+
 int main(int argc, char* argv[]) {
   // Change log level to debug
   /* if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { */
@@ -549,13 +553,13 @@ int main(int argc, char* argv[]) {
   n.param<int>("/frontier_simplification_method", centralModule.frontierSimplificationMethod, centralModule.frontierSimplificationMethod);
 
   /// Global params
-  assert(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
-  assert(n.param<string>("/map_name", centralModule.mapName, ""));
-  assert(n.param<int>   ("/map_size", centralModule.mapSize, 0));
-  assert(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
-  assert(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
-  assert(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
-  assert(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
+  FAIL_IFN(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
+  FAIL_IFN(n.param<string>("/map_name", centralModule.mapName, ""));
+  FAIL_IFN(n.param<int>   ("/map_size", centralModule.mapSize, 0));
+  FAIL_IFN(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
+  FAIL_IFN(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
+  FAIL_IFN(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
+  FAIL_IFN(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
 
   // Initilize timers
   auctionResolutionTimeoutTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimeoutTimerRoutine, true, false);
@@ -571,24 +575,26 @@ int main(int argc, char* argv[]) {
   auctionPub        = n.advertise<Auction>("/auction", 1);
 
   // Initilize Subscribers
-  mapMergedSub       = n.subscribe<MapMergedInfo>("/map_merged", 1, mapMergedCallBack);
+  mapMergedSub       = n.subscribe<OccupancyGrid>("/map", 1, mapMergedCallBack);
   endSub             = n.subscribe("/end", 1, endCallBack);
   requestObjetiveSub = n.subscribe<std_msgs::String>("/request_objetive", 1, &requestObjectiveCallBack);
 
   // Initilize Publishers/Subscribers for each robot
+
   /// Wait for the robots to be ready
   ros::Rate loopRate(1);
   while (true) {
-    int contP3dx = 0;
+    int readyRobots = 0;
+
     ros::master::V_TopicInfo topicInfos;
     ros::master::getTopics(topicInfos);
     for (ros::master::TopicInfo& publishedTopic : topicInfos) {
       if (publishedTopic.name.find("/odom") != string::npos) {
-        contP3dx++;
+        readyRobots++;
       }
     }
 
-    int remaining = centralModule.robotNumber - contP3dx;
+    int remaining = centralModule.robotNumber - readyRobots;
 
     ROS_INFO_STREAM("Waiting for "<<remaining<<" out of "<<centralModule.robotNumber<<" robots");
 

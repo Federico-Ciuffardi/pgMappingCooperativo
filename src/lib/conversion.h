@@ -17,6 +17,7 @@
 
 using namespace pgmappingcooperativo;
 using namespace geometry_msgs;
+using namespace nav_msgs;
 
 typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
 

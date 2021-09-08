@@ -135,7 +135,7 @@ class CentralModule {
   void setState(centralMouleState newState);
 
   // API 
-  void updateMap(const MapMergedInfoConstPtr&);
+  void updateMap(const OccupancyGrid&);
   Auction getAuctionInfo();
   boost::unordered_map<string,Assignment> assign();
   bool saveBid(Bid, RobotId);

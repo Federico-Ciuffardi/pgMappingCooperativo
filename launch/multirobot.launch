@@ -69,6 +69,10 @@
   <!-- <arg name="critical_conditiont_min" default="0" /> -->
   <!-- <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" /> -->  
 
+  <!-- Map merger -->
+  <arg name="robots_map_topic" default="/move_base/global_costmap/costmap" />
+  <param name="robots_map_topic" type="string" value="$(arg robots_map_topic)" />  
+    
   <!-- start gazebo -->
   <param name ="/use_sim_time" value="true"/>
 
