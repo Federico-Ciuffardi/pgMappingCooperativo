@@ -70,7 +70,6 @@ add_message_files(
   Edge.msg
   GoalList.msg
   Graph.msg
-  MapMergedInfo.msg
   Point2D.msg
 )
 

@@ -209,29 +209,26 @@ inline Int toInt(Point p, mapInfoType mapInfo){
 
 // get stateGrid from occupancy grid, set the known cells count on the count attribute 
 inline StateGrid toStateGrid(nav_msgs::OccupancyGrid &og, int* count = NULL) {
+  int threshold = 50;
+
   pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
   StateGrid stateGrid(mapSize);
 
   if(count) (*count) = 0;
 
   for (Pos p : stateGrid) {
-    CellState ct = Unknown;
-    switch (og.data[toInt(p, mapSize.first)]) {
-      case 0:
-        ct = Free;
-        if(count) (*count)++;
-        break;
-      case 100:
-        ct = Occupied;
-        if(count) (*count)++;
-        break;
-      case -1:
-        ct = Unknown;
-        break;
-      default:
-        ct = (CellState)-1;
+    int occupancyCertantyPercentage = og.data[toInt(p, mapSize.first)];
+    if(occupancyCertantyPercentage == -1){
+      stateGrid[p] = Unknown;
+    }else if(occupancyCertantyPercentage <= threshold){
+      stateGrid[p] = Free;
+      if(count) (*count)++;
+    } else if(occupancyCertantyPercentage > threshold) {
+      stateGrid[p] = Occupied;
+      if(count) (*count)++;
+    } else {
+      FAIL("invalid occupancyCertantyPercentage: " << occupancyCertantyPercentage);
     }
-    stateGrid[p] = ct;
   }
 
   return stateGrid;

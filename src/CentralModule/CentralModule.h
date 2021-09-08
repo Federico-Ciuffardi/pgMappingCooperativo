@@ -3,7 +3,6 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <stdio.h>
-#include <pgmappingcooperativo/MapMergedInfo.h>
 #include <pgmappingcooperativo/Auction.h>
 #include <pgmappingcooperativo/Bid.h>
 #include <pgmappingcooperativo/Assignment.h>

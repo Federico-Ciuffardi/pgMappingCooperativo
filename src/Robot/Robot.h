@@ -11,7 +11,6 @@
 #include <pgmappingcooperativo/Auction.h>
 #include <pgmappingcooperativo/Bid.h>
 #include <pgmappingcooperativo/Assignment.h>
-#include <pgmappingcooperativo/MapMergedInfo.h>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>

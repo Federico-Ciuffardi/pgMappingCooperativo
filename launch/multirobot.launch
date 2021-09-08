@@ -42,7 +42,7 @@
   <arg name="file_log_level" default="2" /> 
   <param name="file_log_level" type="int" value="$(arg file_log_level)" />  
 
-  <!-- # CentralModule Check '../src/CentralModule/CentralModule.h' for help (has defaults values on said file that can be overridden by the ros params)-->
+  <!-- # CentralModule Check '../src/CentralModule/CentralModule.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params)-->
   <!-- <arg name="frontier_simplification_method" default="1" /> --> 
   <!-- <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" /> -->  
 
@@ -69,9 +69,16 @@
   <!-- <arg name="critical_conditiont_min" default="0" /> -->
   <!-- <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" /> -->  
 
-  <!-- Map merger -->
+  <!-- # Map merger Check '../src/MapMerger/MapMerger.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params) -->
+  
   <arg name="robots_map_topic" default="/move_base/global_costmap/costmap" />
   <param name="robots_map_topic" type="string" value="$(arg robots_map_topic)" />  
+
+  <arg name="min_robot_maps_arrived" default="3" />
+  <param name="min_robot_maps_arrived" type="int" value="$(arg min_robot_maps_arrived)" />  
+
+  <arg name="decay" default="0.05" />
+  <param name="decay" type="double" value="$(arg decay)" />  
     
   <!-- start gazebo -->
   <param name ="/use_sim_time" value="true"/>

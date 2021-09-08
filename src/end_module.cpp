@@ -8,13 +8,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
-//#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/MapMetaData.h>
 #include <std_msgs/String.h>
 #include <pgmappingcooperativo/GoalList.h>
-#include <pgmappingcooperativo/MapMergedInfo.h>
 #include <cstdlib>
 #include <ctime>
 #include <opencv2/core.hpp>

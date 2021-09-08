@@ -1,5 +1,17 @@
 #include "MapMerger.h"
 
+////////////////
+// Parameters //
+////////////////
+
+// robotMapTopic:
+/// The robots publish their maps on the topic: "[robot_ns]/[robots_map_topic]"
+string robotMapTopic;
+
+// minRobotMapsArrived:
+/// Each of the expected robots have to send at least [min_robot_maps_arrived] maps to the map merger
+int minRobotMapsArrived = 2;
+
 ///////////////
 // Variables //
 ///////////////
@@ -19,34 +31,48 @@ int numberRobots;
 
 MapMerger mapMerger;
 
-boost::unordered_map<string, OccupancyGrid> maps;
-
 string end_msg("END");
 
-bool FIN = false;
+bool endFlag = false;
+
+bool readyToSend = false;
 
 ///////////////
 // CallBacks //
 ///////////////
 
 void mapCallBack(const OccupancyGridConstPtr& msg, string name) {
-  if (FIN) return;
+  if (endFlag) return;
 
   mapMerger.updateMap(msg, name);
 
-  mapControllerPub.publish(mapMerger.mapMerged);
+  // if readyToSend if false check if it is true, once true it will be true until the end 
+  if(!readyToSend && mapMerger.mapsArrived.size() >= numberRobots){
+    readyToSend = true;
+    for(auto it : mapMerger.mapsArrived){
+      int robotMapsArrived = it.second;
+      
+      readyToSend = it.second >= minRobotMapsArrived;
+
+      if(!readyToSend) break;
+    }
+  }
+
+  if(readyToSend){
+    mapControllerPub.publish(mapMerger.mapMerged);
+  }
 }
 
 void odomCallback(const Odometry::ConstPtr &odom, string name) {
-  if (FIN) return;
+  if (endFlag) return;
 
   mapMerger.updatePose(toPoseStamped(*odom), name);
 }
 
 void endCallBack(const std_msgs::StringConstPtr& msg) {
   string str1(msg->data.c_str());
-  FIN = (str1.compare(end_msg) == 0);
-  if (FIN) {
+  endFlag = (str1.compare(end_msg) == 0);
+  if (endFlag) {
     ROS_INFO("Stopping MAP MERGER");
   }
 }
@@ -67,14 +93,15 @@ int main(int argc, char* argv[]) {
   FAIL_IFN(n.param<float>("/robot_sensor_range", mapMerger.sensorRange, 0));
 
   /// MapMerger params
-  string robotMapTopic;
   FAIL_IFN(n.param<string>("/robots_map_topic", robotMapTopic, ""));
+  n.param<int>("/min_robot_maps_arrived", minRobotMapsArrived, 0);
+  n.param<float>("/decay", mapMerger.decay, mapMerger.decay);
 
   // Initilize Publishers
   mapControllerPub = n.advertise<OccupancyGrid>("/map", 1);
 
   // Initilize Subscribers
-  endSub           = n.subscribe("/end", 1, endCallBack);
+  endSub           = n.subscribe("/endFlag", 1, endCallBack);
 
   // Initilize Publishers/Subscribers for each robot
 
@@ -102,8 +129,6 @@ int main(int argc, char* argv[]) {
     loop_rate.sleep();
     ROS_INFO(" MAP MERGER :: waiting for %d robots ", numberRobots - max(readyRobotPos,readyRobotMap));
   }
-
-  ros::Duration(5.0).sleep();
 
   /// Subscribe to robot specific topics
   ros::master::V_TopicInfo topicInfos; ros::master::getTopics(topicInfos);

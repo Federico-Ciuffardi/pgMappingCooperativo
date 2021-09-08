@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /GvdMarker1/Namespaces1
+        - /global_map1
       Splitter Ratio: 0.688095211982727
     Tree Height: 698
   - Class: rviz/Selection
@@ -1048,7 +1049,7 @@ Visualization Manager:
       Draw Behind: false
       Enabled: true
       Name: global_map
-      Topic: /map_controller
+      Topic: /map
       Unreliable: false
       Use Timestamp: false
       Value: true
@@ -1091,8 +1092,8 @@ Visualization Manager:
       Near Clip Distance: 0.009999999776482582
       Scale: 7.401010036468506
       Target Frame: <Fixed Frame>
-      X: -2.4899706840515137
-      Y: 3.601236343383789
+      X: -4.111361503601074
+      Y: 2.7905287742614746
     Saved: ~
 Window Geometry:
   Displays:

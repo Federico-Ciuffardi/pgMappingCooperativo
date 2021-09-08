@@ -396,12 +396,10 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 // CallBacks //
 ///////////////
 
-int maps = 0;
 bool first = true;
 void mapMergedCallBack(const OccupancyGridConstPtr& msg) {
   centralModule.updateMap(*msg);
-  maps++;
-  if (first && maps >= 15){
+  if (first){
     firstAuction = ros::Time::now();
     first = false;
     startAuction();

@@ -8,39 +8,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pgmappingcooperativo/MapMergedInfo.h>
 #include <unistd.h>
 #include <iostream>
-#include <boost/graph/astar_search.hpp>
-#include <boost/graph/adjacency_list.hpp>
 #include <string>
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "nav_msgs/Odometry.h"
 
 class MapMerger {
+ public:
+  ////////////////
+  // Parameters //
+  ////////////////
+
+  // decay
+  /// when a new occupancy grid cell is merged the final value is:
+  ///   * merged_cell_value = decay*new_cell_value + (1-decay)*merged_cell_value
+  /// where decay belongs to the interval (0,1]
+  float decay = 0.1;
+
  private:
   //////////
   // vars //
   //////////
 
-  bool init;
-
   boost::unordered_map<string, PoseStamped> positions;
-  boost::unordered_map<string, OccupancyGrid> robotMaps;
 
   ///////////////
   // Functions //
   ///////////////
-
-  void initMapMerger(const OccupancyGridConstPtr& msg);
-  bool isAnyRobotCloser(Pos pos, string name);
 
  public:
   //////////
   // vars //
   //////////
 
+  boost::unordered_map<string,int> mapsArrived;
   float sensorRange;
   OccupancyGrid mapMerged;
 
@@ -53,6 +56,5 @@ class MapMerger {
 
   // API 
   void updateMap(const OccupancyGridConstPtr& newMap, string name);
-  void saveRobotMap(const OccupancyGridConstPtr& msg, string name);
   void updatePose(PoseStamped newPose, string name);
 };

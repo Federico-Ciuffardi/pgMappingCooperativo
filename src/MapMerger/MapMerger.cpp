@@ -4,9 +4,7 @@
 // Constructor //
 /////////////////
 
-MapMerger::MapMerger() {
-  init = false;
-}
+MapMerger::MapMerger() {}
 
 /////////
 // Aux //
@@ -14,33 +12,6 @@ MapMerger::MapMerger() {
 
 bool isUnknown(int8_t data){
   return data == -1;
-}
-
-void MapMerger::initMapMerger(const OccupancyGridConstPtr& msg) {
-  mapMerged = *msg;
-
-  init = true;
-}
-
-bool MapMerger::isAnyRobotCloser(Pos pos, string name) {
-
-  Pos robotPos = toPos(positions[name].pose.position, mapMerged.info);
-  float minDistSqrt = pos.distanceToSquared(robotPos);
-
-  for( auto it : positions){
-    string robotName = it.first;
-    Point robotPosition = (it.second).pose.position;
-
-    if (robotName == name && isUnknown(robotMaps[robotName].data[toInt(pos,mapMerged.info.width)])) continue; 
-
-    Pos otherRobotPos = toPos(robotPosition, mapMerged.info);
-    float distSqrt = pos.distanceToSquared(otherRobotPos);
-
-    if(minDistSqrt > distSqrt) return true;
-
-  }
-
-  return false;
 }
 
 /////////
@@ -51,32 +22,32 @@ void MapMerger::updatePose(PoseStamped newPose, string name) {
   positions[name] = newPose;
 }
 
-void MapMerger::saveRobotMap(const OccupancyGridConstPtr& msg, string name) {
-  robotMaps[name] = *msg;
-}
-
 void MapMerger::updateMap(const OccupancyGridConstPtr& msg, string name) {
-  saveRobotMap(msg, name);
+  // if this is the first map then initialize the merged map with this map dimensions
+  // note that this module assumes that all the robots share the same map dimensions 
+  // so it uses the dimensions of the fist map for the merged map mantaind
+  if (mapsArrived.empty()) {
+    mapMerged.info = msg->info;
+    mapMerged.header = msg->header;
+    mapMerged.data = vector<int8_t>(msg->data.size(),-1);
+  }
 
-  if (!init) {
-    initMapMerger(msg);
-  } else {
-    int robotIntPos = toInt(positions[name].pose.position, mapMerged.info);
+  int robotIntPos = toInt(positions[name].pose.position, mapMerged.info);
 
-    for (int i = -sensorRange; i < (sensorRange + 1); i++) {
-      for (int j = -sensorRange; j < (sensorRange + 1); j++) {
-        int ind = robotIntPos + i + j * mapMerged.info.width;
+  int windowLenght = sensorRange; 
+  for (int i = -windowLenght; i < (windowLenght + 1); i++) {
+    for (int j = -windowLenght; j < (windowLenght + 1); j++) {
+      int ind = robotIntPos + i + j * mapMerged.info.width;
 
-        if (ind >= msg->data.size() || isUnknown(msg->data[ind])) continue; 
+      if (ind >= msg->data.size() || isUnknown(msg->data[ind])) continue; 
 
-        if (isUnknown(mapMerged.data[ind])) {
-          mapMerged.data[ind] = msg->data[ind];
-        } else if (!isAnyRobotCloser(toPos(ind, mapMerged.info.width), name)) {
-            mapMerged.data[ind] = msg->data[ind];
-        }
+      if (isUnknown(mapMerged.data[ind])) {
+        mapMerged.data[ind] = round(decay*msg->data[ind] + (1-decay)*50);
+      } else {
+        mapMerged.data[ind] = round(decay*msg->data[ind] + (1-decay)*mapMerged.data[ind]);
       }
     }
-
   }
-}
 
+  mapsArrived[name]++;
+}
