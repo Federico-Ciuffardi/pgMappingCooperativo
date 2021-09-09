@@ -12,12 +12,13 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Vector3.h"
-#include "utils.h"
 #include "nav_msgs/Odometry.h"
+#include <map_msgs/OccupancyGridUpdate.h>
 
 using namespace pgmappingcooperativo;
 using namespace geometry_msgs;
 using namespace nav_msgs;
+using namespace map_msgs;
 
 typedef nav_msgs::OccupancyGrid::_info_type mapInfoType;
 
@@ -87,14 +88,6 @@ inline Point toPoint(Pos p,float z) {
   p3d.y = p.y;
   p3d.z = z;
   return p3d;
-}
-
-inline Point toPoint(cv::Point2f ps){
-    Point p3d;
-    p3d.y = ps.y;
-    p3d.x = ps.x;
-    p3d.z = 0.0;
-    return p3d;
 }
 
 inline vector<Point> toVecPoint3D(vector<Point2D> p2ds, mapInfoType mapInfo){

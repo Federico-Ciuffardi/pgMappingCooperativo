@@ -1,7 +1,10 @@
 #include "CentralModule.h"
 #include "../lib/affinity_propagation.h"
+#include "map_msgs/OccupancyGridUpdate.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include <cstddef>
 #include <vector>
+#include "../lib/utils.h"
 
 ///////////////
 // Variables //
@@ -35,6 +38,10 @@ void CentralModule::setState(centralMouleState newState) {
 
 void CentralModule::updateMap(const OccupancyGrid& newOccupancyGrid) {
   this->occupancyGrid = newOccupancyGrid;
+}
+
+void CentralModule::updateMap(const OccupancyGridUpdateConstPtr& update) {
+  updateOccupancyGrid(occupancyGrid, *update);
 }
 
 // Get the info to start an Auction
@@ -377,8 +384,18 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
       // if candidates is empty then the uncoveredFrontier is the only remainingFrontier frontier 
       significativeFrontier = uncoveredFrontier;
     }else{
-      // else get the first candidate (TODO get the candidate that has max information gain)
-      significativeFrontier = *candidates.begin();
+      // else get the farthest candidate from the uncoveredFrontier
+      // (TODO get the candidate that has max information gain)
+      Float maxDist = -INF;
+      Pos maxDistPos = NULL_POS;
+      for(Pos p : candidates){
+        Float dist = p.distanceTo(uncoveredFrontier);
+        if(maxDist < dist ){
+          maxDist = dist;
+          maxDistPos = p;
+        }
+      }
+      significativeFrontier = maxDistPos;
     }
     
     // set the significativeFrontier

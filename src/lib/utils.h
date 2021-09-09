@@ -13,8 +13,17 @@
 #include <opencv2/highgui.hpp>
 #include <fstream>
 #include <ctime>
+#include "conversion.h"
 
 using namespace std;
+
+inline void updateOccupancyGrid(OccupancyGrid& occupancyGrid, const OccupancyGridUpdate& update){
+  Pos updateToGlobal = Pos(update.x,update.y);
+  for (int updateInd = 0; updateInd < update.data.size(); updateInd++) {
+    int globalInd = toInt( updateToGlobal + toPos(updateInd,update.width), occupancyGrid.info.width);
+    occupancyGrid.data[globalInd] = update.data[updateInd];
+  }
+}
 
 inline string get_current_date_and_time(){
   time_t rawtime;

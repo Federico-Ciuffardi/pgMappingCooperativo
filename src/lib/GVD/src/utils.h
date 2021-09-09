@@ -4,10 +4,24 @@
 #include <boost/unordered_set.hpp>
 #include "data/Pos.h"
 
+// terminal colors
+
+/// FOREGROUND
+#define TFGRST  "\x1B[0m"
+#define TFGRED  "\x1B[31m"
+#define TFGGRN  "\x1B[32m"
+#define TFGYEL  "\x1B[33m"
+#define TFGBLU  "\x1B[34m"
+#define TFGMAG  "\x1B[35m"
+#define TFGCYN  "\x1B[36m"
+#define TFGWHT  "\x1B[37m"
+
+#define TFGBOLD "\x1B[1m"
+#define TFGUNDL "\x1B[4m"
 
 // improved assert
-#define FAIL(cause) { std::cerr << "FAIL: " << cause << " @ " << __FILE__ << " (" << __LINE__ << ")" << std::endl; exit(1);  }
-#define FAIL_IFN(condition) { if(!(condition)){ std::cerr << "ASSERT FAILED: " << #condition << " @ " << __FILE__ << " (" << __LINE__ << ")" << std::endl; exit(1); } }
+#define FAIL(cause) { std::cerr <<TFGRED<< "FAIL: " << cause << " @ " << __FILE__ << " (" << __LINE__ << ")" <<TFGRST<< std::endl; exit(1);  }
+#define FAIL_IFN(condition) { if(!(condition)){ std::cerr <<TFGRED<< "ASSERT FAILED: " << #condition << " @ " << __FILE__ << " (" << __LINE__ << ")" <<TFGRST<<std::endl; exit(1); } }
 
 using namespace std;
 

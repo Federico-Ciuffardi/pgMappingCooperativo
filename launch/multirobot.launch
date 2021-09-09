@@ -71,8 +71,11 @@
 
   <!-- # Map merger Check '../src/MapMerger/MapMerger.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params) -->
   
-  <arg name="robots_map_topic" default="/move_base/global_costmap/costmap" />
+  <arg name="robots_map_topic" default="move_base/global_costmap/costmap" />
   <param name="robots_map_topic" type="string" value="$(arg robots_map_topic)" />  
+
+  <arg name="robots_map_update_topic" default="move_base/global_costmap/costmap_updates" />
+  <param name="robots_map_update_topic" type="string" value="$(arg robots_map_update_topic)" />  
 
   <arg name="min_robot_maps_arrived" default="3" />
   <param name="min_robot_maps_arrived" type="int" value="$(arg min_robot_maps_arrived)" />  

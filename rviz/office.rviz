@@ -1045,7 +1045,7 @@ Visualization Manager:
       Draw Behind: false
       Enabled: true
       Name: global_map
-      Topic: /map
+      Topic: /map_visualization_marker
       Unreliable: false
       Use Timestamp: false
       Value: true
@@ -1086,10 +1086,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 7.401010036468506
+      Scale: 8.510032653808594
       Target Frame: <Fixed Frame>
-      X: -2.4899706840515137
-      Y: 3.601236343383789
+      X: -10.011502265930176
+      Y: 11.89362907409668
     Saved: ~
 Window Geometry:
   Displays:

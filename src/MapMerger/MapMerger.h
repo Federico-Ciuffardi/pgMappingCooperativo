@@ -3,6 +3,7 @@
 #include <math.h>
 #include <nav_msgs/MapMetaData.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <map_msgs/OccupancyGridUpdate.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <stdio.h>
@@ -55,6 +56,10 @@ class MapMerger {
   MapMerger();
 
   // API 
-  void updateMap(const OccupancyGridConstPtr& newMap, string name);
+  void mergeMap(const OccupancyGridConstPtr& msg, string name);
+  OccupancyGridUpdate mergeMapUpdate(const OccupancyGridUpdateConstPtr& update, string name);
   void updatePose(PoseStamped newPose, string name);
+
+  // others
+  bool isInitialized();
 };

@@ -46,7 +46,8 @@ ros::Subscriber assignmentSub;
 ros::Subscriber pathResultSub;
 ros::Subscriber endSub;
 
-ros::Subscriber mapMergedSub;
+ros::Subscriber mapSub;
+ros::Subscriber mapUpdateSub;
 
 /// Publishers
 ros::Publisher endPub;
@@ -68,7 +69,6 @@ string endMsg("END");
 ////////////////
 
 void setPathRvizMarks(GoalList &path, mapInfoType mapInfo) {
-
   float cellSize = mapInfo.resolution;
 
   // draw path to objective
@@ -82,7 +82,6 @@ void setPathRvizMarks(GoalList &path, mapInfoType mapInfo) {
 }
 
 void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
-
   float cellSize = mapInfo.resolution;
 
   // Mark Current position on rviz
@@ -100,7 +99,6 @@ void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
 
 Pos lastRtPos = NULL_POS;
 void setRealTimePositionRvizMarks(Pose pose) {
-
   Pos currRtPos;
   currRtPos.x = pose.position.x ;
   currRtPos.y = pose.position.y ;
@@ -163,7 +161,6 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
-
   ROS_INFO("Arrived to the objective, requesting objective");
   std_msgs::String msgRequest;
   msgRequest.data = "signal";
@@ -214,18 +211,20 @@ void assignmentCallback(const AssignmentConstPtr& msg) {
   publishPath(toPos(msg->frontier));
 }
 
-void mapMergedCallBack(const OccupancyGridConstPtr& msg) {
+void mapCallBack(const OccupancyGridConstPtr& msg) {
   robot.occupancyGrid = *msg;
 }
 
-void handleEnd(const std_msgs::StringConstPtr& msg) {
+void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& msg) {
+  updateOccupancyGrid(robot.occupancyGrid, *msg);
+}
 
+void handleEnd(const std_msgs::StringConstPtr& msg) {
   bool endFlag = msg->data.compare(endMsg) == 0;
 
   if (!endFlag) return;
 
   // do nothing for the time being
-
 }
 
 //////////
@@ -259,7 +258,8 @@ int main(int argc, char* argv[]) {
   auctionSub    = n.subscribe("/auction", 1, auctionCallBack);
   assignmentSub = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
   pathResultSub = n.subscribe("path_result", 1, pathSucceedCallback);
-  mapMergedSub  = n.subscribe<OccupancyGrid>("/map", 1, mapMergedCallBack);
+  mapSub        = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
+  mapUpdateSub  = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
   endSub        = n.subscribe("/end", 1, handleEnd);
 
   // spin

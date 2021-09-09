@@ -4,6 +4,7 @@
 #include "conversion.h"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Vector3.h"
+#include "ros/publisher.h"
 #include "std_msgs/ColorRGBA.h"
 
 #include <visualization_msgs/Marker.h>

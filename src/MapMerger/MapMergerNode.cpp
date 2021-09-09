@@ -1,16 +1,22 @@
 #include "MapMerger.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 ////////////////
 // Parameters //
 ////////////////
 
 // robotMapTopic:
-/// The robots publish their maps on the topic: "[robot_ns]/[robots_map_topic]"
-string robotMapTopic;
+/// The robots publish their maps on the topic: "[robot_ns]/[robotMapTopic]"
+string robotMapTopic = "";
+
+// robotMapUpdateTopic:
+/// The robots publish their maps updates on the topic: "[robot_ns]/[robotMapUpdateTopic]"
+/// if not specified then the updates are not used
+string robotMapUpdateTopic = "";
 
 // minRobotMapsArrived:
 /// Each of the expected robots have to send at least [min_robot_maps_arrived] maps to the map merger
-int minRobotMapsArrived = 2;
+int minRobotMapsArrived = 1;
 
 ///////////////
 // Variables //
@@ -19,12 +25,13 @@ int minRobotMapsArrived = 2;
 // Topics
 /// Subscribers
 boost::unordered_map<string, ros::Subscriber> mapSub;
+boost::unordered_map<string, ros::Subscriber> mapUpdateSub;
 boost::unordered_map<string, ros::Subscriber> odomSub;
 ros::Subscriber endSub;
 
 /// Publishers
-ros::Publisher mapMergedPub;
-ros::Publisher mapControllerPub;
+ros::Publisher mapPub;
+ros::Publisher mapUpdatePub;
 
 // others
 int numberRobots;
@@ -36,16 +43,13 @@ string end_msg("END");
 bool endFlag = false;
 
 bool readyToSend = false;
+bool sentFirst = false;
 
-///////////////
-// CallBacks //
-///////////////
+/////////
+// Aux //
+/////////
 
-void mapCallBack(const OccupancyGridConstPtr& msg, string name) {
-  if (endFlag) return;
-
-  mapMerger.updateMap(msg, name);
-
+bool isReadyToSend(){
   // if readyToSend if false check if it is true, once true it will be true until the end 
   if(!readyToSend && mapMerger.mapsArrived.size() >= numberRobots){
     readyToSend = true;
@@ -57,9 +61,37 @@ void mapCallBack(const OccupancyGridConstPtr& msg, string name) {
       if(!readyToSend) break;
     }
   }
+  return readyToSend;
 
-  if(readyToSend){
-    mapControllerPub.publish(mapMerger.mapMerged);
+}
+
+///////////////
+// CallBacks //
+///////////////
+
+void mapCallBack(const OccupancyGridConstPtr& msg, string name) {
+  if (endFlag) return;
+
+  mapMerger.mergeMap(msg, name);
+
+  if(isReadyToSend()){
+    mapPub.publish(mapMerger.mapMerged);
+    sentFirst = true;
+  }
+}
+
+void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& msg, string name) {
+  if (endFlag) return;
+
+  OccupancyGridUpdate updateMerged = mapMerger.mergeMapUpdate(msg, name);
+
+  if(isReadyToSend()){
+    if(sentFirst){
+      mapUpdatePub.publish(updateMerged);
+    }else{
+      mapPub.publish(mapMerger.mapMerged);
+      sentFirst = true;
+    }
   }
 }
 
@@ -93,12 +125,14 @@ int main(int argc, char* argv[]) {
   FAIL_IFN(n.param<float>("/robot_sensor_range", mapMerger.sensorRange, 0));
 
   /// MapMerger params
-  FAIL_IFN(n.param<string>("/robots_map_topic", robotMapTopic, ""));
-  n.param<int>("/min_robot_maps_arrived", minRobotMapsArrived, 0);
+  FAIL_IFN(n.param<string>("/robots_map_topic", robotMapTopic, robotMapTopic));
+  n.param<string>("/robots_map_update_topic", robotMapUpdateTopic, robotMapUpdateTopic);
+  n.param<int>("/min_robot_maps_arrived", minRobotMapsArrived, minRobotMapsArrived);
   n.param<float>("/decay", mapMerger.decay, mapMerger.decay);
 
   // Initilize Publishers
-  mapControllerPub = n.advertise<OccupancyGrid>("/map", 1);
+  mapPub = n.advertise<OccupancyGrid>("/map", 1);
+  mapUpdatePub = n.advertise<OccupancyGridUpdate>("/map_update", 1);
 
   // Initilize Subscribers
   endSub           = n.subscribe("/endFlag", 1, endCallBack);
@@ -139,8 +173,13 @@ int main(int argc, char* argv[]) {
 
       odomSub[robotName] = n.subscribe<Odometry>( publishedTopic.name, 1, boost::bind(&odomCallback, _1, robotName));
 
-      string map_topic = "/" + robotName + robotMapTopic;
-      mapSub[robotName] = n.subscribe<OccupancyGrid>( map_topic, 1, boost::bind(&mapCallBack, _1, robotName));
+      string mapTopic = "/" + robotName + "/" + robotMapTopic;
+      mapSub[robotName] = n.subscribe<OccupancyGrid>( mapTopic, 1, boost::bind(&mapCallBack, _1, robotName));
+
+      if( robotMapUpdateTopic != ""){
+        string mapUpdateTopic = "/" + robotName + "/" + robotMapUpdateTopic;
+        mapUpdateSub[robotName] = n.subscribe<OccupancyGridUpdate>( mapUpdateTopic, 1, boost::bind(&mapUpdateCallBack, _1, robotName));
+      }
     }
   }
 

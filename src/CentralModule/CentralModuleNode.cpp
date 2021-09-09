@@ -1,6 +1,7 @@
 #include <string>
 #include "CentralModule.h"
 #include "../lib/GVD/src/GvdConfig.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 using namespace std;
 
@@ -54,13 +55,15 @@ float criticalLineZ  = 1*layerSeparation;
 /// Subscribers
 map<string, ros::Subscriber> bidSubs;
 ros::Subscriber endSub;
-ros::Subscriber mapMergedSub;
+ros::Subscriber mapSub;
+ros::Subscriber mapUpdateSub;
 ros::Subscriber requestObjetiveSub;
 
 /// Publishers
 ros::Publisher miscMarkerPub;
 ros::Publisher gvdMarkerPub;
 ros::Publisher topoMapMarkerPub;
+ros::Publisher mapMarkerPub;
 ros::Publisher auctionPub;
 map<string, ros::Publisher> AssignmentPubs;
 
@@ -234,6 +237,9 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
   rvizHelper.scale    = makeVector3(cellSize*0.5); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0,0,frontierZ);
   rvizHelper.mark(frontierMarkerPoints, "frontiers");
+
+  /// map not an rviz marker but used just to mark
+  mapMarkerPub.publish(centralModule.occupancyGrid);
 }
 
 ///////////////////
@@ -397,13 +403,17 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 ///////////////
 
 bool first = true;
-void mapMergedCallBack(const OccupancyGridConstPtr& msg) {
+void mapCallBack(const OccupancyGridConstPtr& msg) {
   centralModule.updateMap(*msg);
   if (first){
     firstAuction = ros::Time::now();
     first = false;
     startAuction();
   }
+}
+
+void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& msg) {
+  centralModule.updateMap(msg);
 }
 
 void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
@@ -570,10 +580,12 @@ int main(int argc, char* argv[]) {
   miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
   gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
+  mapMarkerPub        = n.advertise<OccupancyGrid>("/map_visualization_marker", 10); 
   auctionPub        = n.advertise<Auction>("/auction", 1);
 
   // Initilize Subscribers
-  mapMergedSub       = n.subscribe<OccupancyGrid>("/map", 1, mapMergedCallBack);
+  mapSub             = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
+  mapUpdateSub       = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
   endSub             = n.subscribe("/end", 1, endCallBack);
   requestObjetiveSub = n.subscribe<std_msgs::String>("/request_objetive", 1, &requestObjectiveCallBack);
 

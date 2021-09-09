@@ -4,4 +4,4 @@
 /robot_pos_marker
 /robot_path_marker
 /visualization_marker
-/map
+/map_visualization_marker

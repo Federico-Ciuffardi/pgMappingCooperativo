@@ -19,6 +19,7 @@
 #include "../lib/RvizHelper.h"
 #include "../lib/Auctioneer.h"
 #include "../lib/graph/gnuplot.h"
+#include "map_msgs/OccupancyGridUpdate.h"
 
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
 vector<Pos> embed(vector<Pos> &from, vector<Pos> &to);
@@ -135,6 +136,7 @@ class CentralModule {
 
   // API 
   void updateMap(const OccupancyGrid&);
+  void updateMap(const OccupancyGridUpdateConstPtr& update);
   Auction getAuctionInfo();
   boost::unordered_map<string,Assignment> assign();
   bool saveBid(Bid, RobotId);
