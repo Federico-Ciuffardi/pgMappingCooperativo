@@ -89,12 +89,14 @@ OccupancyGridUpdate MapMerger::mergeMapUpdate(const OccupancyGridUpdateConstPtr&
     // only update if the update index points to a non unknown value or there is no
     // line of vision from the update index to the robot (on the update grid)
     if (!isUnknown(update->data[updateInd]) && unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
+
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
         mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*50);
       } else {
         mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]);
       }
+
     }
 
     updateMerged.data[updateInd] = mapMerged.data[globalInd];

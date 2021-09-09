@@ -37,25 +37,22 @@ ros::Subscriber mapUpdateSub;
 ros::Publisher endPub;
 
 // others
-OccupancyGrid occupancyGrid;
 int maxCellCoverage = 5832;
+boost::unordered_set<int> coveredIndices;
+
+int width;
 
 ///////////////////
 // Aux Functions //
 ///////////////////
 
 void checkTermination() {
-  int cont = 0;
-  for (uint32_t value : occupancyGrid.data) {
-    cont += value != -1;
-  }
-
-  if (cont >= maxCellCoverage) {
+  if (coveredIndices.size() >= maxCellCoverage) {
     std_msgs::String end_msg;
     std::stringstream ss;
     ss << "END";
     end_msg.data = ss.str();
-    ROS_INFO(" Stopping at %f ", cont / (float)maxCellCoverage);
+    ROS_INFO("Stopping");
     endPub.publish(end_msg);
   }
 }
@@ -65,12 +62,24 @@ void checkTermination() {
 ///////////////
 
 void mapCallBack(const OccupancyGridConstPtr& msg) {
-  occupancyGrid = *msg;
+  width = msg->info.width;
+  for (int i =0; i < msg->data.size(); i++) {
+    if(msg->data[i] != -1){
+      coveredIndices.insert(i);
+    }
+  }
   checkTermination();
 }
 
-void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& msg) {
-  updateOccupancyGrid(occupancyGrid, *msg);
+void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& update) {
+  Pos updateToGlobal = Pos(update->x,update->y);
+  for (int updateInd = 0; updateInd < update->data.size(); updateInd++) {
+    int globalInd = toInt( updateToGlobal + toPos(updateInd,update->width), width);
+    if(update->data[updateInd] != -1){
+      coveredIndices.insert(globalInd);
+    }
+  }
+
   checkTermination();
 }
 
