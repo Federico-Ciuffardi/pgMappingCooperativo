@@ -165,12 +165,13 @@ Auction CentralModule::getAuctionInfo() {
   // Turn the frontiers info into a ros message
   cout << "debug :: turn frontiers to rosmsg" << endl;
   for (auto it : topoMap->segmenter->connectedComponents) {
-    PosSet frontiers = it.second.typeMembers[Frontier];
+    PosSet &frontiers = it.second.typeMembers[Frontier];
 
     for (Pos frontier : frontiers) {
       auctionInfo.frontiers.push_back(toPoint2D(frontier));
     }
   }
+  cout << "debug :: ended turn frontier to rosmsg" << endl;
   auctionInfo.id = auctionId;
 
   // Increment the auction ID as a new auction will begin

@@ -2,22 +2,19 @@ global_costmap:
   # global_frame: "/map"
   # robot_base_frame: base_link
 
-  always_send_full_costmap: false
-  combination_method: 1
-
-  track_unknown_space: true
-  inflation_radius: 0.4
-  footprint_clearing_enabled: false
-
-  update_frequency: 1.0
-  publish_frequency: 1.0
+  update_frequency: 5.0
+  publish_frequency: 5.0
 
   static_map: false 
-  # map_topic: "/map_controller"
   rolling_window: false 
 
   width: 128.0
   height: 128.0
+
+  resolution: 1
+
   origin_x: -60.0
   origin_y: -60.0
-  resolution: 1
+
+  # always_send_full_costmap: false # false is the default
+  combination_method: 1

@@ -20,16 +20,13 @@
     <!-- waypoint_navigation -->
     <node pkg="waypoint_navigation" type="waypoint_navigation_node" name="move_controller" required="true" />
 
-    <!-- launch-prefix="bash -c 'sleep 5; $0 $@' "/>> -->
-
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" required="true">
-      <!-- <remap from="move_base/global_costmap/costmap" to="map"/> -->
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
-      <rosparam file="$(find pgmappingcooperativo)/config/move_base/$(arg ns)_costmap_common_params.yaml" command="load" ns="local_costmap" />
-      <rosparam file="$(find pgmappingcooperativo)/config/move_base/$(arg ns)_costmap_common_params.yaml" command="load" ns="global_costmap" />
+
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/local_costmap_params.yaml" command="load" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/global_costmap_params.yaml" command="load" /> 
+
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/base_local_planner_params.yaml" command="load" />
 
       <param name="global_costmap/resolution" value="$(arg cell_size)"/>
@@ -39,11 +36,14 @@
       <param name="global_costmap/global_frame" value="map"/>
       <param name="global_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
 
+      <param name="global_costmap/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/>
+      <param name="global_costmap/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/>
+
       <param name="local_costmap/global_frame" value="$(arg ns)/odom"/>
       <param name="local_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
-      <!-- the param overrides below were not working so they were set on the $(arg ns)_costmap_common_params.yaml -->
-      <!-- <param name="local_costmap/obstacle_layer/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/> -->
-      <!-- <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/> -->
+
+      <param name="local_costmap/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/>
+      <param name="local_costmap/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/>
     </node>
 
     <!-- move_controller -->

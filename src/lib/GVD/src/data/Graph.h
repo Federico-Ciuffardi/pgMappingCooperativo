@@ -509,7 +509,7 @@ struct PosGraph : public Graph<graph,Pos> {
         shortest_path.push_front(v);
       }
 
-      if(!shortest_path.empty()){
+      if(!shortest_path.empty() || goalVertex == startVertex){
         shortest_path.push_front(startVertex);
         shortest_paths[goal] = shortest_path;
         shortest_paths_costs[goal] = d[goalVertex];
