@@ -3,6 +3,7 @@ controller_frequency: 5
 recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
 base_global_planner: "carrot_planner/CarrotPlanner"
+# base_global_planner: "global_planner/GlobalPlanner"
 
 base_local_planner: "teb_local_planner/TebLocalPlannerROS" 
 TebLocalPlannerROS:
@@ -17,7 +18,8 @@ TebLocalPlannerROS:
   acc_lim_x: 0.5
   acc_lim_y: 0.5
 
-  footprint_model/type : "point" # footprint already taken into account with the inflation of the costmap 
+  footprint_model/type: "circular" # already taken into
+  footprint_model/radius: 0.2275
 
   # Obstacle Parameters
   min_obstacle_dist: 1.0

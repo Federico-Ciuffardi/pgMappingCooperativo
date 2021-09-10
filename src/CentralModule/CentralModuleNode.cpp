@@ -170,7 +170,7 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 
   //// Mark segments and load frontiers
   rvizHelper.type     = RvizHelper::TRIANGLE_LIST;
-  rvizHelper.scale    = makeVector3(cellSize); rvizHelper.scale.z  = cubeHeight;
+  rvizHelper.scale    = makeVector3(1); rvizHelper.scale.z  = cubeHeight;
   rvizHelper.position = makeVector3(0);
 
   RvizHelper::MarkerPoints frontierMarkerPoints;
@@ -561,11 +561,16 @@ int main(int argc, char* argv[]) {
   n.param<int>("/frontier_simplification_method", centralModule.frontierSimplificationMethod, centralModule.frontierSimplificationMethod);
 
   /// Global params
+  float cell_size;
+  FAIL_IFN(n.param<float>   ("/cell_size", cell_size, cell_size));
+
+  FAIL_IFN(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
+  centralModule.sensorRange /= cell_size;
+
   FAIL_IFN(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
   FAIL_IFN(n.param<string>("/map_name", centralModule.mapName, ""));
   FAIL_IFN(n.param<int>   ("/map_size", centralModule.mapSize, 0));
   FAIL_IFN(n.param<float> ("/robot_speed", centralModule.robotSpeed, 0));
-  FAIL_IFN(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
   FAIL_IFN(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
   FAIL_IFN(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
 

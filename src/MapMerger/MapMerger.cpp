@@ -20,13 +20,15 @@ bool MapMerger::isInitialized(){
   return !mapsArrived.empty();
 }
 
+// disabled
 bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width){
-  int threshold = 50;
-  for (Pos p : discretizeLine(p1,p2)){
-    if(p == p2 || p == p1) continue;
-    if(data[toInt(p,width)] >= threshold) return false;
-  }
   return true;
+  /* int threshold = 50; */
+  /* for (Pos p : discretizeLine(p1,p2)){ */
+  /*   if(p == p2 || p == p1) continue; */
+  /*   if(data[toInt(p,width)] >= threshold) return false; */
+  /* } */
+  /* return true; */
 }
 
 /////////
@@ -50,7 +52,7 @@ void MapMerger::mergeMap(const OccupancyGridConstPtr& msg, string name) {
   int robotGlobalInd = toInt(positions[name].pose.position, msg->info);
   Pos robotGlobalPos = toPos(positions[name].pose.position, msg->info);
 
-  int windowLenght = sensorRange; 
+  int windowLenght = sensorRange / msg->info.resolution; 
   for (int i = -windowLenght; i < (windowLenght + 1); i++) {
     for (int j = -windowLenght; j < (windowLenght + 1); j++) {
       int globalInd = robotGlobalInd + i + j * msg->info.width;

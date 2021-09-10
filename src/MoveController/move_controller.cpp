@@ -15,10 +15,12 @@
 #include "tf/transform_datatypes.h"
 #include "pgmappingcooperativo/GoalList.h"
 
-// Constantes
+////////////////
+// Parameters //
+////////////////
 
-const double TOLERANCE_GOAL = 1.25;       // 0.30;
-const double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
+double TOLERANCE_GOAL = 1.25;       // 0.30;
+double TOLERANCE_WAYPOINTS = 2.25;  // 0.50;
 
 // const std::string ODOM_FRAME = "p3dx_0_tf/odom";
 
@@ -231,18 +233,20 @@ laser_index*increment+laserScan.angle_min, laserScan.ranges[laser_index],safe_di
 }*/
 
 int main(int argc, char** argv) {
-  // ROS_INFO("Initializing node");
-  startTime = clock();
-  // Initializing ros
+  // Init node
   ros::init(argc, argv, "move_controller");
+  ros::NodeHandle n;
 
   bool primera = true;
   char buffer_ns[20];
-  ros::NodeHandle n;
   name_space = n.getNamespace().substr(1, 5);
 
   ROS_DEBUG("Initializing node %s", name_space.c_str());
-  ROS_DEBUG("Initializing node %s", name_space.c_str());
+
+  /* float cell_size; */
+  /* FAIL_IFN(n.param<float>   ("/cell_size", cell_size, cell_size)); */
+  /* TOLERANCE_GOAL /= cell_size; */
+  /* TOLERANCE_WAYPOINTS /= cell_size; */
 
   goalPath_sub = n.subscribe("goalPath", /*1*/ 10, setPath);
   pose_sub = n.subscribe("odom", 1, odomCallback);

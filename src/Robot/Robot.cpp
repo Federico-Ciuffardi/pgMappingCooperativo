@@ -60,7 +60,7 @@ Bid Robot::getBid(Auction msg) {
     Float cost = it.second;
 
     bid.frontiers.push_back(toPoint2D(frontier));
-    bid.pathLength.push_back(pathLenght[frontier]);
+    bid.pathLength.push_back(pathLenght[frontier]*occupancyGrid.info.resolution);
   }
 
   // Set the robot position

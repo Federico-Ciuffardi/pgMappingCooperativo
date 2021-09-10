@@ -74,7 +74,8 @@ inline Point toPoint(Pos p, mapInfoType map_info) {
   return p3d;
 }
 
-inline Point toPoint(Pos p) {
+template <typename T>
+inline Point toPoint(Vector2<T> p) {
   Point p3d;
   p3d.x = p.x;
   p3d.y = p.y;
@@ -145,7 +146,7 @@ inline Pos toPos(Point p3d, mapInfoType mapInfo) {
 
   Pos adjustment(-(p3d.x < 0),-(p3d.y < 0));
 
-  return toPos(p3d) - toPos(mapInfo.origin.position) + adjustment;
+  return (toPos(p3d) - toPos(mapInfo.origin.position))/mapInfo.resolution  + adjustment;
 }
 
 inline PosSet toPosSet(vector<Point2D> &ps){
