@@ -1,7 +1,4 @@
 global_costmap:
-  # global_frame: "/map"
-  # robot_base_frame: base_link
-
   update_frequency: 5.0
   publish_frequency: 5.0
 
@@ -11,10 +8,7 @@ global_costmap:
   width: 128.0
   height: 128.0
 
-  resolution: 1
+  # resolution: 1
 
   origin_x: -60.0
   origin_y: -60.0
-
-  # always_send_full_costmap: false # false is the default
-  combination_method: 1

@@ -377,7 +377,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
 
     // get significativeFrontier candidates
     circle.clear();
-    PosSet candidates = accumCircle(circle, uncoveredFrontier, maxDist/2 - 1, remainingFrontiers, sg, nonTraversables);
+    PosSet candidates = accumCircle(circle, uncoveredFrontier, maxDist/2, remainingFrontiers, sg, nonTraversables);
 
     // get the significativeFrontier
     Pos significativeFrontier;

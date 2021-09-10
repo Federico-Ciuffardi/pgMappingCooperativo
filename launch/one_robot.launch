@@ -36,14 +36,14 @@
       <param name="global_costmap/global_frame" value="map"/>
       <param name="global_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
 
-      <param name="global_costmap/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/>
-      <param name="global_costmap/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/>
+      <param name="global_costmap/laser_scan/sensor_frame" value="$(arg ns)/lms100"/>
+      <param name="global_costmap/laser_scan/topic" value="/$(arg ns)/laser/scan"/>
 
       <param name="local_costmap/global_frame" value="$(arg ns)/odom"/>
       <param name="local_costmap/robot_base_frame" value="$(arg ns)/base_link"/>
 
-      <param name="local_costmap/laser_scan_sensor/sensor_frame" value="$(arg ns)/lms100"/>
-      <param name="local_costmap/laser_scan_sensor/topic" value="/$(arg ns)/laser/scan"/>
+      <param name="local_costmap/laser_scan/sensor_frame" value="$(arg ns)/lms100"/>
+      <param name="local_costmap/laser_scan/topic" value="/$(arg ns)/laser/scan"/>
     </node>
 
     <!-- move_controller -->

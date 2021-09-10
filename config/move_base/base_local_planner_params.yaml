@@ -1,4 +1,5 @@
 controller_frequency: 5
+
 recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
 base_global_planner: "carrot_planner/CarrotPlanner"

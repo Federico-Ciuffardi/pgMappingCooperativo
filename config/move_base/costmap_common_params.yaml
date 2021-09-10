@@ -1,21 +1,19 @@
-obstacle_range: 5.99
-raytrace_range: 5.0
-
 track_unknown_space: true
-
 footprint_clearing_enabled: false
 
 inflation_radius: 0.2275 
 
-observation_sources: laser_scan_sensor
+observation_sources: laser_scan
 
-laser_scan_sensor: {
-  # sensor_frame: p3dx_0/lms100,
-  # topic: /p3dx_0/laser/scan,
-  data_type: LaserScan,
-  marking: true,
-  clearing: true,
-  observation_persistence: 0.0,
+laser_scan:
+  data_type: LaserScan
+
+  observation_persistence: 0.0
+
+  marking: true
+  obstacle_range: 5.99
+
+  clearing: true
+  raytrace_range: 5.0
   inf_is_valid: true
-}
 
