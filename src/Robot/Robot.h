@@ -40,8 +40,11 @@ class Robot {
   //////////
 
   // auction related
-  boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> paths;
-  boost::unordered_map<Pos,float> pathLenght;
+  boost::unordered_map<Pos,list<GvdVecGraph::Vertex>> nonTrivialPaths;
+  boost::unordered_map<Pos,float> nonTrivialPathLenght;
+  boost::unordered_set<Pos> nonTrivialFrontiers;
+
+  Pos robotBidPos = NULL_POS;
 
   GvdVecGraph gvd;
 
@@ -60,6 +63,7 @@ class Robot {
   nav_msgs::OccupancyGrid occupancyGrid;
   StateGrid grid;
   Point position;
+  int meterToCells;
 
   ///////////////
   // Functions //

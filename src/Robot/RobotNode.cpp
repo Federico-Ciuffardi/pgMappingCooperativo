@@ -242,6 +242,10 @@ int main(int argc, char* argv[]) {
   FAIL_IFN(n.param<float> ("/robot_speed", robot.robotSpeed, 0));
   FAIL_IFN(n.param<float> ("/robot_sensor_range", robot.sensorRange, 0));
 
+  float cellSize;
+  FAIL_IFN(n.param<float>   ("/cell_size", cellSize, cellSize));
+  robot.meterToCells = round(1/cellSize);
+
   // Get namespace
   string nameSpace = ros::this_node::getNamespace();
   robot.name = nameSpace.erase(0, 1);

@@ -77,43 +77,22 @@ OccupancyGrid occupancyGrid;
 // Aux Functions //
 ///////////////////
 
-bool unobstructedLine(Vector2<Float> v1, Vector2<Float> v2, OccupancyGrid &occupancyGrid){
-  Pos p1 = toPos(v1, occupancyGrid.info);
-  Pos p2 = toPos(v2, occupancyGrid.info);
-
-  int threshold = 50;
-  for (Pos p : discretizeLine(p1,p2)){
-    if(p == p2 || p == p1) continue;
-
-    int clearence = meterToCells;
-    for(int x = -clearence; x < clearence; x++){
-      for(int y = -clearence; y < clearence; y++){
-        Pos pN = p + Pos(x,y);
-        int pNInd = toInt(pN,occupancyGrid.info.width);
-        if(pNInd < occupancyGrid.data.size() && occupancyGrid.data[pNInd] >= threshold){
-          return false;
-        }
-      }
-    }
-  }
-  return true;
-}
-
 bool isPathOver(){
   return path.goals.size() == currentWaypointIndex;
 }
 
 bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
 
-  Float completionTolerance;
+  Float completionToleranceSquared;
   if(currentWaypointIndex < path.goals.size() - 1){
-    completionTolerance = waypointCompletionToleranceSquared;
+    completionToleranceSquared = waypointCompletionToleranceSquared;
   }else{
-    completionTolerance = pathCompletionToleranceSquared; 
+    completionToleranceSquared = pathCompletionToleranceSquared; 
   }
 
   return fromPos.distanceToSquared(waypointPos) <= 1 ||
-         fromPos.distanceToSquared(waypointPos) <= completionTolerance && unobstructedLine(fromPos,waypointPos,occupancyGrid);
+         fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
+           unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid, meterToCells);
 }
 
 ///////////////

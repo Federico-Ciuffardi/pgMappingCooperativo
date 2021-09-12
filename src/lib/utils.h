@@ -14,8 +14,31 @@
 #include <fstream>
 #include <ctime>
 #include "conversion.h"
+#include "map_msgs/OccupancyGridUpdate.h"
 
 using namespace std;
+
+inline bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width,int clearence = 0){
+  int threshold = 50;
+  for (Pos p : discretizeLine(p1,p2)){
+    if(p == p2 || p == p1) continue;
+
+    for(int x = -clearence; x <= clearence; x++){
+      for(int y = -clearence; y <= clearence; y++){
+        Pos pN = p + Pos(x,y);
+        int pNInd = toInt(pN,width);
+        if(pNInd < data.size() && data[pNInd] >= threshold){
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+inline bool unobstructedLine(Pos p1, Pos p2, OccupancyGrid &occupancyGrid, int clearence = 0){
+  return unobstructedLine(p1, p2, occupancyGrid.data, occupancyGrid.info.width, clearence); 
+}
 
 inline void updateOccupancyGrid(OccupancyGrid& occupancyGrid, const OccupancyGridUpdate& update){
   Pos updateToGlobal = Pos(update.x,update.y);

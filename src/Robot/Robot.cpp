@@ -6,9 +6,9 @@
 
 Robot::Robot() { }
 
-///////////////
-// Get / Set //
-///////////////
+///////////////////
+// Aux Functions //
+///////////////////
 
 /////////
 // API //
@@ -22,73 +22,75 @@ Bid Robot::getBid(Auction msg) {
 
   // Robot position
   /// Get the current Robot pos on the occupancy map frame
-  Pos robotPos = toPos(position, occupancyGrid.info);
+  robotBidPos = toPos(position, occupancyGrid.info);
 
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
   /// place on the GVD)
-  if(!addToGraph(robotPos, gvd, stateGrid)){
-    gvd.addV(robotPos);
+  if(!addToGraph(robotBidPos, gvd, stateGrid)){
+    gvd.addV(robotBidPos);
   }
 
   // Frontiers
   /// convert vector<Point2D> forntiers to PosSet
   PosSet frontiers = toPosSet(msg.frontiers);
 
-  /// add the frontiers to the gvd
-  addToGraph(frontiers, gvd, stateGrid);
-
-  // DEBUG: visuzlize map on std output
-  /* stateGrid[robotPos] = Critical; */
-  /* for( auto it : gvd.idVertexMap){ */
-  /*   Pos vPos = it.first; */
-  /*   stateGrid[vPos] = CriticalLine; */
-  /* } */
-  /* for( Pos fPos  : frontiers){ */
-  /*   stateGrid[fPos] = Frontier; */
-  /* } */
-  /* cout<<stateGrid<<endl; */
-
-  // get the path from the robotPos to each frontier in frontiers
-  boost::tie(paths, pathLenght) = gvd.getMultiPath(robotPos, frontiers);
-  /* cout<<"Calculated path costs: "<<pathLenght<<endl; //DEBUG */
-
-  // Construct bid rosmsg 
+  // Add trivial frontiers to the Bid
   Bid bid;
-  for (auto &it : pathLenght) {
+  nonTrivialFrontiers.clear();
+  for(Pos frontier : frontiers){
+    if(unobstructedLine(robotBidPos,frontier,occupancyGrid,meterToCells)){
+      bid.frontiers.push_back(toPoint2D(frontier));
+      bid.pathLength.push_back(robotBidPos.distanceTo(frontier));
+    }else{
+      nonTrivialFrontiers.insert(frontier);
+    }
+  }
+
+  /// add the non-trivial frontiers to the gvd
+  addToGraph(nonTrivialFrontiers, gvd, stateGrid);
+
+  // get the path from the robotBidPos to each non-trivial frontier
+  boost::tie(nonTrivialPaths, nonTrivialPathLenght) = gvd.getMultiPath(robotBidPos, nonTrivialFrontiers);
+
+  // Add non trivial frontiers to the Bid
+  for (auto &it : nonTrivialPathLenght) {
     Pos frontier = it.first; 
     Float cost = it.second;
 
     bid.frontiers.push_back(toPoint2D(frontier));
-    bid.pathLength.push_back(pathLenght[frontier]*occupancyGrid.info.resolution);
+    bid.pathLength.push_back(nonTrivialPathLenght[frontier]*occupancyGrid.info.resolution);
   }
 
   // Set the robot position
-  bid.robotPosition = toPoint2D(robotPos);
+  bid.robotPosition = toPoint2D(robotBidPos);
 
   return bid;
 }
 
 GoalList Robot::getPathTo(Pos frontier) {
   GoalList goalList;
-
-  if(!is_elem(frontier,paths)){
-    FAIL("No path to assigned objective. This is a bug, halting execution");
-  }
-
-  if (paths[frontier].size() == 0) {
-    ROS_WARN("Empty path!");
-    return goalList;
-  }
-
   goalList.id = lastAssignmentId;
 
-  for (GvdVecGraph::Vertex v : paths[frontier]) {
-    Point p3d = toPoint(gvd[v].p, occupancyGrid.info);
+  if(is_elem(frontier,nonTrivialPaths)){
 
-    goalList.goals.push_back(p3d);
+    if (nonTrivialPaths[frontier].size() == 0) {
+      ROS_WARN("Empty path!");
+      return goalList;
+    }
+
+    for (GvdVecGraph::Vertex v : nonTrivialPaths[frontier]) {
+      goalList.goals.push_back( toPoint(gvd[v].p, occupancyGrid.info) );
+    }
+
+  }else if(!is_elem(frontier,nonTrivialFrontiers)){
+
+    goalList.goals.push_back( toPoint(robotBidPos, occupancyGrid.info) );
+    goalList.goals.push_back( toPoint(frontier, occupancyGrid.info) );
+
+  }else{
+    FAIL("No path to assigned objective. This is a bug, halting execution");
   }
-
   return goalList;
 }
 

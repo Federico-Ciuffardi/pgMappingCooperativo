@@ -20,15 +20,6 @@ bool MapMerger::isInitialized(){
   return !mapsArrived.empty();
 }
 
-bool MapMerger::unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width){
-  int threshold = 50;
-  for (Pos p : discretizeLine(p1,p2)){
-    if(p == p2 || p == p1) continue;
-    if(data[toInt(p,width)] >= threshold) return false;
-  }
-  return true;
-}
-
 /////////
 // API //
 /////////
