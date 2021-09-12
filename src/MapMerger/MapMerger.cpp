@@ -20,15 +20,13 @@ bool MapMerger::isInitialized(){
   return !mapsArrived.empty();
 }
 
-// disabled
-bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width){
+bool MapMerger::unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width){
+  int threshold = 50;
+  for (Pos p : discretizeLine(p1,p2)){
+    if(p == p2 || p == p1) continue;
+    if(data[toInt(p,width)] >= threshold) return false;
+  }
   return true;
-  /* int threshold = 50; */
-  /* for (Pos p : discretizeLine(p1,p2)){ */
-  /*   if(p == p2 || p == p1) continue; */
-  /*   if(data[toInt(p,width)] >= threshold) return false; */
-  /* } */
-  /* return true; */
 }
 
 /////////
@@ -60,15 +58,16 @@ void MapMerger::mergeMap(const OccupancyGridConstPtr& msg, string name) {
       // Skip if the update index is out bounds or the update index points to a value of unknown
       if (globalInd >= msg->data.size() || isUnknown(msg->data[globalInd])) continue; 
 
-      // Skip if there is no line of vision from the update index to the robot (on the update grid)
-      Pos globalPos = toPos(globalInd, msg->info.width); 
-      if(!unobstructedLine(robotGlobalPos, globalPos, msg->data, msg->info.width)) continue;
 
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
         mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*50);
       } else {
-        mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*mapMerged.data[globalInd]);
+        // Skip if there is no line of vision from the update index to the robot (on the update grid)
+        Pos globalPos = toPos(globalInd, msg->info.width); 
+        if(unobstructedLine(robotGlobalPos, globalPos, msg->data, msg->info.width)){ 
+          mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*mapMerged.data[globalInd]);
+        }
       }
     }
   }
@@ -88,15 +87,17 @@ OccupancyGridUpdate MapMerger::mergeMapUpdate(const OccupancyGridUpdateConstPtr&
     Pos updatePos = toPos(updateInd, update->width); 
     int globalInd = toInt(Pos(update->x,update->y) + updatePos, mapMerged.info.width);
 
-    // only update if the update index points to a non unknown value or there is no
-    // line of vision from the update index to the robot (on the update grid)
-    if (!isUnknown(update->data[updateInd]) && unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
+    // only update if the update index points to a non unknown value 
+    if (!isUnknown(update->data[updateInd])){
 
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
         mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*50);
       } else {
-        mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]);
+        // Skip if there is no line of vision from the update index to the robot (on the update grid)
+        if(unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
+          mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]);
+        }
       }
 
     }

@@ -38,6 +38,7 @@ class MapMerger {
   ///////////////
   // Functions //
   ///////////////
+  bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width);
 
  public:
   //////////

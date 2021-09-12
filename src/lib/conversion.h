@@ -173,6 +173,19 @@ inline PosSet toPosSet(vector<int> ps, int width){
   return res;
 }
 
+template<typename T>
+inline Pos toPos(Vector2<T> v){
+  return Pos(v.x,v.y);
+}
+
+template<typename T>
+inline Pos toPos(Vector2<T> v, mapInfoType mapInfo){
+
+  Pos adjustment(-(v.x < 0),-(v.y < 0));
+
+  return (toPos(v) - toPos(mapInfo.origin.position))/mapInfo.resolution  + adjustment;
+}
+
 ///////////////
 // toVector2 //
 ///////////////

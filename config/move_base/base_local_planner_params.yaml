@@ -3,7 +3,12 @@ controller_frequency: 5
 recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
 base_global_planner: "carrot_planner/CarrotPlanner"
+CarrotPlanner:
+  step_size: 0.2275
+  min_dist_from_robot: 0
 # base_global_planner: "global_planner/GlobalPlanner"
+# GlobalPlanner:
+#   orientation_window_size: 0
 
 base_local_planner: "teb_local_planner/TebLocalPlannerROS" 
 TebLocalPlannerROS:

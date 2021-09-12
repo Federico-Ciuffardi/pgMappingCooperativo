@@ -1,7 +1,7 @@
 track_unknown_space: true
 footprint_clearing_enabled: false
 
-inflation_radius: 0 #0.2275 
+inflation_radius: 0.2275 # (robot radius)
 
 observation_sources: laser_scan
 
