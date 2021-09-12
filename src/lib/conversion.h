@@ -173,6 +173,15 @@ inline PosSet toPosSet(vector<int> ps, int width){
   return res;
 }
 
+///////////////
+// toVector2 //
+///////////////
+
+template<typename T>
+inline Vector2<T> toVector2(Point p3d){
+  return Vector2<T>(p3d.x,p3d.y);
+}
+
 /////////
 // Int //
 /////////

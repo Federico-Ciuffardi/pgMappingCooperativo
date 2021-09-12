@@ -585,7 +585,7 @@ int main(int argc, char* argv[]) {
   miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
   gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
-  mapMarkerPub        = n.advertise<OccupancyGrid>("/map_visualization_marker", 10); 
+  mapMarkerPub      = n.advertise<OccupancyGrid>("/map_visualization_marker", 10); 
   auctionPub        = n.advertise<Auction>("/auction", 1);
 
   // Initilize Subscribers

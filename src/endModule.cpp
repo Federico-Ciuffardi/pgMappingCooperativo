@@ -40,7 +40,7 @@ ros::Publisher endPub;
 int maxCellCoverage = 5832;
 boost::unordered_set<int> coveredIndices;
 
-bool first = true;
+bool firstMap = true;
 int width;
 
 ///////////////////
@@ -63,10 +63,10 @@ void checkTermination() {
 ///////////////
 
 void mapCallBack(const OccupancyGridConstPtr& msg) {
-  if(first){
+  if(firstMap){
     width = msg->info.width;
     maxCellCoverage /= msg->info.resolution*msg->info.resolution;
-    first = false;
+    firstMap = false;
   }
   for (int i =0; i < msg->data.size(); i++) {
     if(msg->data[i] != -1){

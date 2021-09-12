@@ -17,9 +17,6 @@
   </include>
 
   <group ns="$(arg ns)">
-    <!-- waypoint_navigation -->
-    <node pkg="waypoint_navigation" type="waypoint_navigation_node" name="move_controller" required="true" />
-
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" required="true">
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
