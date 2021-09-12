@@ -37,7 +37,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -50,7 +50,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 128
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Angle Tolerance: 0.0010000000474974513
       Class: rviz/Odometry
       Covariance:
@@ -1089,10 +1089,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 7.401010036468506
+      Scale: 7.598243713378906
       Target Frame: <Fixed Frame>
-      X: -4.111361503601074
-      Y: 2.7905287742614746
+      X: -5.720547676086426
+      Y: 0.7672564387321472
     Saved: ~
 Window Geometry:
   Displays:
