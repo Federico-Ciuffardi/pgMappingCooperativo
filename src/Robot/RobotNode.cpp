@@ -152,7 +152,8 @@ void publishPath(Pos frontier) {
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   // Store current position
-  robot.position = odom->pose.pose.position;
+  robot.position    = odom->pose.pose.position;
+  robot.orientation = odom->pose.pose.orientation;
 
   // Mark Current position on rviz
   rvizHelper.topic = &markerPub;

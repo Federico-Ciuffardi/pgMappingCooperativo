@@ -23,6 +23,7 @@
 #include "../lib/utils.h"
 #include "../lib/conversion.h"
 #include "../lib/RvizHelper.h"
+#include "geometry_msgs/Quaternion.h"
 
 class Robot {
  public:
@@ -63,6 +64,7 @@ class Robot {
   nav_msgs::OccupancyGrid occupancyGrid;
   StateGrid grid;
   Point position;
+  Quaternion orientation;
   int meterToCells;
 
   ///////////////

@@ -192,8 +192,21 @@ inline Pos toPos(Vector2<T> v, mapInfoType mapInfo){
 ///////////////
 
 template<typename T>
+inline Vector2<T> toVector2(Pos p){
+  return Vector2<T>(p.x,p.y);
+}
+
+template<typename T>
 inline Vector2<T> toVector2(Point p3d){
   return Vector2<T>(p3d.x,p3d.y);
+}
+
+template<typename T>
+inline Vector2<T> toVector2(Point p3d, mapInfoType mapInfo) {
+
+  Vector2<Float> adjustment(-(p3d.x < 0),-(p3d.y < 0));
+
+  return (toVector2<Float>(p3d) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution  + adjustment;
 }
 
 /////////
@@ -219,6 +232,18 @@ inline Int toInt(Point p, mapInfoType mapInfo){
   /* return toInt(p,mapInfo.width,abs(originX) * mapInfo.width) + abs(originY); */
   return toInt(toPos(p,mapInfo),mapInfo.width);
 }
+
+///////////
+// Float //
+///////////
+inline Float toFloat(Quaternion rQ){
+  tf::Quaternion tfQ(rQ.x, rQ.y, rQ.z, rQ.w);
+  tf::Matrix3x3 m(tfQ);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  return yaw;
+}
+
 ////////////////
 // Quaternion //
 ////////////////

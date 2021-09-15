@@ -209,7 +209,7 @@ bool CentralModule::saveBid(Bid bid, RobotId robotId) {
     }
 
     // Calculate bid value
-    Float value = bid.pathLength[i] + segmentValueComponent;
+    Float value = bid.pathLength[i] + bid.pathEntryYaw[i] + segmentValueComponent;
 
     // Store frontier bid
     auctioneer.addBid(robotId, topoMap->segmenter->idGrid[frontierPos] , frontierPos, value);

@@ -22,7 +22,8 @@ Bid Robot::getBid(Auction msg) {
 
   // Robot position
   /// Get the current Robot pos on the occupancy map frame
-  robotBidPos = toPos(position, occupancyGrid.info);
+  Vector2<Float> robotVector2 = toVector2<Float>(position, occupancyGrid.info);
+  robotBidPos = toPos(robotVector2);
 
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
@@ -41,7 +42,17 @@ Bid Robot::getBid(Auction msg) {
   for(Pos frontier : frontiers){
     if(unobstructedLine(robotBidPos,frontier,occupancyGrid,meterToCells)){
       bid.frontiers.push_back(toPoint2D(frontier));
-      bid.pathLength.push_back(robotBidPos.distanceTo(frontier));
+      bid.pathLength.push_back(robotBidPos.distanceTo(frontier)*occupancyGrid.info.resolution);
+
+      Float robotYaw = toFloat(orientation);
+      Float yawToPath = (toVector2<Float>(frontier) - robotVector2).angle();
+      Float pathEntryYaw = abs(minAngleRep(robotYaw-yawToPath));
+      bid.pathEntryYaw.push_back((pathEntryYaw/M_PI)*sensorRange);
+      /* cout<<"entryWaypoint: "<<frontier<<endl; */
+      /* cout<<"robotVector2: "<<robotVector2<<endl; */
+      /* cout<<"pathYaw: "<<(yawToPath*180)/M_PI<<endl; */
+      /* cout<<"robotYaw: "<<(robotYaw*180)/M_PI<<endl; */
+      /* cout<<"pathEntryYaw: "<<(abs(minAngleRep(robotYaw-yawToPath))*180)/M_PI<<endl; */
     }else{
       nonTrivialFrontiers.insert(frontier);
     }
@@ -60,6 +71,7 @@ Bid Robot::getBid(Auction msg) {
 
     bid.frontiers.push_back(toPoint2D(frontier));
     bid.pathLength.push_back(nonTrivialPathLenght[frontier]*occupancyGrid.info.resolution);
+    bid.pathEntryYaw.push_back(sensorRange);
   }
 
   // Set the robot position

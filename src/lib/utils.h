@@ -18,6 +18,10 @@
 
 using namespace std;
 
+inline Float minAngleRep(Float angle){
+  return remainder(angle, 2.0 * M_PI);
+}
+
 inline bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width,int clearence = 0){
   int threshold = 50;
   for (Pos p : discretizeLine(p1,p2)){

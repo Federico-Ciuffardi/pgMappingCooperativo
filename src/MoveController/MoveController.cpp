@@ -94,8 +94,8 @@ bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
   }
 
   return fromPos.distanceToSquared(waypointPos) <= forcedCompletionToleranceSquared ||
-         fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
-           unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid, meterToCells);
+         (fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
+          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid,0));// meterToCells);
 }
 
 ///////////////
