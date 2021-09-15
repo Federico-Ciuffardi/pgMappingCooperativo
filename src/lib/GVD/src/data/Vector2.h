@@ -66,9 +66,10 @@ Vector2&   operator+=(const Vector2 v) {
     return x * v.x + y * v.y;
   }
 
-  Float   angle(Vector2 v) {
-    return atan2(v.y, v.x);
+  Float   angle() {
+    return atan2(y, x);
   }
+
   Float   angle_to(const Vector2 v) const{
     return acos(this->dot(v)/(this->length() * v.length()));
   }

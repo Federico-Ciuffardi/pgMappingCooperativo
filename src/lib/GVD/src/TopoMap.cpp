@@ -65,11 +65,7 @@ bool degreeConstraintAux(GvdGraph& gvd, GvdGraph::Vertex& prevV, GvdGraph::Verte
 // * has a path with the characteristics described on the `degreeConstraintAux`
 //   function
 // Precondition: gvd has isLocalMin stablished for each vertex
-bool satisfiesDegreeConstraint(GvdGraph& gvd, Pos p) {
-  int criticalsCount = 0;
-
-  GvdGraph::Vertex v = gvd.idVertexMap[p];
-
+bool satisfiesDegreeConstraint(GvdGraph& gvd, GvdGraph::Vertex v) {
   // Vertex must have a degree of 2
   if (gvd.degree(v) != 2) return false;
 
@@ -113,27 +109,57 @@ void TopoMap::update(){
   }
 
   cout << "debug :: Set the critical vertices and its information" << endl;
-  for(Pos p : map){
-    // skip non critical vertices
-    if(map[p] != Free || !(*gvd->graphGvd).has(p) || !graphGvd[p].isLocalMin || connectivityAux(p,map,*distMap) || !satisfiesDegreeConstraint(*gvd->graphGvd, p))
+  for(GvdGraph::Vertex v : graphGvd){
+    Pos p = graphGvd[v].p;
+
+    // skip vertices that:
+    if( map[p] != Free                               || // are free
+       !graphGvd[v].isLocalMin                       || // are not local min
+        connectivityAux(p,map,*distMap)              || // are connectivityAux
+       !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // or do not satisfy degreeConstrain
       continue;
 
-    // Set critical in map
-    map[p] = Critical;
-
-    // Set criticals info
+    // Filter critical lines
     CriticalInfo criticalInfo;
-    for(Pos bp : basisPoints(p,*distMap)){
-      // Set critical lines
-      for(Pos linePos : discretizeLine(p,bp)){
+    boost::unordered_set<Pos> criticalLineEnds = basisPoints(p,*distMap);
+    for(Pos bp1 : basisPoints(p,*distMap)){
+      if(map[bp1] == Unknown){ 
+        criticalLineEnds.erase(bp1);
+        continue;
+      }
+      for(Pos bp2 : basisPoints(p,*distMap)){
+        if(bp2 == bp1) continue;
+
+        Pos p_bp1 = bp1-p;
+        Pos p_bp2 = bp2-p;
+
+        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) <= M_PI/1.5){
+          criticalLineEnds.erase(bp2);
+          continue;
+        } 
+        // Set critical lines
+      }
+    }
+
+    // Skip if less than 2 critial lines left
+    if(criticalLineEnds.size() < 2) continue;
+
+    for(Pos endPoint : criticalLineEnds){
+      for(Pos linePos : discretizeLine(p,endPoint)){
         if(map[linePos] == Free){
           map[linePos] = CriticalLine;
           criticalInfo.criticalLines.insert(linePos);
         }
       }
     }
+
     criticalInfos[p] = criticalInfo;
+
+    // Set critical in map
+    map[p] = Critical;
+
   }
+
 
   segmenter->update();
 }

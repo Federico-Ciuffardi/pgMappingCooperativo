@@ -1,4 +1,4 @@
-controller_frequency: 5
+controller_frequency: 10
 
 recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
@@ -14,7 +14,6 @@ recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecover
 base_global_planner: "navfn/NavfnROS"
 NavfnROS:
   allow_unknown: true
-
 
 base_local_planner: "teb_local_planner/TebLocalPlannerROS" 
 TebLocalPlannerROS:
@@ -41,7 +40,7 @@ TebLocalPlannerROS:
   free_goal_vel: true
 
   # Optimization Parameters
-  weight_kinematics_forward_drive: 1.0
+  weight_kinematics_forward_drive: 10000.0
 
   # Parallel Planning in distinctive Topologies
   enable_homotopy_class_planning: false

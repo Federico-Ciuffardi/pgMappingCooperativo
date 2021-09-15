@@ -22,7 +22,6 @@ struct GvdVertexProperty {
   Pos p = NULL_POS;
 
   bool isLocalMin = false;
-  bool degreeConstrain = false;
 
   GvdVertexProperty(){};
 
