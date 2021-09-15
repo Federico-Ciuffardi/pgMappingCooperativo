@@ -8,6 +8,7 @@
 #include "../lib/conversion.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/Quaternion.h"
 #include "move_base_msgs/MoveBaseActionResult.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "actionlib_msgs/GoalStatus.h"
@@ -21,14 +22,16 @@
 
 using namespace sensor_msgs;
 
+#define squared(x) x*x
+
 ////////////////
 // Parameters //
 ////////////////
 
-/* Float TOLERANCE_GOAL = 2.25;// 1.25;       // 0.30; */
-Float waypointCompletionToleranceSquared = 50*50;  // 0.50;
-Float pathCompletionToleranceSquared = 2*2;  // 0.50;
-Float movementDetectionThresholdSquared = 0.01*0.01;
+Float forcedCompletionToleranceSquared   = squared(1.5);
+Float pathCompletionToleranceSquared     = squared(2);
+Float waypointCompletionToleranceSquared = squared(50);
+Float movementDetectionThresholdSquared  = squared(0.01);
 
 ///////////////
 // Variables //
@@ -90,7 +93,7 @@ bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
     completionToleranceSquared = pathCompletionToleranceSquared; 
   }
 
-  return fromPos.distanceToSquared(waypointPos) <= 1 ||
+  return fromPos.distanceToSquared(waypointPos) <= forcedCompletionToleranceSquared ||
          fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
            unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid, meterToCells);
 }
@@ -100,18 +103,24 @@ bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
 ///////////////
 
 int moveBaseSeq = 0;
-void send_point(Point next_point) {
+void sendWaypoint(Pose pose) {
   PoseStamped poseStamped;
   poseStamped.header.frame_id = "map";
   poseStamped.header.stamp = ros::Time::now();
   poseStamped.header.seq = moveBaseSeq;
+  poseStamped.pose = pose;
+
+  moveBaseSimpleGoalPub.publish(poseStamped);
 
   moveBaseSeq++;
+}
 
-  poseStamped.pose.position = next_point;
-  poseStamped.pose.orientation.w = 1;
-  
-  moveBaseSimpleGoalPub.publish(poseStamped);
+void sendWaypoint(Point point) {
+  Pose waypointPose;
+  waypointPose.position = path.goals[currentWaypointIndex] ;
+  waypointPose.orientation.w = 1;
+
+  sendWaypoint(waypointPose);
 }
 
 void notifyStatus(char* data) {
@@ -125,7 +134,23 @@ void nextWaypoint(){
   currentWaypointIndex++;
   if(!isPathOver()){
     currentWaypoint = toVector2<Float>(path.goals[currentWaypointIndex]);
-    send_point(path.goals[currentWaypointIndex]);
+
+    Pose waypointPose;
+    waypointPose.position = path.goals[currentWaypointIndex] ;
+   
+    if(currentWaypointIndex + 1 < path.goals.size()){
+      // if currentWaypoint is not the last one set the direction to the nextWaypoint as the waypoint orientation
+      Vector2<Float> nextWaypoint = toVector2<Float>(path.goals[currentWaypointIndex+1]);
+      Vector2<Float> direction = nextWaypoint - currentWaypoint;
+      waypointPose.orientation = toQuaternion(direction);
+    }else if (path.goals.size() > 1){
+      // if currentWaypoint is the last one set the direction from the robot to the currentWaypoint as the 
+      // orientation of the waypoint
+      Vector2<Float> direction = currentWaypoint - robotPos;
+      waypointPose.orientation = toQuaternion(direction);
+    }
+
+    sendWaypoint(waypointPose);
   }else{
     // if there was a path assigned
     if(path.goals.size() > 0 && (firstCompletedGoal || lastCompleatedGoal != currentWaypoint) ){
@@ -162,7 +187,11 @@ void goalPathCallback(const GoalList& msg) {
 void moveBaseResultCallback(const move_base_msgs::MoveBaseActionResult &msg) {
   // fix weird behavior of carrot planner
   if(msg.status.status == actionlib_msgs::GoalStatus::SUCCEEDED && !isPathOver()){
-    send_point(path.goals[currentWaypointIndex]);
+    Pose waypointPose;
+    waypointPose.position = path.goals[currentWaypointIndex] ;
+    Vector2<Float> direction = currentWaypoint - robotPos;
+    waypointPose.orientation = toQuaternion(direction);
+    sendWaypoint(waypointPose);
   } 
 }
 

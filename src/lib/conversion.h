@@ -13,6 +13,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Vector3.h"
 #include "nav_msgs/Odometry.h"
+#include "tf/transform_datatypes.h"
 #include <map_msgs/OccupancyGridUpdate.h>
 
 using namespace pgmappingcooperativo;
@@ -217,6 +218,14 @@ inline Int toInt(Point p, mapInfoType mapInfo){
   /* int originY = mapInfo.origin.position.y; */
   /* return toInt(p,mapInfo.width,abs(originX) * mapInfo.width) + abs(originY); */
   return toInt(toPos(p,mapInfo),mapInfo.width);
+}
+////////////////
+// Quaternion //
+////////////////
+
+template<typename T>
+Quaternion toQuaternion(Vector2<T> v){
+  return tf::createQuaternionMsgFromYaw(v.angle());
 }
 
 /////////////////////////////
