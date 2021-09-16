@@ -23,7 +23,7 @@ Bid Robot::getBid(Auction msg) {
   // Robot position
   /// Get the current Robot pos on the occupancy map frame
   Vector2<Float> robotVector2 = toVector2<Float>(position, occupancyGrid.info);
-  robotBidPos = toPos(robotVector2);
+  robotBidPos                 = toPos(position, occupancyGrid.info);
 
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking

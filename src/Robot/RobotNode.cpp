@@ -55,7 +55,7 @@ ros::Publisher bidPub;
 
 ros::Publisher requestObjetivePub;
 ros::Publisher goalPathPub;
-ros::Publisher markerPub;
+ros::Publisher pathMarkerPub;
 ros::Publisher posMarkerPub;
 
 // others
@@ -72,7 +72,7 @@ void setPathRvizMarks(GoalList &path, mapInfoType mapInfo) {
   float cellSize = mapInfo.resolution;
 
   // draw path to objective
-  rvizHelper.topic = &markerPub;
+  rvizHelper.topic = &pathMarkerPub;
 
   rvizHelper.color    = MAGENTA;
   rvizHelper.type     = RvizHelper::LINE_STRIP;
@@ -85,7 +85,7 @@ void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
   float cellSize = mapInfo.resolution;
 
   // Mark Current position on rviz
-  rvizHelper.topic = &markerPub;
+  rvizHelper.topic = &pathMarkerPub;
 
   RvizHelper::MarkerPoints posMarkerPoint;
   posMarkerPoint.push_back(toMarkerPoint(toPos(position, mapInfo), mapInfo));
@@ -156,7 +156,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   robot.orientation = odom->pose.pose.orientation;
 
   // Mark Current position on rviz
-  rvizHelper.topic = &markerPub;
+  rvizHelper.topic = &pathMarkerPub;
 
   setRealTimePositionRvizMarks(odom->pose.pose);
 }
@@ -168,7 +168,7 @@ void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
   requestObjetivePub.publish(msgRequest);
 
   // Delete the path mark
-  rvizHelper.topic = &markerPub;
+  rvizHelper.topic = &pathMarkerPub;
   rvizHelper.deleteMark(robot.name + "_path", 0);
   rvizHelper.deleteMark(robot.name + "_pos", 0);
 }
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
   bidPub             = n.advertise<Bid>("bid", 1);
   goalPathPub        = n.advertise<GoalList>("goalPath", 1, true);
   requestObjetivePub = n.advertise<std_msgs::String>("/request_objetive", 1);
-  markerPub          = n.advertise<visualization_msgs::Marker>("/robot_path_marker", 1);
+  pathMarkerPub          = n.advertise<visualization_msgs::Marker>("/robot_path_marker", 1);
   posMarkerPub       = n.advertise<visualization_msgs::Marker>("/robot_pos_marker", 1);
 
   // Initilize Subscribers

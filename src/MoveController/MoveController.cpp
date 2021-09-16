@@ -52,7 +52,7 @@ ros::Subscriber mapSub;
 ros::Subscriber mapUpdateSub;
 ros::Subscriber moveBaseResultSub;
 // Others
-GoalList path;
+vector<Point> path;
 PoseStamped position;
 
 Float cellDiagonal;
@@ -81,13 +81,12 @@ OccupancyGrid occupancyGrid;
 ///////////////////
 
 bool isPathOver(){
-  return path.goals.size() == currentWaypointIndex;
+  return path.size() == currentWaypointIndex;
 }
 
 bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
-
   Float completionToleranceSquared;
-  if(currentWaypointIndex < path.goals.size() - 1){
+  if(currentWaypointIndex < path.size() - 1){
     completionToleranceSquared = waypointCompletionToleranceSquared;
   }else{
     completionToleranceSquared = pathCompletionToleranceSquared; 
@@ -117,7 +116,7 @@ void sendWaypoint(Pose pose) {
 
 void sendWaypoint(Point point) {
   Pose waypointPose;
-  waypointPose.position = path.goals[currentWaypointIndex] ;
+  waypointPose.position = path[currentWaypointIndex] ;
   waypointPose.orientation.w = 1;
 
   sendWaypoint(waypointPose);
@@ -133,17 +132,17 @@ void notifyStatus(char* data) {
 void nextWaypoint(){
   currentWaypointIndex++;
   if(!isPathOver()){
-    currentWaypoint = toVector2<Float>(path.goals[currentWaypointIndex]);
+    currentWaypoint = toVector2<Float>(path[currentWaypointIndex]);
 
     Pose waypointPose;
-    waypointPose.position = path.goals[currentWaypointIndex] ;
+    waypointPose.position = path[currentWaypointIndex] ;
    
-    if(currentWaypointIndex + 1 < path.goals.size()){
+    if(currentWaypointIndex + 1 < path.size()){
       // if currentWaypoint is not the last one set the direction to the nextWaypoint as the waypoint orientation
-      Vector2<Float> nextWaypoint = toVector2<Float>(path.goals[currentWaypointIndex+1]);
+      Vector2<Float> nextWaypoint = toVector2<Float>(path[currentWaypointIndex+1]);
       Vector2<Float> direction = nextWaypoint - currentWaypoint;
       waypointPose.orientation = toQuaternion(direction);
-    }else if (path.goals.size() > 1){
+    }else if (path.size() > 1){
       // if currentWaypoint is the last one set the direction from the robot to the currentWaypoint as the 
       // orientation of the waypoint
       Vector2<Float> direction = currentWaypoint - robotPos;
@@ -153,23 +152,22 @@ void nextWaypoint(){
     sendWaypoint(waypointPose);
   }else{
     // if there was a path assigned
-    if(path.goals.size() > 0 && (firstCompletedGoal || lastCompleatedGoal != currentWaypoint) ){
+    if(path.size() > 0 && (firstCompletedGoal || lastCompleatedGoal != currentWaypoint) ){
       firstCompletedGoal = false;
       lastCompleatedGoal = currentWaypoint;
       // clear path
       currentWaypointIndex = 0;
-      path.goals.clear();
+      path.clear();
       // notify path completion
       notifyStatus((char*)"SUCCESS");
     }
   }
 }
 
-GoalList trimPath(GoalList msg) {
-  int pathStart = 0;
-  for (; pathStart < msg.goals.size() && !isWaypointCompleted(robotPos,toVector2<Float>(msg.goals[pathStart])); pathStart++);
-  msg.goals = vector<Point, allocator<Point>>( msg.goals.begin() + pathStart, msg.goals.end());
-  return msg;
+void trimPath(vector<Point> &path) {
+  int pathStart = path.size()-2;
+  for (; pathStart > 0 && !isWaypointCompleted(robotPos,toVector2<Float>(path[pathStart])); pathStart--);
+  path = vector<Point, allocator<Point>>( path.begin() + pathStart, path.end());
 }
 
 ///////////////
@@ -177,18 +175,20 @@ GoalList trimPath(GoalList msg) {
 ///////////////
 
 void goalPathCallback(const GoalList& msg) {
-  if (msg.goals.size() > 0) {
-    path = trimPath(msg);
-    currentWaypointIndex = -1;
-    nextWaypoint();
-  }
+  if (msg.goals.size() == 0) return; // skip if the new path is empty
+
+  path = msg.goals;
+  trimPath(path);
+
+  currentWaypointIndex = -1;
+  nextWaypoint();
 }
 
 void moveBaseResultCallback(const move_base_msgs::MoveBaseActionResult &msg) {
   // fix weird behavior of carrot planner
   if(msg.status.status == actionlib_msgs::GoalStatus::SUCCEEDED && !isPathOver()){
     Pose waypointPose;
-    waypointPose.position = path.goals[currentWaypointIndex] ;
+    waypointPose.position = path[currentWaypointIndex] ;
     Vector2<Float> direction = currentWaypoint - robotPos;
     waypointPose.orientation = toQuaternion(direction);
     sendWaypoint(waypointPose);

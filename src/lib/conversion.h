@@ -204,9 +204,7 @@ inline Vector2<T> toVector2(Point p3d){
 template<typename T>
 inline Vector2<T> toVector2(Point p3d, mapInfoType mapInfo) {
 
-  Vector2<Float> adjustment(-(p3d.x < 0),-(p3d.y < 0));
-
-  return (toVector2<Float>(p3d) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution  + adjustment;
+  return (toVector2<Float>(p3d) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution;
 }
 
 /////////
