@@ -16,6 +16,10 @@ bool isUnknown(int8_t data){
   return data == -1;
 }
 
+bool isOccupied(int8_t data){
+  return data >= 50;
+}
+
 bool MapMerger::isInitialized(){
   return !mapsArrived.empty();
 }
@@ -56,7 +60,7 @@ void MapMerger::mergeMap(const OccupancyGridConstPtr& msg, string name) {
       } else {
         // Skip if there is no line of vision from the update index to the robot (on the update grid)
         Pos globalPos = toPos(globalInd, msg->info.width); 
-        if(unobstructedLine(robotGlobalPos, globalPos, msg->data, msg->info.width)){ 
+        if(isOccupied(msg->data[globalInd]) || unobstructedLine(robotGlobalPos, globalPos, msg->data, msg->info.width)){ 
           mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*mapMerged.data[globalInd]);
         }
       }
@@ -86,7 +90,7 @@ OccupancyGridUpdate MapMerger::mergeMapUpdate(const OccupancyGridUpdateConstPtr&
         mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*50);
       } else {
         // Skip if there is no line of vision from the update index to the robot (on the update grid)
-        if(unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
+        if(isOccupied(update->data[updateInd]) || unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
           mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]);
         }
       }

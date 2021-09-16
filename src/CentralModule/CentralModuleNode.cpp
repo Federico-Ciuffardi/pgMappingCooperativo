@@ -16,8 +16,10 @@ using namespace std;
 ///          after the first robot request
 ///   *  2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
 ///          after the first robot request. Reset and decrease the delay on new requests.
-int auctionStartTimeoutMode = -1;
-
+///
+///   if the time to contruct the bids is grater than 4 seconds all the modes act like the mode 2
+int auctionStartTimeoutModeParam = -1;
+int auctionStartTimeoutMode = auctionStartTimeoutModeParam;
 // mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
 float mapUpdateDelay = 2;
 
@@ -257,6 +259,12 @@ void startAuction() {
 
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
+
+  if(gvdTime.toSec() > 4){
+    auctionStartTimeoutMode = 2;
+  }else if(auctionStartTimeoutModeParam < 2){
+    auctionStartTimeoutMode = auctionStartTimeoutModeParam;
+  }
 
   // set markers for rviz
   setRvizMarks(auction, centralModule.occupancyGrid.info);
@@ -554,7 +562,7 @@ int main(int argc, char* argv[]) {
   n.param<int>("/critical_condition_min", GvdConfig::get()->criticalConditionMin, GvdConfig::get()->criticalConditionMin);
 
   /// Auction
-  n.param<int>("/auction_start_timeout_mode", auctionStartTimeoutMode, auctionStartTimeoutMode);
+  n.param<int>("/auction_start_timeout_mode", auctionStartTimeoutModeParam, auctionStartTimeoutModeParam);
   n.param<float>("/map_update_delay", mapUpdateDelay, mapUpdateDelay);
 
   // Frontier
