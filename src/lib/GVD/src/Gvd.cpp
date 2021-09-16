@@ -40,17 +40,17 @@ int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
 }
 
 // p has at least 2 obstacles as basis points  
-bool isObstacleGenerated(Pos p, DistMap& distMap, StateGrid& sg){ 
+bool isObstacleGenerated(Pos p, DistMap& distMap, Map& map){ 
   int obstacleBasis = 0;
   for(Pos bp : basisPoints(p, distMap)){
-    obstacleBasis += sg[bp] == Occupied;
+    obstacleBasis += map[bp] == Occupied;
     if(obstacleBasis > 1) return true;
   }
   return false;
 }
 
 // filter condition specific to the connectivity method applied
-bool connectivityAux(Pos p, StateGrid &map, DistMap &distMap){
+bool connectivityAux(Pos p, Map &map, DistMap &distMap){
   switch (GvdConfig::get()->connectivityMethod) {
     case 1:
       return !isObstacleGenerated(p,distMap,map);
@@ -74,7 +74,7 @@ bool Gvd::isConnectivityAux(Pos p){
 
 // returns a boolean matrix, a cell is true if it should belong to the GvdGraph
 // and false otherwise
-GridGvd getGridGvd(DistMap& distMap, StateGrid& sg, Int simplification) {
+GridGvd getGridGvd(DistMap& distMap, Map& map, Int simplification) {
   // Initialize grid GVD
   GridGvd gridGvd(distMap.size(), false);
   GridGvd obstGridGvd(distMap.size(), false);
@@ -100,7 +100,7 @@ GridGvd getGridGvd(DistMap& distMap, StateGrid& sg, Int simplification) {
         gridGvd[p] =  distMap[p].sources.size() > 1 || disconnectsOnRemoval(p, gridGvd);
         break;
       case 2:
-        gridGvd[p] =  (!connectivityAux(p,sg,distMap) && distMap[p].sources.size() > 1) || disconnectsOnRemoval(p, gridGvd);
+        gridGvd[p] =  (!connectivityAux(p,map,distMap) && distMap[p].sources.size() > 1) || disconnectsOnRemoval(p, gridGvd);
         break;
       case 3:
         gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 

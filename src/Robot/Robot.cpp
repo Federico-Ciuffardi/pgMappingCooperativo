@@ -17,8 +17,8 @@ Bid Robot::getBid(Auction msg) {
   // turn rosmsg Graph to GVD lib Graph
   gvd = toGraph<GvdVecGraph>(msg.gvd);
 
-  // Convert the occupancy grid into stateGrid
-  StateGrid stateGrid = toStateGrid(occupancyGrid);
+  // Convert the occupancy grid into Map
+  Map map = toMap(occupancyGrid);
 
   // Robot position
   /// Get the current Robot pos on the occupancy map frame
@@ -28,7 +28,7 @@ Bid Robot::getBid(Auction msg) {
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
   /// place on the GVD)
-  if(!addToGraph(robotBidPos, gvd, stateGrid)){
+  if(!addToGraph(robotBidPos, gvd, map)){
     gvd.addV(robotBidPos);
   }
 
@@ -59,7 +59,7 @@ Bid Robot::getBid(Auction msg) {
   }
 
   /// add the non-trivial frontiers to the gvd
-  addToGraph(nonTrivialFrontiers, gvd, stateGrid);
+  addToGraph(nonTrivialFrontiers, gvd, map);
 
   // get the path from the robotBidPos to each non-trivial frontier
   boost::tie(nonTrivialPaths, nonTrivialPathLenght) = gvd.getMultiPath(robotBidPos, nonTrivialFrontiers);
@@ -140,13 +140,13 @@ bool addToGraphBase(list<Pos> &path, GvdVecGraph &graph) {
 }
 
 // Generates a connection from each p in posSet to the graph that complies with the 
-// traversability stablished on the stateGrid.
+// traversability stablished on the Map.
 //
 // Returns the set of points from where the graph is accesible. 
-void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid) {
+void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, Map& map) {
   list<list<Pos>> paths;
   for (Pos p : posSet) {
-    paths.push_back(graph.findPath(p, stateGrid, {Occupied}));
+    paths.push_back(graph.findPath(p, map, {Occupied}));
   }
   for (list<Pos> path : paths){
     addToGraphBase(path, graph);
@@ -154,11 +154,11 @@ void Robot::addToGraph(PosSet& posSet, GvdVecGraph& graph, StateGrid& stateGrid)
 }
 
 // Generates a connection from p to the graph that complies with the traversability stablished
-// on the stateGrid.
+// on the Map.
 //
 // Returns true if graph is accesible from p and false otherwise 
-bool Robot::addToGraph(Pos p, GvdVecGraph& graph, StateGrid& stateGrid ) {
-  list<Pos> path = graph.findPath(p, stateGrid, {Occupied});
+bool Robot::addToGraph(Pos p, GvdVecGraph& graph, Map& map ) {
+  list<Pos> path = graph.findPath(p, map, {Occupied});
 
   return addToGraphBase(path, graph);
 }

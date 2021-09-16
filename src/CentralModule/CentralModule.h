@@ -24,8 +24,8 @@
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
 vector<Pos> embed(vector<Pos> &from, vector<Pos> &to);
 bool contains(vector<Pos> &centers, Float radius, vector<Pos> &points);
-vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables);
-vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables);
+vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& map, vector<CellState> nonTraversables);
+vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& map, vector<CellState> nonTraversables);
 
 enum centralMouleState { WaitingAuction = 1, WaitingBids = 2, WaitingFirstBid=3, Resolving = 4 };
 
@@ -94,7 +94,7 @@ class CentralModule {
   int assignmentId;
 
   // Map related
-  StateGrid stateGrid;
+  Map map;
 
   // frontier related
   boost::unordered_set<Pos> frontiers;

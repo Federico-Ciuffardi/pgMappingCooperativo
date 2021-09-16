@@ -252,34 +252,34 @@ Quaternion toQuaternion(Vector2<T> v){
 }
 
 /////////////////////////////
-// StateGrid GVD/src/Map.h //
+// Map GVD/src/Map.h //
 /////////////////////////////
 
-// get stateGrid from occupancy grid, set the known cells count on the count attribute 
-inline StateGrid toStateGrid(nav_msgs::OccupancyGrid &og, int* count = NULL) {
+// get map from occupancy grid, set the known cells count on the count attribute 
+inline Map toMap(nav_msgs::OccupancyGrid &og, int* count = NULL) {
   int threshold = 50;
 
   pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
-  StateGrid stateGrid(mapSize);
+  Map map(mapSize);
 
   if(count) (*count) = 0;
 
-  for (Pos p : stateGrid) {
+  for (Pos p : map) {
     int occupancyCertantyPercentage = og.data[toInt(p, mapSize.first)];
     if(occupancyCertantyPercentage == -1){
-      stateGrid[p] = Unknown;
+      map[p] = Unknown;
     }else if(occupancyCertantyPercentage <= threshold){
-      stateGrid[p] = Free;
+      map[p] = Free;
       if(count) (*count)++;
     } else if(occupancyCertantyPercentage > threshold) {
-      stateGrid[p] = Occupied;
+      map[p] = Occupied;
       if(count) (*count)++;
     } else {
       FAIL("invalid occupancyCertantyPercentage: " << occupancyCertantyPercentage);
     }
   }
 
-  return stateGrid;
+  return map;
 }
 
 /////////////////////////////////

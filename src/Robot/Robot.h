@@ -62,7 +62,7 @@ class Robot {
   int lastAssignmentId = -1;
   int lastAuctionId = -1;
   nav_msgs::OccupancyGrid occupancyGrid;
-  StateGrid grid;
+  Map grid;
   Point position;
   Quaternion orientation;
   int meterToCells;
@@ -81,7 +81,7 @@ class Robot {
   GoalList getPathTo(Pos p);
 
   // Aux
-  bool addToGraph(Pos, GvdVecGraph& graph, StateGrid&);
-  void addToGraph(PosSet&, GvdVecGraph& graph, StateGrid&);
+  bool addToGraph(Pos, GvdVecGraph& graph, Map&);
+  void addToGraph(PosSet&, GvdVecGraph& graph, Map&);
 
 };

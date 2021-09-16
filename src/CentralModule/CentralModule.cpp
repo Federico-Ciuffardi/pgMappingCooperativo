@@ -46,27 +46,27 @@ void CentralModule::updateMap(const OccupancyGridUpdateConstPtr& update) {
 
 // Get the info to start an Auction
 Auction CentralModule::getAuctionInfo() {
-  // Convert a occupancyGrid and a frontier list to a stateGrid
-  cout << "debug :: convert a occupancyGrid and a frontier list to a stateGrid" << endl;
-  stateGrid = toStateGrid(occupancyGrid, &cellCount);
+  // Convert a occupancyGrid and a frontier list to a map
+  cout << "debug :: convert a occupancyGrid and a frontier list to a map" << endl;
+  map = toMap(occupancyGrid, &cellCount);
 
   /// frontiers
   frontiers.clear();
-  for(Pos pos : stateGrid){
+  for(Pos pos : map){
 
     // is Free?
-    if(stateGrid[pos] != Free) continue;
+    if(map[pos] != Free) continue;
 
     // hasUnknowNeighbor?
     bool hasUnknowNeighbor = false;
-    for( Pos posN : stateGrid.adj(pos,{Occupied})){
-        hasUnknowNeighbor = stateGrid[posN] == Unknown;
+    for( Pos posN : map.adj(pos,{Occupied})){
+        hasUnknowNeighbor = map[posN] == Unknown;
         if(hasUnknowNeighbor) break;
     }
     if(!hasUnknowNeighbor) continue;
 
     // all conditions passed
-    stateGrid[pos] = Frontier;
+    map[pos] = Frontier;
     frontiers.insert(pos);
     
   }
@@ -75,7 +75,7 @@ Auction CentralModule::getAuctionInfo() {
   if(frontierSimplificationMethod>0){
     // Calculate the connectedComponents of frontiers
     if (!frontierConComps) {
-      frontierConComps = new ConnectedComponents(stateGrid, notFrontier);
+      frontierConComps = new ConnectedComponents(map, notFrontier);
     }
     frontierConComps->update();
 
@@ -124,18 +124,18 @@ Auction CentralModule::getAuctionInfo() {
           significativeFrontiers = affinityPropagation(frontierConCompVec, sensorRange);
          }break;
         case 4:{
-          significativeFrontiers = getRandomSignificativeFroniers(frontierConCompSet, sensorRange, stateGrid, {Occupied});
+          significativeFrontiers = getRandomSignificativeFroniers(frontierConCompSet, sensorRange, map, {Occupied});
         }break;
         case 5:{
-          significativeFrontiers = getSignificativeFroniers(frontierConCompSet, sensorRange, stateGrid, {Occupied});
+          significativeFrontiers = getSignificativeFroniers(frontierConCompSet, sensorRange, map, {Occupied});
         }break;
       }
 
       // unmark all the forntiers
-      for(Pos f : frontierConCompSet) stateGrid[f] = Free;
+      for(Pos f : frontierConCompSet) map[f] = Free;
      
       // mark only the significant frontiers
-      for(Pos f : significativeFrontiers) stateGrid[f] = Frontier;
+      for(Pos f : significativeFrontiers) map[f] = Frontier;
     }
   }
   // Construct the acution rosmsg
@@ -144,7 +144,7 @@ Auction CentralModule::getAuctionInfo() {
   // Get the info for the auction (topological map), and the GVD as a subproduct
   cout << "debug :: get topoMap" << endl;
   if(!topoMap){
-    topoMap = new TopoMap(stateGrid);
+    topoMap = new TopoMap(map);
   }
   topoMap->update();
 
@@ -251,14 +251,14 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
 
 // aux
 
-bool unobstructedLine(Pos p1, Pos p2, StateGrid &sg, vector<CellState> obstructedTypes){
+bool unobstructedLine(Pos p1, Pos p2, Map &map, vector<CellState> obstructedTypes){
   for ( Pos p : discretizeLine(p1,p2)){
-    if(is_elem(sg[p], obstructedTypes)) return false;
+    if(is_elem(map[p], obstructedTypes)) return false;
   }
   return true;
 }
 
-PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, StateGrid &sg, vector<CellState> nonTraversables){
+PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, Map &map, vector<CellState> nonTraversables){
   Float radiusSquared = radius*radius;
 
   PosSet circumference;
@@ -274,12 +274,12 @@ PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, State
 
     visited.insert(p);
 
-    if(is_elem(p,toCover) && unobstructedLine(c, p, sg, {Occupied})){
+    if(is_elem(p,toCover) && unobstructedLine(c, p, map, {Occupied})){
       interior.insert(p);
     }
 
     Float pDist = p.distanceToSquared(c);
-    for (Pos pN : sg.adj(p,nonTraversables)) {
+    for (Pos pN : map.adj(p,nonTraversables)) {
       Float pNDist = pN.distanceToSquared(c);
 
       if (pDist < pNDist){
@@ -296,7 +296,7 @@ PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, State
 
 // frontier simplification
 
-vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
+vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& map, vector<CellState> nonTraversables){
   vector<Pos> frontiersVec = toVec(frontiersSet);
   shuffle(std::begin(frontiersVec), std::end(frontiersVec), default_random_engine(2021));
 
@@ -314,13 +314,13 @@ vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, S
 
     significativeFrontiers.push_back(significativeFrontier);
 
-    accumCircle(coveredFrontiers, significativeFrontier, radius, frontiersSet, sg, nonTraversables);
+    accumCircle(coveredFrontiers, significativeFrontier, radius, frontiersSet, map, nonTraversables);
   }
 
   return significativeFrontiers;
 }
 
-vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGrid& sg, vector<CellState> nonTraversables){
+vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& map, vector<CellState> nonTraversables){
   PosSet remainingFrontiers = frontiersSet;
   vector<Pos> significativeFrontiers;
   std::queue<Pos> endPoints;
@@ -332,7 +332,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
     PosSet coveredFrontiers;
     PosSet newEndPoints;
     /// set the new coveredFrontiers
-    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius + 0.5, remainingFrontiers, sg, nonTraversables);
+    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius + 0.5, remainingFrontiers, map, nonTraversables);
     substract(remainingFrontiers,coveredFrontiers);
     /// get new end points
     for(Pos p : newEndPoints){
@@ -343,8 +343,8 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
   // Set the frontiers adjacent to obstacles as the first endPoints
   for(Pos frontier : frontiersSet){
     bool hasObstructedNeighbor = false;
-    for(Pos frontierNeighbor : sg.adj(frontier)){
-      hasObstructedNeighbor = sg[frontierNeighbor] == Occupied;
+    for(Pos frontierNeighbor : map.adj(frontier)){
+      hasObstructedNeighbor = map[frontierNeighbor] == Occupied;
       if(hasObstructedNeighbor){
         endPoints.push(frontier);
         break;
@@ -367,7 +367,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
 
     // get the distance to from the uncoveredFrontier to it farthest frontier (no further than radius*2)
     PosSet circle;
-    accumCircle(circle, uncoveredFrontier, radius*2, remainingFrontiers, sg, notFrontier);
+    accumCircle(circle, uncoveredFrontier, radius*2, remainingFrontiers, map, notFrontier);
 
     Float maxDist = -INF;
     for(Pos p : circle){
@@ -377,7 +377,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, StateGr
 
     // get significativeFrontier candidates
     circle.clear();
-    PosSet candidates = accumCircle(circle, uncoveredFrontier, maxDist/2 - 1, remainingFrontiers, sg, nonTraversables);
+    PosSet candidates = accumCircle(circle, uncoveredFrontier, maxDist/2 - 1, remainingFrontiers, map, nonTraversables);
 
     // get the significativeFrontier
     Pos significativeFrontier;

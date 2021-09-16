@@ -15,7 +15,7 @@ using namespace boost;
 /////////////////
 // Definitions //
 /////////////////
-bool connectivityAux(Pos p , StateGrid& sg, DistMap& distMap);
+bool connectivityAux(Pos p , Map& map, DistMap& distMap);
 
 typedef Grid<bool> GridGvd;
 struct GvdVertexProperty {
