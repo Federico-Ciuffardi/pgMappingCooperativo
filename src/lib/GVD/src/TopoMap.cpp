@@ -10,6 +10,10 @@
 // Aux //
 /////////
 
+bool isValid(CellState cellState){
+  return cellState != Frontier && cellState != Occupied && cellState != Unknown;
+}
+
 // retruns true if the vertex associated with p is a distance local minimum vertex.
 //
 // Local minimum here means:
@@ -95,6 +99,14 @@ TopoMap::TopoMap(MapType& map) : map(map){
 // also updates its distMap and gvd
 void TopoMap::update(){
   // Clean old result
+  for( auto it : criticalInfos ){
+    Pos critical = it.first;
+    CriticalInfo criticalInfo = it.second;
+    map[critical] = Free;
+    for(Pos p : criticalInfo.criticalLines){
+      map[p] = Free;
+    }
+  }
   criticalInfos.clear();
 
   // Get new result / replace old
@@ -113,10 +125,10 @@ void TopoMap::update(){
     Pos p = graphGvd[v].p;
 
     // skip vertices that:
-    if( map[p] != Free                               || // are free
+    if(!isValid(map[p])                              || // cellState invalid
        !graphGvd[v].isLocalMin                       || // are not local min
         connectivityAux(p,map,*distMap)              || // are connectivityAux
-       !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // or do not satisfy degreeConstrain
+       !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
       continue;
 
     // Filter critical lines
@@ -137,16 +149,15 @@ void TopoMap::update(){
           criticalLineEnds.erase(bp2);
           continue;
         } 
-        // Set critical lines
       }
     }
 
-    // Skip if less than 2 critial lines left
+    // Skip if less than 2 critical lines left
     if(criticalLineEnds.size() < 2) continue;
 
     for(Pos endPoint : criticalLineEnds){
       for(Pos linePos : discretizeLine(p,endPoint)){
-        if(map[linePos] == Free){
+        if(isValid(map[linePos])){
           map[linePos] = CriticalLine;
           criticalInfo.criticalLines.insert(linePos);
         }

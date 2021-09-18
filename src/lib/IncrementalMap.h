@@ -1,0 +1,40 @@
+#pragma once
+
+#include "GVD/src/data/Pos.h"
+#include "GVD/src/Map.h"
+#include "nav_msgs/OccupancyGrid.h"
+#include "map_msgs/OccupancyGridUpdate.h"
+
+using namespace nav_msgs;
+using namespace map_msgs;
+
+class IncrementalMap{
+ private:
+  //////////
+  // vars //
+  //////////
+  
+  ///////////////
+  // Functions //
+  ///////////////
+
+ public:
+  //////////
+  // vars //
+  //////////
+
+  nav_msgs::OccupancyGrid occupancyGrid;
+  
+  Map map;
+
+  boost::unordered_map<Pos,Map::CellType> lastCellState;
+  boost::unordered_map<Pos, int> knowNeighbors;
+
+  ///////////////
+  // Functions //
+  ///////////////
+
+  void update(Pos p, CellState cellState);
+  void update(const OccupancyGridConstPtr& newOccupancyGrid);
+  void update(const OccupancyGridUpdateConstPtr& update);
+};

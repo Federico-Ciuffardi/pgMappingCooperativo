@@ -1,4 +1,5 @@
 #include "MapMerger.h"
+#include "../lib/utils.h"
 #include <cstdint>
 #include "map_msgs/OccupancyGridUpdate.h"
 
@@ -11,14 +12,6 @@ MapMerger::MapMerger() {}
 /////////
 // Aux //
 /////////
-
-bool isUnknown(int8_t data){
-  return data == -1;
-}
-
-bool isOccupied(int8_t data){
-  return data >= 50;
-}
 
 bool MapMerger::isInitialized(){
   return !mapsArrived.empty();

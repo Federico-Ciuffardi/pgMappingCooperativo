@@ -36,46 +36,32 @@ void CentralModule::setState(centralMouleState newState) {
 // API //
 /////////
 
-void CentralModule::updateMap(const OccupancyGrid& newOccupancyGrid) {
-  this->occupancyGrid = newOccupancyGrid;
+void CentralModule::updateMap(const OccupancyGridConstPtr& newOccupancyGrid) {
+  map.update(newOccupancyGrid);
 }
 
 void CentralModule::updateMap(const OccupancyGridUpdateConstPtr& update) {
-  updateOccupancyGrid(occupancyGrid, *update);
+  map.update(update);
 }
 
 // Get the info to start an Auction
 Auction CentralModule::getAuctionInfo() {
   // Convert a occupancyGrid and a frontier list to a map
   cout << "debug :: convert a occupancyGrid and a frontier list to a map" << endl;
-  map = toMap(occupancyGrid, &cellCount);
 
-  /// frontiers
+  // Get the frontiers from the map
   frontiers.clear();
-  for(Pos pos : map){
-
-    // is Free?
-    if(map[pos] != Free) continue;
-
-    // hasUnknowNeighbor?
-    bool hasUnknowNeighbor = false;
-    for( Pos posN : map.adj(pos,{Occupied})){
-        hasUnknowNeighbor = map[posN] == Unknown;
-        if(hasUnknowNeighbor) break;
+  for(Pos pos : map.map){
+    if(map.map[pos] == Frontier){
+      frontiers.insert(pos);
     }
-    if(!hasUnknowNeighbor) continue;
-
-    // all conditions passed
-    map[pos] = Frontier;
-    frontiers.insert(pos);
-    
   }
 
   cout << "debug :: get significant frontiers" << endl;
-  if(frontierSimplificationMethod>0){
+  if(frontierSimplificationMethod > 0){
     // Calculate the connectedComponents of frontiers
     if (!frontierConComps) {
-      frontierConComps = new ConnectedComponents(map, notFrontier);
+      frontierConComps = new ConnectedComponents(map.map, notFrontier);
     }
     frontierConComps->update();
 
@@ -124,30 +110,35 @@ Auction CentralModule::getAuctionInfo() {
           significativeFrontiers = affinityPropagation(frontierConCompVec, sensorRange);
          }break;
         case 4:{
-          significativeFrontiers = getRandomSignificativeFroniers(frontierConCompSet, sensorRange, map, {Occupied});
+          significativeFrontiers = getRandomSignificativeFroniers(frontierConCompSet, sensorRange, map.map, {Occupied});
         }break;
         case 5:{
-          significativeFrontiers = getSignificativeFroniers(frontierConCompSet, sensorRange, map, {Occupied});
+          significativeFrontiers = getSignificativeFroniers(frontierConCompSet, sensorRange, map.map, {Occupied});
         }break;
       }
 
       // unmark all the forntiers
-      for(Pos f : frontierConCompSet) map[f] = Free;
+      for(Pos f : frontierConCompSet) map.map[f] = Free;
      
       // mark only the significant frontiers
-      for(Pos f : significativeFrontiers) map[f] = Frontier;
+      for(Pos f : significativeFrontiers) map.map[f] = Frontier;
     }
   }
-  // Construct the acution rosmsg
-  Auction auctionInfo;
 
   // Get the info for the auction (topological map), and the GVD as a subproduct
   cout << "debug :: get topoMap" << endl;
   if(!topoMap){
-    topoMap = new TopoMap(map);
+    topoMap = new TopoMap(map.map);
   }
   topoMap->update();
 
+  // Restore frontiers to the non simplified ones
+  for(Pos p : frontiers){
+    map.map[p] = Frontier;
+  }
+
+  // Construct the acution rosmsg
+  Auction auctionInfo;
 
   // Turn the boost GVD to a ros message
   GvdGraph& gvd = *(topoMap->gvd->graphGvd);
@@ -244,6 +235,7 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
   // return the info of the assignment bundled as a ros message
   return resolutionRosMessages;
 }
+
 
 ////////////////////////////////////
 // custom frontier simplification //

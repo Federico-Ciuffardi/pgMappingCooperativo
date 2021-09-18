@@ -251,31 +251,49 @@ Quaternion toQuaternion(Vector2<T> v){
   return tf::createQuaternionMsgFromYaw(v.angle());
 }
 
-/////////////////////////////
+///////////////////
+// occupancyGrid //
+///////////////////
+inline bool isUnknown(int8_t data){
+  return data == -1;
+}
+
+inline bool isOccupied(int8_t data){
+  return data >= 50;
+}
+
+inline bool isFree(int8_t data){
+  return !isOccupied(data) && !isUnknown(data);
+}
+
+
+///////////////////////
 // Map GVD/src/Map.h //
-/////////////////////////////
+///////////////////////
+
+// from occupancy probability to CellType
+inline Map::CellType toCellType(uint8_t data){
+  if(isUnknown(data)){
+    return Unknown;
+  } else if(isOccupied(data)) {
+    return Occupied;
+  }else {
+    return Free;
+  }
+}
 
 // get map from occupancy grid, set the known cells count on the count attribute 
 inline Map toMap(nav_msgs::OccupancyGrid &og, int* count = NULL) {
-  int threshold = 50;
-
   pair<Int,Int> mapSize = make_pair(og.info.width, og.info.height);
   Map map(mapSize);
 
   if(count) (*count) = 0;
 
-  for (Pos p : map) {
-    int occupancyCertantyPercentage = og.data[toInt(p, mapSize.first)];
-    if(occupancyCertantyPercentage == -1){
-      map[p] = Unknown;
-    }else if(occupancyCertantyPercentage <= threshold){
-      map[p] = Free;
-      if(count) (*count)++;
-    } else if(occupancyCertantyPercentage > threshold) {
-      map[p] = Occupied;
-      if(count) (*count)++;
-    } else {
-      FAIL("invalid occupancyCertantyPercentage: " << occupancyCertantyPercentage);
+  for (int i = 0; i<og.data.size(); i++) {
+    Pos p = toPos(i,og.info.width);
+    map[p] = toCellType(og.data[i]);
+    if(count) {
+      *count += map[p] != Unknown;
     }
   }
 

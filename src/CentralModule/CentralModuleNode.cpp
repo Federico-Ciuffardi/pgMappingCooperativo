@@ -241,7 +241,7 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
   rvizHelper.mark(frontierMarkerPoints, "frontiers");
 
   /// map not an rviz marker but used just to mark
-  mapMarkerPub.publish(centralModule.occupancyGrid);
+  mapMarkerPub.publish(centralModule.map.occupancyGrid);
 }
 
 ///////////////////
@@ -267,7 +267,7 @@ void startAuction() {
   }
 
   // set markers for rviz
-  setRvizMarks(auction, centralModule.occupancyGrid.info);
+  setRvizMarks(auction, centralModule.map.occupancyGrid.info);
 
   // As the bid was started bids can be received
   /// Reset auction variables
@@ -412,7 +412,7 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 
 bool first = true;
 void mapCallBack(const OccupancyGridConstPtr& msg) {
-  centralModule.updateMap(*msg);
+  centralModule.updateMap(msg);
   if (first){
     firstAuction = ros::Time::now();
     first = false;

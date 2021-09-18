@@ -34,7 +34,10 @@ struct Grid{
 
   // returns grid size
   pair<Int, Int> size() {
-    return pair<Int, Int>(grid.size(), grid.at(0).size());
+    
+    Int xSize = grid.size();
+    Int ySize = xSize == 0 ? 0 : grid.at(0).size();
+    return pair<Int, Int>(xSize, ySize);
   }
 
   // true if Pos is inside the grid bounds

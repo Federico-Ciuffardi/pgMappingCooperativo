@@ -13,8 +13,8 @@
 #include <opencv2/highgui.hpp>
 #include <fstream>
 #include <ctime>
-#include "conversion.h"
 #include "map_msgs/OccupancyGridUpdate.h"
+#include "conversion.h"
 
 using namespace std;
 
@@ -23,7 +23,6 @@ inline Float minAngleRep(Float angle){
 }
 
 inline bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width,int clearence = 0){
-  int threshold = 50;
   for (Pos p : discretizeLine(p1,p2)){
     if(p == p2 || p == p1) continue;
 
@@ -31,7 +30,7 @@ inline bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int wid
       for(int y = -clearence; y <= clearence; y++){
         Pos pN = p + Pos(x,y);
         int pNInd = toInt(pN,width);
-        if(pNInd < data.size() && data[pNInd] >= threshold){
+        if(pNInd < data.size() && isOccupied(data[pNInd])){
           return false;
         }
       }
@@ -51,6 +50,10 @@ inline void updateOccupancyGrid(OccupancyGrid& occupancyGrid, const OccupancyGri
     occupancyGrid.data[globalInd] = update.data[updateInd];
   }
 }
+
+/////////////
+// logging //
+/////////////
 
 inline string get_current_date_and_time(){
   time_t rawtime;

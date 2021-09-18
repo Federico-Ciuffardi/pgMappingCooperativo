@@ -19,6 +19,7 @@
 #include "../lib/RvizHelper.h"
 #include "../lib/Auctioneer.h"
 #include "../lib/graph/gnuplot.h"
+#include "../lib/IncrementalMap.h"
 #include "map_msgs/OccupancyGridUpdate.h"
 
 vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance = 0);
@@ -93,9 +94,6 @@ class CentralModule {
   int auctionId;
   int assignmentId;
 
-  // Map related
-  Map map;
-
   // frontier related
   boost::unordered_set<Pos> frontiers;
   ConnectedComponents* frontierConComps = NULL;
@@ -113,8 +111,6 @@ class CentralModule {
   // vars //
   //////////
 
-  // map related
-  nav_msgs::OccupancyGrid occupancyGrid;
 
   // Auction related
   TopoMap* topoMap = NULL;
@@ -122,6 +118,9 @@ class CentralModule {
 
   //log related
   int cellCount = 0;
+
+  // Map related
+  IncrementalMap map;
 
   ///////////////
   // Functions //
@@ -135,7 +134,7 @@ class CentralModule {
   void setState(centralMouleState newState);
 
   // API 
-  void updateMap(const OccupancyGrid&);
+  void updateMap(const OccupancyGridConstPtr&);
   void updateMap(const OccupancyGridUpdateConstPtr& update);
   Auction getAuctionInfo();
   boost::unordered_map<string,Assignment> assign();
