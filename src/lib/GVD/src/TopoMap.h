@@ -40,6 +40,7 @@ struct TopoMap{
 
   // Functions
   void update();
+  void update(MapUpdatedCells mapUpdatedCells);
 
   // Destructor
   ~TopoMap();

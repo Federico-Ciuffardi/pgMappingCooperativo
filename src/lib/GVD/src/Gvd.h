@@ -53,6 +53,9 @@ struct Gvd {
   bool isConnectivityAux(Pos p);
 
   void update();
+  void update(MapUpdatedCells mapUpdatedCells);
+
+  void updateGvdGraph(Int simplification);
 
   // Destructor
   ~Gvd();

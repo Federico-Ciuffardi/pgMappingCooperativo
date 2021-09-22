@@ -52,12 +52,12 @@ void IncrementalMap::update(Pos p, CellState newCellState) {
   if(oldState == newCellState) return; // skip if the update does not change the current value (frontier -> free -> frontier)
 
   // Make the update effective
-  if(is_elem(p,lastCellState)){
-    if(lastCellState[p] == newCellState){
-      lastCellState.erase(p);
+  if(is_elem(p,updatedCells)){
+    if(updatedCells[p] == newCellState){
+      updatedCells.erase(p);
     }
   }else{
-     lastCellState[p] = oldState;
+     updatedCells[p] = oldState;
   }
   map[p] = newCellState;
 

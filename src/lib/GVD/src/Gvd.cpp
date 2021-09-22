@@ -11,9 +11,18 @@
 // Aux //
 /////////
 
+template<typename CellType>
+int neighbors(Pos p, Grid<CellType>& gridGraph) {
+  int res = 0;
+  for(Pos pN : gridGraph.adj(p)){
+    res += gridGraph[pN];
+  }
+  return res;
+}
+
 /* If removing `p` from  disconects the graph represented with the Grid then  */
 template<typename CellType>
-int disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
+bool disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
   vector<Pos> neighbor = gridGraph.neighborDisplacement;
 
   int res = 0;
@@ -77,7 +86,6 @@ bool Gvd::isConnectivityAux(Pos p){
 GridGvd getGridGvd(DistMap& distMap, Map& map, Int simplification) {
   // Initialize grid GVD
   GridGvd gridGvd(distMap.size(), false);
-  GridGvd obstGridGvd(distMap.size(), false);
 
   // Set the candidates to belong to the GVD
   DistPosQueue gvdCandidatesQueue;
@@ -109,6 +117,66 @@ GridGvd getGridGvd(DistMap& distMap, Map& map, Int simplification) {
   }
   return gridGvd;
 }
+
+void Gvd::updateGvdGraph(Int simplification) {
+
+  for (Pos p : distMap->modified){
+    gridGvd[p] = false;
+    graphGvd->removeV(p);
+  }
+
+  // Set the adjacent to the waveCrashPoss that belong to the gvd to be removed if not needed
+  for (Pos p : distMap->waveCrashPoss){
+    for(Pos pN : map.adj(p,{Occupied})){
+      if(gridGvd[pN]) distMap->waveCrashPoss.insert(pN);
+    }
+  }
+
+  // Set the candidates to belong to the GVD
+  DistPosQueue gvdCandidatesQueue;
+  for (Pos p : distMap->waveCrashPoss){
+    gridGvd[p] = true;
+    gvdCandidatesQueue.push(make_pair((*distMap)[p].distance, p));
+  }
+
+  // Simplify GVD
+  while (!gvdCandidatesQueue.empty()) {
+    Float d = gvdCandidatesQueue.top().first;
+    Pos p = gvdCandidatesQueue.top().second;
+    gvdCandidatesQueue.pop();
+
+    switch (simplification) {
+      case 0:
+        gridGvd[p] = true;
+        break;
+      case 1:
+        gridGvd[p] =  existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd);
+        break;
+      case 2:
+        gridGvd[p] = (!connectivityAux(p,map,*distMap) && (*distMap)[p].sources.size() > 1 && existsNonAdjacent(basisPoints(p,*distMap))) || disconnectsOnRemoval(p, gridGvd);
+        break;
+      case 3:
+        gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 
+        break;
+    }
+
+    if(gridGvd[p]){
+      GvdGraph::Vertex v;
+      bool inserted;
+      tie(v,inserted) = graphGvd->addV(p);
+      if(inserted){
+        for(Pos pN : map.adj(p)){
+          if(graphGvd->has(pN)){
+            GvdGraph::Vertex vN  = graphGvd->idVertexMap[pN];
+            graphGvd->addE(v,vN);
+            graphGvd->addE(vN,v);
+          }
+        }
+      }
+    }
+  }
+}
+
 
 // increase the sparseness of the graph by removing redundant edges:
 //
@@ -193,6 +261,7 @@ Gvd::Gvd(MapType& map) : map(map){
       this->distMap = new DistMap(map,{Occupied},{Occupied});
       break;
   }
+  gridGvd = GridGvd (distMap->size(), false);
 }
 
 // also updates its distMap
@@ -221,6 +290,21 @@ void Gvd::update(){
   cout << "debug :: Generate graphGVD" << endl;
   graphGvd = new GvdGraph(gridGvd, map, distMap->nonTraversables);
   cout << "debug :: cleanUp" << endl;
+
+  cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
+
+}
+
+void Gvd::update(MapUpdatedCells mapUpdatedCells){
+  if(!graphGvd){
+    graphGvd = new GvdGraph();
+  }
+
+  // Get new result / replace old
+  cout << "debug :: Update distMap" << endl;
+  distMap->update(mapUpdatedCells);
+  cout << "debug :: updateGvdGraph" << endl;
+  updateGvdGraph(GvdConfig::get()->vertexSimplificationMethod);
 
   cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
 

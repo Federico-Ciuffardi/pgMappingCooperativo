@@ -147,7 +147,7 @@ ostream& operator<<(ostream& out, Grid<CellType>& grid){
   pair<Int,Int> size = grid.size(); 
   for(int x = 0; x < size.first ; x++){
     for(int y = 0; y < size.second; y++){
-      out<<"|"<<grid[x][y];
+      out<<"|"<<Pos(x,y)<<" "<<grid[x][y];
     }
     out<<"|"<<endl;
   }

@@ -130,7 +130,8 @@ Auction CentralModule::getAuctionInfo() {
   if(!topoMap){
     topoMap = new TopoMap(map.map);
   }
-  topoMap->update();
+  /* topoMap->update(map.updatedCells); */
+  topoMap->update(map.updatedCells);
 
   // Restore frontiers to the non simplified ones
   for(Pos p : frontiers){
@@ -167,6 +168,9 @@ Auction CentralModule::getAuctionInfo() {
 
   // Increment the auction ID as a new auction will begin
   auctionId++;
+
+  // clear map updates
+  map.updatedCells.clear();
 
   // return the info of the auction (and the GVD) bundled as a ros message
   return auctionInfo;

@@ -27,7 +27,8 @@ class IncrementalMap{
   
   Map map;
 
-  boost::unordered_map<Pos,Map::CellType> lastCellState;
+  MapUpdatedCells updatedCells; // cell -> last cell
+
   boost::unordered_map<Pos, int> knowNeighbors;
 
   ///////////////

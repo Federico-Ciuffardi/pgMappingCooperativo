@@ -11,7 +11,7 @@ public:
   // 1: unknown cell generate waves (suitable for indoor)
   // 2: unknown cells are considered unobstructed and map is surrounded with obstacles (suitable for indoor and outdoor)
   // 3: unknown cells are considered unobstructed (suitable for indoor)
-  int connectivityMethod = 1;
+  int connectivityMethod = 3;
 
   // GVD vertex simplification: how hard are the GVD vercices eroded/deleted to
   // simplify or thin the GVD:

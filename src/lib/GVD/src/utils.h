@@ -121,6 +121,24 @@ inline vector<Pos> discretizeLine(Pos p1, Pos p2){
 // Collections utils //
 ///////////////////////
 
+/////
+/// adjacency
+//
+inline bool existsNonAdjacent(PosSet ps1, PosSet ps2){
+  for(Pos p1 : ps1){
+    for(Pos p2 : ps2){
+        if(!p1.adjacent(p2)) return true;
+    }
+  }
+  return false;
+}
+
+inline bool existsNonAdjacent(PosSet ps){
+  return existsNonAdjacent(ps, ps);
+}
+
+
+
 ////
 /// arg_min: get the arg that minimizes the map
 //  PRECOND: map not empty
@@ -178,6 +196,18 @@ void substract(boost::unordered_set<T>& s1, boost::unordered_set<T> s2) {
   /*   s1.erase(s2.begin(),s2.end()); */
 }
 
+template <typename T>
+void substract(vector<T>& v1, vector<T> v2) {
+  vector<T> v1Copy = v1;
+  v1.clear();
+  for( T t : v1Copy){
+    if(!is_elem(t,v2)){
+      v1.push_back(t);
+    }
+  }
+  /* if(!s2.empty()) */
+  /*   s1.erase(s2.begin(),s2.end()); */
+}
 
 ////
 /// accum: accumulate all the elems of the second parameter into the first (no copies are made)

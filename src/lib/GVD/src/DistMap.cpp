@@ -1,4 +1,5 @@
 #include "DistMap.h"
+#include <boost/unordered/unordered_set_fwd.hpp>
 #include <cmath>
 #include <limits>
 #include "Map.h"
@@ -33,6 +34,15 @@ ostream& operator<<(ostream& out, const DistMap::DistCell& cell) {
   return out;
 }
 
+void DistMap::DistCell::clear() {
+  sources.clear();
+  pseudoSources.clear();
+  distance = INF;
+
+  bool toRaise = false;
+  bool isCleared = true;
+}
+
 DistMap::DistMapType::reference DistMap::operator[](Pos p){
   return distMap.cell(p);
 }
@@ -41,7 +51,9 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
 // DistMap //
 /////////////
 
-// the boolean value indicates if the pseudo sources are modified
+// wave
+
+/// the boolean value indicates if the pseudo sources are modified
 bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
 
   PosSet pseudoSources;
@@ -49,16 +61,16 @@ bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
   for ( Pos candidatePseudoSource : distMap[waveP].sources){
     Float candidateDist = p.distanceTo(candidatePseudoSource);
 
+    // Skip if the difference of distance of the source and the pseudo sources is grater than 1
+    // a pseudo source should be a rounding error caused by discretization
+    if(abs(candidateDist - distMap[p].distance) > 1) continue;
+
     // Skip if there exist already a pseudo source closer than the candidates
     Float currentDist;
     if(!distMap[p].pseudoSources.empty()){
       currentDist = p.distanceTo(*distMap[p].pseudoSources.begin());
       if (candidateDist > currentDist) continue;
     }
-
-    // Skip if the difference of distance of the source and the pseudo sources is grater than 1
-    // a pseudo source should be a rounding error caused by discretization
-    if(abs(candidateDist - distMap[p].distance) > 1) continue;
 
     // Skip if adjacent to a source
     for(Pos pSource : distMap[p].sources){
@@ -92,82 +104,212 @@ bool setPseudoSourcesFromWave(Pos p, Pos waveP, DistMap& distMap){
   }
 }
 
-bool existsNonAdjacent(PosSet ps1, PosSet ps2){
-  for(Pos p1 : ps1){
-    for(Pos p2 : ps2){
-        if(!p1.adjacent(p2)) return true;
-    }
-  }
-  return false;
-}
-
-bool existsNonAdjacent(PosSet ps){
-  return existsNonAdjacent(ps, ps);
-}
-
 void checkWaveCrash(Pos p, Pos np, DistMap& distMap, PosSet& waveCrashPoss) {
-  // mehtod 3
   setPseudoSourcesFromWave(p, np, distMap); 
   setPseudoSourcesFromWave(np, p, distMap); 
 
   if (existsNonAdjacent(basisPoints(p, distMap)))  waveCrashPoss.insert(p);
   if (existsNonAdjacent(basisPoints(np, distMap))) waveCrashPoss.insert(np);
-
-  // method 2
-  /* if (distMap[p].sources.size()  > 1) waveCrashPoss.insert(p); */ 
-  /* if (distMap[np].sources.size() > 1) waveCrashPoss.insert(np); */
-  
-  /* if(setPseudoSourcesFromWave(p, np, distMap)) waveCrashPoss.insert(p); */ 
-  /* if(setPseudoSourcesFromWave(np, p, distMap)) waveCrashPoss.insert(np); */ 
-
-
-  // method 1
-  /* bool are_adj = true; */
-  /* for(Pos pSource : distMap[p].sources){ */
-  /*   for(Pos npSource : distMap[np].sources){ */
-  /*     are_adj = npSource.adjacent(pSource); // better than: `npSource == pSource || is_elem(pSource, distMap.adj(npSource));` */
-  /*     if(!are_adj) break; */
-  /*   } */
-  /*   if(!are_adj) break; */
-  /* } */
-
-  /* if(are_adj) return; */
-
-  /* if (distMap[p].distance > 0) { //(dist(s, obst_n) <= dist(n, obst_s)) &&  could add the multi obstacle variation */
-  /*   waveCrashPoss.insert(p); */
-  /*   distMap[p].crashingWaves.insert(np); */
-  /* } */
-  /* if (distMap[np].distance > 0) { //(dist(n, obst_s) <= dist(s, obst_n)) && could add the multi obstacle variation */ 
-  /*   waveCrashPoss.insert(np); */
-  /*   distMap[np].crashingWaves.insert(p); */
-  /* } */
 }
 
-pair<Int,Int> DistMap::size(){
-  return distMap.size();
+// recheck basisPoints of p
+bool DistMap::hasBasisPoint(Pos p){
+  filter(distMap[p].sources,      [this](Pos s){return !is_elem(map[s],sources);});
+  filter(distMap[p].pseudoSources,[this](Pos s){return !is_elem(map[s],sources);});
+
+  if(distMap[p].sources.empty()){
+    distMap[p].pseudoSources.clear();
+  }
+
+  return !distMap[p].sources.empty();
 }
 
-DistMap::DistMap(MapType& map, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives) : map(map){
- distMap = DistMapType(map.size()); 
- this->sources = sources;
- this->nonTraversables = nonTraversables;
- this->objectives = objectives;
+// sources
+void DistMap::removeSource(Pos p) {
+  distMap[p].clear();
+
+  distMap[p].toRaise = true;
+
+  open.push(DistPos(0, p));
+}
+
+void DistMap::setSource(Pos p) {
+  distMap[p].clear();
+
+  distMap[p].isCleared = false;
+  distMap[p].sources.insert(p);
+  distMap[p].distance = 0;
+
+  open.push(DistPos(0, p));
+}
+
+void DistMap::setConsistentBorders(Pos p){
+  for (Pos pN : map.adj(p)) {
+    if (hasBasisPoint(pN) && !is_elem(consistentBorders, pN)) {
+      open.push(DistPos(distMap[pN].distance, pN));
+      consistentBorders.insert(pN);
+    }
+  }
+}
+
+// update
+void DistMap::processLower(Pos p) {
+  modified.insert(p);
+
+  for (Pos pN : map.adj(p,nonTraversables)) {
+    if (distMap[pN].toRaise) continue; // optimization avoids unnecesary operations
+
+    modified.insert(pN);
+
+    Float minD;
+    PosSet minDSources;
+    tie(minD,minDSources) = closests(pN,distMap[p].sources);
+    if (minD < distMap[pN].distance) {
+      distMap[pN].distance = minD;
+      distMap[pN].sources = minDSources;
+      distMap[pN].pseudoSources.clear();
+      distMap[pN].isCleared = false;
+      open.push(DistPos(distMap[pN].distance, pN));
+    } else {
+      if (minD == distMap[pN].distance){
+        accum(distMap[pN].sources, minDSources);
+
+        PosSet filteredPseudoSources;
+        for(Pos ps : distMap[pN].pseudoSources ){
+          bool adjacentToNewSouce = false;
+          for(Pos s : minDSources){
+            adjacentToNewSouce = ps.adjacent(s);
+            if(adjacentToNewSouce) break;
+          }
+          if(!adjacentToNewSouce) filteredPseudoSources.insert(ps);
+        }
+        distMap[pN].pseudoSources = filteredPseudoSources;
+      }
+      if(hasBasisPoint(pN)){
+        checkWaveCrash(p, pN, *this, waveCrashPoss);
+      }
+      /* if(hasBasisPoint(pN)){ */
+      /*   if(!is_elem(map[p],nonTraversables)){ */
+      /*     setPseudoSourcesFromWave(p, pN, *this); */ 
+      /*     if (existsNonAdjacent(basisPoints(p, *this)))  waveCrashPoss.insert(p); */
+      /*   } */
+
+      /*   for(Pos pNN : map.adj(pN,nonTraversables)){ */
+      /*     if (hasBasisPoint(pNN) && distMap[pNN].distance >= distMap[pN].distance) { */
+      /*       setPseudoSourcesFromWave(pN, pNN, *this); */ 
+      /*     } */
+      /*   } */
+      /*   if (existsNonAdjacent(basisPoints(pN, *this))) waveCrashPoss.insert(pN); */
+      /* } */
+    }
+  }
+}
+
+void DistMap::processRaise(Pos p) {
+  Float minD = INF;
+  for (Pos pN : map.adj(p)) {
+    if (distMap[pN].isCleared || distMap[pN].toRaise) continue;
+
+    // if n does not have any valid obstacle then its distance is invalid
+    // it and should propagate the process raise
+    if (!hasBasisPoint(pN)) {
+      // cout << "raised: " <<n << endl;
+      open.push(DistPos(distMap[pN].distance, pN));
+      distMap[pN].clear();
+      distMap[pN].toRaise = true;
+    } else {
+      open.push(DistPos(distMap[pN].distance, pN));
+      /* if(is_elem(gvd.full_graph, s)) old_region_border.insert(s); */
+      /* if(is_elem(gvd.full_graph, n)) old_region_border.insert(n); */
+
+      // if n has a valid obstacle then it could be used
+      // to obtain the disstance of s
+      /* Float d; */
+      /* PosSet minDSources; */
+      /* tie(d,minDSources) = closests(p,distMap[pN].sources); */
+      /* if (d < minD) { */
+      /*   minD = d; */
+      /*   distMap[p].sources = minDSources; */
+      /* } else if (d == minD) { */
+      /*   accum(distMap[p].sources, minDSources); */
+      /* } */
+    }
+  }
+
+  /* if (minD < INF) { */
+  /*   distMap[p].isCleared = false; */
+  /*   distMap[p].distance = minD; */
+  /*   open.push(DistPos(distMap[p].distance, p)); */
+  /* } */
+
+  distMap[p].toRaise = false;
+}
+
+// API
+void DistMap::update(MapUpdatedCells mapUpdatedCells) {
+  // Clean old result
+  waveCrashPoss.clear();
+  consistentBorders.clear();
+  modified.clear();
+
+  // Initialize update
+  for(auto it : mapUpdatedCells){
+    Pos p                 = it.first;
+    CellType lastState    = it.second;
+    CellType currentState = map[p];
+    if(is_elem(currentState,sources)){
+      setSource(p);
+    }else{ // currentState not source
+      if(is_elem(lastState,sources)){
+        removeSource(p);
+      /* }else if(lastState == Unknown){ */
+      /*   setConsistentBorders(p); */
+      }
+    }
+  }
+
+  // Get new result / replace old
+  while (!open.empty()) {
+    Pos p = open.top().second;
+    open.pop();
+
+    if (distMap[p].toRaise) {
+      processRaise(p);
+    } else if (hasBasisPoint(p)) {
+      waveCrashPoss.erase(p);
+      distMap[p].pseudoSources.clear();
+      processLower(p);
+    }
+  }
+  for(auto it : mapUpdatedCells){
+    Pos p                 = it.first;
+    if (!is_elem(p,waveCrashPoss)) continue;
+    CellType lastState    = it.second;
+    CellType currentState = map[p];
+    /* cout<<"---------------"<<endl; */
+    /* cout<<p<<" state     : "<< lastState << " -> "<< currentState<< endl; */
+    /* cout<<p<<" distance  : "<<distMap[p].distance<<endl; */
+    /* cout<<p<<" sources   : "<<distMap[p].sources<<endl; */
+    /* cout<<p<<" pSources  : "<<distMap[p].pseudoSources<<endl; */
+    /* cout<<p<<" toRaise   : "<<distMap[p].toRaise<<endl; */
+    /* cout<<p<<" isCleared : "<<distMap[p].isCleared<<endl; */
+  }
+  /* cout<<map<<endl; */
+
 }
 
 void DistMap::update() {
   // Clean old result
-  objectiveDQueue = DistPosQueue();
   waveCrashPoss.clear();
 
   // Get new result / replace old
-  DistPosQueue dqueue; 
   for (Pos p : map) {
     DistMap::DistCell dcell;
     if (is_elem(map[p], sources)) { 
       dcell.distance = 0;
       dcell.sources.insert(p);
       if(!map.adj(p,nonTraversables).empty()){
-        dqueue.push(DistPos(0, p));
+        open.push(DistPos(0, p));
       }
     } else {
       dcell.distance = INF;
@@ -175,38 +317,29 @@ void DistMap::update() {
     distMap[p] = dcell;
   }
 
-  while (!dqueue.empty()) {
-    Pos p = dqueue.top().second;
-    dqueue.pop();
+  while (!open.empty()) {
+    Pos p = open.top().second;
+    open.pop();
 
     waveCrashPoss.erase(p);
     distMap[p].pseudoSources.clear();
 
-    // Update neighbors distance
-    for (Pos np : map.adj(p,nonTraversables)) {
-      Float minD;
-      PosSet minDSources;
-      tie(minD,minDSources) = closests(np,distMap[p].sources);
-
-      if (minD < distMap[np].distance) {
-        distMap[np].distance = minD;
-        distMap[np].sources = minDSources;
-        dqueue.push(DistPos(distMap[np].distance, np));
-      } else {
-        if (minD == distMap[np].distance){
-          distMap[np].sources.insert(minDSources.begin(), minDSources.end());
-        }
-        checkWaveCrash(p, np, *this, waveCrashPoss);
-      }
-
-      if (objectives.empty() || is_elem(map[np],objectives)){
-        objectiveDQueue.push(DistPos(distMap[np].distance, np));
-      }
-
-    }
+    processLower(p);
   }
 }
 
+// Costructor
+pair<Int,Int> DistMap::size(){
+  return distMap.size();
+}
+
+DistMap::DistMap(MapType& map, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives) : map(map){
+ this->distMap = DistMapType(map.size()); 
+ this->sources = sources;
+ this->nonTraversables = nonTraversables;
+}
+
+// utils
 ostream& operator<<(ostream& out, DistMap& distMap) {
   // out<<"("<< cell.distance<<", "<< cell.sources.size() << " )";
   return out<<distMap.distMap;

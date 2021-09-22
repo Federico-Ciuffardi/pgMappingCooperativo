@@ -175,6 +175,84 @@ void TopoMap::update(){
   segmenter->update();
 }
 
+void TopoMap::update(MapUpdatedCells mapUpdatedCells){
+  // Clean old result
+  for( auto it : criticalInfos ){
+    Pos critical = it.first;
+    CriticalInfo criticalInfo = it.second;
+    map[critical] = Free;
+    for(Pos p : criticalInfo.criticalLines){
+      map[p] = Free;
+    }
+  }
+  criticalInfos.clear();
+
+  // Get new result / replace old
+  cout << "debug :: Update gvd" << endl;
+  gvd->update(mapUpdatedCells); // also updates the shared distMap
+  GvdGraph &graphGvd = *gvd->graphGvd;
+  
+  cout << "debug :: Calculate isLocalMin for each vertex gvd" << endl;
+  for (GvdGraph::Vertex v : graphGvd) {
+    auto &vertexInfo = graphGvd[v];
+    vertexInfo.isLocalMin = isLocalMin(*distMap, graphGvd, vertexInfo.p);
+  }
+
+  cout << "debug :: Set the critical vertices and its information" << endl;
+  for(GvdGraph::Vertex v : graphGvd){
+    Pos p = graphGvd[v].p;
+
+    // skip vertices that:
+    if(!isValid(map[p])                              || // cellState invalid
+       !graphGvd[v].isLocalMin                       || // are not local min
+        connectivityAux(p,map,*distMap)              || // are connectivityAux
+       !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
+      continue;
+
+    // Filter critical lines
+    CriticalInfo criticalInfo;
+    boost::unordered_set<Pos> criticalLineEnds = basisPoints(p,*distMap);
+    for(Pos bp1 : basisPoints(p,*distMap)){
+      if(map[bp1] == Unknown){ 
+        criticalLineEnds.erase(bp1);
+        continue;
+      }
+      for(Pos bp2 : basisPoints(p,*distMap)){
+        if(bp2 == bp1) continue;
+
+        Pos p_bp1 = bp1-p;
+        Pos p_bp2 = bp2-p;
+
+        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) <= M_PI/1.5){
+          criticalLineEnds.erase(bp2);
+          continue;
+        } 
+      }
+    }
+
+    // Skip if less than 2 critical lines left
+    if(criticalLineEnds.size() < 2) continue;
+
+    for(Pos endPoint : criticalLineEnds){
+      for(Pos linePos : discretizeLine(p,endPoint)){
+        if(isValid(map[linePos])){
+          map[linePos] = CriticalLine;
+          criticalInfo.criticalLines.insert(linePos);
+        }
+      }
+    }
+
+    criticalInfos[p] = criticalInfo;
+
+    // Set critical in map
+    map[p] = Critical;
+
+  }
+
+
+  segmenter->update();
+}
+
 TopoMap::~TopoMap(){
   delete distMap;
   if(gvd)

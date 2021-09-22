@@ -10,12 +10,17 @@ struct DistMap{
 
   struct DistCell {
     PosSet sources;
+    PosSet pseudoSources;
     Float distance = INF;
 
-    PosSet pseudoSources;
+    bool toRaise = false;
+    bool isCleared = true;
 
     bool operator>(const DistCell& d) const;
     bool operator==(const DistCell& p) const;
+
+    void clear();
+
     friend ostream& operator<<(ostream& out, const DistCell& cell);
   };
 
@@ -23,8 +28,10 @@ struct DistMap{
 
   // Results
   DistMapType distMap;
-  DistPosQueue objectiveDQueue;
+  DistPosQueue open; 
+
   PosSet waveCrashPoss;
+  PosSet modified;
 
   // Info
   MapType& map;
@@ -32,7 +39,6 @@ struct DistMap{
   // Configuration
   vector<CellType> nonTraversables;
   vector<CellType> sources;
-  vector<CellType> objectives;
 
   // Constructor
   DistMap(MapType&, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
@@ -41,8 +47,20 @@ struct DistMap{
   pair<Int,Int> size();
   DistMapType::reference operator[](Pos);
   void update();
+  void update(MapUpdatedCells mapUpdatedCells);
 
   friend ostream& operator<<(ostream& out, const DistMap&);
+
+  private:
+  // functions
+  void setSource(Pos p);
+  void removeSource(Pos p);
+  bool hasBasisPoint(Pos p);
+  void processLower(Pos s);
+  void processRaise(Pos p);
+  void setConsistentBorders(Pos p);
+
+  PosSet consistentBorders;
 };
 
 // util
