@@ -51,7 +51,7 @@ bool disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
 // p has at least 2 obstacles as basis points  
 bool isObstacleGenerated(Pos p, DistMap& distMap, Map& map){ 
   int obstacleBasis = 0;
-  for(Pos bp : basisPoints(p, distMap)){
+  for(Pos bp : distMap.basisPoints(p)){
     obstacleBasis += map[bp] == Occupied;
     if(obstacleBasis > 1) return true;
   }
@@ -89,7 +89,7 @@ GridGvd getGridGvd(DistMap& distMap, Map& map, Int simplification) {
 
   // Set the candidates to belong to the GVD
   DistPosQueue gvdCandidatesQueue;
-  for (Pos p : distMap.waveCrashPoss){
+  for (Pos p : distMap.waveCrashes){
     gvdCandidatesQueue.push(make_pair(distMap[p].distance, p));
     gridGvd[p] = true;
   }
@@ -125,16 +125,16 @@ void Gvd::updateGvdGraph(Int simplification) {
     graphGvd->removeV(p);
   }
 
-  // Set the adjacent to the waveCrashPoss that belong to the gvd to be removed if not needed
-  for (Pos p : distMap->waveCrashPoss){
+  // Set the adjacent to the waveCrashes that belong to the gvd to be removed if not needed
+  for (Pos p : distMap->waveCrashes){
     for(Pos pN : map.adj(p,{Occupied})){
-      if(gridGvd[pN]) distMap->waveCrashPoss.insert(pN);
+      if(gridGvd[pN]) distMap->waveCrashes.insert(pN);
     }
   }
 
   // Set the candidates to belong to the GVD
   DistPosQueue gvdCandidatesQueue;
-  for (Pos p : distMap->waveCrashPoss){
+  for (Pos p : distMap->waveCrashes){
     gridGvd[p] = true;
     gvdCandidatesQueue.push(make_pair((*distMap)[p].distance, p));
   }
@@ -153,7 +153,7 @@ void Gvd::updateGvdGraph(Int simplification) {
         gridGvd[p] =  existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd);
         break;
       case 2:
-        gridGvd[p] = (!connectivityAux(p,map,*distMap) && (*distMap)[p].sources.size() > 1 && existsNonAdjacent(basisPoints(p,*distMap))) || disconnectsOnRemoval(p, gridGvd);
+        gridGvd[p] = (!connectivityAux(p,map,*distMap) && (*distMap)[p].sources.size() > 1 && existsNonAdjacent(distMap->basisPoints(p))) || disconnectsOnRemoval(p, gridGvd);
         break;
       case 3:
         gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 

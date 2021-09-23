@@ -30,7 +30,7 @@ struct DistMap{
   DistMapType distMap;
   DistPosQueue open; 
 
-  PosSet waveCrashPoss;
+  PosSet waveCrashes;
   PosSet modified;
 
   // Info
@@ -49,6 +49,8 @@ struct DistMap{
   void update();
   void update(MapUpdatedCells mapUpdatedCells);
 
+  PosSet basisPoints(Pos p);
+
   friend ostream& operator<<(ostream& out, const DistMap&);
 
   private:
@@ -60,17 +62,11 @@ struct DistMap{
   void processRaise(Pos p);
   void setConsistentBorders(Pos p);
 
+  void setPseudoSourcesFromWave(Pos p, Pos waveP);
+  void processWaveCrash(Pos p, Pos waveP);
+
+  void updateBase();
+
   PosSet consistentBorders;
 };
-
-// util
-inline PosSet basisPoints(Pos p, DistMap& distMap){
-  PosSet res;
-
-  // sources U pseudoSources
-  res.insert(distMap[p].sources.begin(), distMap[p].sources.end());
-  res.insert(distMap[p].pseudoSources.begin(), distMap[p].pseudoSources.end());
-
-  return res;
-}
 

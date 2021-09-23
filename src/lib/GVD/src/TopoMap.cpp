@@ -133,19 +133,22 @@ void TopoMap::update(){
 
     // Filter critical lines
     CriticalInfo criticalInfo;
-    boost::unordered_set<Pos> criticalLineEnds = basisPoints(p,*distMap);
-    for(Pos bp1 : basisPoints(p,*distMap)){
+    boost::unordered_set<Pos> pBasisPoints     = distMap->basisPoints(p);
+    boost::unordered_set<Pos> criticalLineEnds = pBasisPoints;
+
+    // TODO do with filter
+    for(Pos bp1 : pBasisPoints){
       if(map[bp1] == Unknown){ 
         criticalLineEnds.erase(bp1);
         continue;
       }
-      for(Pos bp2 : basisPoints(p,*distMap)){
+      for(Pos bp2 : pBasisPoints){
         if(bp2 == bp1) continue;
 
         Pos p_bp1 = bp1-p;
         Pos p_bp2 = bp2-p;
 
-        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) <= M_PI/1.5){
+        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) <= M_PI/1.35){
           criticalLineEnds.erase(bp2);
           continue;
         } 
@@ -211,19 +214,21 @@ void TopoMap::update(MapUpdatedCells mapUpdatedCells){
 
     // Filter critical lines
     CriticalInfo criticalInfo;
-    boost::unordered_set<Pos> criticalLineEnds = basisPoints(p,*distMap);
-    for(Pos bp1 : basisPoints(p,*distMap)){
+    boost::unordered_set<Pos> pBasisPoints     = distMap->basisPoints(p);
+    boost::unordered_set<Pos> criticalLineEnds = pBasisPoints;
+
+    for(Pos bp1 : pBasisPoints){
       if(map[bp1] == Unknown){ 
         criticalLineEnds.erase(bp1);
         continue;
       }
-      for(Pos bp2 : basisPoints(p,*distMap)){
+      for(Pos bp2 : pBasisPoints){
         if(bp2 == bp1) continue;
 
         Pos p_bp1 = bp1-p;
         Pos p_bp2 = bp2-p;
 
-        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) <= M_PI/1.5){
+        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) < M_PI/1.35){
           criticalLineEnds.erase(bp2);
           continue;
         } 

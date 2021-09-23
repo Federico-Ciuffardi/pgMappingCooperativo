@@ -46,8 +46,6 @@ void CentralModule::updateMap(const OccupancyGridUpdateConstPtr& update) {
 
 // Get the info to start an Auction
 Auction CentralModule::getAuctionInfo() {
-  // Convert a occupancyGrid and a frontier list to a map
-  cout << "debug :: convert a occupancyGrid and a frontier list to a map" << endl;
 
   // Get the frontiers from the map
   frontiers.clear();
@@ -57,7 +55,7 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
 
-  cout << "debug :: get significant frontiers" << endl;
+  // Simplify the frontiers obtaining the significative frontiers and using those instead of all the frontiers
   if(frontierSimplificationMethod > 0){
     // Calculate the connectedComponents of frontiers
     if (!frontierConComps) {
@@ -125,23 +123,25 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
 
-  // Get the info for the auction (topological map), and the GVD as a subproduct
-  cout << "debug :: get topoMap" << endl;
+  // Get the info for the auction, topological map, and the GVD
+  cout << "debug :: update topological map" << endl;
   if(!topoMap){
     topoMap = new TopoMap(map.map);
   }
-  /* topoMap->update(map.updatedCells); */
   topoMap->update(map.updatedCells);
 
-  // Restore frontiers to the non simplified ones
+  // Restore frontier (undo simplification)
   for(Pos p : frontiers){
     map.map[p] = Frontier;
   }
 
+  // clear map updates (from now on start to accumulate the state changes for the next increment)
+  map.updatedCells.clear();
+
   // Construct the acution rosmsg
   Auction auctionInfo;
 
-  // Turn the boost GVD to a ros message
+  /// Turn the boost GVD to a ros message
   GvdGraph& gvd = *(topoMap->gvd->graphGvd);
   cout << "debug :: gvd to rosmsg" << endl;
   for (GvdGraph::Vertex v : gvd) {
@@ -154,7 +154,7 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
 
-  // Turn the frontiers info into a ros message
+  /// Turn the frontiers info into a ros message
   cout << "debug :: turn frontiers to rosmsg" << endl;
   for (auto it : topoMap->segmenter->connectedComponents) {
     PosSet &frontiers = it.second.typeMembers[Frontier];
@@ -164,13 +164,7 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
   cout << "debug :: ended turn frontier to rosmsg" << endl;
-  auctionInfo.id = auctionId;
-
-  // Increment the auction ID as a new auction will begin
-  auctionId++;
-
-  // clear map updates
-  map.updatedCells.clear();
+  auctionInfo.id = auctionId++; // increment for next auction
 
   // return the info of the auction (and the GVD) bundled as a ros message
   return auctionInfo;
