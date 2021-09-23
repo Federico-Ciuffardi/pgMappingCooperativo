@@ -7,18 +7,130 @@
 #include "Map.h"
 #include "data/Pos.h"
 
+//////////
+// Util //
+//////////
+
+// increase the sparseness a the graph by removing redundant edges:
+//
+//   * in this case redundant edges are the ones that from v lead to a neighbor
+//     vN1 that can be reached from another neighbor of v vN2, meaning there is a
+//     path v - vN1 and a path v - vN2 - vN1, so v - vN1 can be safely removed
+//
+//   * v is only considered for cleanUp if it has a neighbor with a greater or
+//     equal degree one of those neighbors of greater or equal degree (then v and
+//     v's neighbors) will keep the connection with v
+void cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval) {
+  if (simplification <= 0) return;
+
+  GvdGraph::Vertex v = graph.idVertexMap[p];
+ 
+  // get the vertex with max degree from the v and its neighbors
+  GvdGraph::Vertex maxDegV = v;
+  int maxDeg = graph.degree(v);
+  for (GvdGraph::Vertex vN : graph.adj(v)) {
+    int vNdegree = graph.degree(vN);
+    if (vNdegree > maxDeg || (simplification > 1 && vNdegree == maxDeg)) {
+      maxDegV = vN;
+      maxDeg = vNdegree;
+    }
+  }
+ 
+  if (maxDegV == v) return;
+                              
+  GvdGraph::AdjacencyIterator avIt, avItEnd;
+  for (boost::tie(avIt, avItEnd) = adjacent_vertices(v, graph.g); avIt != avItEnd;) {
+    GvdGraph::Vertex vN = *(avIt++);
+ 
+    if (maxDegV == vN) continue; //skip max deg vertex
+ 
+    if (edge(vN, maxDegV, graph.g).second) {
+      graph.removeE(vN, v);
+      graph.removeE(v,vN);
+ 
+      if(graph.degree(vN)==1 && vertexRemoval){
+        graph.removeE(vN,maxDegV);
+        graph.removeE(maxDegV,vN);
+      }
+ 
+      if(graph.degree(v)==1 && vertexRemoval){
+        graph.removeE(v,maxDegV);
+        graph.removeE(maxDegV,v);
+      }
+ 
+      boost::tie(avIt, avItEnd) = adjacent_vertices(v, graph.g);
+    }
+  }
+ 
+  if(vertexRemoval){
+    if (graph.degree(v) == 0) {
+      graph.removeV(v);
+    }
+  }
+}
+
 /////////
-// Aux //
+// API //
 /////////
 
-template<typename CellType>
-int neighbors(Pos p, Grid<CellType>& gridGraph) {
-  int res = 0;
-  for(Pos pN : gridGraph.adj(p)){
-    res += gridGraph[pN];
+// also updates its distMap
+void Gvd::update(){
+  // if connectivityMethod is 2 fill boders with obstacles
+  if(GvdConfig::get()->connectivityMethod == 2){
+    pair<Int,Int> size = map.size();
+    for(int x = 0; x < size.first; x++){
+      map[x][0] = Occupied;
+      map[x][size.second - 1] = Occupied;
+    }
+    for(int y = 0; y < size.second; y++){
+      map[0][y] = Occupied;
+      map[size.first - 1][y] = Occupied;
+    }
   }
-  return res;
+
+  cout << "debug :: Update distMap" << endl;
+  distMap->update();
+
+  // pre update
+  /// clean previous
+  gridGvd = GridGvd(distMap->size(), false);
+  delete graphGvd;
+  graphGvd = new GvdGraph();
+
+
+  // update
+  updateBase();
+
 }
+
+void Gvd::update(MapUpdatedCells mapUpdatedCells){
+  cout << "debug :: Update distMap" << endl;
+  distMap->update(mapUpdatedCells);
+
+  // pre update
+  /// refine the distmap and modify the gridGVD to do an incremental update
+  for (Pos p : distMap->modified){
+    gridGvd[p] = false;
+    graphGvd->removeV(p);
+  }
+
+  /// Set the adjacent to the waveCrashes that belong to the gvd to be removed if not needed
+  for (Pos p : distMap->waveCrashes){
+    for(Pos pN : map.adj(p, nonTraversables)){
+      if(existsNonAdjacent( distMap->basisPoints(pN) ) || gridGvd[pN]) distMap->waveCrashes.insert(pN);
+    }
+  }
+
+  // update
+  updateBase();
+
+  /* cout << "debug :: Update distMap" << endl; */
+  /* cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval); */
+
+}
+///////////////////
+// Aux Functions //
+///////////////////
 
 /* If removing `p` from  disconects the graph represented with the Grid then  */
 template<typename CellType>
@@ -81,56 +193,8 @@ bool Gvd::isConnectivityAux(Pos p){
   return connectivityAux(p, map, *distMap);
 }
 
-// returns a boolean matrix, a cell is true if it should belong to the GvdGraph
-// and false otherwise
-GridGvd getGridGvd(DistMap& distMap, Map& map, Int simplification) {
-  // Initialize grid GVD
-  GridGvd gridGvd(distMap.size(), false);
-
-  // Set the candidates to belong to the GVD
-  DistPosQueue gvdCandidatesQueue;
-  for (Pos p : distMap.waveCrashes){
-    gvdCandidatesQueue.push(make_pair(distMap[p].distance, p));
-    gridGvd[p] = true;
-  }
-
-  // Simplify GVD
-  while (!gvdCandidatesQueue.empty() && simplification > 0) {
-    Float d = gvdCandidatesQueue.top().first;
-    Pos p = gvdCandidatesQueue.top().second;
-    gvdCandidatesQueue.pop();
-
-    switch (simplification) {
-      case 0:
-        gridGvd[p] = true;
-        break;
-      case 1:
-        gridGvd[p] =  distMap[p].sources.size() > 1 || disconnectsOnRemoval(p, gridGvd);
-        break;
-      case 2:
-        gridGvd[p] =  (!connectivityAux(p,map,distMap) && distMap[p].sources.size() > 1) || disconnectsOnRemoval(p, gridGvd);
-        break;
-      case 3:
-        gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 
-        break;
-    }
-  }
-  return gridGvd;
-}
-
-void Gvd::updateGvdGraph(Int simplification) {
-
-  for (Pos p : distMap->modified){
-    gridGvd[p] = false;
-    graphGvd->removeV(p);
-  }
-
-  // Set the adjacent to the waveCrashes that belong to the gvd to be removed if not needed
-  for (Pos p : distMap->waveCrashes){
-    for(Pos pN : map.adj(p,{Occupied})){
-      if(gridGvd[pN]) distMap->waveCrashes.insert(pN);
-    }
-  }
+void Gvd::updateBase() {
+  PosSet toClean;
 
   // Set the candidates to belong to the GVD
   DistPosQueue gvdCandidatesQueue;
@@ -139,13 +203,13 @@ void Gvd::updateGvdGraph(Int simplification) {
     gvdCandidatesQueue.push(make_pair((*distMap)[p].distance, p));
   }
 
-  // Simplify GVD
+  // Construct the gvd
   while (!gvdCandidatesQueue.empty()) {
     Float d = gvdCandidatesQueue.top().first;
     Pos p = gvdCandidatesQueue.top().second;
     gvdCandidatesQueue.pop();
 
-    switch (simplification) {
+    switch (GvdConfig::get()->vertexSimplificationMethod) {
       case 0:
         gridGvd[p] = true;
         break;
@@ -153,7 +217,7 @@ void Gvd::updateGvdGraph(Int simplification) {
         gridGvd[p] =  existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd);
         break;
       case 2:
-        gridGvd[p] = (!connectivityAux(p,map,*distMap) && (*distMap)[p].sources.size() > 1 && existsNonAdjacent(distMap->basisPoints(p))) || disconnectsOnRemoval(p, gridGvd);
+        gridGvd[p] = (!isConnectivityAux(p) && existsNonAdjacent(distMap->basisPoints(p))) || disconnectsOnRemoval(p, gridGvd);
         break;
       case 3:
         gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 
@@ -164,151 +228,62 @@ void Gvd::updateGvdGraph(Int simplification) {
       GvdGraph::Vertex v;
       bool inserted;
       tie(v,inserted) = graphGvd->addV(p);
-      if(inserted){
-        for(Pos pN : map.adj(p)){
-          if(graphGvd->has(pN)){
-            GvdGraph::Vertex vN  = graphGvd->idVertexMap[pN];
-            graphGvd->addE(v,vN);
-            graphGvd->addE(vN,v);
-          }
+      if(!inserted){
+        graphGvd->removeV(p);
+        tie(v,inserted) = graphGvd->addV(p);
+      }
+
+      toClean.insert(p);
+
+      for(Pos pN : map.adj(p, nonTraversables)){
+        if(graphGvd->has(pN)){
+          toClean.insert(p);
+          GvdGraph::Vertex vN  = graphGvd->idVertexMap[pN];
+          graphGvd->addE(v,vN);
+          graphGvd->addE(vN,v);
         }
       }
     }
   }
-}
 
-
-// increase the sparseness of the graph by removing redundant edges:
-//
-//   * in this case redundant edges are the ones that from v lead to a neighbor
-//     vN1 that can be reached from another neighbor of v vN2, meaning there is a
-//     path v - vN1 and a path v - vN2 - vN1, so v - vN1 can be safely removed
-//
-//   * v is only considered for cleanUp if it has a neighbor with a greater or
-//     equal degree one of those neighbors of greater or equal degree (then v and
-//     v's neighbors) will keep the connection with v
-void cleanUp(GvdGraph& gvd, Int simplification, Int vertexRemoval) {
-  if (simplification <= 0) return;
-
-  for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
-    GvdGraph::Vertex v = *(vIt++);
-
-    // get the vertex with max degree from the v and its neighbors
-    GvdGraph::Vertex maxDegV = v;
-    int maxDeg = gvd.degree(v);
-    for (GvdGraph::Vertex vN : gvd.adj(v)) {
-      int vNdegree = gvd.degree(vN);
-      if (vNdegree > maxDeg || (simplification > 1 && vNdegree == maxDeg)) {
-        maxDegV = vN;
-        maxDeg = vNdegree;
-      }
-    }
-
-    if (maxDegV == v) continue;
-                                
-    GvdGraph::AdjacencyIterator avIt, avItEnd;
-    for (boost::tie(avIt, avItEnd) = adjacent_vertices(v, gvd.g); avIt != avItEnd;) {
-      GvdGraph::Vertex vN = *(avIt++);
-
-      if (maxDegV == vN) continue; //skip max deg vertex
-
-      if (edge(vN, maxDegV, gvd.g).second) {
-        gvd.removeE(vN, v);
-        gvd.removeE(v,vN);
-
-        if(gvd.degree(vN)==1 && vertexRemoval){
-          gvd.removeE(vN,maxDegV);
-          gvd.removeE(maxDegV,vN);
-        }
-
-        if(gvd.degree(v)==1 && vertexRemoval){
-          gvd.removeE(v,maxDegV);
-          gvd.removeE(maxDegV,v);
-        }
-
-        boost::tie(avIt, avItEnd) = adjacent_vertices(v, gvd.g);
-      }
-    }
+  for (Pos p : toClean){
+    cleanUp(p, *graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
   }
-  if(vertexRemoval){
-    for (GvdGraph::VertexIterator vIt = gvd.begin(); vIt != gvd.end();) {
-      GvdGraph::Vertex v = *(vIt++);
-      if (gvd.degree(v) == 0) {
-        gvd.removeV(v);
-      }
-    }
-  }
+
 }
 
-/////////
-// Gvd //
-/////////
-Gvd::Gvd(DistMap* distMap) : map(distMap->map){
-  this->distMap = distMap;
-}
+//////////////////
+// Constructors //
+//////////////////
 
 Gvd::Gvd(MapType& map) : map(map){
-  cout<<"connectivityMethod: "<<GvdConfig::get()->connectivityMethod<<endl;
+  graphGvd = new GvdGraph();
+
+  gridGvd = GridGvd (map.size(), false);
+
   switch (GvdConfig::get()->connectivityMethod) {
     case 0:
-      this->distMap = new DistMap(map,{Occupied},{Occupied,Unknown});
+      sources         = {Occupied};
+      nonTraversables = {Occupied,Unknown};
+
       break;
     case 1:
-      this->distMap = new DistMap(map,{Occupied,Unknown},{Occupied,Unknown});
+      sources         = {Occupied,Unknown};
+      nonTraversables = {Occupied,Unknown};
       break;
     case 2:
     case 3:
-      this->distMap = new DistMap(map,{Occupied},{Occupied});
+      sources         = {Occupied};
+      nonTraversables = {Occupied};
       break;
   }
-  gridGvd = GridGvd (distMap->size(), false);
-}
-
-// also updates its distMap
-void Gvd::update(){
-  // if connectivityMethod is 2 fill boders with obstacles
-  if(GvdConfig::get()->connectivityMethod == 2){
-    pair<Int,Int> size = map.size();
-    for(int x = 0; x < size.first; x++){
-      map[x][0] = Occupied;
-      map[x][size.second - 1] = Occupied;
-    }
-    for(int y = 0; y < size.second; y++){
-      map[0][y] = Occupied;
-      map[size.first - 1][y] = Occupied;
-    }
-  }
-
-  // Clean old result
-  if(graphGvd) delete graphGvd;
-
-  // Get new result / replace old
-  cout << "debug :: Update distMap" << endl;
-  distMap->update();
-  cout << "debug :: Generate gridGVD" << endl;
-  gridGvd = getGridGvd(*distMap, map, GvdConfig::get()->vertexSimplificationMethod);
-  cout << "debug :: Generate graphGVD" << endl;
-  graphGvd = new GvdGraph(gridGvd, map, distMap->nonTraversables);
-  cout << "debug :: cleanUp" << endl;
-
-  cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
+  this->distMap = new DistMap(map, sources, nonTraversables);
 
 }
 
-void Gvd::update(MapUpdatedCells mapUpdatedCells){
-  if(!graphGvd){
-    graphGvd = new GvdGraph();
-  }
-
-  // Get new result / replace old
-  cout << "debug :: Update distMap" << endl;
-  distMap->update(mapUpdatedCells);
-  cout << "debug :: updateGvdGraph" << endl;
-  updateGvdGraph(GvdConfig::get()->vertexSimplificationMethod);
-
-  cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
-
-}
+/////////////////
+// Destructors //
+/////////////////
 
 Gvd::~Gvd(){
   delete distMap;

@@ -128,6 +128,7 @@ Auction CentralModule::getAuctionInfo() {
   if(!topoMap){
     topoMap = new TopoMap(map.map);
   }
+  /* topoMap->update(); */
   topoMap->update(map.updatedCells);
 
   // Restore frontier (undo simplification)

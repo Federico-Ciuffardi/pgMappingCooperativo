@@ -137,7 +137,16 @@ inline bool existsNonAdjacent(PosSet ps){
   return existsNonAdjacent(ps, ps);
 }
 
-
+/////
+/// exist 
+//
+template<typename T, typename F>
+inline bool exist(boost::unordered_set<T> &collection, F f){
+  for(T t : collection){
+    if( f(t) ) return true;
+  }
+  return false;
+}
 
 ////
 /// arg_min: get the arg that minimizes the map

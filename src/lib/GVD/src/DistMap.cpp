@@ -89,13 +89,7 @@ void DistMap::update() {
   for (Pos p : map) {
     distMap[p].clear();
     if (is_elem(map[p], sources)) { 
-      distMap[p].distance = 0;
-      distMap[p].sources.insert(p);
-      if(!map.adj(p,nonTraversables).empty()){
-        open.push(DistPos(0, p));
-      }
-    } else {
-      distMap[p].distance = INF;
+      setSource(p);
     }
   }
 
@@ -233,7 +227,7 @@ void DistMap::processWaveCrash(Pos p, Pos np){
 }
 
 void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
-  PosSet pseudoSources;
+  PosSet pseudoSources = distMap[p].pseudoSources;
   for ( Pos candidatePseudoSource : distMap[waveP].sources){
     Float candidateDist = p.distanceTo(candidatePseudoSource);
 
@@ -243,29 +237,29 @@ void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
 
     // Skip if there exist already a pseudo source closer than the candidate
     Float currentDist = INF;
-    if(!distMap[p].pseudoSources.empty()){
-      currentDist = p.distanceTo(*distMap[p].pseudoSources.begin());
+    if(!pseudoSources.empty()){
+      currentDist = p.distanceTo(*pseudoSources.begin());
       if (candidateDist > currentDist) continue;
     }
 
-    // Skip if adjacent to a source
-    for(Pos pSource : distMap[p].sources){
-      if(candidatePseudoSource.adjacent(pSource)) return; // TODO cuidado antes era return false 
-    }
+    // Abort changing the pseudoSources if adjacent to a source (this could be
+    // changed to skip)
+    if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } ))
+      return;
 
     if (candidateDist < currentDist){
       // if candidate distance is less than the current one(s) then remove the current ones
-      distMap[p].pseudoSources.clear();
+      pseudoSources.clear();
     } else {
       // if the candidate distance is the same that the current one(s) then
       // Skip if adjacent to a pseudo source
-      for(Pos pPseudoSource : distMap[p].pseudoSources){
-        if(candidatePseudoSource.adjacent(pPseudoSource)) continue;
-      }
+      if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } ))
+        continue;
     }
-
-    distMap[p].pseudoSources.insert(candidatePseudoSource);
+    pseudoSources.insert(candidatePseudoSource);
   }
+
+  distMap[p].pseudoSources = pseudoSources;
 }
 
 /////////////////

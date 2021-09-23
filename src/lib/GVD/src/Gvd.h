@@ -37,6 +37,10 @@ struct Gvd {
   typedef CellState      CellType; // could be set as template if needed
   typedef Grid<CellType> MapType; // could be set as template if needed
 
+  // variables
+  vector<CellType> nonTraversables;
+  vector<CellType> sources;
+
   // Results
   GridGvd gridGvd;
   GvdGraph* graphGvd = NULL;
@@ -46,7 +50,6 @@ struct Gvd {
   MapType& map;
 
   // Constructors
-  Gvd(DistMap*);
   Gvd(MapType&);
 
   // Functions
@@ -55,7 +58,7 @@ struct Gvd {
   void update();
   void update(MapUpdatedCells mapUpdatedCells);
 
-  void updateGvdGraph(Int simplification);
+  void updateBase();
 
   // Destructor
   ~Gvd();
