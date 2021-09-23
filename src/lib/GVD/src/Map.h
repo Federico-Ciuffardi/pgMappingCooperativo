@@ -13,6 +13,7 @@ typedef Grid<CellState> Map;
 typedef boost::unordered_map<Pos,Map::CellType> MapUpdatedCells;
 
 /* typedef Map<CellState> StateMap; */
+CellState toOccupancyState(CellState cs);
 
 ostream& operator<<(ostream& out, const CellState cs);
 

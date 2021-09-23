@@ -3,7 +3,7 @@
 #include "conversion.h"
 #include "nav_msgs/OccupancyGrid.h"
 
-  void IncrementalMap::update(const OccupancyGridConstPtr& newOccupancyGrid){
+void IncrementalMap::update(const OccupancyGridConstPtr& newOccupancyGrid){
   // Update occupancyGrid header and info
   occupancyGrid.header = newOccupancyGrid->header;
   occupancyGrid.info   = newOccupancyGrid->info;
@@ -35,8 +35,10 @@ void IncrementalMap::update(const OccupancyGridUpdateConstPtr& occGridUpdate){
 }
 
 void IncrementalMap::update(Pos p, CellState newCellState) {
-  CellState oldState = map[p];
-  if(oldState == newCellState) return; // skip if the update does not change the current value
+  CellState oldState = toOccupancyState(map[p]);
+  newCellState = toOccupancyState(newCellState);
+  // skip if the update does not change the current value or if the new value is unknown (this should not be taken into account)
+  if( oldState == newCellState ) return; 
 
   // if the cell is free and has an unknown neighbor then it is actually a frontier
   if (newCellState == Free) {

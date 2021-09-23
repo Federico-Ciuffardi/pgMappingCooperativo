@@ -96,165 +96,139 @@ TopoMap::TopoMap(MapType& map) : map(map){
   this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
 }
 
-// also updates its distMap and gvd
-void TopoMap::update(){
-  // Clean old result
-  for( auto it : criticalInfos ){
-    Pos critical = it.first;
-    CriticalInfo criticalInfo = it.second;
-    map[critical] = Free;
-    for(Pos p : criticalInfo.criticalLines){
-      map[p] = Free;
-    }
-  }
-  criticalInfos.clear();
-
-  // Get new result / replace old
-  cout << "debug :: Update gvd" << endl;
-  gvd->update(); // also updates the shared distMap
+void TopoMap::updateBase(PosSet modified){
   GvdGraph &graphGvd = *gvd->graphGvd;
-  
+
   cout << "debug :: Calculate isLocalMin for each vertex gvd" << endl;
-  for (GvdGraph::Vertex v : graphGvd) {
-    auto &vertexInfo = graphGvd[v];
-    vertexInfo.isLocalMin = isLocalMin(*distMap, graphGvd, vertexInfo.p);
+  for( Pos pos : modified ){
+    if(graphGvd.has(pos)){
+      auto &vertexInfo = graphGvd[pos];
+      vertexInfo.isLocalMin = isLocalMin(*distMap, graphGvd, pos);
+    }
   }
 
   cout << "debug :: Set the critical vertices and its information" << endl;
-  for(GvdGraph::Vertex v : graphGvd){
-    Pos p = graphGvd[v].p;
+  for( Pos p : modified ){
+    if(graphGvd.has(p)){
 
-    // skip vertices that:
-    if(!isValid(map[p])                              || // cellState invalid
-       !graphGvd[v].isLocalMin                       || // are not local min
-        connectivityAux(p,map,*distMap)              || // are connectivityAux
-       !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
-      continue;
+      GvdGraph::Vertex v = graphGvd.idVertexMap[p];
 
-    // Filter critical lines
-    CriticalInfo criticalInfo;
-    boost::unordered_set<Pos> pBasisPoints     = distMap->basisPoints(p);
-    boost::unordered_set<Pos> criticalLineEnds = pBasisPoints;
-
-    for(Pos bp1 : pBasisPoints){
-      if(map[bp1] == Unknown){ 
-        criticalLineEnds.erase(bp1);
+      // skip vertices that:
+      if(!isValid(map[p])                              || // cellState invalid
+         !graphGvd[v].isLocalMin                       || // are not local min
+          connectivityAux(p,map,*distMap)              || // are connectivityAux
+         !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
         continue;
-      }
-      for(Pos bp2 : pBasisPoints){
-        if(bp2 == bp1) continue;
 
-        Pos p_bp1 = bp1-p;
-        Pos p_bp2 = bp2-p;
+      // Filter critical lines
+      CriticalInfo criticalInfo;
+      boost::unordered_set<Pos> pBasisPoints     = distMap->basisPoints(p);
+      boost::unordered_set<Pos> criticalLineEnds = pBasisPoints;
 
-        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) < M_PI/1.5){
-          criticalLineEnds.erase(bp2);
+      for(Pos bp1 : pBasisPoints){
+        if(map[bp1] == Unknown){ 
+          criticalLineEnds.erase(bp1);
           continue;
-        } 
-      }
-    }
+        }
+        for(Pos bp2 : pBasisPoints){
+          if(bp2 == bp1) continue;
 
-    // Skip if less than 2 critical lines left
-    if(criticalLineEnds.size() < 2) continue;
+          Pos p_bp1 = bp1-p;
+          Pos p_bp2 = bp2-p;
 
-    for(Pos endPoint : criticalLineEnds){
-      for(Pos linePos : discretizeLine(p,endPoint)){
-        if(isValid(map[linePos])){
-          map[linePos] = CriticalLine;
-          criticalInfo.criticalLines.insert(linePos);
+          if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) < M_PI/1.5){
+            criticalLineEnds.erase(bp2);
+            continue;
+          } 
         }
       }
+
+      // Skip if less than 2 critical lines left
+      if(criticalLineEnds.size() < 2) continue;
+
+      for(Pos endPoint : criticalLineEnds){
+        for(Pos linePos : discretizeLine(p,endPoint)){
+          if(isValid(map[linePos])){
+            map[linePos] = CriticalLine;
+          }
+          if(!is_elem(map[linePos], distMap->sources)){
+            criticalInfo.criticalLines.insert(linePos);
+            criticalLines.insert(linePos);
+          }
+        }
+      }
+
+      criticalInfos[p] = criticalInfo;
+
+      // Set critical in map
+      map[p] = Critical;
+
     }
-
-    criticalInfos[p] = criticalInfo;
-
-    // Set critical in map
-    map[p] = Critical;
-
   }
-
 
   segmenter->update();
 }
 
-void TopoMap::update(MapUpdatedCells mapUpdatedCells){
+void TopoMap::update(){
+  // update the gvd and the dist map
+  gvd->update(); 
+
+  // get the modified cells positon to update
+  PosSet modified;
+  for(auto &it : gvd->graphGvd->idVertexMap){
+    modified.insert(it.first);
+  }
+
   // Clean old result
   for( auto it : criticalInfos ){
     Pos critical = it.first;
     CriticalInfo criticalInfo = it.second;
     map[critical] = Free;
-    for(Pos p : criticalInfo.criticalLines){
-      map[p] = Free;
+    for(Pos linePos : criticalInfo.criticalLines){
+      criticalLines.erase(linePos);
+      map[linePos] = Free;
     }
   }
   criticalInfos.clear();
 
-  // Get new result / replace old
-  cout << "debug :: Update gvd" << endl;
-  gvd->update(mapUpdatedCells); // also updates the shared distMap
-  GvdGraph &graphGvd = *gvd->graphGvd;
+  updateBase(modified);
+}
+
+void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
+  // update the gvd and the dist map
+  gvd->update(mapUpdatedCells); 
   
-  cout << "debug :: Calculate isLocalMin for each vertex gvd" << endl;
-  for (GvdGraph::Vertex v : graphGvd) {
-    auto &vertexInfo = graphGvd[v];
-    vertexInfo.isLocalMin = isLocalMin(*distMap, graphGvd, vertexInfo.p);
+  // get the modified cells positon to update
+  PosSet modified = distMap->modified;
+  for(auto &it : mapUpdatedCells){
+    Pos p = it.first;
+    modified.insert(p);
+
+    // if is valid then restore the value
+    if(isValid(map[p])){
+      if(is_elem(p, criticalInfos)){
+        map[p] = Critical;
+      }else if(is_elem(p, criticalLines)){
+        map[p] = Critical;
+      }
+    }
   }
 
-  cout << "debug :: Set the critical vertices and its information" << endl;
-  for(GvdGraph::Vertex v : graphGvd){
-    Pos p = graphGvd[v].p;
-
-    // skip vertices that:
-    if(!isValid(map[p])                              || // cellState invalid
-       !graphGvd[v].isLocalMin                       || // are not local min
-        connectivityAux(p,map,*distMap)              || // are connectivityAux
-       !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
-      continue;
-
-    // Filter critical lines
-    CriticalInfo criticalInfo;
-    boost::unordered_set<Pos> pBasisPoints     = distMap->basisPoints(p);
-    boost::unordered_set<Pos> criticalLineEnds = pBasisPoints;
-
-    for(Pos bp1 : pBasisPoints){
-      if(map[bp1] == Unknown){ 
-        criticalLineEnds.erase(bp1);
-        continue;
+  // Clean old result
+  for( Pos pos : modified ){
+    if(is_elem(pos,criticalInfos)){
+      CriticalInfo criticalInfo = criticalInfos[pos];
+      map[pos] = Free;
+      for(Pos linePos : criticalInfo.criticalLines){
+        map[linePos] = Free;
+        criticalLines.erase(linePos);
       }
-      for(Pos bp2 : pBasisPoints){
-        if(bp2 == bp1) continue;
-
-        Pos p_bp1 = bp1-p;
-        Pos p_bp2 = bp2-p;
-
-        if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) < M_PI/1.5){
-          criticalLineEnds.erase(bp2);
-          continue;
-        } 
-      }
+      criticalInfos.erase(pos);
     }
-
-    // Skip if less than 2 critical lines left
-    if(criticalLineEnds.size() < 2) continue;
-
-    for(Pos endPoint : criticalLineEnds){
-      for(Pos linePos : discretizeLine(p,endPoint)){
-        if(isValid(map[linePos])){
-          map[linePos] = CriticalLine;
-          criticalInfo.criticalLines.insert(linePos);
-        }
-      }
-    }
-
-    criticalInfos[p] = criticalInfo;
-
-    // Set critical in map
-    map[p] = Critical;
-
   }
 
 
-  segmenter->update();
+  updateBase(modified);
 }
 
 TopoMap::~TopoMap(){

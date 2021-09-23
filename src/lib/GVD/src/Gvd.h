@@ -56,7 +56,7 @@ struct Gvd {
   bool isConnectivityAux(Pos p);
 
   void update();
-  void update(MapUpdatedCells mapUpdatedCells);
+  void update(MapUpdatedCells &mapUpdatedCells);
 
   void updateBase();
 

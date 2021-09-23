@@ -133,7 +133,9 @@ Auction CentralModule::getAuctionInfo() {
 
   // Restore frontier (undo simplification)
   for(Pos p : frontiers){
-    map.map[p] = Frontier;
+    if(map.map[p] != CriticalLine && map.map[p] != Critical){
+      map.map[p] = Frontier;
+    }
   }
 
   // clear map updates (from now on start to accumulate the state changes for the next increment)

@@ -64,7 +64,7 @@ void DistMap::DistCell::clear() {
 // API //
 /////////
 
-void DistMap::update(MapUpdatedCells mapUpdatedCells) {
+void DistMap::update(MapUpdatedCells &mapUpdatedCells) {
   // Initialize update
   for(auto it : mapUpdatedCells){
     Pos p                 = it.first;

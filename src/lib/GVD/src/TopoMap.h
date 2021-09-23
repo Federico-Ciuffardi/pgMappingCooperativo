@@ -25,7 +25,7 @@ struct TopoMap{
 
   // Results
   CriticalInfos criticalInfos;
-  
+  PosSet criticalLines;
   // Sub results
   DistMap* distMap;
   Gvd* gvd;
@@ -39,8 +39,9 @@ struct TopoMap{
   TopoMap(MapType&);
 
   // Functions
+  void updateBase(PosSet modified);
   void update();
-  void update(MapUpdatedCells mapUpdatedCells);
+  void update(MapUpdatedCells &mapUpdatedCells);
 
   // Destructor
   ~TopoMap();

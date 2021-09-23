@@ -103,7 +103,7 @@ void Gvd::update(){
 
 }
 
-void Gvd::update(MapUpdatedCells mapUpdatedCells){
+void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   cout << "debug :: Update distMap" << endl;
   distMap->update(mapUpdatedCells);
 
@@ -180,9 +180,9 @@ bool connectivityAux(Pos p, Map &map, DistMap &distMap){
     case 3:
       // p is not unknown or a neighbor of unknown
       if (map[p] == Unknown) return true;
-      for (Pos pn : map.adj(p)){
-        if (map[pn] == Unknown) return true;
-      } 
+      /* for (Pos pn : map.adj(p)){ */
+      /*   if (map[pn] == Unknown) return true; */
+      /* } */ 
       return false;
       break;
   }

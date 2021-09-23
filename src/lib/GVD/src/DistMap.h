@@ -47,7 +47,7 @@ struct DistMap{
   pair<Int,Int> size();
   DistMapType::reference operator[](Pos);
   void update();
-  void update(MapUpdatedCells mapUpdatedCells);
+  void update(MapUpdatedCells &mapUpdatedCells);
 
   PosSet basisPoints(Pos p);
 
