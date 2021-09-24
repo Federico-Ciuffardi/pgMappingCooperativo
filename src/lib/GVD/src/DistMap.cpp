@@ -108,8 +108,7 @@ void DistMap::processLower(Pos p) {
 
   for (Pos pN : map.adj(p,nonTraversables)) {
     if (distMap[pN].toRaise) continue; // optimization avoids unnecesary operations
-
-    modified.insert(pN);
+    hasBasisPoint(pN); // to clean invalid basis
 
     Float minD;
     PosSet minDSources;
@@ -131,11 +130,12 @@ void DistMap::processLower(Pos p) {
           }
           return false;
         });
+
+        if(!is_elem(pN,modified)) open.push(DistPos(distMap[pN].distance, pN));
       }
-      if(hasBasisPoint(pN)){
-        processWaveCrash(p, pN);
-      }
+      processWaveCrash(p, pN);
     }
+    modified.insert(pN);
   }
 }
 
@@ -145,17 +145,14 @@ void DistMap::processRaise(Pos p) {
   for (Pos pN : map.adj(p)) {
     if (distMap[pN].isCleared || distMap[pN].toRaise) continue;
 
+    open.push(DistPos(distMap[pN].distance, pN));
     // if n does not have any valid obstacle then its distance is invalid
     // it and should propagate the process raise
     if (!hasBasisPoint(pN)) {
-      open.push(DistPos(distMap[pN].distance, pN));
       distMap[pN].clear();
       distMap[pN].toRaise = true;
-    } else {
-      open.push(DistPos(distMap[pN].distance, pN));
-    }
+    } 
   }
-
   distMap[p].toRaise = false;
 }
 
@@ -172,6 +169,11 @@ bool DistMap::hasBasisPoint(Pos p){
 }
 
 bool DistMap::isWaveCrash(Pos p){
+  // version 1
+  /* return existsNonAdjacent(basisPoints(p)); */
+
+
+  // version 2
   // the unknownSources part is to maintain the gvd connected when updating the connectivityAux
   PosSet unknownSources;
   for(Pos p : distMap[p].sources){
@@ -179,7 +181,6 @@ bool DistMap::isWaveCrash(Pos p){
       unknownSources.insert(p);
     }
   }
-
   return unknownSources.size() > 1 || existsNonAdjacent(basisPoints(p));
 }
 

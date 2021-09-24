@@ -24,7 +24,7 @@
   <param name="map_size" type="int" value="$(arg map_size)" />  
 
   <!-- ## Set the cell size TO USE in the occupancy grid  -->
-  <arg name="cell_size" default="0.25" /> 
+  <arg name="cell_size" default="1" /> 
   <param name="cell_size" type="double" value="$(arg cell_size)" />  
 
   <!-- ## Set TO MATCH the robot speed  -->

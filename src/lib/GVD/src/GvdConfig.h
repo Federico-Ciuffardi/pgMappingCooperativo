@@ -30,7 +30,7 @@ public:
   // Allow GVD edge simplification to remove vertex: if when removing edges the verte
   // 0: Do not allow vertex removal
   // 1: Allow vertex removal
-  int edgeSimplificationAllowVertexRemoval = 0;
+  int edgeSimplificationAllowVertexRemoval = 1;
 
   // Set what is the min codition 
   // 0: - All neighbors has greater distance
