@@ -17,3 +17,4 @@ CellState toOccupancyState(CellState cs);
 
 ostream& operator<<(ostream& out, const CellState cs);
 
+void updateMap(boost::unordered_map<Pos,CellState> &updatedCells,Map &map, Pos p, CellState newCellState);

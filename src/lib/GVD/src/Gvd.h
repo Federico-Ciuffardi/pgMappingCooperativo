@@ -58,7 +58,8 @@ struct Gvd {
   void update();
   void update(MapUpdatedCells &mapUpdatedCells);
 
-  void updateBase();
+  void updateBase(PosSet &candidates);
+  void cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval);
 
   // Destructor
   ~Gvd();

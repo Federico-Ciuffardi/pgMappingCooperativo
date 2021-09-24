@@ -50,6 +50,7 @@ struct DistMap{
   void update(MapUpdatedCells &mapUpdatedCells);
 
   PosSet basisPoints(Pos p);
+  bool isWaveCrash(Pos p);
 
   friend ostream& operator<<(ostream& out, const DistMap&);
 

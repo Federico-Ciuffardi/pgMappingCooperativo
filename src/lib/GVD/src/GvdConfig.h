@@ -11,23 +11,13 @@ public:
   // 1: unknown cell generate waves (suitable for indoor)
   // 2: unknown cells are considered unobstructed and map is surrounded with obstacles (suitable for indoor and outdoor)
   // 3: unknown cells are considered unobstructed (suitable for indoor)
-  int connectivityMethod = 3;
+  int connectivityMethod = 1;
 
   // GVD vertex simplification: how hard are the GVD vercices eroded/deleted to
   // simplify or thin the GVD:
   // 0: no simplification (only for debugging)
   // 1: A vertex is deleted if it is not needed for connectivity and it does not have
-  //    two or more sources (basis points at minumun distance)
-  // 2: A vertex is deleted if it is not needed for connectivity and it does not have
-  //    two or more sources (basis points at minumun distance). 
-  //    Some vertices are added just to keep the connectivity in the regions that are
-  //    beeing expored [*], those vertices are deleted if they are not  needed for connectivity
-  // 3: All vertices will be discarded if they can be safely discarded without
-  //    disconnecting the GVD.
-  // [*] Depends on the connectivityMethod used:
-  //       0:  that have less than 2 obstacles as basis points  are auxiliar
-  //       (are a products of unknown vertices)
-  //       1 and 2: vertices that are unknown or are close to unknown
+  //    two or more non adjacent sources
   int vertexSimplificationMethod = 1;
 
 
@@ -40,7 +30,7 @@ public:
   // Allow GVD edge simplification to remove vertex: if when removing edges the verte
   // 0: Do not allow vertex removal
   // 1: Allow vertex removal
-  int edgeSimplificationAllowVertexRemoval = 1;
+  int edgeSimplificationAllowVertexRemoval = 0;
 
   // Set what is the min codition 
   // 0: - All neighbors has greater distance

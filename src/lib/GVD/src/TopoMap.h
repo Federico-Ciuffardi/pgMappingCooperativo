@@ -39,7 +39,7 @@ struct TopoMap{
   TopoMap(MapType&);
 
   // Functions
-  void updateBase(PosSet modified);
+  void updateBase(PosSet &candidates);
   void update();
   void update(MapUpdatedCells &mapUpdatedCells);
 

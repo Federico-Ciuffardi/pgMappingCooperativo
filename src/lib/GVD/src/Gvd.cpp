@@ -7,9 +7,10 @@
 #include "Map.h"
 #include "data/Pos.h"
 
-//////////
-// Util //
-//////////
+///////////////////
+// Aux Functions //
+///////////////////
+
 
 // increase the sparseness a the graph by removing redundant edges:
 //
@@ -20,7 +21,7 @@
 //   * v is only considered for cleanUp if it has a neighbor with a greater or
 //     equal degree one of those neighbors of greater or equal degree (then v and
 //     v's neighbors) will keep the connection with v
-void cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval) {
+void Gvd::cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval) {
   if (simplification <= 0) return;
 
   GvdGraph::Vertex v = graph.idVertexMap[p];
@@ -65,72 +66,10 @@ void cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval) {
   if(vertexRemoval){
     if (graph.degree(v) == 0) {
       graph.removeV(v);
+      gridGvd[p] = false;
     }
   }
 }
-
-/////////
-// API //
-/////////
-
-// also updates its distMap
-void Gvd::update(){
-  // if connectivityMethod is 2 fill boders with obstacles
-  if(GvdConfig::get()->connectivityMethod == 2){
-    pair<Int,Int> size = map.size();
-    for(int x = 0; x < size.first; x++){
-      map[x][0] = Occupied;
-      map[x][size.second - 1] = Occupied;
-    }
-    for(int y = 0; y < size.second; y++){
-      map[0][y] = Occupied;
-      map[size.first - 1][y] = Occupied;
-    }
-  }
-
-  cout << "debug :: Update distMap" << endl;
-  distMap->update();
-
-  // pre update
-  /// clean previous
-  gridGvd = GridGvd(distMap->size(), false);
-  delete graphGvd;
-  graphGvd = new GvdGraph();
-
-
-  // update
-  updateBase();
-
-}
-
-void Gvd::update(MapUpdatedCells &mapUpdatedCells){
-  cout << "debug :: Update distMap" << endl;
-  distMap->update(mapUpdatedCells);
-
-  // pre update
-  /// refine the distmap and modify the gridGVD to do an incremental update
-  for (Pos p : distMap->modified){
-    gridGvd[p] = false;
-    graphGvd->removeV(p);
-  }
-
-  /// Set the adjacent to the waveCrashes that belong to the gvd to be removed if not needed
-  for (Pos p : distMap->waveCrashes){
-    for(Pos pN : map.adj(p, nonTraversables)){
-      if(existsNonAdjacent( distMap->basisPoints(pN) ) || gridGvd[pN]) distMap->waveCrashes.insert(pN);
-    }
-  }
-
-  // update
-  updateBase();
-
-  /* cout << "debug :: Update distMap" << endl; */
-  /* cleanUp(*graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval); */
-
-}
-///////////////////
-// Aux Functions //
-///////////////////
 
 /* If removing `p` from  disconects the graph represented with the Grid then  */
 template<typename CellType>
@@ -162,12 +101,10 @@ bool disconnectsOnRemoval(Pos p, Grid<CellType>& gridGraph) {
 
 // p has at least 2 obstacles as basis points  
 bool isObstacleGenerated(Pos p, DistMap& distMap, Map& map){ 
-  int obstacleBasis = 0;
-  for(Pos bp : distMap.basisPoints(p)){
-    obstacleBasis += map[bp] == Occupied;
-    if(obstacleBasis > 1) return true;
+  for(Pos bp1 : distMap.basisPoints(p)){
+    if(map[bp1] == Unknown) return false;
   }
-  return false;
+  return true;
 }
 
 // filter condition specific to the connectivity method applied
@@ -193,12 +130,12 @@ bool Gvd::isConnectivityAux(Pos p){
   return connectivityAux(p, map, *distMap);
 }
 
-void Gvd::updateBase() {
+void Gvd::updateBase(PosSet &candidates) {
   PosSet toClean;
 
   // Set the candidates to belong to the GVD
   DistPosQueue gvdCandidatesQueue;
-  for (Pos p : distMap->waveCrashes){
+  for (Pos p : candidates){
     gridGvd[p] = true;
     gvdCandidatesQueue.push(make_pair((*distMap)[p].distance, p));
   }
@@ -214,13 +151,9 @@ void Gvd::updateBase() {
         gridGvd[p] = true;
         break;
       case 1:
-        gridGvd[p] =  existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd);
-        break;
-      case 2:
-        gridGvd[p] = (!isConnectivityAux(p) && existsNonAdjacent(distMap->basisPoints(p))) || disconnectsOnRemoval(p, gridGvd);
-        break;
-      case 3:
-        gridGvd[p] = disconnectsOnRemoval(p, gridGvd); 
+        gridGvd[p] = (isConnectivityAux(p)  && (*distMap)[p].sources.size() > 1)         || 
+                     (!isConnectivityAux(p) && existsNonAdjacent((*distMap)[p].sources)) ||
+                     disconnectsOnRemoval(p, gridGvd);
         break;
     }
 
@@ -252,6 +185,93 @@ void Gvd::updateBase() {
 
 }
 
+/////////
+// API //
+/////////
+
+// also updates its distMap
+void Gvd::update(){
+  // if connectivityMethod is 2 fill boders with obstacles
+  if(GvdConfig::get()->connectivityMethod == 2){
+    pair<Int,Int> size = map.size();
+    for(int x = 0; x < size.first; x++){
+      map[x][0] = Occupied;
+      map[x][size.second - 1] = Occupied;
+    }
+    for(int y = 0; y < size.second; y++){
+      map[0][y] = Occupied;
+      map[size.first - 1][y] = Occupied;
+    }
+  }
+
+  // update dist map
+  cout << "debug :: Update distMap" << endl;
+  distMap->update();
+
+  // pre update
+  /// clean previous
+  gridGvd = GridGvd(distMap->size(), false);
+  delete graphGvd;
+  graphGvd = new GvdGraph();
+
+  // update base
+  updateBase(distMap->waveCrashes);
+}
+
+void Gvd::update(MapUpdatedCells &mapUpdatedCells){
+  switch(GvdConfig::get()->connectivityMethod){
+    case 1:{
+      PosSet unknownBorder;
+      for(auto it : mapUpdatedCells){
+        Pos p = it.first;
+        for(Pos pN : map.adj(p)){
+          if(map[pN] == Unknown){
+            unknownBorder.insert(pN);
+          }
+        }
+      }
+      for(Pos p :unknownBorder){
+        mapUpdatedCells[p] = Free;
+      }
+    }break;
+    case 2:{
+      // if connectivityMethod is 2 fill boders with obstacles
+      pair<Int,Int> size = map.size();
+      for(int x = 0; x < size.first; x++){
+        updateMap(mapUpdatedCells, map, Pos(x,0), Occupied);
+        updateMap(mapUpdatedCells, map, Pos(x,size.second - 1), Occupied);
+      }
+      for(int y = 0; y < size.second; y++){
+        updateMap(mapUpdatedCells, map, Pos(0,y), Occupied);
+        updateMap(mapUpdatedCells, map, Pos(size.first - 1,y), Occupied);
+      }
+    }break;
+  }
+
+  // update dist map
+  cout << "debug :: Update distMap" << endl;
+  distMap->update(mapUpdatedCells);
+
+  // pre update
+  /// remove the vertices of the modified region
+  for (Pos p : distMap->modified){
+    gridGvd[p] = false;
+    graphGvd->removeV(p);
+  }
+
+  /// Set the modified cells to check which should be added to the gvd
+  PosSet modified;
+  for (Pos p : distMap->waveCrashes){
+    modified.insert(p);
+    for(Pos pN : map.adj(p, nonTraversables)){
+      if(existsNonAdjacent( distMap->basisPoints(pN) ) || gridGvd[pN]) modified.insert(pN);
+    }
+  }
+
+  // update base
+  updateBase(modified);
+}
+
 //////////////////
 // Constructors //
 //////////////////
@@ -278,7 +298,6 @@ Gvd::Gvd(MapType& map) : map(map){
       break;
   }
   this->distMap = new DistMap(map, sources, nonTraversables);
-
 }
 
 /////////////////

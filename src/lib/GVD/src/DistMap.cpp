@@ -60,53 +60,6 @@ void DistMap::DistCell::clear() {
 /// DistMap
 //
 
-/////////
-// API //
-/////////
-
-void DistMap::update(MapUpdatedCells &mapUpdatedCells) {
-  // Initialize update
-  for(auto it : mapUpdatedCells){
-    Pos p                 = it.first;
-    CellType lastState    = it.second;
-    CellType currentState = map[p];
-    if(is_elem(currentState,sources)){
-      setSource(p);
-    }else{ // currentState not source
-      if(is_elem(lastState,sources)){
-        removeSource(p);
-      /* }else if(lastState == Unknown){ */
-      /*   setConsistentBorders(p); */
-      }
-    }
-  }
-
-  updateBase();
-}
-
-void DistMap::update() {
-  // Get new result / replace old
-  for (Pos p : map) {
-    distMap[p].clear();
-    if (is_elem(map[p], sources)) { 
-      setSource(p);
-    }
-  }
-
-  updateBase();
-}
-
-// get basisPoints
-PosSet DistMap::basisPoints(Pos p){
-  PosSet res;
-
-  // sources U pseudoSources
-  accum(res,distMap[p].sources);
-  accum(res,distMap[p].pseudoSources);
-
-  return res;
-}
-
 ///////////////////
 // Aux functions //
 ///////////////////
@@ -218,14 +171,27 @@ bool DistMap::hasBasisPoint(Pos p){
   return !distMap[p].sources.empty();
 }
 
+bool DistMap::isWaveCrash(Pos p){
+  // the unknownSources part is to maintain the gvd connected when updating the connectivityAux
+  PosSet unknownSources;
+  for(Pos p : distMap[p].sources){
+    if(map[p] == Unknown){
+      unknownSources.insert(p);
+    }
+  }
+
+  return unknownSources.size() > 1 || existsNonAdjacent(basisPoints(p));
+}
+
 void DistMap::processWaveCrash(Pos p, Pos np){
   setPseudoSourcesFromWave(p, np);
   setPseudoSourcesFromWave(np, p);
 
-  if (existsNonAdjacent( basisPoints(p)  )) waveCrashes.insert(p);
-  if (existsNonAdjacent( basisPoints(np) )) waveCrashes.insert(np);
+  if (isWaveCrash(p)) waveCrashes.insert(p);
+  if (isWaveCrash(np)) waveCrashes.insert(np);
 }
 
+// ver 1
 void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
   PosSet pseudoSources = distMap[p].pseudoSources;
   for ( Pos candidatePseudoSource : distMap[waveP].sources){
@@ -242,8 +208,7 @@ void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
       if (candidateDist > currentDist) continue;
     }
 
-    // Abort changing the pseudoSources if adjacent to a source (this could be
-    // changed to skip)
+    // skip if adjacent to a source (this could be changed to an abort)
     if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } ))
       return;
 
@@ -258,8 +223,76 @@ void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
     }
     pseudoSources.insert(candidatePseudoSource);
   }
-
   distMap[p].pseudoSources = pseudoSources;
+}
+
+// ver 2
+/* void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){ */
+/*   PosSet pseudoSources = distMap[p].pseudoSources; */
+/*   for ( Pos candidatePseudoSource : distMap[waveP].sources){ */
+/*     Float candidateDist = p.distanceTo(candidatePseudoSource); */
+
+/*     // Skip if the difference of distance of the source and candidatePseudoSource is */ 
+/*     // grater than 1 a pseudo source should be a rounding error caused by discretization */
+/*     if(abs(candidateDist - distMap[p].distance) > 1) continue; */
+
+/*     // skip if adjacent to a source (this could be changed to an abort) */
+/*     if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue; */
+
+/*     // if the candidate distance is the same that the current one(s) then */
+/*     // Skip if adjacent to a pseudo source */
+/*     if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue; */
+
+/*     pseudoSources.insert(candidatePseudoSource); */
+/*   } */
+/*   distMap[p].pseudoSources = pseudoSources; */
+/* } */
+
+/////////
+// API //
+/////////
+
+void DistMap::update(MapUpdatedCells &mapUpdatedCells) {
+  // Initialize update
+  for(auto it : mapUpdatedCells){
+    Pos p                 = it.first;
+    CellType lastState    = it.second;
+    CellType currentState = map[p];
+    if(is_elem(currentState,sources)){
+      setSource(p);
+    }else{ // currentState not source
+      if(is_elem(lastState,sources)){
+        removeSource(p);
+      /* }else if(lastState == Unknown){ */
+      /*   setConsistentBorders(p); */
+      }
+    }
+  }
+
+  updateBase();
+}
+
+void DistMap::update() {
+  // Get new result / replace old
+  for (Pos p : map) {
+    distMap[p].clear();
+    if (is_elem(map[p], sources)) { 
+      setSource(p);
+    }
+  }
+
+  updateBase();
+}
+
+// get basisPoints
+PosSet DistMap::basisPoints(Pos p){
+  PosSet res;
+
+  // sources U pseudoSources
+  accum(res,distMap[p].sources);
+  accum(res,distMap[p].pseudoSources);
+
+  return res;
 }
 
 /////////////////
@@ -271,9 +304,9 @@ pair<Int,Int> DistMap::size(){
 }
 
 DistMap::DistMap(MapType& map, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives) : map(map){
- this->distMap = DistMapType(map.size()); 
- this->sources = sources;
- this->nonTraversables = nonTraversables;
+  this->distMap = DistMapType(map.size()); 
+  this->sources = sources;
+  this->nonTraversables = nonTraversables;
 }
 
 ///////////////

@@ -6,9 +6,9 @@
 #include "Map.h"
 #include "utils.h"
 
-/////////
-// Aux //
-/////////
+///////////////////
+// Aux Functions //
+///////////////////
 
 bool isValid(CellState cellState){
   return cellState != Frontier && cellState != Occupied && cellState != Unknown;
@@ -81,26 +81,11 @@ bool satisfiesDegreeConstraint(GvdGraph& gvd, GvdGraph::Vertex v) {
   return false;
 }
 
-/////////////
-// TopoMap //
-/////////////
-TopoMap::TopoMap(Gvd* gvd) : map(gvd->map){
-  this->gvd = gvd;
-  this->distMap = gvd->distMap;
-  this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
-}
-
-TopoMap::TopoMap(MapType& map) : map(map){
-  this->gvd = new Gvd(map);
-  this->distMap = gvd->distMap;
-  this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
-}
-
-void TopoMap::updateBase(PosSet modified){
+void TopoMap::updateBase(PosSet &candidates){
   GvdGraph &graphGvd = *gvd->graphGvd;
 
   cout << "debug :: Calculate isLocalMin for each vertex gvd" << endl;
-  for( Pos pos : modified ){
+  for( Pos pos : candidates ){
     if(graphGvd.has(pos)){
       auto &vertexInfo = graphGvd[pos];
       vertexInfo.isLocalMin = isLocalMin(*distMap, graphGvd, pos);
@@ -108,7 +93,7 @@ void TopoMap::updateBase(PosSet modified){
   }
 
   cout << "debug :: Set the critical vertices and its information" << endl;
-  for( Pos p : modified ){
+  for( Pos p : candidates ){
     if(graphGvd.has(p)){
 
       GvdGraph::Vertex v = graphGvd.idVertexMap[p];
@@ -169,14 +154,19 @@ void TopoMap::updateBase(PosSet modified){
   segmenter->update();
 }
 
+/////////
+// API //
+/////////
+
 void TopoMap::update(){
   // update the gvd and the dist map
+  cout << "debug :: Update gvd" << endl;
   gvd->update(); 
 
   // get the modified cells positon to update
-  PosSet modified;
+  PosSet candidates;
   for(auto &it : gvd->graphGvd->idVertexMap){
-    modified.insert(it.first);
+    candidates.insert(it.first);
   }
 
   // Clean old result
@@ -191,18 +181,20 @@ void TopoMap::update(){
   }
   criticalInfos.clear();
 
-  updateBase(modified);
+  // update base
+  updateBase(candidates);
 }
 
 void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
   // update the gvd and the dist map
+  cout << "debug :: Update gvd" << endl;
   gvd->update(mapUpdatedCells); 
   
   // get the modified cells positon to update
-  PosSet modified = distMap->modified;
+  PosSet candidates = distMap->modified;
   for(auto &it : mapUpdatedCells){
     Pos p = it.first;
-    modified.insert(p);
+    candidates.insert(p);
 
     // if is valid then restore the value
     if(isValid(map[p])){
@@ -215,7 +207,7 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
   }
 
   // Clean old result
-  for( Pos pos : modified ){
+  for( Pos pos : candidates ){
     if(is_elem(pos,criticalInfos)){
       CriticalInfo criticalInfo = criticalInfos[pos];
       map[pos] = Free;
@@ -228,8 +220,29 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
   }
 
 
-  updateBase(modified);
+  // update base
+  updateBase(candidates);
 }
+
+//////////////////
+// Constructors //
+//////////////////
+
+TopoMap::TopoMap(Gvd* gvd) : map(gvd->map){
+  this->gvd = gvd;
+  this->distMap = gvd->distMap;
+  this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
+}
+
+TopoMap::TopoMap(MapType& map) : map(map){
+  this->gvd = new Gvd(map);
+  this->distMap = gvd->distMap;
+  this->segmenter = new ConnectedComponents(map, {Occupied,Unknown,Critical,CriticalLine});
+}
+
+/////////////////
+// Destructors //
+/////////////////
 
 TopoMap::~TopoMap(){
   delete distMap;
