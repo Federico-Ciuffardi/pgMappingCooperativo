@@ -131,11 +131,13 @@ void DistMap::processLower(Pos p) {
           return false;
         });
 
-        if(!is_elem(pN,modified)) open.push(DistPos(distMap[pN].distance, pN));
+        if(!is_elem(pN,modified)){
+          open.push(DistPos(distMap[pN].distance, pN));
+          modified.insert(pN);
+        }
       }
       processWaveCrash(p, pN);
     }
-    modified.insert(pN);
   }
 }
 
@@ -169,19 +171,18 @@ bool DistMap::hasBasisPoint(Pos p){
 }
 
 bool DistMap::isWaveCrash(Pos p){
-  // version 1
-  /* return existsNonAdjacent(basisPoints(p)); */
+  // ver 1
+  return existsNonAdjacent(basisPoints(p));
 
-
-  // version 2
+  // ver 2
   // the unknownSources part is to maintain the gvd connected when updating the connectivityAux
-  PosSet unknownSources;
-  for(Pos p : distMap[p].sources){
-    if(map[p] == Unknown){
-      unknownSources.insert(p);
-    }
-  }
-  return unknownSources.size() > 1 || existsNonAdjacent(basisPoints(p));
+  /* PosSet unknownSources; */
+  /* for(Pos p : distMap[p].sources){ */
+  /*   if(map[p] == Unknown){ */
+  /*     unknownSources.insert(p); */
+  /*   } */
+  /* } */
+  /* return unknownSources.size() > 1 || existsNonAdjacent(basisPoints(p)); */
 }
 
 void DistMap::processWaveCrash(Pos p, Pos np){

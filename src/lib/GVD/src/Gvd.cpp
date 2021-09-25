@@ -151,9 +151,12 @@ void Gvd::updateBase(PosSet &candidates) {
         gridGvd[p] = true;
         break;
       case 1:
-        gridGvd[p] = (isConnectivityAux(p)  && (*distMap)[p].sources.size() > 1)         || 
-                     (!isConnectivityAux(p) && existsNonAdjacent((*distMap)[p].sources)) ||
-                     disconnectsOnRemoval(p, gridGvd);
+        // ver 1
+        gridGvd[p] = existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd);
+        // ver 2
+        /* gridGvd[p] = (isConnectivityAux(p)  && (*distMap)[p].sources.size() > 1)         || */ 
+        /*              (!isConnectivityAux(p) && existsNonAdjacent((*distMap)[p].sources)) || */
+        /*              disconnectsOnRemoval(p, gridGvd); */
         break;
     }
 
@@ -253,23 +256,32 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   distMap->update(mapUpdatedCells);
 
   // pre update
-  /// remove the vertices of the modified region
+  /// remove the vertices of the modified region 
   for (Pos p : distMap->modified){
     gridGvd[p] = false;
     graphGvd->removeV(p);
   }
-
-  /// Set the modified cells to check which should be added to the gvd
-  PosSet modified;
-  for (Pos p : distMap->waveCrashes){
-    modified.insert(p);
+  /// remove the vertices of the surrounding border of the modified region if it does not disconnect the gvd 
+  for (Pos p : distMap->modified){
     for(Pos pN : map.adj(p, nonTraversables)){
-      if(existsNonAdjacent( distMap->basisPoints(pN) ) || gridGvd[pN]) modified.insert(pN);
+      gridGvd[pN] = gridGvd[pN] && disconnectsOnRemoval(pN, gridGvd);
+      if(!gridGvd[pN]){
+        graphGvd->removeV(pN);
+      }
+    }
+  }
+
+  PosSet candidates;
+  /// Set the modified cells to check which should be added to the gvd
+  for (Pos p : distMap->waveCrashes){
+    candidates.insert(p);
+    for(Pos pN : map.adj(p, nonTraversables)){
+      if(gridGvd[pN]) candidates.insert(pN);
     }
   }
 
   // update base
-  updateBase(modified);
+  updateBase(candidates);
 }
 
 //////////////////

@@ -163,7 +163,7 @@ void TopoMap::update(){
   cout << "debug :: Update gvd" << endl;
   gvd->update(); 
 
-  // get the modified cells positon to update
+  // get the candidate cells to change their critical status
   PosSet candidates;
   for(auto &it : gvd->graphGvd->idVertexMap){
     candidates.insert(it.first);
@@ -190,8 +190,15 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
   cout << "debug :: Update gvd" << endl;
   gvd->update(mapUpdatedCells); 
   
-  // get the modified cells positon to update
-  PosSet candidates = distMap->modified;
+  // get the candidate cells to change their critical status
+  PosSet candidates;
+  for(Pos p : distMap->modified){
+    candidates.insert(p);
+    for( Pos pN : map.adj(p)){
+      candidates.insert(pN);
+    }
+  }
+
   for(auto &it : mapUpdatedCells){
     Pos p = it.first;
     candidates.insert(p);
@@ -218,7 +225,6 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
       criticalInfos.erase(pos);
     }
   }
-
 
   // update base
   updateBase(candidates);
