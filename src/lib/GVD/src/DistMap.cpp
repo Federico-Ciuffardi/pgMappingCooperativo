@@ -182,7 +182,7 @@ bool DistMap::isWaveCrash(Pos p){
   /*     unknownSources.insert(p); */
   /*   } */
   /* } */
-  /* return unknownSources.size() > 1 || existsNonAdjacent(basisPoints(p)); */
+  /* return unknownSources.size() >= 1 || existsNonAdjacent(basisPoints(p)); */
 }
 
 void DistMap::processWaveCrash(Pos p, Pos np){

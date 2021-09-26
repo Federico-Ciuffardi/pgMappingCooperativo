@@ -24,7 +24,7 @@
   <param name="map_size" type="int" value="$(arg map_size)" />  
 
   <!-- ## Set the cell size TO USE in the occupancy grid  -->
-  <arg name="cell_size" default="0.25" /> 
+  <arg name="cell_size" default="1" /> 
   <param name="cell_size" type="double" value="$(arg cell_size)" />  
 
   <!-- ## Set TO MATCH the robot speed  -->
@@ -43,6 +43,9 @@
   <param name="file_log_level" type="int" value="$(arg file_log_level)" />  
 
   <!-- # CentralModule Check '../src/CentralModule/CentralModule.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params)-->
+  <arg name="auction_info_incremental" default="1" /> 
+  <param name="auction_info_incremental" type="int" value="$(arg auction_info_incremental)" />  
+
   <!-- <arg name="frontier_simplification_method" default="1" /> --> 
   <!-- <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" /> -->  
 

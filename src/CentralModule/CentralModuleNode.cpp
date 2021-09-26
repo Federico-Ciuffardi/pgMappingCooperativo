@@ -569,6 +569,10 @@ int main(int argc, char* argv[]) {
   // Frontier
   n.param<int>("/frontier_simplification_method", centralModule.frontierSimplificationMethod, centralModule.frontierSimplificationMethod);
 
+  // incremental
+  n.param<int>("/auction_info_incremental", centralModule.auctionInfoIncremental, centralModule.auctionInfoIncremental);
+
+
   /// Global params
   float cell_size;
   FAIL_IFN(n.param<float>   ("/cell_size", cell_size, cell_size));

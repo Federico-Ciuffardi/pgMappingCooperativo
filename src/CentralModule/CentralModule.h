@@ -70,6 +70,12 @@ class CentralModule {
   //                               |  0                                   ; otherwise
   int bidSegmentValueComponentMode = 2;
 
+  
+  // incremental auction info
+  // 0: OFF
+  // 1: ON
+  int auctionInfoIncremental = 1;
+
   // kMeans parameters
   Float kMeansMaxIter = 10000;
   Float kMeansTolerance = 0;

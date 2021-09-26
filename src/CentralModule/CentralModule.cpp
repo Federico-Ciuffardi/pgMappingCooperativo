@@ -128,8 +128,11 @@ Auction CentralModule::getAuctionInfo() {
   if(!topoMap){
     topoMap = new TopoMap(map.map);
   }
-  /* topoMap->update(); */
-  topoMap->update(map.updatedCells);
+  if(auctionInfoIncremental == 1){
+    topoMap->update(map.updatedCells);
+  }else{
+    topoMap->update();
+  }
 
   // Restore frontier (undo simplification)
   for(Pos p : frontiers){
