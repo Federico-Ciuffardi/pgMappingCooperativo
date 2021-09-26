@@ -48,27 +48,22 @@ bool isLocalMin(DistMap& distMap, GvdGraph& gvd, Pos p) {
 // * Does not contain a critial vertex candidate meaning a local min vertex
 //   (see setLocalMins for local min definition) 
 bool degreeConstraintAux(GvdGraph& gvd, GvdGraph::Vertex prevV, GvdGraph::Vertex v){
-
-  std::list<pair<GvdGraph::Vertex, GvdGraph::Vertex>> s;
-  s.push_back(make_pair(prevV, v));
-  while(!s.empty()){
-    prevV = s.front().first;
-    v     = s.front().second;
-    s.pop_front();
-    if (gvd.degree(v) >= 3){ // neighbor of degree 3 or greater
+  while(true){
+    int degree = gvd.degree(v);
+    if (degree >= 3){ // neighbor of degree 3 or greater
       return true;
-    } else if (gvd.degree(v) == 1 || gvd[v].isLocalMin){ // path end or another candidate
+    } else if (degree == 1 || gvd[v].isLocalMin){ // path end or another candidate
       return false;
     } else{
       for (GvdGraph::Vertex vN : gvd.adj(v)) {
         if(vN != prevV){
-          s.push_back(make_pair(v, vN));
+          prevV = v;
+          v = vN;
+          break;
         }
       }
     }
   }
-  cout<< "WARNING: degreeConstraintAux bad base case reached"<<endl;
-  return false;
 }
 
 // retruns true if the vertex associated with p satisfies the degreeConstrain and false otherwise
@@ -160,6 +155,7 @@ void TopoMap::updateBase(PosSet &candidates){
     }
   }
 
+  cout << "debug :: Set segments" << endl;
   segmenter->update();
 }
 

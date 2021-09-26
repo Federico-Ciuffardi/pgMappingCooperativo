@@ -14,6 +14,7 @@ public:
 
   typedef Int IdType;
   static const IdType firstId = 0;
+  IdType lastId = 0;
 
   struct Component{
     PosSet members;

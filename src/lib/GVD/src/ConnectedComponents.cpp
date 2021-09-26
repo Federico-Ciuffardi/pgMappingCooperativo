@@ -1,4 +1,5 @@
 #include "ConnectedComponents.h"
+#include <utility>
 #include "utils.h"
 
 ConnectedComponents::ConnectedComponents(MapType& map, vector<CellType> nonTraversables) : map(map){
@@ -13,25 +14,32 @@ void ConnectedComponents::add(Pos p, IdType id){
 } 
 
 void ConnectedComponents::fill(Pos p, IdType id){
+  stack<pair<Pos,IdType>> s;
+
   add(p, id);
-  for (Pos np : map.adj(p,nonTraversables)) {
-    if(idGrid[np] == NULL_ID){
-      fill(np, id);
+  s.push(make_pair(p,id));
+
+  while(!s.empty()){
+    p  = s.top().first;
+    id = s.top().second;
+    s.pop();
+
+    for (Pos pN : map.adj(p,nonTraversables)) {
+      if(idGrid[pN] == NULL_ID){
+        add(pN,id);
+        s.push(make_pair(pN, id));
+      }
     }
   }
 }
 
 ConnectedComponents::IdType ConnectedComponents::genId(){
-  IdType i = firstId;
-  for(auto it : connectedComponents){
-    if (it.first != i) break;
-    i++;
-  }
-  return i;
+  return lastId++;
 }
 
 void ConnectedComponents::update(){
   // Clean old result
+  lastId = firstId;
   connectedComponents.clear();
   idGrid = Grid<IdType>(map.size(), NULL_ID);
 

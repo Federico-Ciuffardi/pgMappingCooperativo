@@ -173,7 +173,7 @@ void Gvd::updateBase(PosSet &candidates) {
 
       for(Pos pN : map.adj(p, nonTraversables)){
         if(graphGvd.has(pN)){
-          toClean.insert(p);
+          /* toClean.insert(pN); */
           GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
           graphGvd.addE(v,vN);
           graphGvd.addE(vN,v);

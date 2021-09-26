@@ -176,9 +176,9 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
   rvizHelper.position = makeVector3(0);
 
   RvizHelper::MarkerPoints frontierMarkerPoints;
-  for(auto it : centralModule.topoMap->segmenter->connectedComponents){
+  for(auto &it : centralModule.topoMap->segmenter->connectedComponents){
     int id = it.first;
-    ConnectedComponents::Component segment = it.second;
+    ConnectedComponents::Component &segment = it.second;
 
     rvizHelper.color    = getColor(id);
 
@@ -213,9 +213,9 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
   //// mark critical points and critical lines
   RvizHelper::MarkerPoints criticalMarkerPoints;
   RvizHelper::MarkerPoints criticalLinesMarkerPoints;
-  for (auto it : centralModule.topoMap->criticalInfos) {
+  for (auto &it : centralModule.topoMap->criticalInfos) {
     Pos p = it.first;
-    CriticalInfo criticalInfo = it.second;
+    CriticalInfo &criticalInfo = it.second;
     criticalMarkerPoints.push_back(toMarkerPoint(p, mapInfo));
     accum(criticalLinesMarkerPoints,toMarkerPoint(criticalInfo.criticalLines,mapInfo));
   }
@@ -259,6 +259,7 @@ void startAuction() {
 
   gvdTime = (ros::Time::now() - lastGvdStart);
   gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
+  cout<<"debug :: ended getAuctionInfo"<<endl;
 
   if(gvdTime.toSec() > 4){
     auctionStartTimeoutMode = 2;
