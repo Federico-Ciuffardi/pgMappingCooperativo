@@ -12,11 +12,8 @@
 
 using namespace boost;
 
-/////////////////
-// Definitions //
-/////////////////
 bool connectivityAux(Pos p , Map& map, DistMap& distMap);
-
+  
 typedef Grid<bool> GridGvd;
 struct GvdVertexProperty {
   Pos p = NULL_POS;
@@ -37,17 +34,25 @@ struct Gvd {
   typedef CellState      CellType; // could be set as template if needed
   typedef Grid<CellType> MapType; // could be set as template if needed
 
-  // variables
+  ///////////////
+  // variables //
+  ///////////////
+
+  // Configuration
   vector<CellType> nonTraversables;
   vector<CellType> sources;
 
   // Results
   GridGvd gridGvd;
-  GvdGraph* graphGvd = NULL;
+  GvdGraph graphGvd;
   DistMap* distMap = NULL;
 
   // Info
   MapType& map;
+
+  //////////////
+  // Funcions //
+  //////////////
 
   // Constructors
   Gvd(MapType&);
@@ -58,9 +63,16 @@ struct Gvd {
   void update();
   void update(MapUpdatedCells &mapUpdatedCells);
 
+  // Destructor
+  ~Gvd();
+
+ private:
+  //////////////
+  // Funcions //
+  //////////////
+
   void updateBase(PosSet &candidates);
   void cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval);
 
-  // Destructor
-  ~Gvd();
+
 };

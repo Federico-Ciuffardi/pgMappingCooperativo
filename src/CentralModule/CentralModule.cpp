@@ -143,7 +143,7 @@ Auction CentralModule::getAuctionInfo() {
   Auction auctionInfo;
 
   /// Turn the boost GVD to a ros message
-  GvdGraph& gvd = *(topoMap->gvd->graphGvd);
+  GvdGraph& gvd = topoMap->gvd->graphGvd;
   cout << "debug :: gvd to rosmsg" << endl;
   for (GvdGraph::Vertex v : gvd) {
     auctionInfo.gvd.vertices.push_back(toPoint2D(gvd.g[v].p));

@@ -43,9 +43,9 @@ DistMap::DistMapType::reference DistMap::operator[](Pos p){
   return distMap.cell(p);
 }
 
-///////////
-// Clear //
-///////////
+//////////////
+// Funcions //
+//////////////
 
 void DistMap::DistCell::clear() {
   sources.clear();
@@ -265,8 +265,6 @@ void DistMap::update(MapUpdatedCells &mapUpdatedCells) {
     }else{ // currentState not source
       if(is_elem(lastState,sources)){
         removeSource(p);
-      /* }else if(lastState == Unknown){ */
-      /*   setConsistentBorders(p); */
       }
     }
   }
@@ -275,7 +273,7 @@ void DistMap::update(MapUpdatedCells &mapUpdatedCells) {
 }
 
 void DistMap::update() {
-  // Get new result / replace old
+  // Initialize update
   for (Pos p : map) {
     distMap[p].clear();
     if (is_elem(map[p], sources)) { 

@@ -5,6 +5,11 @@
 #include "data/Num.h"
 
 struct DistMap{
+
+  /////////////
+  // Typedef //
+  /////////////
+
   typedef CellState      CellType; // could be set as template if needed
   typedef Grid<CellType> MapType; // could be set as template if needed
 
@@ -26,6 +31,10 @@ struct DistMap{
 
   typedef Grid<DistCell> DistMapType;
 
+  ///////////////
+  // Variables //
+  ///////////////
+
   // Results
   DistMapType distMap;
   DistPosQueue open; 
@@ -40,22 +49,29 @@ struct DistMap{
   vector<CellType> nonTraversables;
   vector<CellType> sources;
 
-  // Constructor
-  DistMap(MapType&, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
+  ///////////////
+  // functions //
+  ///////////////
 
-  // functions
   pair<Int,Int> size();
   DistMapType::reference operator[](Pos);
+
   void update();
   void update(MapUpdatedCells &mapUpdatedCells);
 
   PosSet basisPoints(Pos p);
   bool isWaveCrash(Pos p);
 
+  // Constructor
+  DistMap(MapType&, vector<CellType> sources, vector<CellType> nonTraversables, vector<CellType> objectives = {});
+
   friend ostream& operator<<(ostream& out, const DistMap&);
 
-  private:
-  // functions
+ private:
+  ///////////////
+  // functions //
+  ///////////////
+
   void setSource(Pos p);
   void removeSource(Pos p);
   bool hasBasisPoint(Pos p);
@@ -67,7 +83,5 @@ struct DistMap{
   void processWaveCrash(Pos p, Pos waveP);
 
   void updateBase();
-
-  PosSet consistentBorders;
 };
 

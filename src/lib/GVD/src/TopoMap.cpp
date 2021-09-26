@@ -82,7 +82,7 @@ bool satisfiesDegreeConstraint(GvdGraph& gvd, GvdGraph::Vertex v) {
 }
 
 void TopoMap::updateBase(PosSet &candidates){
-  GvdGraph &graphGvd = *gvd->graphGvd;
+  GvdGraph &graphGvd = gvd->graphGvd;
 
   cout << "debug :: Calculate isLocalMin for each vertex gvd" << endl;
   for( Pos pos : candidates ){
@@ -99,10 +99,10 @@ void TopoMap::updateBase(PosSet &candidates){
       GvdGraph::Vertex v = graphGvd.idVertexMap[p];
 
       // skip vertices that:
-      if(!isValid(map[p])                              || // cellState invalid
-         !graphGvd[v].isLocalMin                       || // are not local min
-          connectivityAux(p,map,*distMap)              || // are connectivityAux
-         !satisfiesDegreeConstraint(*gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
+      if(!isValid(map[p])                             || // cellState invalid
+         !graphGvd[v].isLocalMin                      || // are not local min
+          connectivityAux(p,map,*distMap)             || // are connectivityAux
+         !satisfiesDegreeConstraint(gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
         continue;
 
       // Filter critical lines
@@ -165,7 +165,7 @@ void TopoMap::update(){
 
   // get the candidate cells to change their critical status
   PosSet candidates;
-  for(auto &it : gvd->graphGvd->idVertexMap){
+  for(auto &it : gvd->graphGvd.idVertexMap){
     candidates.insert(it.first);
   }
 

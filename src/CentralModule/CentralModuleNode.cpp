@@ -112,7 +112,7 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 
   // Gvd
   Gvd& gvd = *centralModule.topoMap->gvd;
-  GvdGraph& gvdGraph = *centralModule.topoMap->gvd->graphGvd;
+  GvdGraph& gvdGraph = centralModule.topoMap->gvd->graphGvd;
 
   rvizHelper.topic = &gvdMarkerPub;
 

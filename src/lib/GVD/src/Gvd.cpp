@@ -163,27 +163,27 @@ void Gvd::updateBase(PosSet &candidates) {
     if(gridGvd[p]){
       GvdGraph::Vertex v;
       bool inserted;
-      tie(v,inserted) = graphGvd->addV(p);
+      tie(v,inserted) = graphGvd.addV(p);
       if(!inserted){
-        graphGvd->removeV(p);
-        tie(v,inserted) = graphGvd->addV(p);
+        graphGvd.removeV(p);
+        tie(v,inserted) = graphGvd.addV(p);
       }
 
       toClean.insert(p);
 
       for(Pos pN : map.adj(p, nonTraversables)){
-        if(graphGvd->has(pN)){
+        if(graphGvd.has(pN)){
           toClean.insert(p);
-          GvdGraph::Vertex vN  = graphGvd->idVertexMap[pN];
-          graphGvd->addE(v,vN);
-          graphGvd->addE(vN,v);
+          GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
+          graphGvd.addE(v,vN);
+          graphGvd.addE(vN,v);
         }
       }
     }
   }
 
   for (Pos p : toClean){
-    cleanUp(p, *graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
+    cleanUp(p, graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
   }
 
 }
@@ -214,8 +214,7 @@ void Gvd::update(){
   // pre update
   /// clean previous
   gridGvd = GridGvd(distMap->size(), false);
-  delete graphGvd;
-  graphGvd = new GvdGraph();
+  graphGvd = GvdGraph();
 
   // update base
   updateBase(distMap->waveCrashes);
@@ -259,14 +258,14 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   /// remove the vertices of the modified region 
   for (Pos p : distMap->modified){
     gridGvd[p] = false;
-    graphGvd->removeV(p);
+    graphGvd.removeV(p);
   }
   /// remove the vertices of the surrounding border of the modified region if it does not disconnect the gvd 
   for (Pos p : distMap->modified){
     for(Pos pN : map.adj(p, nonTraversables)){
       gridGvd[pN] = gridGvd[pN] && disconnectsOnRemoval(pN, gridGvd);
       if(!gridGvd[pN]){
-        graphGvd->removeV(pN);
+        graphGvd.removeV(pN);
       }
     }
   }
@@ -289,8 +288,6 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
 //////////////////
 
 Gvd::Gvd(MapType& map) : map(map){
-  graphGvd = new GvdGraph();
-
   gridGvd = GridGvd (map.size(), false);
 
   switch (GvdConfig::get()->connectivityMethod) {

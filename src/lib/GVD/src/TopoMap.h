@@ -23,27 +23,42 @@ struct TopoMap{
   typedef CellState      CellType; // could be set as template if needed
   typedef Grid<CellType> MapType; // could be set as template if needed
 
+  ///////////////
+  // Variables //
+  ///////////////
+
   // Results
   CriticalInfos criticalInfos;
   PosSet criticalLines;
-  // Sub results
+
   DistMap* distMap;
   Gvd* gvd;
+
   ConnectedComponents* segmenter;
 
   // Info
   MapType& map;
 
+  ///////////////
+  // Functions //
+  ///////////////
+
+  void update();
+  void update(MapUpdatedCells &mapUpdatedCells);
+
   // Constructors
   TopoMap(Gvd*);
   TopoMap(MapType&);
 
-  // Functions
-  void updateBase(PosSet &candidates);
-  void update();
-  void update(MapUpdatedCells &mapUpdatedCells);
-
   // Destructor
   ~TopoMap();
+
+ private:
+  //////////////
+  // Funcions //
+  //////////////
+
+  void updateBase(PosSet &candidates);
+
 };
 
