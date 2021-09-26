@@ -1,5 +1,6 @@
 #include "TopoMap.h"
 #include <iostream>
+#include <utility>
 #include <vector>
 #include "DistMap.h"
 #include "Gvd.h"
@@ -46,15 +47,23 @@ bool isLocalMin(DistMap& distMap, GvdGraph& gvd, Pos p) {
 // * Ends on a vertex of degree 3 
 // * Does not contain a critial vertex candidate meaning a local min vertex
 //   (see setLocalMins for local min definition) 
-bool degreeConstraintAux(GvdGraph& gvd, GvdGraph::Vertex& prevV, GvdGraph::Vertex& v){
-  if (gvd.degree(v) >= 3){ // neighbor of degree 3 or greater
-    return true;
-  } else if (gvd.degree(v) == 1 || gvd[v].isLocalMin){ // path end or another candidate
-    return false;
-  } else{
-    for (GvdGraph::Vertex vN : gvd.adj(v)) {
-      if(vN != prevV){
-        return degreeConstraintAux(gvd, v, vN);
+bool degreeConstraintAux(GvdGraph& gvd, GvdGraph::Vertex prevV, GvdGraph::Vertex v){
+
+  std::list<pair<GvdGraph::Vertex, GvdGraph::Vertex>> s;
+  s.push_back(make_pair(prevV, v));
+  while(!s.empty()){
+    prevV = s.front().first;
+    v     = s.front().second;
+    s.pop_front();
+    if (gvd.degree(v) >= 3){ // neighbor of degree 3 or greater
+      return true;
+    } else if (gvd.degree(v) == 1 || gvd[v].isLocalMin){ // path end or another candidate
+      return false;
+    } else{
+      for (GvdGraph::Vertex vN : gvd.adj(v)) {
+        if(vN != prevV){
+          s.push_back(make_pair(v, vN));
+        }
       }
     }
   }
