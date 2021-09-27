@@ -95,8 +95,6 @@ void DistMap::updateBase(){
     if (distMap[p].toRaise) {
       processRaise(p);
     } else if (hasBasisPoint(p)) {
-      waveCrashes.erase(p);
-      distMap[p].pseudoSources.clear();
       processLower(p);
     }
   }
@@ -104,6 +102,8 @@ void DistMap::updateBase(){
 
 // Consistent wave
 void DistMap::processLower(Pos p) {
+  waveCrashes.erase(p);
+  distMap[p].pseudoSources.clear();
   modified.insert(p);
 
   for (Pos pN : map.adj(p,nonTraversables)) {

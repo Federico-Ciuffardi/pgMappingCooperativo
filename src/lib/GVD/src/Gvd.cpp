@@ -248,6 +248,10 @@ void Gvd::updateBase(PosSet &candidates) {
           graphGvd.addE(vN,v);
         }
       }
+    }else {
+      toClean.erase(p);
+      graphGvd.removeV(p);
+
     }
   }
 
@@ -330,7 +334,15 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
     graphGvd.removeV(p);
   }
   /// remove the vertices of the surrounding border of the modified region if it does not disconnect the gvd 
+  //// ver 1
+  /* for (Pos p : distMap->modified){ */
+  /*   for(Pos pN : map.adj(p, nonTraversables)){ */
+  /*     if(gridGvd[pN]) candidates.insert(pN); */
+  /*   } */
+  /* } */
+  // ver 2
   for (Pos p : distMap->modified){
+    if((*distMap)[p].distance <= 1.5 && disconnectsOnRemoval(p, gridGvd)) continue;
     for(Pos pN : map.adj(p, nonTraversables)){
       gridGvd[pN] = gridGvd[pN] && disconnectsOnRemoval(pN, gridGvd);
       if(!gridGvd[pN]){
