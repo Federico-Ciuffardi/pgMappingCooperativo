@@ -176,13 +176,12 @@ bool DistMap::isWaveCrash(Pos p){
 
   // ver 2
   // the unknownSources part is to maintain the gvd connected when updating the connectivityAux
-  /* PosSet unknownSources; */
   /* for(Pos p : distMap[p].sources){ */
   /*   if(map[p] == Unknown){ */
-  /*     unknownSources.insert(p); */
+  /*     return true; */
   /*   } */
   /* } */
-  /* return unknownSources.size() >= 1 || existsNonAdjacent(basisPoints(p)); */
+  /* return existsNonAdjacent(basisPoints(p)); */
 }
 
 void DistMap::processWaveCrash(Pos p, Pos np){

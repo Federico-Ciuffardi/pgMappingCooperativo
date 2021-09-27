@@ -160,7 +160,7 @@ Auction CentralModule::getAuctionInfo() {
 
   /// Turn the frontiers info into a ros message
   cout << "debug :: turn frontiers to rosmsg" << endl;
-  for (auto &it : topoMap->segmenter->connectedComponents) {
+  for (auto it : topoMap->segmenter->connectedComponents) {
     PosSet &frontiers = it.second.typeMembers[Frontier];
 
     for (Pos frontier : frontiers) {

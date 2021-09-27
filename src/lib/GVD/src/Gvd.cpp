@@ -151,12 +151,38 @@ void Gvd::updateBase(PosSet &candidates) {
         gridGvd[p] = true;
         break;
       case 1:
-        // ver 1
-        gridGvd[p] = existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd);
+        // ver 1.1
+        /* gridGvd[p] = existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd); */
+        // ver 1.2
+        /* gridGvd[p] = ((*distMap)[p].distance > 1.5 && neighborNumber(p,gridGvd) == 1) || existsNonAdjacent((*distMap)[p].sources) || disconnectsOnRemoval(p, gridGvd); */
+        // ver 1.3
+        /* Float maxDistToBasis = (*distMap)[p].distance; */
+        /* if(!(*distMap)[p].pseudoSources.empty()){ */
+        /*   maxDistToBasis = p.distanceTo(*(*distMap)[p].pseudoSources.begin()); */
+        /* } */
+        /* gridGvd[p] = ( ( (*distMap)[p].distance > 1.5 || (maxDistToBasis - (*distMap)[p].distance == 1) ) && neighborNumber(p,gridGvd) == 1 )   || */
+        /*              existsNonAdjacent((*distMap)[p].sources)                                     || */ 
+        /*              disconnectsOnRemoval(p, gridGvd); */
+        // ver 1.4
+        /* gridGvd[p] = ( (((*distMap)[p].distance == 1 && neighborNumber(p,gridGvd) == 2) || neighborNumber(p,gridGvd) == 1) &&  existsNonAdjacent(distMap->basisPoints(p)) )  || */
+        /*              existsNonAdjacent((*distMap)[p].sources)                                         || */ 
+        /*              disconnectsOnRemoval(p, gridGvd); */
+        // ver 1.5 (works)
+        int neighbors = 0;
+        bool lessDistThanRoot2 = (*distMap)[p].distance < 1.5;
+        for(Pos pN : map.adj(p,nonTraversables)){
+          neighbors += gridGvd[pN];
+          lessDistThanRoot2 = lessDistThanRoot2 && (*distMap)[pN].distance < 1.5;
+        }
+        gridGvd[p] = ( ( (lessDistThanRoot2 && neighbors == 2) || neighbors == 1) && existsNonAdjacent(distMap->basisPoints(p)) )  ||
+                     existsNonAdjacent((*distMap)[p].sources)                                                                      || 
+                     disconnectsOnRemoval(p, gridGvd);
+
         // ver 2
         /* gridGvd[p] = (isConnectivityAux(p)  && (*distMap)[p].sources.size() > 1)         || */ 
         /*              (!isConnectivityAux(p) && existsNonAdjacent((*distMap)[p].sources)) || */
         /*              disconnectsOnRemoval(p, gridGvd); */
+        
         break;
     }
 
@@ -173,7 +199,7 @@ void Gvd::updateBase(PosSet &candidates) {
 
       for(Pos pN : map.adj(p, nonTraversables)){
         if(graphGvd.has(pN)){
-          /* toClean.insert(pN); */
+          toClean.insert(pN);
           GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
           graphGvd.addE(v,vN);
           graphGvd.addE(vN,v);
