@@ -27,7 +27,7 @@ struct GvdVertexProperty {
   }
 };
 
-typedef PosGraph<adjacency_list<setS, setS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdGraph;
+typedef PosGraph<adjacency_list<listS, listS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdGraph;
 typedef PosGraph<adjacency_list<vecS, vecS, bidirectionalS, GvdVertexProperty,property<edge_weight_t, Float>>> GvdVecGraph;
 
 struct Gvd {
