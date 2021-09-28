@@ -149,7 +149,20 @@ Auction CentralModule::getAuctionInfo() {
   GvdGraph& gvd = topoMap->gvd->graphGvd;
   cout << "debug :: gvd to rosmsg" << endl;
   for (GvdGraph::Vertex v : gvd) {
-    auctionInfo.gvd.vertices.push_back(toPoint2D(gvd.g[v].p));
+    Pos p = gvd.g[v].p;
+    auctionInfo.gvd.vertices.push_back(toPoint2D(p));
+
+    // ver 1 : undoes cleaning (all adjacent vertices are connected)
+    /* for(Pos pN : map.map.adj(p, topoMap->gvd->nonTraversables)){ */
+    /*   if(gvd.has(pN)){ */
+    /*     Edge e; */
+    /*     e.from = toPoint2D(p); */
+    /*     e.to = toPoint2D(pN); */
+    /*     auctionInfo.gvd.edges.push_back(e); */
+    /*   } */
+    /* } */
+
+    // ver 2 : uses gvd as it is
     for (GvdGraph::Vertex nv : gvd.adj(v)) {
       Edge e;
       e.from = toPoint2D(gvd.g[v].p);

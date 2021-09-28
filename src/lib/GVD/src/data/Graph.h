@@ -542,7 +542,7 @@ struct PosGraph : public Graph<graph,Pos> {
       openQueue.pop();
 
       // if np is on the graph then a path to the graph was found!
-      if (is_elem(pos, this->idVertexMap)) {
+      if (this->has(pos)) {
 
         // construct a vector with the nodes of the path
         Pos prevPos;

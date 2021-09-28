@@ -213,7 +213,7 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
       if(is_elem(p, criticalInfos)){
         map[p] = Critical;
       }else if(is_elem(p, criticalLines)){
-        map[p] = Critical;
+        map[p] = CriticalLine;
       }
     }
   }

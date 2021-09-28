@@ -62,13 +62,6 @@ void Gvd::cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval)
       boost::tie(avIt, avItEnd) = adjacent_vertices(v, graph.g);
     }
   }
- 
-  if(vertexRemoval){
-    if (graph.degree(v) == 0) {
-      graph.removeV(v);
-      gridGvd[p] = false;
-    }
-  }
 }
 
 /* If removing `p` from  disconects the graph represented with the Grid then  */
@@ -234,7 +227,7 @@ void Gvd::updateBase(PosSet &candidates) {
       bool inserted;
       tie(v,inserted) = graphGvd.addV(p);
       if(!inserted){
-        graphGvd.removeV(p);
+        graphGvd.removeV(v);
         tie(v,inserted) = graphGvd.addV(p);
       }
 
@@ -242,7 +235,7 @@ void Gvd::updateBase(PosSet &candidates) {
 
       for(Pos pN : map.adj(p, nonTraversables)){
         if(graphGvd.has(pN)){
-          toClean.insert(pN);
+          /* toClean.insert(pN); */
           GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
           graphGvd.addE(v,vN);
           graphGvd.addE(vN,v);
@@ -259,6 +252,15 @@ void Gvd::updateBase(PosSet &candidates) {
     cleanUp(p, graphGvd, GvdConfig::get()->edgeSimplificationMethod, GvdConfig::get()->edgeSimplificationAllowVertexRemoval);
   }
 
+  if(GvdConfig::get()->edgeSimplificationAllowVertexRemoval){
+    for (Pos p : toClean){
+      GvdGraph::Vertex v = graphGvd.idVertexMap[p];
+      if (graphGvd.degree(v) == 0) {
+        graphGvd.removeV(v);
+        gridGvd[p] = false;
+      }
+    }
+  }
 }
 
 /////////
@@ -334,13 +336,15 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
     graphGvd.removeV(p);
   }
   /// remove the vertices of the surrounding border of the modified region if it does not disconnect the gvd 
-  //// ver 1
+
+  //// ver 1 (should work)
   /* for (Pos p : distMap->modified){ */
   /*   for(Pos pN : map.adj(p, nonTraversables)){ */
   /*     if(gridGvd[pN]) candidates.insert(pN); */
   /*   } */
   /* } */
-  // ver 2
+
+  //// ver 2 (works)
   for (Pos p : distMap->modified){
     if((*distMap)[p].distance <= 1.5 && disconnectsOnRemoval(p, gridGvd)) continue;
     for(Pos pN : map.adj(p, nonTraversables)){

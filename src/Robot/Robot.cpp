@@ -54,11 +54,13 @@ Bid Robot::getBid(Auction msg) {
     }
   }
 
-  /// add the non-trivial frontiers to the gvd
-  addToGraph(nonTrivialFrontiers, gvd, map);
+  if(!nonTrivialFrontiers.empty()){
+    /// add the non-trivial frontiers to the gvd
+    addToGraph(nonTrivialFrontiers, gvd, map);
 
-  // get the path from the robotBidPos to each non-trivial frontier
-  boost::tie(nonTrivialPaths, nonTrivialPathLenght) = gvd.getMultiPath(robotBidPos, nonTrivialFrontiers);
+    // get the path from the robotBidPos to each non-trivial frontier
+    boost::tie(nonTrivialPaths, nonTrivialPathLenght) = gvd.getMultiPath(robotBidPos, nonTrivialFrontiers);
+  }
 
   // Add non trivial frontiers to the Bid
   for (auto &it : nonTrivialPathLenght) {
