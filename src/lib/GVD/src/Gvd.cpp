@@ -176,15 +176,15 @@ void Gvd::updateBase(PosSet &candidates) {
         /*              disconnectsOnRemoval(p, gridGvd); */
 
         // ver 1.6 (works and should work on corridors of pair width greater than 4 (and less than 4 too))
-        int neighbors = 0;
-        bool nonStrictMax = true;
-        for(Pos pN : map.adj(p,nonTraversables)){
-          neighbors += gridGvd[pN];
-          nonStrictMax = nonStrictMax && (*distMap)[pN].distance <= (*distMap)[p].distance + 0.5;
-        }
-        gridGvd[p] = ( ( (nonStrictMax && neighbors == 2) || neighbors == 1) && existsNonAdjacent(distMap->basisPoints(p)) )  ||
-                     existsNonAdjacent((*distMap)[p].sources)                                                                 || 
-                     disconnectsOnRemoval(p, gridGvd);
+        /* int neighbors = 0; */
+        /* bool nonStrictMax = true; */
+        /* for(Pos pN : map.adj(p,nonTraversables)){ */
+        /*   neighbors += gridGvd[pN]; */
+        /*   nonStrictMax = nonStrictMax && (*distMap)[pN].distance <= (*distMap)[p].distance + 0.5; */
+        /* } */
+        /* gridGvd[p] = ( ( (nonStrictMax && neighbors == 2) || neighbors == 1) && existsNonAdjacent(distMap->basisPoints(p)) )  || */
+        /*              existsNonAdjacent((*distMap)[p].sources)                                                                 || */ 
+        /*              disconnectsOnRemoval(p, gridGvd); */
 
         // ver 1.7 (works and should work on corridors of pair width greater than 4 (and less than 4 too), has false positives)
         /* Float maxDistToBasis = (*distMap)[p].distance; */
@@ -213,6 +213,18 @@ void Gvd::updateBase(PosSet &candidates) {
         /* gridGvd[p] = ( ( ((lessDistThanRoot2 ||nonStrictMax) && neighbors == 2) || neighbors == 1) && existsNonAdjacent(distMap->basisPoints(p)) )  || */
         /*              existsNonAdjacent((*distMap)[p].sources)                                                                      || */ 
         /*              disconnectsOnRemoval(p, gridGvd); */
+
+        // ver 1.9 (works and should work on corridors of pair width greater than 4 (and less than 4 too)) makes cleaner gvd
+        //   Needs testing, if this version fails use ver 1.6 (almost the same but forces the inclusion of cells that have 2 
+        //   non adjacent sources.
+        int neighbors = 0;
+        bool nonStrictMax = true;
+        for(Pos pN : map.adj(p,nonTraversables)){
+          neighbors += gridGvd[pN];
+          nonStrictMax = nonStrictMax && (*distMap)[pN].distance <= (*distMap)[p].distance + 0.5;
+        }
+        gridGvd[p] = ( ( (nonStrictMax && neighbors == 2) || neighbors == 1) && existsNonAdjacent(distMap->basisPoints(p)) )  ||
+                     disconnectsOnRemoval(p, gridGvd);
 
         // ver 2
         /* gridGvd[p] = (isConnectivityAux(p)  && (*distMap)[p].sources.size() > 1)         || */ 
