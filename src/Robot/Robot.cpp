@@ -44,15 +44,11 @@ Bid Robot::getBid(Auction msg) {
       bid.frontiers.push_back(toPoint2D(frontier));
       bid.pathLength.push_back(robotBidPos.distanceTo(frontier)*occupancyGrid.info.resolution);
 
-      Float robotYaw = toFloat(orientation);
-      Float yawToPath = (toVector2<Float>(frontier) - robotVector2).angle();
-      Float pathEntryYaw = abs(minAngleRep(robotYaw-yawToPath));
-      bid.pathEntryYaw.push_back((pathEntryYaw/M_PI)*sensorRange);
-      /* cout<<"entryWaypoint: "<<frontier<<endl; */
-      /* cout<<"robotVector2: "<<robotVector2<<endl; */
-      /* cout<<"pathYaw: "<<(yawToPath*180)/M_PI<<endl; */
-      /* cout<<"robotYaw: "<<(robotYaw*180)/M_PI<<endl; */
-      /* cout<<"pathEntryYaw: "<<(abs(minAngleRep(robotYaw-yawToPath))*180)/M_PI<<endl; */
+      /* Float robotYaw = toFloat(orientation); */
+      /* Float yawToPath = (toVector2<Float>(frontier) - robotVector2).angle(); */
+      /* Float pathEntryYaw = abs(minAngleRep(robotYaw-yawToPath)); */
+      /* bid.pathEntryYaw.push_back((pathEntryYaw/M_PI)*sensorRange); */
+      bid.pathEntryYaw.push_back(0);
     }else{
       nonTrivialFrontiers.insert(frontier);
     }
@@ -71,7 +67,8 @@ Bid Robot::getBid(Auction msg) {
 
     bid.frontiers.push_back(toPoint2D(frontier));
     bid.pathLength.push_back(nonTrivialPathLenght[frontier]*occupancyGrid.info.resolution);
-    bid.pathEntryYaw.push_back(sensorRange);
+    /* bid.pathEntryYaw.push_back(sensorRange); */
+    bid.pathEntryYaw.push_back(0);
   }
 
   // Set the robot position
