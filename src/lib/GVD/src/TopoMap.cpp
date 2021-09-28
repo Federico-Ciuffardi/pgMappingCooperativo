@@ -222,9 +222,9 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
   for( Pos pos : candidates ){
     if(is_elem(pos,criticalInfos)){
       CriticalInfo criticalInfo = criticalInfos[pos];
-      map[pos] = Free;
+      if(map[pos] == Critical) map[pos] = Free;
       for(Pos linePos : criticalInfo.criticalLines){
-        map[linePos] = Free;
+        if(map[linePos] == CriticalLine) map[linePos] = Free;
         criticalLines.erase(linePos);
       }
       criticalInfos.erase(pos);

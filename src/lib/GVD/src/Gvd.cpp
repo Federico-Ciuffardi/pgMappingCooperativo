@@ -235,7 +235,7 @@ void Gvd::updateBase(PosSet &candidates) {
 
       for(Pos pN : map.adj(p, nonTraversables)){
         if(graphGvd.has(pN)){
-          /* toClean.insert(pN); */
+          toClean.insert(pN);
           GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
           graphGvd.addE(v,vN);
           graphGvd.addE(vN,v);
@@ -337,26 +337,37 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   }
   /// remove the vertices of the surrounding border of the modified region if it does not disconnect the gvd 
 
-  //// ver 1 (should work)
+  //// ver 1 (do not work, fails on some raise waves)
   /* for (Pos p : distMap->modified){ */
   /*   for(Pos pN : map.adj(p, nonTraversables)){ */
   /*     if(gridGvd[pN]) candidates.insert(pN); */
   /*   } */
   /* } */
 
-  //// ver 2 (works)
+  //// ver 2 (do not work, fails on some raise waves)
+  /* for (Pos p : distMap->modified){ */
+  /*   if((*distMap)[p].distance <= 1.5 && disconnectsOnRemoval(p, gridGvd)) continue; */
+  /*   for(Pos pN : map.adj(p, nonTraversables)){ */
+  /*     gridGvd[pN] = gridGvd[pN] && disconnectsOnRemoval(pN, gridGvd); */
+  /*     if(!gridGvd[pN]){ */
+  /*       graphGvd.removeV(pN); */
+  /*     } */
+  /*   } */
+  /* } */
+
+  //// ver 3 (works, causes some artifacts on corners) 
+  /* not doing anything */
+
+  //// ver 4 (works)
+  PosSet extraErosion; 
   for (Pos p : distMap->modified){
-    if((*distMap)[p].distance <= 1.5 && disconnectsOnRemoval(p, gridGvd)) continue;
     for(Pos pN : map.adj(p, nonTraversables)){
-      gridGvd[pN] = gridGvd[pN] && disconnectsOnRemoval(pN, gridGvd);
-      if(!gridGvd[pN]){
-        graphGvd.removeV(pN);
-      }
+      if(gridGvd[pN]) extraErosion.insert(pN);
     }
   }
 
+  /// Set the wave crashes on the distance map which are candidates be added to the gvd
   PosSet candidates;
-  /// Set the modified cells to check which should be added to the gvd
   for (Pos p : distMap->waveCrashes){
     candidates.insert(p);
     for(Pos pN : map.adj(p, nonTraversables)){
@@ -366,6 +377,10 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
 
   // update base
   updateBase(candidates);
+
+  //// part of ver 4
+  filter(extraErosion,[this](Pos p){return !gridGvd[p];});
+  updateBase(extraErosion);
 }
 
 //////////////////
