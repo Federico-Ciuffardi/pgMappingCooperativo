@@ -235,7 +235,7 @@ void Gvd::updateBase(PosSet &candidates) {
 
       for(Pos pN : map.adj(p, nonTraversables)){
         if(graphGvd.has(pN)){
-          toClean.insert(pN);
+          /* toClean.insert(pN); */
           GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
           graphGvd.addE(v,vN);
           graphGvd.addE(vN,v);
@@ -344,9 +344,8 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   /*   } */
   /* } */
 
-  //// ver 2 (do not work, fails on some raise waves)
+  //// ver 2 (could work, if it does not use 4)
   /* for (Pos p : distMap->modified){ */
-  /*   if((*distMap)[p].distance <= 1.5 && disconnectsOnRemoval(p, gridGvd)) continue; */
   /*   for(Pos pN : map.adj(p, nonTraversables)){ */
   /*     gridGvd[pN] = gridGvd[pN] && disconnectsOnRemoval(pN, gridGvd); */
   /*     if(!gridGvd[pN]){ */
@@ -355,16 +354,16 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   /*   } */
   /* } */
 
-  //// ver 3 (works, causes some artifacts on corners) 
-  /* not doing anything */
+  //// ver 3 (works)
+  /* PosSet extraErosion; */ 
+  /* for (Pos p : distMap->modified){ */
+  /*   for(Pos pN : map.adj(p, nonTraversables)){ */
+  /*     if(gridGvd[pN]) extraErosion.insert(pN); */
+  /*   } */
+  /* } */
 
-  //// ver 4 (works)
-  PosSet extraErosion; 
-  for (Pos p : distMap->modified){
-    for(Pos pN : map.adj(p, nonTraversables)){
-      if(gridGvd[pN]) extraErosion.insert(pN);
-    }
-  }
+  //// ver 4 (works, may cause some artifacts on corners) 
+  /* not doing anything */
 
   /// Set the wave crashes on the distance map which are candidates be added to the gvd
   PosSet candidates;
@@ -378,9 +377,9 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   // update base
   updateBase(candidates);
 
-  //// part of ver 4
-  filter(extraErosion,[this](Pos p){return !gridGvd[p];});
-  updateBase(extraErosion);
+  //// part of ver 3
+  /* filter(extraErosion,[this](Pos p){return !gridGvd[p];}); */
+  /* updateBase(extraErosion); */
 }
 
 //////////////////
