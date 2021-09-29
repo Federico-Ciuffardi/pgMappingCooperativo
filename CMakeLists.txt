@@ -171,7 +171,7 @@ add_executable(${PROJECT_NAME}_map_merger src/MapMerger/MapMergerNode.cpp src/Ma
 add_executable(${PROJECT_NAME}_central_module src/CentralModule/CentralModuleNode.cpp src/CentralModule/CentralModule.cpp src/lib/RvizHelper.cpp src/lib/IncrementalMap.cpp ${GVD_SOURCES})
 add_executable(${PROJECT_NAME}_move_controller src/MoveController/MoveController.cpp ${GVD_SOURCES})
 add_executable(${PROJECT_NAME}_robot src/Robot/RobotNode.cpp src/Robot/Robot.cpp src/lib/RvizHelper.cpp ${GVD_SOURCES})
-add_executable(${PROJECT_NAME}_end_module src/endModule.cpp)
+add_executable(${PROJECT_NAME}_end_module src/EndModule.cpp)
 #add_executable(${PROJECT_NAME}_monitor src/monitor.cpp src/CentralModule/CentralModule.cpp src/Robot/Robot.cpp)
 
 ## Rename C++ executable without prefix

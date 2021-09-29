@@ -20,11 +20,11 @@
 
   <!-- ## Set TO MATCH the size of the used map -->
   <!--    TODO set this through a file near the .world file as is heavily dependent on the map -->
-  <arg name="map_size" default="5832" /> 
+  <arg name="map_size" default="15832" /> 
   <param name="map_size" type="int" value="$(arg map_size)" />  
 
   <!-- ## Set the cell size TO USE in the occupancy grid  -->
-  <arg name="cell_size" default="0.2" /> 
+  <arg name="cell_size" default="1" /> 
   <param name="cell_size" type="double" value="$(arg cell_size)" />  
 
   <!-- ## Set TO MATCH the robot speed  -->

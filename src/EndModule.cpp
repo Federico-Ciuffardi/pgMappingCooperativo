@@ -37,7 +37,7 @@ ros::Subscriber mapUpdateSub;
 ros::Publisher endPub;
 
 // others
-int maxCellCoverage = 5832;
+int maxCellCoverage;
 boost::unordered_set<int> coveredIndices;
 
 bool firstMap = true;
@@ -96,6 +96,9 @@ int main(int argc, char* argv[]) {
   // Init node
   ros::init(argc, argv, "end_module");
   ros::NodeHandle n;
+
+  // Load params
+  FAIL_IFN(n.param<int>   ("/map_size", maxCellCoverage, 0));
 
   // Initilize Subscribers
   mapSub             = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);

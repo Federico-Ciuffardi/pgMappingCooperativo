@@ -566,10 +566,10 @@ int main(int argc, char* argv[]) {
   n.param<int>("/auction_start_timeout_mode", auctionStartTimeoutModeParam, auctionStartTimeoutModeParam);
   n.param<float>("/map_update_delay", mapUpdateDelay, mapUpdateDelay);
 
-  // Frontier
+  /// Frontier
   n.param<int>("/frontier_simplification_method", centralModule.frontierSimplificationMethod, centralModule.frontierSimplificationMethod);
 
-  // incremental
+  /// incremental
   n.param<int>("/auction_info_incremental", centralModule.auctionInfoIncremental, centralModule.auctionInfoIncremental);
 
 
