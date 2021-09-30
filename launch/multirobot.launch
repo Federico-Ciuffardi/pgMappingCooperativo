@@ -20,7 +20,7 @@
 
   <!-- ## Set TO MATCH the size of the used map -->
   <!--    TODO set this through a file near the .world file as is heavily dependent on the map -->
-  <arg name="map_size" default="15832" /> 
+  <arg name="map_size" default="12380" /> 
   <param name="map_size" type="int" value="$(arg map_size)" />  
 
   <!-- ## Set the cell size TO USE in the occupancy grid  -->
@@ -36,7 +36,7 @@
   <param name="robot_sensor_range" type="double" value="$(arg robot_sensor_range)" />  
 
   <!-- # Log -->
-  <arg name="file_log_dir" default="$(find pgmappingcooperativo)/logFiles/" /> 
+  <arg name="file_log_dir" default="$(find pgmappingcooperativo)/logFiles" /> 
   <param name="file_log_dir" type="string" value="$(arg file_log_dir)" />  
 
   <arg name="file_log_level" default="2" /> 

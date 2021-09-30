@@ -23,6 +23,8 @@ class IncrementalMap{
   // vars //
   //////////
 
+  boost::unordered_set<int> coveredIndices;
+
   nav_msgs::OccupancyGrid occupancyGrid;
   
   Map map;

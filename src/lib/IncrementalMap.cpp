@@ -20,6 +20,9 @@ void IncrementalMap::update(const OccupancyGridConstPtr& newOccupancyGrid){
 
     update(p,toCellType(newOccupancyGrid->data[i]));
     occupancyGrid.data[i] = newOccupancyGrid->data[i];
+    if(!isUnknown(occupancyGrid.data[i])){
+      coveredIndices.insert(i);
+    }
   }
 }
 
@@ -31,6 +34,9 @@ void IncrementalMap::update(const OccupancyGridUpdateConstPtr& occGridUpdate){
 
     update(globalPos,toCellType(occGridUpdate->data[updateInd]));
     occupancyGrid.data[globalInd] = occGridUpdate->data[updateInd];
+    if(!isUnknown(occupancyGrid.data[globalInd])){
+      coveredIndices.insert(globalInd);
+    }
   }
 }
 

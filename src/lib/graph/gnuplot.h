@@ -31,7 +31,7 @@ class gnuplot{
         //this->operator()("set yrange [0:] ");
         this->operator()("set xrange [0:] ");
         this->operator()("set style line 10 linetype 2 lc rgb \'blue\' pointtype 7");
-        this->operator()("plot \""+name_file_data+".dat\" u 1:2 notitle with lp ls 10");
+        this->operator()("plot \""+name_file_data+"\" u 1:2 notitle with lp ls 10");
     }
         
     protected:

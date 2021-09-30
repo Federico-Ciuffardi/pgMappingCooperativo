@@ -41,7 +41,7 @@ function set_id(){
   fi
   # set variables
   this_log_dir="${log_dir}/${id}"
-  this_settings_file="${this_log_dir}/settings.yaml"
+  this_settings_file="${this_log_dir}/rosparams.yaml"
 
   # create new stuff if id was new
   if [ $# -le 0 ] ; then
@@ -89,10 +89,6 @@ function test(){
   # get new id
   set_id
 
-  # save the settings
-  echo "starting_robot_number: ${starting_robot_number}" >  ${this_settings_file}
-  echo "map_name:              ${map_name}"              >> ${this_settings_file}
-
   #  execute test
   ## init ros 
   init_generic_ros "${map_name}"
@@ -105,7 +101,7 @@ function test(){
 
   ## start the sim
   printf "> Simulation on ${map_name} with ${starting_robot_number}\n\n"
-  roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} || true
+  roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} file_log_dir:=${this_log_dir} || true
 
   ## Post process the replay
 

@@ -55,6 +55,13 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
 
+  // remove useless frontiers (not adjacent to another free space)
+  for(Pos frontier : frontiers){
+    if(map.map.adj(frontier,{Occupied,Unknown}).size() == 0){
+      map.map[frontier] = Free;
+    }
+  }
+
   // Simplify the frontiers obtaining the significative frontiers and using those instead of all the frontiers
   if(frontierSimplificationMethod > 0){
     // Calculate the connectedComponents of frontiers

@@ -122,9 +122,6 @@ class CentralModule {
   TopoMap* topoMap = NULL;
   boost::unordered_map<RobotId,boost::unordered_map<Pos,Float>> bids;
 
-  //log related
-  int cellCount = 0;
-
   // Map related
   IncrementalMap map;
 

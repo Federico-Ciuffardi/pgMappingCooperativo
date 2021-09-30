@@ -38,24 +38,36 @@ ros::Publisher endPub;
 
 // others
 int maxCellCoverage;
+string fileLogDir;
+
 boost::unordered_set<int> coveredIndices;
 
 bool firstMap = true;
+ros::Time firstMapTime;
 int width;
+
+bool endFlag = false;
 
 ///////////////////
 // Aux Functions //
 ///////////////////
 
 void checkTermination() {
-  if (coveredIndices.size() >= maxCellCoverage) {
-    std_msgs::String end_msg;
-    std::stringstream ss;
-    ss << "END";
-    end_msg.data = ss.str();
-    ROS_INFO("Stopping");
-    endPub.publish(end_msg);
-  }
+  if (!endFlag || coveredIndices.size() >= maxCellCoverage) return; // if already ended or not ready to end then skip
+
+  endFlag = true;
+
+  // Notify termination to other nodes
+  std_msgs::String end_msg;
+  end_msg.data = "END";
+  ROS_INFO("Stopping");
+  endPub.publish(end_msg);
+
+  // log
+  string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
+  string exploredCells = to_string(coveredIndices.size());
+  logIfNotExists(fileLogDir+"/termination.yaml", "explored_cells: "+exploredCells + "\n" + 
+                                                 "time:           "+explorationTime);
 }
 
 ///////////////
@@ -64,12 +76,13 @@ void checkTermination() {
 
 void mapCallBack(const OccupancyGridConstPtr& msg) {
   if(firstMap){
+    firstMapTime = ros::Time::now();
     width = msg->info.width;
     maxCellCoverage /= msg->info.resolution*msg->info.resolution;
     firstMap = false;
   }
   for (int i =0; i < msg->data.size(); i++) {
-    if(msg->data[i] != -1){
+    if(!isUnknown(msg->data[i])){
       coveredIndices.insert(i);
     }
   }
@@ -80,7 +93,7 @@ void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& update) {
   Pos updateToGlobal = Pos(update->x,update->y);
   for (int updateInd = 0; updateInd < update->data.size(); updateInd++) {
     int globalInd = toInt( updateToGlobal + toPos(updateInd,update->width), width);
-    if(update->data[updateInd] != -1){
+    if(!isUnknown(update->data[updateInd])){
       coveredIndices.insert(globalInd);
     }
   }
@@ -99,6 +112,7 @@ int main(int argc, char* argv[]) {
 
   // Load params
   FAIL_IFN(n.param<int>   ("/map_size", maxCellCoverage, 0));
+  FAIL_IFN(n.param<string>("/file_log_dir", fileLogDir, ""));
 
   // Initilize Subscribers
   mapSub             = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);

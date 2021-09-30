@@ -89,17 +89,17 @@ int expectedRobots = 0;
 int requests       = 0;
 
 ros::Time lastAuctionStart;
-ros::Time lastGvdStart;
-ros::Time firstAuction;
 
-ros::Duration gvdTime;
-ros::Duration gvdTimeIncrement(0);
+ros::Duration auctionInfoTime;
+ros::Duration estimatedAuctionInfoTimeIncrement(0);
 
 string endMsg = "END";
 
-string gvdFileLog;
-string incrementGvdFileLog;
-string coverageFileLog;
+gnuplot gplot;
+
+bool firstMap = true;
+ros::Time firstMapTime;
+
 
 ////////////////
 // Rviz marks //
@@ -247,21 +247,27 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 ///////////////////
 // Aux Functions //
 ///////////////////
+void end(){
+  ROS_INFO("Shutting down ros...");
+  ros::Duration(2.5).sleep();
+  ros::shutdown();
+}
 
 void startAuction() {
   // get aution info (calculate gvd + mesure time of calculation)
   ROS_INFO("Computing Auction information");
 
-  ros::Duration lastGvdTime = gvdTime;
-  lastGvdStart = ros::Time::now();
+  ros::Duration lastauctionInfoTime = auctionInfoTime;
 
+  ros::Time auctionInfoStart = ros::Time::now();
   Auction auction = centralModule.getAuctionInfo();
+  auctionInfoTime = (ros::Time::now() - auctionInfoStart);
 
-  gvdTime = (ros::Time::now() - lastGvdStart);
-  gvdTimeIncrement = max(gvdTimeIncrement, gvdTime - lastGvdTime);
+  estimatedAuctionInfoTimeIncrement = max(estimatedAuctionInfoTimeIncrement, auctionInfoTime - lastauctionInfoTime);
+
   cout<<"debug :: ended getAuctionInfo"<<endl;
 
-  if(gvdTime.toSec() > 4){
+  if(auctionInfoTime.toSec() > 4){
     auctionStartTimeoutMode = 2;
   }else if(auctionStartTimeoutModeParam < 2){
     auctionStartTimeoutMode = auctionStartTimeoutModeParam;
@@ -280,38 +286,21 @@ void startAuction() {
   auctionPub.publish(auction);
   ROS_INFO("Auction information broadcasted");
 
-  // log gvd time
+  // log auction info construction time
   if (centralModule.fileLogLevel >= 2) {
-    ros::Duration currentTime = ros::Time::now() - firstAuction;
-    string time = to_string(currentTime.toSec());
-    string coveragePer = to_string(((float)centralModule.cellCount / centralModule.mapSize) * 100);
+    string exploredCells = to_string((float)centralModule.map.coveredIndices.size());
 
-    if (coverageFileLog.empty()) {
-      coverageFileLog = "covarage";
-      coverageFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + coverageFileLog + to_string(centralModule.robotNumber);
-    }
+    // log auctionInfoTime
+    string auctionInfoTimeLog = centralModule.fileLogDir + "/auctionInfoTime";
+    string time = to_string(auctionInfoTime.toSec());
+    logAppend(auctionInfoTimeLog, exploredCells + "  " + time);
+    gplot.graph_file(auctionInfoTimeLog, "Explored cells", "Time to get information about the auction");
 
-    string data = coveragePer + " " + to_string(gvdTime.toSec());
-    if (gvdFileLog.empty()) {
-      gvdFileLog = "tiemposGVD";
-      gvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + gvdFileLog + to_string(centralModule.robotNumber);
-    }
-
-    log_data(data, gvdFileLog);
-
-    ros::Duration increment = (gvdTime - lastGvdTime);
-    data = to_string(currentTime.toSec())+"  "+to_string(increment.toSec());
-    data = coveragePer + "  " + to_string(increment.toSec());
-    if (incrementGvdFileLog.empty()) {
-      incrementGvdFileLog = "incrementoGVD";
-      incrementGvdFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + incrementGvdFileLog + to_string(centralModule.robotNumber);
-    }
-
-    log_data(data, incrementGvdFileLog);
-
-    gnuplot p;
-    p.graph_file(gvdFileLog, "Cubrimiento del map(%)", "Tiempo de GvdGraph(s)");
-    p.graph_file(incrementGvdFileLog, "Cubrimiento del map(%)", "Incremento de tiempo de GvdGraph(s)");
+    // log auctionInfoIncrementalTime
+    string auctionInfoTimeIncrementLog = centralModule.fileLogDir + "/AuctionInfoTimeDiff";
+    string timeIncrement = to_string((auctionInfoTime - lastauctionInfoTime).toSec());
+    logAppend(auctionInfoTimeIncrementLog, exploredCells + "  " + timeIncrement);
+    gplot.graph_file(auctionInfoTimeIncrementLog, "Explored cells", "Time diference to get information about the auction");
   }
 
 }
@@ -358,7 +347,7 @@ void resolveAuction() {
   }
 
   // Set the timeout to start the next auction
-  auctionStartTimeout = gvdTime + gvdTimeIncrement + auctionStartDelayTimeout;
+  auctionStartTimeout = auctionInfoTime + estimatedAuctionInfoTimeIncrement + auctionStartDelayTimeout;
   auctionStartTimeoutTimer.setPeriod(auctionStartTimeout,false);
 
   /// Calculate the robots that are expected to complete the assigned task not long after the first auction request
@@ -380,6 +369,17 @@ void resolveAuction() {
 
   /// Show resolution
   ROS_INFO_STREAM("Auction resoved, robots assigned = "<<assignedRobots<<" | robots expected "<<expectedRobots);
+
+  if(expectedRobots == 0){
+    // log termination
+    string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
+    string exploredCells = to_string(centralModule.map.coveredIndices.size());
+    logIfNotExists(centralModule.fileLogDir+"/termination.yaml", "explored_cells: "+exploredCells + "\n" + 
+                                                                 "time:           "+explorationTime);
+    ROS_INFO("Nothing else to explore");
+
+    end();
+  }
 }
 
 /////////////////////
@@ -411,12 +411,11 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 // CallBacks //
 ///////////////
 
-bool first = true;
 void mapCallBack(const OccupancyGridConstPtr& msg) {
   centralModule.updateMap(msg);
-  if (first){
-    firstAuction = ros::Time::now();
-    first = false;
+  if (firstMap){
+    firstMapTime = ros::Time::now();
+    firstMap = false;
     startAuction();
   }
 }
@@ -509,35 +508,8 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
 
   if (!endFlag) return;
 
-  // log data
-  if (centralModule.fileLogLevel > 0) {
-    ros::Duration currentTime = ros::Time::now() - firstAuction;
-    string robotCount = to_string(centralModule.robotNumber);
-    string time = to_string(currentTime.toSec());
-
-    string data = "Cantidad Robots: " + robotCount + "\n";
-    data += "Tiempo de ejecucion: " + time;
-    string ejecucionFileLog = "tiemposEjecucion";
-    ejecucionFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + ejecucionFileLog;
-    log_data(data, ejecucionFileLog);
-
-    ejecucionFileLog = "tiemposEjecucionG";
-    ejecucionFileLog = centralModule.fileLogDir + centralModule.mapName + "_" + ejecucionFileLog;
-    string gData = robotCount + "  " + time;
-    log_data(gData, ejecucionFileLog);
-    log_data(time, (ejecucionFileLog + robotCount));
-
-    gnuplot p;
-    p.graph_file(ejecucionFileLog, "Numero de robots", "Tiempo de ejecucion");
-    if (centralModule.fileLogLevel > 1) {
-      p.graph_file(gvdFileLog, "Cubrimiento del map(%)", "Tiempo de GvdGraph(s)");
-      p.graph_file(incrementGvdFileLog, "Cubrimiento del map(%)", "Incremento de tiempo de GvdGraph(s)");
-    }
-  }
-
-  ROS_INFO("Exploration completed, shutting down ros...");
-  ros::Duration(2.5).sleep();
-  ros::shutdown();
+  ROS_INFO("End signal received");
+  end();
 }
 
 //////////
@@ -645,6 +617,9 @@ int main(int argc, char* argv[]) {
       ROS_DEBUG_STREAM("Extracted `robot_name = "<<robotName<<"` from `topic_name = "<<publishedTopic.name<<"`");
     }
   }
+
+  // Store rosparams
+  std::system(("rosparam dump "+centralModule.fileLogDir+"/rosparams.yaml").c_str());
 
   // spin
   ROS_INFO_STREAM("Initilized");
