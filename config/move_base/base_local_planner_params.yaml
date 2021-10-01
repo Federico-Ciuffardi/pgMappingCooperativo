@@ -7,20 +7,20 @@ recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecover
 #   step_size: 10
 #   min_dist_from_robot: 10
 
-base_global_planner: "global_planner/GlobalPlanner"
-GlobalPlanner:
-  allow_unknown: true
-  use_dijkstra: true
-  lethal_cost: 50
-  neutral_cost: 25
-  outline_map: false
-  use_grid_path: false 
-  # orientation_window_size: 0
-  old_navfn_behavior: true
-
-# base_global_planner: "navfn/NavfnROS"
-# NavfnROS:
+# base_global_planner: "global_planner/GlobalPlanner"
+# GlobalPlanner:
 #   allow_unknown: true
+#   use_dijkstra: true
+#   lethal_cost: 50
+#   neutral_cost: 25
+#   outline_map: false
+#   use_grid_path: false 
+#   # orientation_window_size: 0
+#   old_navfn_behavior: true
+
+base_global_planner: "navfn/NavfnROS"
+NavfnROS:
+  allow_unknown: true
 
 base_local_planner: "teb_local_planner/TebLocalPlannerROS" 
 TebLocalPlannerROS:
@@ -54,4 +54,14 @@ TebLocalPlannerROS:
 
 # base_local_planner: "eband_local_planner/EBandPlannerROS" 
 # EBandPlannerROS:
-# ...
+#   max_vel_lin: 0.75
+#   max_vel_th: 1.0
+
+#   max_vel_x_backwards: 0.75
+
+#   max_acceleration: 0.5
+#   max_translational_acceleration: 0.5
+#   max_rotational_acceleration: 1.5
+
+#   yaw_goal_tolerance: 360
+#   xy_goal_tolerance: 0.5
