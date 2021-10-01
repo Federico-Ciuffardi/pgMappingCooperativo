@@ -69,16 +69,20 @@ string endMsg("END");
 ////////////////
 
 void setPathRvizMarks(GoalList &path, mapInfoType mapInfo) {
-  float cellSize = mapInfo.resolution;
+  if(path.goals.empty()){
+    rvizHelper.deleteMark(robot.name + "_path", 0);
+  }else{
+    float cellSize = mapInfo.resolution;
 
-  // draw path to objective
-  rvizHelper.topic = &pathMarkerPub;
+    // draw path to objective
+    rvizHelper.topic = &pathMarkerPub;
 
-  rvizHelper.color    = MAGENTA;
-  rvizHelper.type     = RvizHelper::LINE_STRIP;
-  rvizHelper.scale    = makeVector3(cellSize*0.15, cellSize, 1);
-  rvizHelper.position = makeVector3(0,0,pathLineZ);
-  rvizHelper.mark(path.goals, robot.name + "_path");
+    rvizHelper.color    = MAGENTA;
+    rvizHelper.type     = RvizHelper::LINE_STRIP;
+    rvizHelper.scale    = makeVector3(cellSize*0.15, cellSize, 1);
+    rvizHelper.position = makeVector3(0,0,pathLineZ);
+    rvizHelper.mark(path.goals, robot.name + "_path");
+  }
 }
 
 void setPositionRvizMarks(Point &position, mapInfoType mapInfo) {
@@ -131,21 +135,6 @@ void setRealTimePositionRvizMarks(Pose pose) {
   rvizHelper.position = Vector3();
 }
 
-///////////////////
-// Aux Functions //
-///////////////////
-
-void publishPath(Pos frontier) {
-  // Get path
-  GoalList path = robot.getPathTo(frontier);
-
-  // Publish the path
-  goalPathPub.publish(path);
-  
-  // Mark path info
-  setPathRvizMarks(path,  robot.occupancyGrid.info);
-}
-
 ///////////////
 // CallBacks //
 ///////////////
@@ -186,8 +175,10 @@ void auctionCallBack(const AuctionConstPtr& msg) {
 
   /* ros::Time bidStart = ros::Time::now(); */
   ROS_INFO("Calculate bids");
-  Bid bid = robot.getBid(*msg);
-  /* ROS_INFO_STREAM("Bids calculated in "<<(ros::Time::now()-bidStart).toSec()<<" secs"); */
+  Bid bid;
+  if(!msg->frontiers.empty()){
+    bid = robot.getBid(*msg);
+  }
 
   ROS_INFO("Publish bids");
   bid.id = msg->id;
@@ -208,8 +199,21 @@ void assignmentCallback(const AssignmentConstPtr& msg) {
   ROS_INFO("A assingment arived");
   robot.lastAssignmentId = msg->id;
 
+  // Set path info
+  GoalList goalList;
+
+  if(msg->assigned){
+    goalList = robot.getPathTo(toPos(msg->frontier));
+  }else{
+    goalList.id = robot.lastAssignmentId;
+  }
+
+  // Publish the path
   ROS_INFO("Publish the path that leads to the assingment");
-  publishPath(toPos(msg->frontier));
+  goalPathPub.publish(goalList);
+    
+  // Mark path info
+  setPathRvizMarks(goalList,  robot.occupancyGrid.info);
 }
 
 void mapCallBack(const OccupancyGridConstPtr& msg) {

@@ -57,17 +57,10 @@ void checkTermination() {
 
   endFlag = true;
 
-  // Notify termination to other nodes
-  std_msgs::String end_msg;
-  end_msg.data = "END";
-  ROS_INFO("Stopping");
-  endPub.publish(end_msg);
-
-  // log
+  // log termination
   string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
   string exploredCells = to_string(coveredIndices.size());
-  logIfNotExists(fileLogDir+"/termination.yaml", "explored_cells: "+exploredCells + "\n" + 
-                                                 "time:           "+explorationTime);
+  terminateExploration(fileLogDir, endPub, exploredCells, explorationTime);
 }
 
 ///////////////

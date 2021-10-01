@@ -240,13 +240,15 @@ boost::unordered_map<string, Assignment> CentralModule::assign() {
   // Process the auction resolution and bundle it as a ros message
   boost::unordered_map<string, Assignment> resolutionRosMessages;
 
-  for (auto it : resolution) {
-    RobotId robotId = it.first;
-    Pos frontier = it.second;
-
+  for (RobotId robotId : allRobots) {
     Assignment assignment;
+
     assignment.id = assignmentId;
-    assignment.frontier = toPoint2D(frontier);
+
+    assignment.assigned = is_elem(robotId,resolution);
+    if(assignment.assigned){
+      assignment.frontier = toPoint2D(resolution[robotId]);
+    }
 
     resolutionRosMessages[robotId] = assignment;
   }

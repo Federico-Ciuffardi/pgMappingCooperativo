@@ -17,10 +17,12 @@
 #include "std_msgs/String.h"
 #include "tf/transform_datatypes.h"
 #include "pgmappingcooperativo/GoalList.h"
+#include "pgmappingcooperativo/RobotReport.h"
 #include "../lib/GVD/src/data/Pos.h"
 #include "../lib/utils.h"
 
 using namespace sensor_msgs;
+using namespace pgmappingcooperativo;
 
 #define squared(x) x*x
 
@@ -40,9 +42,8 @@ Float movementDetectionThresholdSquared  = squared(0.01);
 // Topics
 /// Publishers
 ros::Publisher pathResultPub;
-ros::Publisher pathInfoPub;
-ros::Publisher waypointPub;
 ros::Publisher moveBaseSimpleGoalPub;
+ros::Publisher robotReportPub;
 
 /// Subscribers
 ros::Subscriber endSub;
@@ -53,19 +54,14 @@ ros::Subscriber mapUpdateSub;
 ros::Subscriber moveBaseResultSub;
 // Others
 vector<Point> path;
-PoseStamped position;
 
-Float cellDiagonal;
 int meterToCells;
 Float metersTraveled = 0;
 
-int pathflag = 0;
-int path_step = 0;
-int estado = 0;
-bool FIN = false;
-string endMsg("END");
+string endMsg = "END";
 
 bool firstRobotPos = true; 
+Pose robotPose;
 Vector2<Float> robotPos;
 
 int currentWaypointIndex = 0;
@@ -114,19 +110,10 @@ void sendWaypoint(Pose pose) {
   moveBaseSeq++;
 }
 
-void sendWaypoint(Point point) {
-  Pose waypointPose;
-  waypointPose.position = path[currentWaypointIndex] ;
-  waypointPose.orientation.w = 1;
-
-  sendWaypoint(waypointPose);
-}
-
 void notifyStatus(char* data) {
   std_msgs::String str;
   str.data = data;
   pathResultPub.publish(str);
-  pathInfoPub.publish(str);
 }
 
 void nextWaypoint(){
@@ -175,13 +162,17 @@ void trimPath(vector<Point> &path) {
 ///////////////
 
 void goalPathCallback(const GoalList& msg) {
-  if (msg.goals.size() == 0) return; // skip if the new path is empty
-
   path = msg.goals;
-  trimPath(path);
-
-  currentWaypointIndex = -1;
-  nextWaypoint();
+  if (msg.goals.empty()){
+    // cancel
+    currentWaypointIndex = 0;
+    sendWaypoint(robotPose);
+  }else{
+    // set path
+    trimPath(path);
+    currentWaypointIndex = -1;
+    nextWaypoint();
+  }
 }
 
 void moveBaseResultCallback(const move_base_msgs::MoveBaseActionResult &msg) {
@@ -200,18 +191,23 @@ void endCallback(const std_msgs::StringConstPtr& msg) {
 
   if (!endFlag) return;
 
+  RobotReport report;
+  report.metersTraveled = metersTraveled;
+  robotReportPub.publish(report);
+
   ROS_INFO_STREAM("Meters traveled: "<< metersTraveled);
 }
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
+  robotPose = odom->pose.pose;
 
-  Vector2<Float> currentRobotPos = toVector2<Float>(odom->pose.pose.position);
+  Vector2<Float> currentRobotPos = toVector2<Float>(robotPose.position);
 
   Float distanceOffsetSquared = currentRobotPos.distanceToSquared(robotPos);
 
   // check if an update is needed
   if(firstRobotPos || distanceOffsetSquared > movementDetectionThresholdSquared){
-    robotPos = toVector2<Float>(odom->pose.pose.position);
+    robotPos = currentRobotPos;
 
     // update distance traveled
     metersTraveled += sqrt(distanceOffsetSquared);
@@ -239,14 +235,12 @@ int main(int argc, char** argv) {
   // Load params
   float cellSize;
   FAIL_IFN(n.param<float>   ("/cell_size", cellSize, cellSize));
-  cellDiagonal = cellSize*sqrt(2);
   meterToCells = round(1/cellSize);
 
   // Initilize Publishers
   pathResultPub         = n.advertise<std_msgs::String>("path_result", 10);
-  pathInfoPub           = n.advertise<std_msgs::String>("path_info", 10);
-  waypointPub           = n.advertise<Point>("waypoint", 1);
   moveBaseSimpleGoalPub = n.advertise<PoseStamped>("move_base_simple/goal", 1);
+  robotReportPub        = n.advertise<RobotReport>("report", 10);
 
   // Initilize Subscribers
   moveBaseResultSub = n.subscribe("move_base/result", 1, moveBaseResultCallback);

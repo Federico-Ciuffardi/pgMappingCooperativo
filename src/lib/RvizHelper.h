@@ -131,10 +131,4 @@ struct RvizHelper{
   void mark(MarkerPoints markerPoints, string ns = "", int id = 0);
   void mark(MarkerPoints markerPoints, int id);
   void deleteMark(string ns = "", int id = -1 );
-
-  // old
-  Marker mark_points(string ns, MarkerPoints ps,ColorRGBA color);
-  Marker mark_lines(string ns, MarkerPoints ls, ColorRGBA color,float z,int type);
-  Marker mark_lines(string ns, MarkerPoints ls, ColorRGBA color);
-  Marker delete_marks(string ns);
 };

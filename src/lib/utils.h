@@ -16,6 +16,7 @@
 #include <ctime>
 #include "map_msgs/OccupancyGridUpdate.h"
 #include "conversion.h"
+#include "std_msgs/String.h"
 
 using namespace std;
 
@@ -78,4 +79,17 @@ inline void logAppend(string name_file, string s) {
   outfile.open(name_file, ios::out | std::ofstream::app);
   outfile << s << endl;
   outfile.close();
+}
+
+///////////////////////////////
+// multinode ros interaction //
+///////////////////////////////
+
+void inline terminateExploration(string fileLogDir, ros::Publisher terminationPublisher, string exploredCells, string explorationTime){
+  ROS_INFO("Termination started...");
+  logIfNotExists(fileLogDir+"/termination.yaml", "explored_cells: "+exploredCells + "\n" + 
+                                                 "exploration_time: "+explorationTime);
+  std_msgs::String end_msg;
+  end_msg.data = "END";
+  terminationPublisher.publish(end_msg);
 }

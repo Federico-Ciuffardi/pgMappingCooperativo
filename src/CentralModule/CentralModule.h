@@ -117,6 +117,7 @@ class CentralModule {
   // vars //
   //////////
 
+  boost::unordered_set<string> allRobots;
 
   // Auction related
   TopoMap* topoMap = NULL;

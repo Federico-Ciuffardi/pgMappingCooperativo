@@ -71,6 +71,7 @@ add_message_files(
   GoalList.msg
   Graph.msg
   Point2D.msg
+  RobotReport.msg
 )
 
 ## Generate services in the 'srv' folder

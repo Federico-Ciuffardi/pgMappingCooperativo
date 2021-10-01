@@ -1,5 +1,6 @@
 #include <string>
 #include "CentralModule.h"
+#include "pgmappingcooperativo/RobotReport.h"
 #include "../lib/GVD/src/GvdConfig.h"
 #include "nav_msgs/OccupancyGrid.h"
 
@@ -56,6 +57,7 @@ float criticalLineZ  = 1*layerSeparation;
 // Topics
 /// Subscribers
 map<string, ros::Subscriber> bidSubs;
+map<string, ros::Subscriber> robotReportSubs;
 ros::Subscriber endSub;
 ros::Subscriber mapSub;
 ros::Subscriber mapUpdateSub;
@@ -67,6 +69,7 @@ ros::Publisher gvdMarkerPub;
 ros::Publisher topoMapMarkerPub;
 ros::Publisher mapMarkerPub;
 ros::Publisher auctionPub;
+ros::Publisher endPub;
 map<string, ros::Publisher> AssignmentPubs;
 
 // timers 
@@ -100,6 +103,13 @@ gnuplot gplot;
 bool firstMap = true;
 ros::Time firstMapTime;
 
+boost::unordered_map<string,RobotReport> robotReports;
+
+string auctionInfoTimeLog;         
+string auctionInfoTimeIncrementLog;
+string metersTraveledLog;         
+
+bool endFlag = false;
 
 ////////////////
 // Rviz marks //
@@ -247,7 +257,18 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 ///////////////////
 // Aux Functions //
 ///////////////////
-void end(){
+void tryToEnd(){
+  // return if not meeting the ending conditions
+  if(!endFlag || robotReports.size() < centralModule.robotNumber) return;
+
+  for(auto it : robotReports){
+    RobotReport robotReport = it.second;
+    logAppend(metersTraveledLog, to_string(robotReport.metersTraveled));
+  }
+
+  gplot.graph_file(auctionInfoTimeLog, "Explored cells", "Time to get the auction information");
+  gplot.graph_file(auctionInfoTimeIncrementLog, "Explored cells", "Time diference to get the auction information");
+
   ROS_INFO("Shutting down ros...");
   ros::Duration(2.5).sleep();
   ros::shutdown();
@@ -267,42 +288,50 @@ void startAuction() {
 
   cout<<"debug :: ended getAuctionInfo"<<endl;
 
-  if(auctionInfoTime.toSec() > 4){
-    auctionStartTimeoutMode = 2;
-  }else if(auctionStartTimeoutModeParam < 2){
-    auctionStartTimeoutMode = auctionStartTimeoutModeParam;
+  if(auction.frontiers.empty()){
+    ROS_INFO("No frontiers to explore");
+    // Notify termination to other nodes, the end module won't do it becouse it will never reach the coverge needed to end
+    // (no frontiers means no new cells explored)
+    string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
+    string exploredCells = to_string(centralModule.map.coveredIndices.size());
+    terminateExploration(centralModule.fileLogDir, endPub, exploredCells, explorationTime);
+  }else{
+    // change timeout mode if took too long to compute the auction info
+    if(auctionInfoTime.toSec() > 4){
+      auctionStartTimeoutMode = 2;
+    }else if(auctionStartTimeoutModeParam < 2){
+      auctionStartTimeoutMode = auctionStartTimeoutModeParam;
+    }
+
+    // As the bid was started bids can be received
+    /// Reset auction variables
+    requests = 0;
+    /// Change state
+    centralModule.setState(WaitingFirstBid);
+    // Send auction info so the bids can be calculated
+    auctionPub.publish(auction);
+    ROS_INFO("Auction information broadcasted");
   }
 
   // set markers for rviz
+  cout<<"debug :: setting rviz marks"<<endl;
   setRvizMarks(auction, centralModule.map.occupancyGrid.info);
 
-  // As the bid was started bids can be received
-  /// Reset auction variables
-  requests = 0;
-  /// Change state
-  centralModule.setState(WaitingFirstBid);
-
-  // Send auction info so the bids can be calculated
-  auctionPub.publish(auction);
-  ROS_INFO("Auction information broadcasted");
-
   // log auction info construction time
+  cout<<"debug :: log auction info construction time"<<endl;
   if (centralModule.fileLogLevel >= 2) {
     string exploredCells = to_string((float)centralModule.map.coveredIndices.size());
 
     // log auctionInfoTime
-    string auctionInfoTimeLog = centralModule.fileLogDir + "/auctionInfoTime";
     string time = to_string(auctionInfoTime.toSec());
     logAppend(auctionInfoTimeLog, exploredCells + "  " + time);
-    gplot.graph_file(auctionInfoTimeLog, "Explored cells", "Time to get information about the auction");
 
     // log auctionInfoIncrementalTime
-    string auctionInfoTimeIncrementLog = centralModule.fileLogDir + "/AuctionInfoTimeDiff";
     string timeIncrement = to_string((auctionInfoTime - lastauctionInfoTime).toSec());
     logAppend(auctionInfoTimeIncrementLog, exploredCells + "  " + timeIncrement);
-    gplot.graph_file(auctionInfoTimeIncrementLog, "Explored cells", "Time diference to get information about the auction");
   }
 
+  cout<<"debug :: aucion started successfully"<<endl;
 }
 
 void resolveAuction() {
@@ -319,8 +348,7 @@ void resolveAuction() {
   auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
   // Get the robot-frontier assignment
-  boost::unordered_map<string, Assignment> assignment = centralModule.assign();
-  expectedRobots = assignedRobots = assignment.size();
+  boost::unordered_map<string, Assignment> assignments = centralModule.assign();
 
   // As the assignment was calculated a new auction can be started
   /// Reset auction variables
@@ -332,53 +360,61 @@ void resolveAuction() {
   float maxEstimatedTime = 0;       // max estimated task completion time
   float minEstimatedTime = FLT_MAX; // min estimated task completion time
 
-  for (auto it : assignment) {
-    Assignment sa = it.second;
-    string robot = it.first;
+  assignedRobots = centralModule.robotNumber;
 
-    // Let the robot know about it assigned frontier
-    AssignmentPubs[robot].publish(sa);
+  for (auto it : assignments) {
+    RobotId robot = it.first;
+    Assignment assignment = it.second;
 
-    // Calculate the estimated task completion time
-    float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(sa.frontier)]) / (centralModule.robotSpeed));
+    // Let the robot know about it assignment
+    AssignmentPubs[robot].publish(assignment);
 
-    maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
-    minEstimatedTime = min(minEstimatedTime, estimatedTime);
-  }
+    if(assignment.assigned){
+      // Calculate the estimated task completion time
+      float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(assignment.frontier)]) / (centralModule.robotSpeed));
 
-  // Set the timeout to start the next auction
-  auctionStartTimeout = auctionInfoTime + estimatedAuctionInfoTimeIncrement + auctionStartDelayTimeout;
-  auctionStartTimeoutTimer.setPeriod(auctionStartTimeout,false);
-
-  /// Calculate the robots that are expected to complete the assigned task not long after the first auction request
-  for (auto it : assignment) {
-    Assignment sa = it.second;
-    string robot = it.first;
-
-    float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(sa.frontier)]) / (centralModule.robotSpeed));
-    if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
-      expectedRobots--;
+      maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
+      minEstimatedTime = min(minEstimatedTime, estimatedTime);
+    }else{
+      assignedRobots--;
     }
   }
 
-  // Show info about the auction
-  /// Show the last gvd construction the estimated and the max estimated time 
-  ROS_INFO_STREAM("GVD | estimated time+map update delay"<<auctionStartTimeout.toSec()<<
-                     " | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<
-                     " | last robot task completion estimated time "<<maxEstimatedTime);
+  if(assignedRobots > 0){
+    // Set the timeout to start the next auction
+    auctionStartTimeout = auctionInfoTime + estimatedAuctionInfoTimeIncrement + auctionStartDelayTimeout;
+    auctionStartTimeoutTimer.setPeriod(auctionStartTimeout,false);
 
-  /// Show resolution
-  ROS_INFO_STREAM("Auction resoved, robots assigned = "<<assignedRobots<<" | robots expected "<<expectedRobots);
+    /// Calculate the robots that are expected to complete the assigned task not long after the first auction request
+    expectedRobots = assignedRobots;
+    for (auto it : assignments) {
+      Assignment assignment = it.second;
 
-  if(expectedRobots == 0){
-    // log termination
+      if(assignment.assigned){
+        string robot = it.first;
+
+        float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(assignment.frontier)]) / (centralModule.robotSpeed));
+        if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
+          expectedRobots--;
+        }
+      }
+    }
+
+    // Show info about the auction
+    /// Show the last gvd construction the estimated and the max estimated time 
+    ROS_INFO_STREAM("GVD | estimated time+map update delay"<<auctionStartTimeout.toSec()<<
+                       " | first robot task completion time "<<minEstimatedTime + auctionStartTimeout.toSec()<<
+                       " | last robot task completion estimated time "<<maxEstimatedTime);
+
+    /// Show resolution
+    ROS_INFO_STREAM("Auction resoved, robots assigned = "<<assignedRobots<<" | robots expected "<<expectedRobots);
+  }else{
+    ROS_INFO("No path to frontiers");
+    // Notify termination to other nodes, the end module won't do it becouse it will never reach the coverge needed to end
+    // (no robots assinged means no new cells explored)
     string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
     string exploredCells = to_string(centralModule.map.coveredIndices.size());
-    logIfNotExists(centralModule.fileLogDir+"/termination.yaml", "explored_cells: "+exploredCells + "\n" + 
-                                                                 "time:           "+explorationTime);
-    ROS_INFO("Nothing else to explore");
-
-    end();
+    terminateExploration(centralModule.fileLogDir, endPub,exploredCells, explorationTime);
   }
 }
 
@@ -503,13 +539,20 @@ void bidCallBack(const BidConstPtr& msg, string name) {
   }
 }
 
+void robotReportCallBack(const RobotReportConstPtr& msg, string name) {
+  robotReports[name] = *msg;
+
+  if(robotReports.size() == centralModule.robotNumber){
+    tryToEnd();
+  }
+}
+
 void endCallBack(const std_msgs::StringConstPtr& msg) {
-  bool endFlag = msg->data.compare(endMsg) == 0;
+  endFlag = msg->data.compare(endMsg) == 0;
 
-  if (!endFlag) return;
-
-  ROS_INFO("End signal received");
-  end();
+  if(endFlag){
+    tryToEnd();
+  }
 }
 
 //////////
@@ -559,6 +602,11 @@ int main(int argc, char* argv[]) {
   FAIL_IFN(n.param<string>("/file_log_dir", centralModule.fileLogDir, ""));
   FAIL_IFN(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
 
+  // log files
+  auctionInfoTimeLog          = centralModule.fileLogDir + "/auction_info_time";
+  auctionInfoTimeIncrementLog = centralModule.fileLogDir + "/auction_info_time_diff";
+  metersTraveledLog           = centralModule.fileLogDir + "/meters_traveled";
+
   // Initilize timers
   auctionResolutionTimeoutTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimeoutTimerRoutine, true, false);
   auctionStartTimeoutTimer      = n.createTimer(auctionStartTimeout     , auctionStartTimeoutTimerRoutine     , true, false);
@@ -572,6 +620,7 @@ int main(int argc, char* argv[]) {
   topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
   mapMarkerPub      = n.advertise<OccupancyGrid>("/map_visualization_marker", 10); 
   auctionPub        = n.advertise<Auction>("/auction", 1);
+  endPub            = n.advertise<std_msgs::String>("/end", 1);
 
   // Initilize Subscribers
   mapSub             = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
@@ -611,8 +660,11 @@ int main(int argc, char* argv[]) {
       string topicName = publishedTopic.name;                                  // name = "/robot_name/..."
       string robotName = topicName.erase(0, 1).substr(0, topicName.find('/')); // name = "robot_name"
 
+      robotReportSubs[robotName] = n.subscribe<RobotReport>("/"+robotName+"/report", 1, boost::bind(&robotReportCallBack, _1, robotName));
       bidSubs[robotName] = n.subscribe<Bid>("/"+robotName+"/bid", 1, boost::bind(&bidCallBack, _1, robotName));
       AssignmentPubs[robotName] = n.advertise<Assignment>("/"+robotName+"/assigment", 1);
+
+      centralModule.allRobots.insert(robotName);
 
       ROS_DEBUG_STREAM("Extracted `robot_name = "<<robotName<<"` from `topic_name = "<<publishedTopic.name<<"`");
     }

@@ -1,2 +1,2 @@
-Edge[] edges
 Point2D[] vertices
+Edge[]    edges
