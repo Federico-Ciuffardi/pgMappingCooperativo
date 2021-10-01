@@ -176,14 +176,25 @@ void goalPathCallback(const GoalList& msg) {
 }
 
 void moveBaseResultCallback(const move_base_msgs::MoveBaseActionResult &msg) {
-  // fix weird behavior of carrot planner
-  if(msg.status.status == actionlib_msgs::GoalStatus::SUCCEEDED && !isPathOver()){
-    Pose waypointPose;
-    waypointPose.position = path[currentWaypointIndex] ;
-    Vector2<Float> direction = currentWaypoint - robotPos;
-    waypointPose.orientation = toQuaternion(direction);
-    sendWaypoint(waypointPose);
-  } 
+  switch (msg.status.status){
+    case actionlib_msgs::GoalStatus::SUCCEEDED:
+      // fix weird behavior of carrot planner
+      if(!isPathOver()){
+        Pose waypointPose;
+        waypointPose.position = path[currentWaypointIndex] ;
+        Vector2<Float> direction = currentWaypoint - robotPos;
+        waypointPose.orientation = toQuaternion(direction);
+        sendWaypoint(waypointPose);
+      }
+      break;
+    case actionlib_msgs::GoalStatus::PREEMPTED:
+    case actionlib_msgs::GoalStatus::RECALLED:
+      // Do nothing
+      break;
+    default:
+      ROS_INFO_STREAM(msg.status.text << " | STATUS ID: " << (int)msg.status.status );
+      break;
+  }
 }
 
 void endCallback(const std_msgs::StringConstPtr& msg) {
