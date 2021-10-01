@@ -124,8 +124,8 @@ void DistMap::processLower(Pos p) {
         accum(distMap[pN].sources, minDSources);
 
         // fiter the pseudoSources now adjacent to a new source
-        filter(distMap[pN].pseudoSources, [this,minDSources](Pos ps){
-          for(Pos s : minDSources){
+        filter(distMap[pN].pseudoSources, [this,pN](Pos ps){
+          for(Pos s : distMap[pN].sources){
             if (ps.adjacent(s)) return true;
           }
           return false;
@@ -193,41 +193,6 @@ void DistMap::processWaveCrash(Pos p, Pos np){
 }
 
 // ver 1
-void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
-  PosSet pseudoSources = distMap[p].pseudoSources;
-  for ( Pos candidatePseudoSource : distMap[waveP].sources){
-    Float candidateDist = p.distanceTo(candidatePseudoSource);
-
-    // Skip if the difference of distance of the source and candidatePseudoSource is 
-    // grater than 1 a pseudo source should be a rounding error caused by discretization
-    if(abs(candidateDist - distMap[p].distance) > 1) continue;
-
-    // Skip if there exist already a pseudo source closer than the candidate
-    Float currentDist = INF;
-    if(!pseudoSources.empty()){
-      currentDist = p.distanceTo(*pseudoSources.begin());
-      if (candidateDist > currentDist) continue;
-    }
-
-    // skip if adjacent to a source (this could be changed to an abort)
-    if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } ))
-      return;
-
-    if (candidateDist < currentDist){
-      // if candidate distance is less than the current one(s) then remove the current ones
-      pseudoSources.clear();
-    } else {
-      // if the candidate distance is the same that the current one(s) then
-      // Skip if adjacent to a pseudo source
-      if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } ))
-        continue;
-    }
-    pseudoSources.insert(candidatePseudoSource);
-  }
-  distMap[p].pseudoSources = pseudoSources;
-}
-
-// ver 2
 /* void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){ */
 /*   PosSet pseudoSources = distMap[p].pseudoSources; */
 /*   for ( Pos candidatePseudoSource : distMap[waveP].sources){ */
@@ -237,17 +202,52 @@ void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
 /*     // grater than 1 a pseudo source should be a rounding error caused by discretization */
 /*     if(abs(candidateDist - distMap[p].distance) > 1) continue; */
 
+/*     // Skip if there exist already a pseudo source closer than the candidate */
+/*     Float currentDist = INF; */
+/*     if(!pseudoSources.empty()){ */
+/*       currentDist = p.distanceTo(*pseudoSources.begin()); */
+/*       if (candidateDist > currentDist) continue; */
+/*     } */
+
 /*     // skip if adjacent to a source (this could be changed to an abort) */
-/*     if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue; */
+/*     if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) */
+/*       return; */
 
-/*     // if the candidate distance is the same that the current one(s) then */
-/*     // Skip if adjacent to a pseudo source */
-/*     if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue; */
-
+/*     if (candidateDist < currentDist){ */
+/*       // if candidate distance is less than the current one(s) then remove the current ones */
+/*       pseudoSources.clear(); */
+/*     } else { */
+/*       // if the candidate distance is the same that the current one(s) then */
+/*       // Skip if adjacent to a pseudo source */
+/*       if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) */
+/*         continue; */
+/*     } */
 /*     pseudoSources.insert(candidatePseudoSource); */
 /*   } */
 /*   distMap[p].pseudoSources = pseudoSources; */
 /* } */
+
+// ver 2
+void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
+  PosSet pseudoSources = distMap[p].pseudoSources;
+  for ( Pos candidatePseudoSource : distMap[waveP].sources){
+    Float candidateDist = p.distanceTo(candidatePseudoSource);
+
+    // Skip if the difference of distance of the source and candidatePseudoSource is 
+    // grater than 1 a pseudo source should be a rounding error caused by discretization
+    if(abs(candidateDist - distMap[p].distance) > 1) continue;
+
+    // abort if adjacent to a source (this could be changed to an skip)
+    if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) return;
+
+    // if the candidate distance is the same that the current one(s) then
+    // Skip if adjacent to a pseudo source
+    if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue;
+
+    pseudoSources.insert(candidatePseudoSource);
+  }
+  distMap[p].pseudoSources = pseudoSources;
+}
 
 /////////
 // API //
