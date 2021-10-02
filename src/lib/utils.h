@@ -85,7 +85,7 @@ inline void logAppend(string name_file, string s) {
 // multinode ros interaction //
 ///////////////////////////////
 
-void inline terminateExploration(string fileLogDir, ros::Publisher terminationPublisher, string exploredCells, string explorationTime){
+void inline endExploration(string fileLogDir, ros::Publisher terminationPublisher, string exploredCells, string explorationTime){
   ROS_INFO("Termination started...");
   logIfNotExists(fileLogDir+"/termination.yaml", "explored_cells: "+exploredCells + "\n" + 
                                                  "exploration_time: "+explorationTime);

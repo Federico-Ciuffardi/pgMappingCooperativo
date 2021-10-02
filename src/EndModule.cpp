@@ -52,7 +52,7 @@ bool endFlag = false;
 // Aux Functions //
 ///////////////////
 
-void checkTermination() {
+void tryToEnd() {
   if (!endFlag || coveredIndices.size() >= maxCellCoverage) return; // if already ended or not ready to end then skip
 
   endFlag = true;
@@ -60,7 +60,7 @@ void checkTermination() {
   // log termination
   string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
   string exploredCells = to_string(coveredIndices.size());
-  terminateExploration(fileLogDir, endPub, exploredCells, explorationTime);
+  endExploration(fileLogDir, endPub, exploredCells, explorationTime);
 }
 
 ///////////////
@@ -79,7 +79,7 @@ void mapCallBack(const OccupancyGridConstPtr& msg) {
       coveredIndices.insert(i);
     }
   }
-  checkTermination();
+  tryToEnd();
 }
 
 void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& update) {
@@ -91,7 +91,7 @@ void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& update) {
     }
   }
 
-  checkTermination();
+  tryToEnd();
 }
 
 //////////

@@ -257,7 +257,7 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 ///////////////////
 // Aux Functions //
 ///////////////////
-void tryToEnd(){
+void tryToShutdown(){
   // return if not meeting the ending conditions
   if(!endFlag || robotReports.size() < centralModule.robotNumber) return;
 
@@ -294,7 +294,7 @@ void startAuction() {
     // (no frontiers means no new cells explored)
     string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
     string exploredCells = to_string(centralModule.map.coveredIndices.size());
-    terminateExploration(centralModule.fileLogDir, endPub, exploredCells, explorationTime);
+    endExploration(centralModule.fileLogDir, endPub, exploredCells, explorationTime);
   }else{
     // change timeout mode if took too long to compute the auction info
     if(auctionInfoTime.toSec() > 4){
@@ -414,7 +414,7 @@ void resolveAuction() {
     // (no robots assinged means no new cells explored)
     string explorationTime = to_string((ros::Time::now() - firstMapTime).toSec());
     string exploredCells = to_string(centralModule.map.coveredIndices.size());
-    terminateExploration(centralModule.fileLogDir, endPub,exploredCells, explorationTime);
+    endExploration(centralModule.fileLogDir, endPub,exploredCells, explorationTime);
   }
 }
 
@@ -543,7 +543,7 @@ void robotReportCallBack(const RobotReportConstPtr& msg, string name) {
   robotReports[name] = *msg;
 
   if(robotReports.size() == centralModule.robotNumber){
-    tryToEnd();
+    tryToShutdown();
   }
 }
 
@@ -551,7 +551,7 @@ void endCallBack(const std_msgs::StringConstPtr& msg) {
   endFlag = msg->data.compare(endMsg) == 0;
 
   if(endFlag){
-    tryToEnd();
+    tryToShutdown();
   }
 }
 
