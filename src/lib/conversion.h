@@ -124,9 +124,44 @@ inline Vector3 toVector3(Point point){
   return vector3;
 }
 
+///////////////
+// toVector2 //
+///////////////
+
+template<typename T>
+inline Vector2<T> toVector2(Pos p){
+  return Vector2<T>(p.x,p.y);
+}
+
+template<typename T, typename K>
+inline Vector2<T> toVector2(Vector2<K> v){
+  return Vector2<T>(v.x,v.y);
+}
+
+template<typename T>
+inline Vector2<T> toVector2(Point p3d){
+  return Vector2<T>(p3d.x,p3d.y);
+}
+
+template<typename T>
+inline Vector2<T> toVector2(Point p3d, mapInfoType mapInfo) {
+
+  return (toVector2<Float>(p3d) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution;
+}
+
 /////////////////////////////
 // Pos: GVD/src/data/Pos.h //
 /////////////////////////////
+
+template<typename T>
+inline Pos toPos(Vector2<T> v){
+  return Pos(v.x,v.y);
+}
+
+template<typename T>
+inline Pos toPos(Vector2<T> v, mapInfoType mapInfo){
+  return toPos((toVector2<Float>(v) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution);
+}
 
 inline Pos toPos(Point2D p2d){
   Pos p;
@@ -144,10 +179,7 @@ inline Pos toPos(Point p3d){
 }
 
 inline Pos toPos(Point p3d, mapInfoType mapInfo) {
-
-  Pos adjustment(-(p3d.x < 0),-(p3d.y < 0));
-
-  return (toPos(p3d) - toPos(mapInfo.origin.position))/mapInfo.resolution  + adjustment;
+  return toPos((toVector2<Float>(p3d) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution);
 }
 
 inline PosSet toPosSet(vector<Point2D> &ps){
@@ -174,39 +206,6 @@ inline PosSet toPosSet(vector<int> ps, int width){
   return res;
 }
 
-template<typename T>
-inline Pos toPos(Vector2<T> v){
-  return Pos(v.x,v.y);
-}
-
-template<typename T>
-inline Pos toPos(Vector2<T> v, mapInfoType mapInfo){
-
-  Pos adjustment(-(v.x < 0),-(v.y < 0));
-
-  return (toPos(v) - toPos(mapInfo.origin.position))/mapInfo.resolution  + adjustment;
-}
-
-///////////////
-// toVector2 //
-///////////////
-
-template<typename T>
-inline Vector2<T> toVector2(Pos p){
-  return Vector2<T>(p.x,p.y);
-}
-
-template<typename T>
-inline Vector2<T> toVector2(Point p3d){
-  return Vector2<T>(p3d.x,p3d.y);
-}
-
-template<typename T>
-inline Vector2<T> toVector2(Point p3d, mapInfoType mapInfo) {
-
-  return (toVector2<Float>(p3d) - toVector2<Float>(mapInfo.origin.position))/mapInfo.resolution;
-}
-
 /////////
 // Int //
 /////////
@@ -219,9 +218,7 @@ inline Int toInt(Point p, int width, int originIndex = 0){
  int x = p.x;
  int y = p.y;
 
- Pos adjustment(-(p.x < 0),-(p.y < 0));
-
- return originIndex + x + adjustment.x + (y + adjustment.y) * width;
+ return originIndex + x + y * width;
 }
 
 inline Int toInt(Point p, mapInfoType mapInfo){
