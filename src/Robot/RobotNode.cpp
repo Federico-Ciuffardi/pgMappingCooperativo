@@ -148,6 +148,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   rvizHelper.topic = &pathMarkerPub;
 
   setRealTimePositionRvizMarks(odom->pose.pose);
+  setPositionRvizMarks(robot.position, robot.occupancyGrid.info);
 }
 
 void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
@@ -183,9 +184,6 @@ void auctionCallBack(const AuctionConstPtr& msg) {
   ROS_INFO("Publish bids");
   bid.id = msg->id;
   bidPub.publish(bid);
-
-  // Mark position
-  setPositionRvizMarks(robot.position, robot.occupancyGrid.info);
 }
 
 void assignmentCallback(const AssignmentConstPtr& msg) {
