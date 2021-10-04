@@ -269,6 +269,11 @@ void tryToShutdown(){
   gplot.graph_file(auctionInfoTimeLog, "Explored cells", "Time to get the auction information");
   gplot.graph_file(auctionInfoTimeIncrementLog, "Explored cells", "Time diference to get the auction information");
 
+  std::system(("rosrun map_server map_saver --occ 50 --free 49 -f "+ centralModule.fileLogDir +"/map map:=map_visualization_marker &").c_str());
+  ros::Duration(5).sleep();
+  mapMarkerPub.publish(centralModule.map.occupancyGrid);
+  ros::Duration(5).sleep();
+
   ROS_INFO("Shutting down ros...");
   ros::Duration(2.5).sleep();
   ros::shutdown();
