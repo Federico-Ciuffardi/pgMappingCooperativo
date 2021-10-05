@@ -191,6 +191,9 @@ void moveBaseResultCallback(const move_base_msgs::MoveBaseActionResult &msg) {
     case actionlib_msgs::GoalStatus::RECALLED:
       // Do nothing
       break;
+    case actionlib_msgs::GoalStatus::ABORTED:
+      notifyStatus((char*)"FAILURE");
+      break;
     default:
       ROS_INFO_STREAM(msg.status.text << " | STATUS ID: " << (int)msg.status.status );
       break;

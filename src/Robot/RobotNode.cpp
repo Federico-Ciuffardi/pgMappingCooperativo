@@ -151,7 +151,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   setPositionRvizMarks(robot.position, robot.occupancyGrid.info);
 }
 
-void pathSucceedCallback(const std_msgs::String::ConstPtr& msg) {
+void pathResultCallback(const std_msgs::String::ConstPtr& msg) {
   ROS_INFO("Arrived to the objective, requesting objective");
   std_msgs::String msgRequest;
   msgRequest.data = "signal";
@@ -264,7 +264,7 @@ int main(int argc, char* argv[]) {
   odomSub       = n.subscribe("odom", 1, odomCallback);
   auctionSub    = n.subscribe("/auction", 1, auctionCallBack);
   assignmentSub = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
-  pathResultSub = n.subscribe("path_result", 1, pathSucceedCallback);
+  pathResultSub = n.subscribe("path_result", 1, pathResultCallback);
   mapSub        = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
   mapUpdateSub  = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
   endSub        = n.subscribe("/end", 1, handleEnd);
