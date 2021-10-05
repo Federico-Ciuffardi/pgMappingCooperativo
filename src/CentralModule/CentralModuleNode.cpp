@@ -336,10 +336,12 @@ void startAuction() {
     logAppend(auctionInfoTimeIncrementLog, exploredCells + "  " + timeIncrement);
   }
 
-  cout<<"debug :: aucion started successfully"<<endl;
+  cout<<"debug :: auction started successfully"<<endl;
 }
 
 void resolveAuction() {
+  cout<<"debug :: resolution starting"<<endl;
+
   // Change state to reolving auction
   centralModule.setState(Resolving);
 
@@ -353,7 +355,9 @@ void resolveAuction() {
   auctionResolutionTimeoutTimer.setPeriod(AuctionResolutionTimeout,false);
 
   // Get the robot-frontier assignment
+  cout<<"debug :: assignment starting"<<endl;
   boost::unordered_map<string, Assignment> assignments = centralModule.assign();
+  cout<<"debug :: assignment end"<<endl;
 
   // As the assignment was calculated a new auction can be started
   /// Reset auction variables
@@ -421,6 +425,8 @@ void resolveAuction() {
     string exploredCells = to_string(centralModule.map.coveredIndices.size());
     endExploration(centralModule.fileLogDir, endPub,exploredCells, explorationTime);
   }
+
+  cout<<"debug :: resolution end"<<endl;
 }
 
 /////////////////////
