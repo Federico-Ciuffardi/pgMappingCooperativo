@@ -119,7 +119,7 @@ class Auctioneer{
     ///
     /// `remainingItemSubItems.empty()` corresponds to: are there items with remaining subItem to be assigned?.
     /// Meaning in remainingItemSubItems there are no idItems mapped to a empty subItemIds set.
-    while (!remainingBidders.empty() && !remainingItemSubItems.empty()){ // !bidPriorityQueue.empty() &&  
+    while (!remainingBidders.empty() && !remainingItemSubItems.empty() && !bidPriorityQueue.empty() ){ 
       Bid bid = bidPriorityQueue.top();
       bidPriorityQueue.pop();
 

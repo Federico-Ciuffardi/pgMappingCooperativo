@@ -380,7 +380,7 @@ void resolveAuction() {
 
     if(assignment.assigned){
       // Calculate the estimated task completion time
-      float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(assignment.frontier)]) / (centralModule.robotSpeed));
+      float estimatedTime = max(0.f,(centralModule.pathLengths[robot][toPos(assignment.frontier)]) / (centralModule.robotSpeed));
 
       maxEstimatedTime = max(maxEstimatedTime, estimatedTime);
       minEstimatedTime = min(minEstimatedTime, estimatedTime);
@@ -402,7 +402,7 @@ void resolveAuction() {
       if(assignment.assigned){
         string robot = it.first;
 
-        float estimatedTime = max(0.f,(centralModule.bids[robot][toPos(assignment.frontier)]) / (centralModule.robotSpeed));
+        float estimatedTime = max(0.f,(centralModule.pathLengths[robot][toPos(assignment.frontier)]) / (centralModule.robotSpeed));
         if (estimatedTime > minEstimatedTime + auctionStartTimeout.toSec()) {
           expectedRobots--;
         }

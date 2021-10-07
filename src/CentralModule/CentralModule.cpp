@@ -226,7 +226,9 @@ bool CentralModule::saveBid(Bid bid, RobotId robotId) {
 
     // Store frontier bid
     auctioneer.addBid(robotId, topoMap->segmenter->idGrid[frontierPos] , frontierPos, value);
-    bids[robotId][frontierPos] = value;
+
+    // Store frontier pathLength bid
+    pathLengths[robotId][frontierPos] = bid.pathLength[i];
   }
 
   return true;
