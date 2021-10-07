@@ -1,0 +1,71 @@
+#! /usr/bin/env bash
+
+pkg_dir="${HOME}/catkin_ws/src/pgmappingcooperativo"
+log_dir="${pkg_dir}/log"
+data_dir="${pkg_dir}/data"
+
+function set_id(){
+  # set id
+  if [ $# -gt 0 ] ; then
+    # old id
+    id="$(basename "$(realpath ${data_dir}/$1)")"
+  else
+    # new id
+    id="$(date +%Y_%m_%d__%H_%M_%S)"
+  fi
+  # set variables
+  this_data_dir="${data_dir}/${id}"
+
+  # create new stuff if id was new
+  if [ $# -le 0 ] ; then
+    mkdir -p "$this_data_dir"
+    ln -sfn "$this_data_dir" "$data_dir/latest"
+  fi
+}
+
+if [[ ${DEBUG-} =~ ^1|yes|true$ ]]; then
+    set -o xtrace       # Trace the execution of the script (debug)
+fi
+
+set -o errexit      # Exit on most errors (see the manual)
+set -o nounset      # Disallow expansion of unset variables
+set -o pipefail     # Use last non-zero exit code in a pipeline
+set -o errtrace     # Ensure the error trap handler is inherited
+
+# 1. Obtener el parametro segun se quiere comparar (param en el yaml)
+# 2. Procesar la carpeta logs, separar cada ejecucion segun el parameto a comparar
+# 3. Al procesar dejar archivos tanto de texto orientados a generar graficas
+#    (gnuplot) como para tablas de overleaf (los datos deberian ser los mismos
+#    sin importar lo usado en 1.)
+
+set_id
+
+comparation_param=${1:-cell_size}
+
+successfull_log_count=0
+
+cd "$log_dir"
+for log in * ; do
+  if [ "${log}" = "latest" ] ; then
+    continue
+  fi
+
+  if ! [ -f "${log}/termination.yaml" ] ; then
+    echo "WARNING: ${log} did not terminate successfully, skipping"
+    continue
+  fi
+
+  comparation_value="$(yq e ".${comparation_param}" "${log}/rosparams.yaml")"
+
+  time_value="$(yq e ".exploration_time" "${log}/termination.yaml")"
+  echo "$comparation_value  $time_value" >> $this_data_dir/times
+
+  explored_cells="$(yq e ".explored_cells" "${log}/termination.yaml")"
+  echo "$comparation_value  $explored_cells" >> $this_data_dir/explored_cells
+
+  successfull_log_count=$((successfull_log_count+1)) 
+
+done
+
+echo "comparation_param :  $comparation_param" >> $this_data_dir/stats
+echo "successfull_log_count :  $successfull_log_count" >> $this_data_dir/stats
