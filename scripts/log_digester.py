@@ -28,6 +28,16 @@ data_dir=f"{pkg_dir}/data"
 x_param = "cell_size"
 y_params = [ "explored_cells" , "exploration_time" ] # params on termination.yaml
 
+#############
+# Functions #
+#############
+
+def linealize_cell_size(data):
+    linealized_data = {}
+    for x_value, y_values in data.items():
+        linealized_data[math.pow(1/x_value,2)] = y_values
+    return linealized_data
+
 ########
 # MAIN #
 ########
@@ -58,14 +68,72 @@ for this_log in os.scandir(log_dir):
 
     x_value = rosparams_yaml[x_param]
 
+    # params from termination.yamls
     with open(f"{this_log_dir}/termination.yaml", 'r') as f:
         termination_yaml = yaml.safe_load(f)
-
     for y_param in y_params:
         predigest.setdefault(y_param,{})
         predigest[y_param].setdefault(x_value,[])
         predigest[y_param][x_value].append(termination_yaml[y_param])
 
+    # distance
+    with open(f"{this_log_dir}/meters_traveled", 'r') as f:
+        lines_list = f.readlines()
+        meters_traveled_list = []
+        for val in lines_list:
+            meters_traveled_list.append(float(val))
+
+    meters_traveled_sum =  sum(meters_traveled_list)
+
+    predigest.setdefault("distance_sum",{})
+    predigest["distance_sum"].setdefault(x_value,[])
+    predigest["distance_sum"][x_value].append(meters_traveled_sum)
+
+    # predigest.setdefault("distance_mean",{})
+    # predigest["distance_mean"].setdefault(x_value,[])
+    # predigest["distance_mean"][x_value].append(meters_traveled_sum/len(meters_traveled_list))
+
+    # auction_time times
+    with open(f"{this_log_dir}/auction_info_time", 'r') as f:
+        lines_list = f.readlines()
+        auction_time_time_max = 0
+        auction_time_time_sum = 0
+        auction_time_time_count = 0
+        for line in lines_list:
+            auction_time_time = float(line.split()[1])
+            auction_time_time_sum += auction_time_time
+            if(auction_time_time_max < auction_time_time):
+                auction_time_time_max = auction_time_time
+            auction_time_time_count += 1
+
+    predigest.setdefault("auction_time_time_max",{})
+    predigest["auction_time_time_max"].setdefault(x_value,[])
+    predigest["auction_time_time_max"][x_value].append(auction_time_time_max)
+
+    predigest.setdefault("auction_time_time_mean",{})
+    predigest["auction_time_time_mean"].setdefault(x_value,[])
+    predigest["auction_time_time_mean"][x_value].append(auction_time_time_sum/auction_time_time_count)
+
+    # auction_time times increment
+    with open(f"{this_log_dir}/auction_info_time_diff", 'r') as f:
+        lines_list = f.readlines()
+        auction_time_time_increment_max = 0
+        auction_time_time_increment_sum = 0
+        auction_time_time_increment_count = 0
+        for line in lines_list:
+            auction_time_time_increment = float(line.split()[1])
+            auction_time_time_increment_sum += auction_time_time_increment
+            if(auction_time_time_increment_max < auction_time_time_increment):
+                auction_time_time_increment_max = auction_time_time_increment
+            auction_time_time_increment_count += 1
+
+    predigest.setdefault("auction_time_time_increment_max",{})
+    predigest["auction_time_time_increment_max"].setdefault(x_value,[])
+    predigest["auction_time_time_increment_max"][x_value].append(auction_time_time_increment_max)
+
+    predigest.setdefault("auction_time_time_increment_mean",{})
+    predigest["auction_time_time_increment_mean"].setdefault(x_value,[])
+    predigest["auction_time_time_increment_mean"][x_value].append(auction_time_time_increment_sum/auction_time_time_increment_count)
 
 # Paso 2 armar los digest de cada predigest
 
@@ -108,12 +176,12 @@ with open(f'{digest_dir}/digest.yaml', 'w') as outfile:
 for y_param, stats in digest.items():
     g = gnuplot.Gnuplot(terminal = 'pngcairo font "arial,10" fontscale 1.0 size 1024, 768',
                         output = f'"{digest_dir}/{y_param}.png"',
-                        xlabel = f"\"{x_param.replace('_',' ')}\"",
+                        xlabel = f"\"cells per square meter\"",
                         ylabel = f"\"{y_param.replace('_',' ')}\"",
                         yrange = "[0:]")
 
-    mean_df    = pd.DataFrame.from_dict(stats["mean"], orient='index')
-    std_dev_df = pd.DataFrame.from_dict(stats["std_dev"], orient='index')
+    mean_df    = pd.DataFrame.from_dict(linealize_cell_size(stats["mean"]), orient='index')
+    std_dev_df = pd.DataFrame.from_dict(linealize_cell_size(stats["std_dev"]), orient='index')
     
     df = mean_df.join(std_dev_df, lsuffix="mean", rsuffix="std_dev", sort = True)
 
