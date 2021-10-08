@@ -39,7 +39,15 @@ TebLocalPlannerROS:
   footprint_model/radius: 0.2275
 
   # Obstacle Parameters
-  min_obstacle_dist: 1.0
+  min_obstacle_dist: 0.5
+  inflation_dist: 1.5
+
+  # Trajectory Configuration Parameters 
+  dt_ref: 0.3
+  dt_hysteresis: 0.03
+  max_global_plan_lookahead_dist: 10.0
+  exact_arc_length: true
+  global_plan_viapoint_sep: 2.5
 
   # Goal Tolerance Parameters
   yaw_goal_tolerance: 360
@@ -47,7 +55,7 @@ TebLocalPlannerROS:
   free_goal_vel: true
 
   # Optimization Parameters
-  weight_kinematics_forward_drive: 100000000000000000000000.0
+  weight_kinematics_forward_drive: 999999999999999999999999.0
 
   # Parallel Planning in distinctive Topologies
   enable_homotopy_class_planning: false
