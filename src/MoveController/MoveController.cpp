@@ -90,7 +90,7 @@ bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
 
   return fromPos.distanceToSquared(waypointPos) <= forcedCompletionToleranceSquared ||
          (fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
-          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid,ceil(meterToCells*0.1)));
+          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid,ceil(meterToCells*0.5)));
 }
 
 ///////////////
@@ -152,9 +152,9 @@ void nextWaypoint(){
 }
 
 void trimPath(vector<Point> &path) {
-  int pathStart = path.size()-2;
-  for (; pathStart > 0 && !isWaypointCompleted(robotPos,toVector2<Float>(path[pathStart])); pathStart--);
-  path = vector<Point, allocator<Point>>( path.begin() + pathStart, path.end());
+  int pathStart = 0;
+  for (; pathStart < path.size()-2 && isWaypointCompleted(robotPos,toVector2<Float>(path[pathStart])); pathStart++);
+  path = vector<Point, allocator<Point>>(path.begin() + pathStart, path.end());
 }
 
 ///////////////
