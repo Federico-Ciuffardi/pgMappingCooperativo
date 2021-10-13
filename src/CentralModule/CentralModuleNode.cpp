@@ -108,6 +108,8 @@ boost::unordered_map<string,RobotReport> robotReports;
 string auctionInfoTimeLog;         
 string auctionInfoTimeIncrementLog;
 string metersTraveledLog;         
+string gvdUpdateTimeLog;
+string gvdUpdateTimeIncrementLog;
 
 bool endFlag = false;
 
@@ -266,8 +268,11 @@ void tryToShutdown(){
     logAppend(metersTraveledLog, to_string(robotReport.metersTraveled));
   }
 
-  gplot.graph_file(auctionInfoTimeLog, "Explored cells", "Time to get the auction information");
-  gplot.graph_file(auctionInfoTimeIncrementLog, "Explored cells", "Time diference to get the auction information");
+  gplot.graph_file(auctionInfoTimeLog,          "Celdas exploradas", "Tiempo de obtención de la info de la subasta (s)");
+  gplot.graph_file(auctionInfoTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempos de obtención de la info de la subasta (s)");
+
+  gplot.graph_file(gvdUpdateTimeLog,          "Celdas exploradas", "Tiempo de obtención del GVD (s)");
+  gplot.graph_file(gvdUpdateTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de obtención del GVD (s)");
 
   std::system(("rosrun map_server map_saver --occ 50 --free 49 -f "+ centralModule.fileLogDir +"/map map:=map_visualization_marker &").c_str());
   ros::Duration(5).sleep();
@@ -284,6 +289,7 @@ void startAuction() {
   ROS_INFO("Computing Auction information");
 
   ros::Duration lastauctionInfoTime = auctionInfoTime;
+  float lastgvdUpdateTime = centralModule.topoMap ? centralModule.topoMap->gvd->updateTime : 0;
 
   ros::Time auctionInfoStart = ros::Time::now();
   Auction auction = centralModule.getAuctionInfo();
@@ -334,6 +340,14 @@ void startAuction() {
     // log auctionInfoIncrementalTime
     string timeIncrement = to_string((auctionInfoTime - lastauctionInfoTime).toSec());
     logAppend(auctionInfoTimeIncrementLog, exploredCells + "  " + timeIncrement);
+
+    // log auctionInfoTime
+    time = to_string(centralModule.topoMap->gvd->updateTime);
+    logAppend(gvdUpdateTimeLog, exploredCells + "  " + time);
+
+    // log gvdUpdateTimeIncrementLog
+    timeIncrement = to_string(centralModule.topoMap->gvd->updateTime - lastgvdUpdateTime);
+    logAppend(gvdUpdateTimeIncrementLog, exploredCells + "  " + timeIncrement);
   }
 
   cout<<"debug :: auction started successfully"<<endl;
@@ -614,9 +628,11 @@ int main(int argc, char* argv[]) {
   FAIL_IFN(n.param<int>   ("/file_log_level", centralModule.fileLogLevel, 0));
 
   // log files
-  auctionInfoTimeLog          = centralModule.fileLogDir + "/auction_info_time";
-  auctionInfoTimeIncrementLog = centralModule.fileLogDir + "/auction_info_time_diff";
-  metersTraveledLog           = centralModule.fileLogDir + "/meters_traveled";
+  auctionInfoTimeLog             = centralModule.fileLogDir + "/auction_info_time";
+  auctionInfoTimeIncrementLog    = centralModule.fileLogDir + "/auction_info_time_diff";
+  gvdUpdateTimeLog               = centralModule.fileLogDir + "/gvd_construction_time";
+  gvdUpdateTimeIncrementLog      = centralModule.fileLogDir + "/gvd_construction_time_diff";
+  metersTraveledLog              = centralModule.fileLogDir + "/meters_traveled";
 
   // Initilize timers
   auctionResolutionTimeoutTimer = n.createTimer(AuctionResolutionTimeout, auctionResolutionTimeoutTimerRoutine, true, false);

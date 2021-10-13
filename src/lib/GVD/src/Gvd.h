@@ -46,6 +46,7 @@ struct Gvd {
   GridGvd gridGvd;
   GvdGraph graphGvd;
   DistMap* distMap = NULL;
+  double updateTime = 0;
 
   // Info
   MapType& map;

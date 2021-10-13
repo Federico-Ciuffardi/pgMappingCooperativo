@@ -38,6 +38,49 @@ def linealize_cell_size(data):
         linealized_data[math.pow(1/x_value,2)] = y_values
     return linealized_data
 
+def process_times(this_log_dir,name):
+    with open(f"{this_log_dir}/{name}_time", 'r') as f:
+        lines_list = f.readlines()
+        time_max = 0
+        time_sum = 0
+        time_count = 0
+        for line in lines_list:
+            time = float(line.split()[1])
+            time_sum += time
+            if(time_max < time):
+                time_max = time
+            time_count += 1
+
+    predigest.setdefault(name+"_time_max",{})
+    predigest[name+"_time_max"].setdefault(x_value,[])
+    predigest[name+"_time_max"][x_value].append(time_max)
+
+    predigest.setdefault(name+"_time_mean",{})
+    predigest[name+"_time_mean"].setdefault(x_value,[])
+    predigest[name+"_time_mean"][x_value].append(time_sum/time_count)
+
+    # times increment
+    with open(f"{this_log_dir}/{name}_time_diff", 'r') as f:
+        lines_list = f.readlines()
+        time_increment_max = 0
+        time_increment_sum = 0
+        time_increment_count = 0
+        for line in lines_list:
+            time_increment = float(line.split()[1])
+            time_increment_sum += time_increment
+            if(time_increment_max < time_increment):
+                time_increment_max = time_increment
+            time_increment_count += 1
+
+    predigest.setdefault(name+"_time_increment_max",{})
+    predigest[name+"_time_increment_max"].setdefault(x_value,[])
+    predigest[name+"_time_increment_max"][x_value].append(time_increment_max)
+
+    predigest.setdefault(name+"_time_increment_mean",{})
+    predigest[name+"_time_increment_mean"].setdefault(x_value,[])
+    predigest[name+"_time_increment_mean"][x_value].append(time_increment_sum/time_increment_count)
+
+
 ########
 # MAIN #
 ########
@@ -93,47 +136,8 @@ for this_log in os.scandir(log_dir):
     # predigest["distance_mean"].setdefault(x_value,[])
     # predigest["distance_mean"][x_value].append(meters_traveled_sum/len(meters_traveled_list))
 
-    # auction_time times
-    with open(f"{this_log_dir}/auction_info_time", 'r') as f:
-        lines_list = f.readlines()
-        auction_time_time_max = 0
-        auction_time_time_sum = 0
-        auction_time_time_count = 0
-        for line in lines_list:
-            auction_time_time = float(line.split()[1])
-            auction_time_time_sum += auction_time_time
-            if(auction_time_time_max < auction_time_time):
-                auction_time_time_max = auction_time_time
-            auction_time_time_count += 1
-
-    predigest.setdefault("auction_time_time_max",{})
-    predigest["auction_time_time_max"].setdefault(x_value,[])
-    predigest["auction_time_time_max"][x_value].append(auction_time_time_max)
-
-    predigest.setdefault("auction_time_time_mean",{})
-    predigest["auction_time_time_mean"].setdefault(x_value,[])
-    predigest["auction_time_time_mean"][x_value].append(auction_time_time_sum/auction_time_time_count)
-
-    # auction_time times increment
-    with open(f"{this_log_dir}/auction_info_time_diff", 'r') as f:
-        lines_list = f.readlines()
-        auction_time_time_increment_max = 0
-        auction_time_time_increment_sum = 0
-        auction_time_time_increment_count = 0
-        for line in lines_list:
-            auction_time_time_increment = float(line.split()[1])
-            auction_time_time_increment_sum += auction_time_time_increment
-            if(auction_time_time_increment_max < auction_time_time_increment):
-                auction_time_time_increment_max = auction_time_time_increment
-            auction_time_time_increment_count += 1
-
-    predigest.setdefault("auction_time_time_increment_max",{})
-    predigest["auction_time_time_increment_max"].setdefault(x_value,[])
-    predigest["auction_time_time_increment_max"][x_value].append(auction_time_time_increment_max)
-
-    predigest.setdefault("auction_time_time_increment_mean",{})
-    predigest["auction_time_time_increment_mean"].setdefault(x_value,[])
-    predigest["auction_time_time_increment_mean"][x_value].append(auction_time_time_increment_sum/auction_time_time_increment_count)
+    process_times(this_log_dir, 'auction_info')
+    process_times(this_log_dir, 'gvd_construction')
 
 # Paso 2 armar los digest de cada predigest
 

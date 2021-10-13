@@ -281,6 +281,8 @@ void Gvd::updateBase(PosSet &candidates) {
 
 // also updates its distMap
 void Gvd::update(){
+  chrono::steady_clock::time_point begin = std::chrono::steady_clock::now(); // start the timer
+
   // if connectivityMethod is 2 fill boders with obstacles
   if(GvdConfig::get()->connectivityMethod == 2){
     pair<Int,Int> size = map.size();
@@ -305,9 +307,17 @@ void Gvd::update(){
 
   // update base
   updateBase(distMap->waveCrashes);
+
+  // stop timer and set update time
+  chrono::steady_clock::time_point end = chrono::steady_clock::now();
+  float secOnNanosec = 1000000000;
+  updateTime = (chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count())/secOnNanosec;
+
 }
 
 void Gvd::update(MapUpdatedCells &mapUpdatedCells){
+  chrono::steady_clock::time_point begin = std::chrono::steady_clock::now(); // start the timer
+
   switch(GvdConfig::get()->connectivityMethod){
     case 1:{
       PosSet unknownBorder;
@@ -392,6 +402,11 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   //// part of ver 3
   /* filter(extraErosion,[this](Pos p){return !gridGvd[p];}); */
   /* updateBase(extraErosion); */
+
+  // stop timer and set update time
+  chrono::steady_clock::time_point end = chrono::steady_clock::now();
+  float secOnNanosec = 1000000000;
+  updateTime = (chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count())/secOnNanosec;
 }
 
 //////////////////
