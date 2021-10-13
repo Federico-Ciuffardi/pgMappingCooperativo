@@ -11,4 +11,5 @@ CTestTestfile.cmake
 libMAIN_SOURCES.a
 logFiles
 log
+log_old
 data
