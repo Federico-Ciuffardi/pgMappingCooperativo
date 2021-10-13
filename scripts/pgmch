@@ -59,6 +59,7 @@ function clean_ros(){
   pkill roscore         || true
   killall -9 roscore    || true
   killall -9 rosmaster  || true
+  pkill -9 gzserver     || true
 }
 
 function init_generic_ros(){
@@ -85,6 +86,8 @@ function test(){
   # load args
   local map_name="${1:-office}"
   local starting_robot_number="${2:-5}"
+  local cell_size="${3:-1}"
+  local timeout="${4:-7200}"
 
   # get new id
   set_id
@@ -101,7 +104,7 @@ function test(){
 
   ## start the sim
   printf "> Simulation on ${map_name} with ${starting_robot_number}\n\n"
-  roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} file_log_dir:=${this_log_dir} || true
+  timeout --signal=SIGINT --foreground ${timeout} roslaunch pgmappingcooperativo multirobot.launch starting_robot_number:=${starting_robot_number} map_name:=${map_name} file_log_dir:=${this_log_dir} cell_size:=${cell_size} || true
 
   ## Post process the replay
 
@@ -145,6 +148,10 @@ function compile(){
   printf "\n"
 }
 
+function test-nocompile(){
+  test $@
+}
+
 ########
 # Main #
 ########
@@ -177,7 +184,7 @@ while [ $# -gt 0 ]; do
       exit $?
       ;;
 
-    replay|compile)
+    replay|compile|test-nocompile)
       $@  
       exit $?
       ;;

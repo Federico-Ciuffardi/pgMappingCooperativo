@@ -1,0 +1,21 @@
+#!/usr/bin/env bash 
+
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+
+for (( n = 0 ; n < 2 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 1.000 900s
+done
+
+for (( n = 0 ; n < 2 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 0.500 1100s
+done
+
+for (( n = 0 ; n < 2 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 0.315 1300s
+done
+
+for (( n = 0 ; n < 2 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 0.250 1500s
+done
+
