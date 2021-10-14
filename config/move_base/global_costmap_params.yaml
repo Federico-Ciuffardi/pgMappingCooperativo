@@ -10,5 +10,5 @@ global_costmap:
 
   # resolution: 1
 
-  origin_x: -60.0
-  origin_y: -60.0
+  origin_x: -64.0
+  origin_y: -64.0
