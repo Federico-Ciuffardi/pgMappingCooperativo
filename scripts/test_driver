@@ -3,19 +3,19 @@
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
-for (( n = 0 ; n < 2 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 1.000 900s
+for (( n = 0 ; n < 10 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 1.000 1000s
 done
 
-for (( n = 0 ; n < 2 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 0.500 1100s
+for (( n = 0 ; n < 10 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 0.500 1200s
 done
 
-for (( n = 0 ; n < 2 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 0.315 1300s
+for (( n = 0 ; n < 10 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 0.315 1400s
 done
 
-for (( n = 0 ; n < 2 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 0.250 1500s
+for (( n = 0 ; n < 10 ; n++ )); do
+  $SCRIPT_DIR/pgmch test-nocompile office 5 0.250 1600s
 done
 
