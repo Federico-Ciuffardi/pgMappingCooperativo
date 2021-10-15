@@ -17,6 +17,26 @@ bool MapMerger::isInitialized(){
   return !mapsArrived.empty();
 }
 
+#define P_PRIOR 0.5
+#define P_OCC   0.65
+#define P_FREE  0.45
+
+void updateOccupancy(int8_t &currentOccupancy, int8_t newOccupancy){
+  float newProb;
+  if ( isUnknown(newOccupancy) ){
+    newProb = P_PRIOR;
+  }else if (isOccupied(newOccupancy)){
+    newProb = P_OCC;
+  }else{ // isFree(newOccupancy)
+    newProb = P_FREE;
+  }
+
+  float currentProb = currentOccupancy/100.0;
+
+  currentOccupancy = 100/(1 + ((1-newProb)/newProb) * (P_PRIOR/(1-P_PRIOR)) * ((1-currentProb)/currentProb));
+}
+
+
 /////////
 // API //
 /////////
@@ -49,12 +69,15 @@ void MapMerger::mergeMap(const OccupancyGridConstPtr& msg, string name) {
 
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
-        mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*50);
+        mapMerged.data[globalInd] = 100*P_PRIOR;
+        updateOccupancy(mapMerged.data[globalInd],msg->data[globalInd]);
+        /* mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*50); */
       } else {
         // Skip if there is no line of vision from the update index to the robot (on the update grid)
         Pos globalPos = toPos(globalInd, msg->info.width); 
         if(isOccupied(msg->data[globalInd]) || unobstructedLine(robotGlobalPos, globalPos, msg->data, msg->info.width)){ 
-          mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*mapMerged.data[globalInd]);
+          updateOccupancy(mapMerged.data[globalInd],msg->data[globalInd]);
+          /* mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*mapMerged.data[globalInd]); */
         }
       }
     }
@@ -80,11 +103,14 @@ OccupancyGridUpdate MapMerger::mergeMapUpdate(const OccupancyGridUpdateConstPtr&
 
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
-        mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*50);
+        mapMerged.data[globalInd] = 100*P_PRIOR;
+        updateOccupancy(mapMerged.data[globalInd],update->data[updateInd]);
+        /* mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*50); */
       } else {
         // Skip if there is no line of vision from the update index to the robot (on the update grid)
         if(isOccupied(update->data[updateInd]) || unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
-          mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]);
+          updateOccupancy(mapMerged.data[globalInd],update->data[updateInd]);
+          /* mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]); */
         }
       }
 
