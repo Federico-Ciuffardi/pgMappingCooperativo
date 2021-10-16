@@ -15,9 +15,11 @@ Robot::Robot() { }
 /////////
 Bid Robot::getBid(Auction msg) {
   // turn rosmsg Graph to GVD lib Graph
+  cout<<"gvd = toGraph<GvdVecGraph>(msg.gvd);"<<endl;
   gvd = toGraph<GvdVecGraph>(msg.gvd);
 
   // Convert the occupancy grid into Map
+  cout<<"Map map = toMap(occupancyGrid);"<<endl;
   Map map = toMap(occupancyGrid);
 
   // Robot position
@@ -28,15 +30,18 @@ Bid Robot::getBid(Auction msg) {
   /// add the robot to the gvd (if this is not possible, then add the robot as
   /// the only vertex in the GVD, this is necesary due to the navigation taking
   /// place on the GVD)
+  cout<<"gvd.addV(robotBidPos);"<<endl;
   if(!addToGraph(robotBidPos, gvd, map)){
     gvd.addV(robotBidPos);
   }
 
   // Frontiers
   /// convert vector<Point2D> forntiers to PosSet
+  cout<<"PosSet frontiers = toPosSet(msg.frontiers);"<<endl;
   PosSet frontiers = toPosSet(msg.frontiers);
 
   // Add trivial frontiers to the Bid
+  cout<<"Add trivial frontiers to the Bid"<<endl;
   Bid bid;
   nonTrivialFrontiers.clear();
   for(Pos frontier : frontiers){
@@ -56,13 +61,16 @@ Bid Robot::getBid(Auction msg) {
 
   if(!nonTrivialFrontiers.empty()){
     /// add the non-trivial frontiers to the gvd
+    cout<<"addToGraph(nonTrivialFrontiers, gvd, map);"<<endl;
     addToGraph(nonTrivialFrontiers, gvd, map);
 
     // get the path from the robotBidPos to each non-trivial frontier
+    cout<<"boost::tie(nonTrivialPaths, nonTrivialPathLenght) = gvd.getMultiPath(robotBidPos, nonTrivialFrontiers);"<<endl;
     boost::tie(nonTrivialPaths, nonTrivialPathLenght) = gvd.getMultiPath(robotBidPos, nonTrivialFrontiers);
   }
 
   // Add non trivial frontiers to the Bid
+  cout<<"Add non trivial frontiers to the Bid"<<endl;
   for (auto &it : nonTrivialPathLenght) {
     Pos frontier = it.first; 
     Float cost = it.second;

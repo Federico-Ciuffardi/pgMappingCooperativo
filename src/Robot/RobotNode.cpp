@@ -152,7 +152,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 }
 
 void pathResultCallback(const std_msgs::String::ConstPtr& msg) {
-  ROS_INFO("Arrived to the objective, requesting objective");
+  ROS_INFO_STREAM("Result "<<msg->data<<", requesting objective");
   std_msgs::String msgRequest;
   msgRequest.data = "signal";
   requestObjetivePub.publish(msgRequest);
