@@ -90,7 +90,7 @@ bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
 
   return fromPos.distanceToSquared(waypointPos) <= forcedCompletionToleranceSquared ||
          (fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
-          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid,ceil(meterToCells*0.5)));
+          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid,meterToCells));
 }
 
 ///////////////
@@ -139,14 +139,24 @@ void nextWaypoint(){
     sendWaypoint(waypointPose);
   }else{
     // if there was a path assigned
-    if(path.size() > 0 && (firstCompletedGoal || lastCompleatedGoal != currentWaypoint) ){
-      firstCompletedGoal = false;
-      lastCompleatedGoal = currentWaypoint;
-      // clear path
-      currentWaypointIndex = 0;
-      path.clear();
-      // notify path completion
-      notifyStatus((char*)"SUCCESS");
+    if(path.size() > 0){
+      if (firstCompletedGoal || lastCompleatedGoal != currentWaypoint){
+        firstCompletedGoal = false;
+        lastCompleatedGoal = currentWaypoint;
+        // clear path
+        currentWaypointIndex = 0;
+        path.clear();
+        // notify path completion
+        notifyStatus((char*)"SUCCEED");
+      }else{
+        Pose waypointPose;
+        Vector2<Float> direction = currentWaypoint - robotPos;
+        waypointPose.orientation = toQuaternion(direction);
+        waypointPose.position = toPoint(robotPos - 3*(lastCompleatedGoal-robotPos).normalize());
+        sendWaypoint(waypointPose);
+        sleep(5);
+        notifyStatus((char*)"RECOVERY");
+      }
     }
   }
 }
@@ -249,7 +259,7 @@ int main(int argc, char** argv) {
   // Load params
   float cellSize;
   FAIL_IFN(n.param<float>   ("/cell_size", cellSize, cellSize));
-  meterToCells = round(1/cellSize);
+  meterToCells = ceil(1/cellSize);
 
   // Initilize Publishers
   pathResultPub         = n.advertise<std_msgs::String>("path_result", 10);
