@@ -15,8 +15,9 @@ GlobalPlanner:
   neutral_cost: 25
   outline_map: false
   use_grid_path: true 
-#   # orientation_window_size: 0
-#   old_navfn_behavior: true
+  # default_tolerance: 0.5
+  # orientation_window_size: 0
+  # old_navfn_behavior: true
 
 # base_global_planner: "navfn/NavfnROS"
 # NavfnROS:

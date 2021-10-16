@@ -18,7 +18,7 @@ bool MapMerger::isInitialized(){
 }
 
 #define P_PRIOR 0.5
-#define P_OCC   0.65
+#define P_OCC   0.55
 #define P_FREE  0.45
 
 void updateOccupancy(int8_t &currentOccupancy, int8_t newOccupancy){
