@@ -425,26 +425,30 @@ struct PosGraph : public Graph<graph,Pos> {
   //// euclidean distance heuristic
   template <class GraphType, class CostType>
   class multi_astar_distance_heuristic : public astar_heuristic<GraphType, CostType> {
+   private:
+    GraphType g;
+    PosSet goals;
+
    public:
     typedef typename graph_traits<GraphType>::vertex_descriptor Vertex;
-    multi_astar_distance_heuristic(GraphType &g, PosSet goals) : m_graph(g), m_goals(goals) {}
-    CostType operator()(Vertex u) {
-      // cout<<"heuristica antes"<<m_goals.size()<<endl;
-      Pos current_target = *(m_goals.begin());
-      CostType distance = m_graph[u].p.distanceTo(current_target);
-      // cout<<distance<<endl;
-      auto it = m_goals.find(m_graph[u].p);
-      if (it != m_goals.end() && m_goals.size() > 1) {
-        m_goals.erase(it);
-      }
-      Pos new_target = *(m_goals.begin());
-      // cout<<"heuristica desopues"<<m_goals.size()<<endl;
-      return m_graph[u].p.distanceTo(new_target);
+
+    multi_astar_distance_heuristic(GraphType &g, PosSet goals){
+      this->g = g;
+      this->goals = goals; 
     }
 
-   private:
-    GraphType m_graph;
-    PosSet m_goals;
+    CostType operator()(Vertex u) {
+      goals.erase(g[u].p);
+
+      if(goals.empty()){
+        return 0;
+      }else{
+        Pos current_target = *(goals.begin());
+
+        return g[u].p.distanceTo(current_target);
+      }
+    }
+
   };
 
   struct found_goals {};  // exception for termination
@@ -452,33 +456,29 @@ struct PosGraph : public Graph<graph,Pos> {
   //// visitor that terminates when we find the goal
   template <class Vertex>
   class multi_astar_goal_visitor : public boost::default_astar_visitor {
+   private:
+    PosSet goals;
+
    public:
-    multi_astar_goal_visitor(PosSet goals) : m_goals(goals) {}
+    multi_astar_goal_visitor(PosSet goals){
+      this->goals = goals;
+    }
+
     template <class GraphType>
     void examine_vertex(Vertex u, GraphType &g) {
-      // cout<<"visitor antess"<<m_goals.size()<<endl;
-      auto it = m_goals.find(g[u].p);
-      if (it != m_goals.end()) {
-        if (m_goals.size() > 1) {
-          m_goals.erase(it);
-        } else {
-          throw found_goals();
-        }
-      }
-      // cout<<"visitor despues"<<m_goals.size()<<endl;
-      if (m_goals.size() == 0) {
+      goals.erase(g[u].p);
+
+      if(goals.empty()){
         throw found_goals();
       }
     }
-
-   private:
-    PosSet m_goals;
   };
 
   //// get the shortestpath and the cost of reaching the goal
   boost::tuple<boost::unordered_map<Pos, list<Vertex>>, boost::unordered_map<Pos, float>>
   getMultiPath(Pos start, PosSet goals) {
 
+    cout<<"  filter"<<endl;
     filter(goals,[this](Pos goal){
                    return !is_elem(goal, this->idVertexMap);
                  });
@@ -486,11 +486,15 @@ struct PosGraph : public Graph<graph,Pos> {
     boost::unordered_map<Pos, list<Vertex>> shortest_paths;
     boost::unordered_map<Pos, float> shortest_paths_costs;
 
+    // if there is no goals return trivial result
+    if(goals.empty()) return boost::make_tuple(shortest_paths, shortest_paths_costs); 
+
     vector<Vertex> p(num_vertices(this->g));
     vector<float>  d(num_vertices(this->g));
 
     Vertex startVertex = this->idVertexMap[start];
 
+    cout<<"  astar_search_tree"<<endl;
     try {
       // call astar named parameter interface
       astar_search_tree(this->g, startVertex,
@@ -500,7 +504,7 @@ struct PosGraph : public Graph<graph,Pos> {
                             .visitor(multi_astar_goal_visitor<Vertex>(goals)));
     } catch (found_goals fg) {} // found a path to the goal
 
-    // cout<<"comienzo del termino!"<<endl;
+    cout<<"  Process paths"<<endl;
     for (Pos goal : goals) {
       Vertex goalVertex = this->idVertexMap[goal];
 
@@ -515,6 +519,8 @@ struct PosGraph : public Graph<graph,Pos> {
         shortest_paths_costs[goal] = d[goalVertex];
       }
     }
+
+    cout<<"  return paths"<<endl;
     return boost::make_tuple(shortest_paths, shortest_paths_costs);
   }
 
