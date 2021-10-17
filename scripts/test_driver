@@ -1,21 +1,58 @@
 #!/usr/bin/env bash 
 
+# Variables
+pkg_dir="${HOME}/catkin_ws/src/pgmappingcooperativo"
+rviz_dir="${pkg_dir}/rviz"
+config_dir="${pkg_dir}/config"
+log_dir="${pkg_dir}/log"
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
-for (( n = 0 ; n < 10 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 1.000 1000s
-done
+function count_executed_tests(){
+  test_param=$1
+  test_value=$2
 
-for (( n = 0 ; n < 10 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 0.500 1200s
-done
+  count=0
+  for log in $log_dir/* ; do
+    if [ -f "$log/termination.yaml" ] ; then
+      val=$(ruby -r yaml -e "puts YAML.load_file(ARGV[0])[\"$test_param\"]" "$log/rosparams.yaml")
+      if [ $val = $test_value ] ; then
+        ((count=count+1))
+      fi
+    fi
+  done
+  echo $count
+}
 
-for (( n = 0 ; n < 10 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 0.315 1400s
-done
+function remaining_tests(){
+  test_param=$1
+  test_value=$2
+  desired_tests=$3
 
-for (( n = 0 ; n < 10 ; n++ )); do
-  $SCRIPT_DIR/pgmch test-nocompile office 5 0.250 1600s
-done
+  current=$(count_executed_tests $test_param $test_value)
+  ((remaining=desired_tests-current))
+  echo $remaining
+}
 
+function execute_remaining_tests(){
+  test_param=$1
+  test_value=$2
+  desired_tests=$3
+  test_cmd=$4
+
+  remaining=$(remaining_tests $test_param $test_value $desired_tests)
+  while [ $remaining  -gt 0 ] ; do
+    for (( n = 0 ; n < $remaining ; n++ )); do
+      $test_cmd
+    done
+    remaining=$(remaining_tests $1 $2 $3)
+  done
+}
+
+execute_remaining_tests "cell_size" 1.0   10 "$SCRIPT_DIR/pgmch test-nocompile office 5 1.000 1000s"
+
+execute_remaining_tests "cell_size" 0.5   10 "$SCRIPT_DIR/pgmch test-nocompile office 5 0.500 1200s"
+
+execute_remaining_tests "cell_size" 0.315 10 "$SCRIPT_DIR/pgmch test-nocompile office 5 0.315 1400s"
+
+execute_remaining_tests "cell_size" 0.25  10 "$SCRIPT_DIR/pgmch test-nocompile office 5 0.250 1600s"
