@@ -21,7 +21,6 @@ HOME=os.environ['HOME']
 # config
 ## paths
 pkg_dir=f"{HOME}/catkin_ws/src/pgmappingcooperativo"
-log_dir=f"{pkg_dir}/log"
 data_dir=f"{pkg_dir}/data"
 maps_dir=f"{pkg_dir}/maps"
 
@@ -100,11 +99,17 @@ def compare_maps(real_path, explored_path):
 # MAIN #
 ########
 
-digest_dir = sys.argv[1] if len(sys.argv) > 1 else "latest"
-digest_dir = f"{data_dir}/{digest_dir}"
+digest_dir = sys.argv[1] if len(sys.argv) > 1 else f"{data_dir}/latest"
+
+log_dir = sys.argv[2] if len(sys.argv) > 2 else f"{pkg_dir}/log"
 
 if os.path.exists(digest_dir):
-    shutil.rmtree(digest_dir)
+    print(f"{digest_dir} already exists")
+    print(f"Remove?[y/N]:")
+    if sys.stdin.read(1) == 'y':
+        shutil.rmtree(digest_dir)
+    else:
+        sys.exit(f"Please remove {digest_dir} or use another path")
 
 os.mkdir(digest_dir)
 
