@@ -154,7 +154,7 @@ void nextWaypoint(){
         waypointPose.orientation = toQuaternion(direction);
         waypointPose.position = toPoint(robotPos - 3*(lastCompleatedGoal-robotPos).normalize());
         sendWaypoint(waypointPose);
-        sleep(5);
+        sleep(10);
         notifyStatus((char*)"RECOVERY");
       }
     }
