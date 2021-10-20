@@ -93,6 +93,7 @@ int requests       = 0;
 
 ros::Time lastAuctionStart;
 
+float auctionInfoRealTime;
 ros::Duration auctionInfoTime;
 ros::Duration estimatedAuctionInfoTimeIncrement(0);
 
@@ -288,12 +289,21 @@ void startAuction() {
   // get aution info (calculate gvd + mesure time of calculation)
   ROS_INFO("Computing Auction information");
 
+  // save the last times
   ros::Duration lastauctionInfoTime = auctionInfoTime;
-  float lastgvdUpdateTime = centralModule.topoMap ? centralModule.topoMap->gvd->updateTime : 0;
+  float lastAuctionInfoRealTime = auctionInfoRealTime;
+  float lastgvdUpdateTime = centralModule.topoMap ? centralModule.topoMap->gvd->updateTime : 0; //real time
 
+  // Start the timers
   ros::Time auctionInfoStart = ros::Time::now();
+  std::chrono::steady_clock::time_point auctionInfoRealStart = std::chrono::steady_clock::now();
+
   Auction auction = centralModule.getAuctionInfo();
+
+  // get the current times
   auctionInfoTime = (ros::Time::now() - auctionInfoStart);
+  float secOnNanosec = 1000000000;
+  auctionInfoRealTime = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - auctionInfoRealStart).count())/secOnNanosec;
 
   estimatedAuctionInfoTimeIncrement = max(estimatedAuctionInfoTimeIncrement, auctionInfoTime - lastauctionInfoTime);
 
@@ -334,11 +344,11 @@ void startAuction() {
     string exploredCells = to_string((float)centralModule.map.coveredIndices.size());
 
     // log auctionInfoTime
-    string time = to_string(auctionInfoTime.toSec());
+    string time = to_string(auctionInfoRealTime);
     logAppend(auctionInfoTimeLog, exploredCells + "  " + time);
 
     // log auctionInfoIncrementalTime
-    string timeIncrement = to_string((auctionInfoTime - lastauctionInfoTime).toSec());
+    string timeIncrement = to_string(auctionInfoRealTime - lastAuctionInfoRealTime);
     logAppend(auctionInfoTimeIncrementLog, exploredCells + "  " + timeIncrement);
 
     // log auctionInfoTime
