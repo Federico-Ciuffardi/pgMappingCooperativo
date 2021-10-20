@@ -38,6 +38,8 @@ class MapMerger {
   ///////////////
   // Functions //
   ///////////////
+  void setOccupancy(int,double);
+  void updateOccupancy(int, int8_t newOccupancy);
 
  public:
   //////////
@@ -47,6 +49,7 @@ class MapMerger {
   boost::unordered_map<string,int> mapsArrived;
   float sensorRange;
   OccupancyGrid mapMerged;
+  vector<double> mapMergedDoubleData;
 
   ///////////////
   // Functions //

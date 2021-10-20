@@ -17,12 +17,17 @@ bool MapMerger::isInitialized(){
   return !mapsArrived.empty();
 }
 
+void MapMerger::setOccupancy(int index, double occupancy){
+  mapMerged.data[index]      = round(100*occupancy);
+  mapMergedDoubleData[index] = occupancy;
+}
+
 #define P_PRIOR 0.5
 #define P_OCC   0.55
-#define P_FREE  0.475
+#define P_FREE  0.45
 
-void updateOccupancy(int8_t &currentOccupancy, int8_t newOccupancy){
-  float newProb;
+void MapMerger::updateOccupancy(int index, int8_t newOccupancy){
+  double newProb;
   if ( isUnknown(newOccupancy) ){
     newProb = P_PRIOR;
   }else if (isOccupied(newOccupancy)){
@@ -31,9 +36,14 @@ void updateOccupancy(int8_t &currentOccupancy, int8_t newOccupancy){
     newProb = P_FREE;
   }
 
-  float currentProb = currentOccupancy/100.0;
+  double currentProb = mapMergedDoubleData[index];
+  currentProb = 1/(1 + ((1-newProb)/newProb) * /*(P_PRIOR/(1-P_PRIOR))* */ ((1-currentProb)/currentProb)); // optimized for P_PRIOR = 0.5
 
-  currentOccupancy = 100/(1 + ((1-newProb)/newProb) * (P_PRIOR/(1-P_PRIOR)) * ((1-currentProb)/currentProb));
+  // avoid certainty
+  currentProb = min(currentProb, 0.99999);
+  currentProb = max(currentProb, 0.00001);
+
+  setOccupancy(index, currentProb);
 }
 
 
@@ -53,6 +63,7 @@ void MapMerger::mergeMap(const OccupancyGridConstPtr& msg, string name) {
     mapMerged.info = msg->info;
     mapMerged.header = msg->header;
     mapMerged.data = vector<int8_t>(msg->data.size(),-1);
+    mapMergedDoubleData = vector<double>(msg->data.size(),-1);
   }
 
   int robotGlobalInd = toInt(positions[name].pose.position, msg->info);
@@ -69,14 +80,14 @@ void MapMerger::mergeMap(const OccupancyGridConstPtr& msg, string name) {
 
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
-        mapMerged.data[globalInd] = 100*P_PRIOR;
-        updateOccupancy(mapMerged.data[globalInd],msg->data[globalInd]);
+        setOccupancy(globalInd, P_PRIOR);
+        updateOccupancy(globalInd,msg->data[globalInd]);
         /* mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*50); */
       } else {
         // Skip if there is no line of vision from the update index to the robot (on the update grid)
         Pos globalPos = toPos(globalInd, msg->info.width); 
         if(isOccupied(msg->data[globalInd]) || unobstructedLine(robotGlobalPos, globalPos, msg->data, msg->info.width)){ 
-          updateOccupancy(mapMerged.data[globalInd],msg->data[globalInd]);
+          updateOccupancy(globalInd,msg->data[globalInd]);
           /* mapMerged.data[globalInd] = round(decay*msg->data[globalInd] + (1-decay)*mapMerged.data[globalInd]); */
         }
       }
@@ -103,13 +114,13 @@ OccupancyGridUpdate MapMerger::mergeMapUpdate(const OccupancyGridUpdateConstPtr&
 
       // merge index
       if (isUnknown(mapMerged.data[globalInd])) {
-        mapMerged.data[globalInd] = 100*P_PRIOR;
-        updateOccupancy(mapMerged.data[globalInd],update->data[updateInd]);
+        setOccupancy(globalInd, P_PRIOR);
+        updateOccupancy(globalInd,update->data[updateInd]);
         /* mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*50); */
       } else {
         // Skip if there is no line of vision from the update index to the robot (on the update grid)
         if(isOccupied(update->data[updateInd]) || unobstructedLine(robotUpdatePos, updatePos, update->data, update->width)){
-          updateOccupancy(mapMerged.data[globalInd],update->data[updateInd]);
+          updateOccupancy(globalInd,update->data[updateInd]);
           /* mapMerged.data[globalInd] = round(decay*update->data[updateInd] + (1-decay)*mapMerged.data[globalInd]); */
         }
       }
