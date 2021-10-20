@@ -40,7 +40,7 @@ Float forcedCompletionToleranceSquared   = squared(1.5);
 Float pathCompletionToleranceSquared     = squared(2.5);//squared(2);
 Float waypointCompletionToleranceSquared = squared(50);
 Float movementDetectionThresholdSquared  = squared(0.01);
-Float stopTresholdSquared                = squared(0.6); // squared(1.25); // squared(1);
+Float stopTresholdSquared                = squared(1); // squared(1.25); // squared(1);
 Float progressToleranceSquared           = squared(0.05);
 
 //secs

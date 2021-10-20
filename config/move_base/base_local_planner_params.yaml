@@ -26,8 +26,8 @@ GlobalPlanner:
 base_local_planner: "teb_local_planner/TebLocalPlannerROS" 
 TebLocalPlannerROS:
   # Robot Configuration Parameters
-  max_vel_x: 0.75
-  max_vel_y: 0.75
+  max_vel_x: 1.2
+  max_vel_y: 1.2
   max_vel_theta: 1.0
 
   max_vel_x_backwards: 0.75
@@ -40,7 +40,7 @@ TebLocalPlannerROS:
   footprint_model/radius: 0.2275
 
   # Obstacle Parameters
-  min_obstacle_dist: 0.75
+  min_obstacle_dist: 0.475
   inflation_dist: 1.5
 
   # Trajectory Configuration Parameters 
@@ -56,7 +56,7 @@ TebLocalPlannerROS:
   free_goal_vel: true
 
   # Optimization Parameters
-  weight_kinematics_forward_drive: 999999999999999999999999.0
+  # weight_kinematics_forward_drive: 999999999999999999999999.0 # should not go backwards
   # weight_obstacle:  0.1
   # weight_inflation: 0.1
 
