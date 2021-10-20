@@ -157,10 +157,12 @@ void pathResultCallback(const std_msgs::String::ConstPtr& msg) {
   msgRequest.data = "signal";
   requestObjetivePub.publish(msgRequest);
 
-  // Delete the path mark
-  rvizHelper.topic = &pathMarkerPub;
-  rvizHelper.deleteMark(robot.name + "_path", 0);
-  rvizHelper.deleteMark(robot.name + "_pos", 0);
+  if(msg->data != "RECOVERY"){
+    // Delete the path mark
+    rvizHelper.topic = &pathMarkerPub;
+    rvizHelper.deleteMark(robot.name + "_path", 0);
+    rvizHelper.deleteMark(robot.name + "_pos", 0);
+  }
 }
 
 void auctionCallBack(const AuctionConstPtr& msg) {

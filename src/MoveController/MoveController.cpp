@@ -13,6 +13,7 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "actionlib_msgs/GoalStatus.h"
 #include "nav_msgs/Odometry.h"
+#include "ros/time.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/String.h"
 #include "tf/transform_datatypes.h"
@@ -20,9 +21,13 @@
 #include "pgmappingcooperativo/RobotReport.h"
 #include "../lib/GVD/src/data/Pos.h"
 #include "../lib/utils.h"
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
 
 using namespace sensor_msgs;
 using namespace pgmappingcooperativo;
+
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 #define squared(x) x*x
 
@@ -30,10 +35,16 @@ using namespace pgmappingcooperativo;
 // Parameters //
 ////////////////
 
+// meters
 Float forcedCompletionToleranceSquared   = squared(1.5);
-Float pathCompletionToleranceSquared     = squared(2);
+Float pathCompletionToleranceSquared     = squared(2.5);//squared(2);
 Float waypointCompletionToleranceSquared = squared(50);
 Float movementDetectionThresholdSquared  = squared(0.01);
+Float stopTresholdSquared                = squared(0.6); // squared(1.25); // squared(1);
+Float progressToleranceSquared           = squared(0.05);
+
+//secs
+Float recoveryBehaviorTimeTolerance      = 10;
 
 ///////////////
 // Variables //
@@ -52,7 +63,16 @@ ros::Subscriber poseSub;
 ros::Subscriber mapSub;
 ros::Subscriber mapUpdateSub;
 ros::Subscriber moveBaseResultSub;
+ros::Subscriber laserScansub;
+
+/// Action client
+MoveBaseClient* ac;
+
 // Others
+ros::Timer succeedAgainTimer;
+ros::Duration succeedAgainTimerTimeout(recoveryBehaviorTimeTolerance);
+
+
 vector<Point> path;
 
 int meterToCells;
@@ -68,7 +88,15 @@ int currentWaypointIndex = 0;
 Vector2<Float> currentWaypoint;
 
 bool firstCompletedGoal = true; 
-Vector2<Float> lastCompleatedGoal;
+Vector2<Float> lastCompletedGoal;
+ros::Time lastCompleatedGoalTime;
+
+bool firstGoal = true; 
+Vector2<Float> lastGoalPos;
+Vector2<Float> lastRobotPos;
+ros::Time lastProgressTime;
+Float lastDistanceSquaredToGoal;
+
 
 OccupancyGrid occupancyGrid;
 
@@ -116,6 +144,16 @@ void notifyStatus(char* data) {
   pathResultPub.publish(str);
 }
 
+void recoveryBehavior(){
+  Pose waypointPose;
+  Vector2<Float> direction = currentWaypoint - robotPos;
+  waypointPose.orientation = toQuaternion(direction);
+  waypointPose.position = toPoint(robotPos - 2*(lastCompletedGoal-robotPos).normalize());
+  sendWaypoint(waypointPose);
+  sleep(10);
+  notifyStatus((char*)"RECOVERY");
+}
+
 void nextWaypoint(){
   currentWaypointIndex++;
   if(!isPathOver()){
@@ -140,22 +178,19 @@ void nextWaypoint(){
   }else{
     // if there was a path assigned
     if(path.size() > 0){
-      if (firstCompletedGoal || lastCompleatedGoal != currentWaypoint){
+      if (firstCompletedGoal || lastCompletedGoal != currentWaypoint){
         firstCompletedGoal = false;
-        lastCompleatedGoal = currentWaypoint;
+        lastCompletedGoal = currentWaypoint;
+        lastCompleatedGoalTime = ros::Time::now();
         // clear path
         currentWaypointIndex = 0;
         path.clear();
         // notify path completion
         notifyStatus((char*)"SUCCEED");
+      }else if((ros::Time::now() - lastCompleatedGoalTime).toSec() > recoveryBehaviorTimeTolerance) {
+        recoveryBehavior();
       }else{
-        Pose waypointPose;
-        Vector2<Float> direction = currentWaypoint - robotPos;
-        waypointPose.orientation = toQuaternion(direction);
-        waypointPose.position = toPoint(robotPos - 3*(lastCompleatedGoal-robotPos).normalize());
-        sendWaypoint(waypointPose);
-        sleep(10);
-        notifyStatus((char*)"RECOVERY");
+        succeedAgainTimer.start();
       }
     }
   }
@@ -171,17 +206,51 @@ void trimPath(vector<Point> &path) {
 // CallBacks //
 ///////////////
 
+Float minDist = INF;
+void lidarCallback(const sensor_msgs::LaserScan::ConstPtr &scan) {
+  minDist = INF;
+  for(Float dist : scan->ranges){
+    minDist = min(minDist, dist);
+  }
+}
+
+
+void succeedAgainTimerTimeoutTimerRoutine(const ros::TimerEvent&){
+  notifyStatus((char*)"SUCCEED_AGAIN");
+}
+
 void goalPathCallback(const GoalList& msg) {
+  succeedAgainTimer.stop();
+
   path = msg.goals;
+
   if (msg.goals.empty()){
-    // cancel
-    currentWaypointIndex = 0;
-    sendWaypoint(robotPose);
+    // stop
+    ac->cancelAllGoals();
   }else{
-    // set path
-    trimPath(path);
-    currentWaypointIndex = -1;
-    nextWaypoint();
+    Vector2<Float> currentGoalPos = toVector2<Float>(path[currentWaypointIndex]);
+    if(firstGoal || lastGoalPos != currentGoalPos){
+      firstGoal = false;
+      lastGoalPos = currentGoalPos;
+      lastProgressTime = ros::Time::now();
+      lastDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
+    }
+
+    Float currentDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
+    if(lastDistanceSquaredToGoal >= currentDistanceSquaredToGoal + progressToleranceSquared){
+      lastDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
+      lastProgressTime = ros::Time::now();
+    }
+
+    if ((ros::Time::now() - lastProgressTime).toSec() < recoveryBehaviorTimeTolerance){
+      // set path
+      trimPath(path);
+      currentWaypointIndex = -1;
+      nextWaypoint();
+    } else {
+      recoveryBehavior();
+      firstGoal = true; // invalidate goal
+    }
   }
 }
 
@@ -240,6 +309,11 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
     while(isWaypointCompleted(robotPos,currentWaypoint) && !isPathOver()){
       nextWaypoint();
     }
+
+    if(isPathOver() && minDist*minDist <= stopTresholdSquared){
+      // stop
+      ac->cancelAllGoals();
+    }
   }
 }
 
@@ -273,10 +347,24 @@ int main(int argc, char** argv) {
   endSub            = n.subscribe("/end", 1, endCallback);
   mapSub            = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
   mapUpdateSub      = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
+  laserScansub = n.subscribe("laser/scan", 1, lidarCallback);
+
+
+  // Initilize action client
+  ac = new MoveBaseClient("move_base");
+  //wait for the action server to come up
+  while(!ac->waitForServer(ros::Duration(5.0))){
+    ROS_INFO("Waiting for the move_base action server to come up");
+  }
+
+  // Initilize timers
+  succeedAgainTimer = n.createTimer(succeedAgainTimerTimeout, succeedAgainTimerTimeoutTimerRoutine, true, false);
 
   // spin
   ROS_INFO_STREAM("Initilized");
   ros::spin();
+
+  delete ac;
 
   return 0;
 }
