@@ -36,15 +36,16 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 ////////////////
 
 // meters
-Float forcedCompletionToleranceSquared   = squared(1.5);
-Float pathCompletionToleranceSquared     = squared(2.5);//squared(2);
-Float waypointCompletionToleranceSquared = squared(50);
-Float movementDetectionThresholdSquared  = squared(0.01);
-Float stopTresholdSquared                = squared(1); // squared(1.25); // squared(1);
-Float progressToleranceSquared           = squared(0.05);
+Float forcedCompletionToleranceSquared  = squared(1.5);
+Float pathCompletionToleranceSquared    = squared(2.5);//squared(2);
+Float goalCompletionToleranceSquared    = squared(50);
+Float movementDetectionThresholdSquared = squared(0.01);
+Float stopTresholdSquared               = squared(1); // squared(1.25); // squared(1);
+Float progressToleranceSquared          = squared(0.05);
 
 //secs
-Float recoveryBehaviorTimeTolerance      = 10;
+Float recoveryBehaviorTimeToleranceBase = 15;
+Float recoveryBehaviorTimeTolerance     = recoveryBehaviorTimeToleranceBase;
 
 ///////////////
 // Variables //
@@ -84,19 +85,20 @@ bool firstRobotPos = true;
 Pose robotPose;
 Vector2<Float> robotPos;
 
-int currentWaypointIndex = 0;
-Vector2<Float> currentWaypoint;
+int currentGoalPosIndex = 0;
+Vector2<Float> currentGoalPos;
+Point currentGoalPose;
 
 bool firstCompletedGoal = true; 
-Vector2<Float> lastCompletedGoal;
+Vector2<Float> lastCompletedGoalPos;
 ros::Time lastCompleatedGoalTime;
 
 bool firstGoal = true; 
-Vector2<Float> lastGoalPos;
-Vector2<Float> lastRobotPos;
 ros::Time lastProgressTime;
 Float lastDistanceSquaredToGoal;
+Vector2<Float> lastGoalPos;
 
+int noProgressCounter = 0;
 
 OccupancyGrid occupancyGrid;
 
@@ -105,20 +107,20 @@ OccupancyGrid occupancyGrid;
 ///////////////////
 
 bool isPathOver(){
-  return path.size() == currentWaypointIndex;
+  return path.size() == currentGoalPosIndex;
 }
 
-bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
+bool isGoalCompleted(Vector2<Float> fromPos, Vector2<Float> goalPos){
   Float completionToleranceSquared;
-  if(currentWaypointIndex < path.size() - 1){
-    completionToleranceSquared = waypointCompletionToleranceSquared;
+  if(currentGoalPosIndex < path.size() - 1){
+    completionToleranceSquared = goalCompletionToleranceSquared;
   }else{
     completionToleranceSquared = pathCompletionToleranceSquared; 
   }
 
-  return fromPos.distanceToSquared(waypointPos) <= forcedCompletionToleranceSquared ||
-         (fromPos.distanceToSquared(waypointPos) <= completionToleranceSquared &&
-          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(waypointPos, occupancyGrid.info),occupancyGrid,meterToCells));
+  return fromPos.distanceToSquared(goalPos) <= forcedCompletionToleranceSquared ||
+         (fromPos.distanceToSquared(goalPos) <= completionToleranceSquared &&
+          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(goalPos, occupancyGrid.info),occupancyGrid,meterToCells));
 }
 
 ///////////////
@@ -126,7 +128,7 @@ bool isWaypointCompleted(Vector2<Float> fromPos, Vector2<Float> waypointPos){
 ///////////////
 
 int moveBaseSeq = 0;
-void sendWaypoint(Pose pose) {
+void sendGoal(Pose pose) {
   PoseStamped poseStamped;
   poseStamped.header.frame_id = "map";
   poseStamped.header.stamp = ros::Time::now();
@@ -138,57 +140,71 @@ void sendWaypoint(Pose pose) {
   moveBaseSeq++;
 }
 
+// to currentGoalPos
+void sendGoal(){
+    Pose goalPose;
+    goalPose.position = currentGoalPose;
+   
+    if(currentGoalPosIndex + 1 < path.size()){
+      // if currentGoalPos is not the last one set the direction to the nextGoal as the goal orientation
+      Vector2<Float> nextGoal = toVector2<Float>(path[currentGoalPosIndex+1]);
+      Vector2<Float> direction = nextGoal - currentGoalPos;
+      goalPose.orientation = toQuaternion(direction);
+    }else if (path.size() > 1){
+      // if currentGoalPos is the last one set the direction from the robot to the currentGoalPos as the 
+      // orientation of the goal
+      Vector2<Float> direction = currentGoalPos - robotPos;
+      goalPose.orientation = toQuaternion(direction);
+    }
+
+    sendGoal(goalPose);
+}
+
 void notifyStatus(char* data) {
   std_msgs::String str;
   str.data = data;
   pathResultPub.publish(str);
 }
 
-void recoveryBehavior(){
-  Pose waypointPose;
-  Vector2<Float> direction = currentWaypoint - robotPos;
-  waypointPose.orientation = toQuaternion(direction);
-  waypointPose.position = toPoint(robotPos - 2*(lastCompletedGoal-robotPos).normalize());
-  sendWaypoint(waypointPose);
-  sleep(10);
+void recoveryBehavior(Vector2<Float> failedPos, float minDistToFailed = 2){
+  /* if(offset.length() < minDist) offset = offset.normalize()*minDist; */
+  /* Vector2<Float> offset = 2.5*(failed-robotPos).normalize(); */
+  Vector2<Float> robot2failedOffset = failedPos-robotPos;
+  Float robot2recoveryOffsetLenght = min(1.0f , minDistToFailed - robot2failedOffset.length());
+  Vector2<Float> robot2recoveryOffset = -robot2recoveryOffsetLenght*robot2failedOffset.normalize();
+
+  Pose goalPose;
+  goalPose.orientation = toQuaternion(robot2recoveryOffset);
+  goalPose.position = toPoint(robotPos + robot2recoveryOffset);
+
+  sendGoal(goalPose);
+
+  ROS_INFO_STREAM("STARTING RECOVERY");
+  sleep(minDistToFailed + 5);
   notifyStatus((char*)"RECOVERY");
+  sendGoal();
 }
 
-void nextWaypoint(){
-  currentWaypointIndex++;
+void nextGoal(){
+  currentGoalPosIndex++;
   if(!isPathOver()){
-    currentWaypoint = toVector2<Float>(path[currentWaypointIndex]);
-
-    Pose waypointPose;
-    waypointPose.position = path[currentWaypointIndex] ;
-   
-    if(currentWaypointIndex + 1 < path.size()){
-      // if currentWaypoint is not the last one set the direction to the nextWaypoint as the waypoint orientation
-      Vector2<Float> nextWaypoint = toVector2<Float>(path[currentWaypointIndex+1]);
-      Vector2<Float> direction = nextWaypoint - currentWaypoint;
-      waypointPose.orientation = toQuaternion(direction);
-    }else if (path.size() > 1){
-      // if currentWaypoint is the last one set the direction from the robot to the currentWaypoint as the 
-      // orientation of the waypoint
-      Vector2<Float> direction = currentWaypoint - robotPos;
-      waypointPose.orientation = toQuaternion(direction);
-    }
-
-    sendWaypoint(waypointPose);
+    currentGoalPos  = toVector2<Float>(path[currentGoalPosIndex]);
+    currentGoalPose = path[currentGoalPosIndex];
+    sendGoal();
   }else{
     // if there was a path assigned
     if(path.size() > 0){
-      if (firstCompletedGoal || lastCompletedGoal != currentWaypoint){
+      if (firstCompletedGoal || lastCompletedGoalPos != currentGoalPos){
         firstCompletedGoal = false;
-        lastCompletedGoal = currentWaypoint;
+        lastCompletedGoalPos = currentGoalPos;
         lastCompleatedGoalTime = ros::Time::now();
         // clear path
-        currentWaypointIndex = 0;
+        currentGoalPosIndex = 0;
         path.clear();
         // notify path completion
         notifyStatus((char*)"SUCCEED");
-      }else if((ros::Time::now() - lastCompleatedGoalTime).toSec() > recoveryBehaviorTimeTolerance) {
-        recoveryBehavior();
+      /* }else if((ros::Time::now() - lastCompleatedGoalTime).toSec() > recoveryBehaviorTimeTolerance) { */
+      /*   recoveryBehavior(lastCompletedGoalPos); */
       }else{
         succeedAgainTimer.start();
       }
@@ -196,10 +212,11 @@ void nextWaypoint(){
   }
 }
 
-void trimPath(vector<Point> &path) {
-  int pathStart = 0;
-  for (; pathStart < path.size()-2 && isWaypointCompleted(robotPos,toVector2<Float>(path[pathStart])); pathStart++);
-  path = vector<Point, allocator<Point>>(path.begin() + pathStart, path.end());
+int firstUncompletedGoalIndex(vector<Point> &path) {
+  int goalIndex = 0;
+  for (; goalIndex < path.size()-1 && isGoalCompleted(robotPos,toVector2<Float>(path[goalIndex])); goalIndex++);
+  /* path = vector<Point, allocator<Point>>(path.begin() + pathStart, path.end()); */
+  return goalIndex;
 }
 
 ///////////////
@@ -216,40 +233,50 @@ void lidarCallback(const sensor_msgs::LaserScan::ConstPtr &scan) {
 
 
 void succeedAgainTimerTimeoutTimerRoutine(const ros::TimerEvent&){
+  succeedAgainTimer.stop();
   notifyStatus((char*)"SUCCEED_AGAIN");
 }
 
 void goalPathCallback(const GoalList& msg) {
   succeedAgainTimer.stop();
 
-  path = msg.goals;
-
   if (msg.goals.empty()){
     // stop
+    currentGoalPosIndex = 0;
+    path.clear();
     ac->cancelAllGoals();
   }else{
-    Vector2<Float> currentGoalPos = toVector2<Float>(path[currentWaypointIndex]);
-    if(firstGoal || lastGoalPos != currentGoalPos){
-      firstGoal = false;
-      lastGoalPos = currentGoalPos;
-      lastProgressTime = ros::Time::now();
-      lastDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
-    }
+    path = msg.goals;
+    int newGoalIndex = firstUncompletedGoalIndex(path); // trim path
 
-    Float currentDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
-    if(lastDistanceSquaredToGoal >= currentDistanceSquaredToGoal + progressToleranceSquared){
-      lastDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
+    Vector2<Float> newGoalPos = toVector2<Float>(path[newGoalIndex]);
+    if(firstGoal || newGoalPos != lastGoalPos){
+      firstGoal = false;
+      lastGoalPos = newGoalPos;
+
+      noProgressCounter = 0;
       lastProgressTime = ros::Time::now();
+      lastDistanceSquaredToGoal = robotPos.distanceToSquared(newGoalPos);
+      recoveryBehaviorTimeTolerance = recoveryBehaviorTimeToleranceBase;
+    }else{
+      Float currentDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
+      if(lastDistanceSquaredToGoal > currentDistanceSquaredToGoal + progressToleranceSquared){
+        noProgressCounter = 0;
+        lastProgressTime = ros::Time::now();
+        lastDistanceSquaredToGoal = currentDistanceSquaredToGoal;
+        recoveryBehaviorTimeTolerance = recoveryBehaviorTimeToleranceBase;
+      }
     }
 
     if ((ros::Time::now() - lastProgressTime).toSec() < recoveryBehaviorTimeTolerance){
       // set path
-      trimPath(path);
-      currentWaypointIndex = -1;
-      nextWaypoint();
+      currentGoalPosIndex = newGoalIndex-1; // newGoalIndex is not completed
+      nextGoal();
     } else {
-      recoveryBehavior();
-      firstGoal = true; // invalidate goal
+      noProgressCounter++;
+      recoveryBehavior(lastGoalPos, 2 + (noProgressCounter/2.0));
+      recoveryBehaviorTimeTolerance = (ros::Time::now() - lastProgressTime).toSec() + recoveryBehaviorTimeToleranceBase;
+      /* firstGoal = true; // force progress (constant distnace recovery) */
     }
   }
 }
@@ -259,11 +286,11 @@ void moveBaseResultCallback(const move_base_msgs::MoveBaseActionResult &msg) {
     case actionlib_msgs::GoalStatus::SUCCEEDED:
       // fix weird behavior of carrot planner
       if(!isPathOver()){
-        Pose waypointPose;
-        waypointPose.position = path[currentWaypointIndex] ;
-        Vector2<Float> direction = currentWaypoint - robotPos;
-        waypointPose.orientation = toQuaternion(direction);
-        sendWaypoint(waypointPose);
+        Pose goalPose;
+        goalPose.position = currentGoalPose;
+        Vector2<Float> direction = currentGoalPos - robotPos;
+        goalPose.orientation = toQuaternion(direction);
+        sendGoal(goalPose);
       }
       break;
     case actionlib_msgs::GoalStatus::PREEMPTED:
@@ -306,8 +333,8 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
     metersTraveled += sqrt(distanceOffsetSquared);
 
     // update path completion
-    while(isWaypointCompleted(robotPos,currentWaypoint) && !isPathOver()){
-      nextWaypoint();
+    while(isGoalCompleted(robotPos,currentGoalPos) && !isPathOver()){
+      nextGoal();
     }
 
     if(isPathOver() && minDist*minDist <= stopTresholdSquared){
