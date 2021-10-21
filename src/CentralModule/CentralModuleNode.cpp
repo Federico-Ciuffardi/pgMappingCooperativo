@@ -111,6 +111,7 @@ string auctionInfoTimeIncrementLog;
 string metersTraveledLog;         
 string gvdUpdateTimeLog;
 string gvdUpdateTimeIncrementLog;
+string gvdUpdateAuctionInfoPercentLog;
 
 bool endFlag = false;
 
@@ -275,6 +276,8 @@ void tryToShutdown(){
   gplot.graph_file(gvdUpdateTimeLog,          "Celdas exploradas", "Tiempo de obtención del GVD (s)");
   gplot.graph_file(gvdUpdateTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de obtención del GVD (s)");
 
+  gplot.graph_file(gvdUpdateAuctionInfoPercentLog, "Celdas exploradas", "Porcentaje de obtención GVD en obtención info subasta");
+
   std::system(("rosrun map_server map_saver --occ 50 --free 49 -f "+ centralModule.fileLogDir +"/map map:=map_visualization_marker &").c_str());
   ros::Duration(5).sleep();
   mapMarkerPub.publish(centralModule.map.occupancyGrid);
@@ -358,6 +361,10 @@ void startAuction() {
     // log gvdUpdateTimeIncrementLog
     timeIncrement = to_string(centralModule.topoMap->gvd->updateTime - lastgvdUpdateTime);
     logAppend(gvdUpdateTimeIncrementLog, exploredCells + "  " + timeIncrement);
+
+    // log auctionInfoTime spent on gvdUpate
+    time = to_string(100*(centralModule.topoMap->gvd->updateTime/auctionInfoRealTime));
+    logAppend(gvdUpdateAuctionInfoPercentLog, exploredCells + "  " + time);
   }
 
   cout<<"debug :: auction started successfully"<<endl;
@@ -642,6 +649,7 @@ int main(int argc, char* argv[]) {
   auctionInfoTimeIncrementLog    = centralModule.fileLogDir + "/auction_info_time_diff";
   gvdUpdateTimeLog               = centralModule.fileLogDir + "/gvd_construction_time";
   gvdUpdateTimeIncrementLog      = centralModule.fileLogDir + "/gvd_construction_time_diff";
+  gvdUpdateAuctionInfoPercentLog = centralModule.fileLogDir + "/gvd_update_auction_info_percent_log";
   metersTraveledLog              = centralModule.fileLogDir + "/meters_traveled";
 
   // Initilize timers
