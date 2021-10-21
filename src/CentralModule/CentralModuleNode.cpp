@@ -270,13 +270,13 @@ void tryToShutdown(){
     logAppend(metersTraveledLog, to_string(robotReport.metersTraveled));
   }
 
-  gplot.graph_file(auctionInfoTimeLog,          "Celdas exploradas", "Tiempo de obtención de la info de la subasta (s)");
+  gplot.graph_file(auctionInfoTimeLog,          "Celdas exploradas", "Tiempo de obtención de la info de la subasta (s)",true);
   gplot.graph_file(auctionInfoTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempos de obtención de la info de la subasta (s)");
 
-  gplot.graph_file(gvdUpdateTimeLog,          "Celdas exploradas", "Tiempo de obtención del GVD (s)");
+  gplot.graph_file(gvdUpdateTimeLog,          "Celdas exploradas", "Tiempo de obtención del GVD (s)", true);
   gplot.graph_file(gvdUpdateTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de obtención del GVD (s)");
 
-  gplot.graph_file(gvdUpdateAuctionInfoPercentLog, "Celdas exploradas", "Porcentaje de obtención GVD en obtención info subasta");
+  gplot.graph_file(gvdUpdateAuctionInfoPercentLog, "Celdas exploradas", "Porcentaje de obtención GVD en obtención info subasta", true);
 
   std::system(("rosrun map_server map_saver --occ 50 --free 49 -f "+ centralModule.fileLogDir +"/map map:=map_visualization_marker &").c_str());
   ros::Duration(5).sleep();
