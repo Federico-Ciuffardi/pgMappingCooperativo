@@ -1,5 +1,5 @@
-image: 1_000m.pgm
-resolution: 1.000000
+image: 0_333333m.pgm
+resolution: 0.333333
 origin: [-64.000000, -64.000000, 0.000000]
 negate: 0
 occupied_thresh: 0.65

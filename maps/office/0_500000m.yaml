@@ -1,4 +1,4 @@
-image: 0_500m.pgm
+image: 0_500000m.pgm
 resolution: 0.500000
 origin: [-64.000000, -64.000000, 0.000000]
 negate: 0

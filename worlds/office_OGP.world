@@ -1,7 +1,7 @@
 <sdf version='1.7'>
   <world name='default'>
     <plugin name='gazebo_occupancy_map' filename='libgazebo_2Dmap_plugin.so'>
-      <map_resolution>0.250</map_resolution> <!-- in meters, optional, default 0.1 -->
+      <map_resolution>0.333333</map_resolution> <!-- in meters, optional, default 0.1 -->
       <map_height>1.25</map_height>          <!-- in meters, optional, default 0.3 -->
       <map_size_x>128</map_size_x>           <!-- in meters, optional, default 10 -->
       <map_size_y>128</map_size_y>           <!-- in meters, optional, default 10 -->

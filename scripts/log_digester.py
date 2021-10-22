@@ -65,7 +65,7 @@ def isUnk(val):
 
 def cell_size_to_map_name(cell_size):
     map_name = ""
-    for c in "{:.3f}".format(cell_size):
+    for c in "{:.6f}".format(cell_size):
         if c == '.':
             map_name += '_'
         else:
@@ -213,8 +213,12 @@ for y_param, values in predigest.items():
         digest[y_param]["mean"][x_value]    = s1/n
 
         # https://math.stackexchange.com/questions/2148877/iterative-calculation-of-mean-and-standard-deviation
+        # https://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
         digest[y_param].setdefault("std_dev",{})
-        digest[y_param]["std_dev"][x_value] = math.sqrt(n*s2 - math.pow(s1,2))/n
+        inside_root = max(n*s2 - math.pow(s1,2),0) # numeric error could lead to neg value if std_dev close to 0
+                                                   # (3 samples of 10155.111111111111 should lead to a std_dev of 
+                                                   # 0 but leads to neg value instead)
+        digest[y_param]["std_dev"][x_value] = math.sqrt(inside_root)/n
 
 # Paso 3 dejar el digest (quizas tambien el pre digest) en el file sistem
 
