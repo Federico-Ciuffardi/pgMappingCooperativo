@@ -178,10 +178,10 @@ void TopoMap::update(){
   for( auto it : criticalInfos ){
     Pos critical = it.first;
     CriticalInfo criticalInfo = it.second;
-    map[critical] = Free;
+    if(map[critical] == Critical) map[critical] = Free;
     for(Pos linePos : criticalInfo.criticalLines){
+      if(map[linePos] == CriticalLine) map[linePos] = Free;
       criticalLines.erase(linePos);
-      map[linePos] = Free;
     }
   }
   criticalInfos.clear();
