@@ -34,13 +34,18 @@ function set_id(){
   # set id
   if [ $# -gt 0 ] ; then
     # old id
-    id="$(basename "$(realpath ${log_dir}/$1)")"
+    if [ -d $1 ] ; then
+      id="$(basename "$(realpath $1)")"
+      this_log_dir="$1"
+    else
+      id="$(basename "$(realpath ${log_dir}/$1)")"
+      this_log_dir="${log_dir}/${id}"
+    fi
   else
     # new id
     id="$(date +%Y_%m_%d__%H_%M_%S)"
+    this_log_dir="${log_dir}/${id}"
   fi
-  # set variables
-  this_log_dir="${log_dir}/${id}"
   this_settings_file="${this_log_dir}/rosparams.yaml"
 
   # create new stuff if id was new
