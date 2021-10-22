@@ -27,14 +27,14 @@ base_local_planner: "teb_local_planner/TebLocalPlannerROS"
 TebLocalPlannerROS:
   # Robot Configuration Parameters
   max_vel_x: 1.2
-  max_vel_y: 1.2
-  max_vel_theta: 1.0
-
-  max_vel_x_backwards: 0.75
-
-  acc_lim_theta: 1.5
   acc_lim_x: 0.5
-  acc_lim_y: 0.5
+  max_vel_x_backwards: 1.2
+
+  max_vel_theta: 3.2 # ~ 60% ω = v / r
+  acc_lim_theta: 1.6 # ~ 75% α = a / r
+
+  acc_lim_y: 0.0
+  max_vel_y: 0.0   
 
   footprint_model/type: "circular"
   footprint_model/radius: 0.2275
@@ -48,10 +48,9 @@ TebLocalPlannerROS:
   dt_hysteresis: 0.03
   max_global_plan_lookahead_dist: 10.0
   exact_arc_length: true
-  global_plan_viapoint_sep: 2.5
 
   # Goal Tolerance Parameters
-  yaw_goal_tolerance: 360
+  yaw_goal_tolerance: 6.28318530717958647693 # 2*pi
   xy_goal_tolerance: 0.5
   free_goal_vel: true
 
