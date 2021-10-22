@@ -39,13 +39,16 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 Float forcedCompletionToleranceSquared  = squared(1.5);
 Float pathCompletionToleranceSquared    = squared(2.5);//squared(2);
 Float goalCompletionToleranceSquared    = squared(50);
-Float movementDetectionThresholdSquared = squared(0.01);
+Float movementDetectionThresholdSquared = squared(0.000001); // 1 micrometer
+Float nonstuckThresholdSquared          = squared(0.5);
 Float stopTresholdSquared               = squared(1); // squared(1.25); // squared(1);
 Float progressToleranceSquared          = squared(0.05);
 
+Float baseRecoveryDistance = 1.5;
+
 //secs
-Float recoveryBehaviorTimeToleranceBase = 15;
-Float recoveryBehaviorTimeTolerance     = recoveryBehaviorTimeToleranceBase;
+Float recoveryBehaviorTimeTolerance = 15;
+Float stuckTimeTolerance            = 20;
 
 ///////////////
 // Variables //
@@ -71,13 +74,13 @@ MoveBaseClient* ac;
 
 // Others
 ros::Timer succeedAgainTimer;
-ros::Duration succeedAgainTimerTimeout(recoveryBehaviorTimeTolerance);
-
+ros::Duration succeedAgainTimerTimeout(stuckTimeTolerance);
 
 vector<Point> path;
 
 int meterToCells;
 Float metersTraveled = 0;
+Float lastMetersTraveled = 0;
 
 string endMsg = "END";
 
@@ -97,6 +100,9 @@ bool firstGoal = true;
 ros::Time lastProgressTime;
 Float lastDistanceSquaredToGoal;
 Vector2<Float> lastGoalPos;
+
+Vector2<Float> lastNonstuckRobotPos;
+ros::Time lastNonstuckTime;
 
 int noProgressCounter = 0;
 
@@ -166,9 +172,7 @@ void notifyStatus(char* data) {
   pathResultPub.publish(str);
 }
 
-void recoveryBehavior(Vector2<Float> failedPos, float minDistToFailed = 2){
-  /* if(offset.length() < minDist) offset = offset.normalize()*minDist; */
-  /* Vector2<Float> offset = 2.5*(failed-robotPos).normalize(); */
+void recoveryBehavior(Vector2<Float> failedPos, float minDistToFailed){
   Vector2<Float> robot2failedOffset = failedPos-robotPos;
   Float robot2recoveryOffsetLenght = min(1.0f , minDistToFailed - robot2failedOffset.length());
   Vector2<Float> robot2recoveryOffset = -robot2recoveryOffsetLenght*robot2failedOffset.normalize();
@@ -179,7 +183,6 @@ void recoveryBehavior(Vector2<Float> failedPos, float minDistToFailed = 2){
 
   sendGoal(goalPose);
 
-  ROS_INFO_STREAM("STARTING RECOVERY");
   sleep(minDistToFailed + 5);
   notifyStatus((char*)"RECOVERY");
   sendGoal();
@@ -203,8 +206,6 @@ void nextGoal(){
         path.clear();
         // notify path completion
         notifyStatus((char*)"SUCCEED");
-      /* }else if((ros::Time::now() - lastCompleatedGoalTime).toSec() > recoveryBehaviorTimeTolerance) { */
-      /*   recoveryBehavior(lastCompletedGoalPos); */
       }else{
         succeedAgainTimer.start();
       }
@@ -257,26 +258,26 @@ void goalPathCallback(const GoalList& msg) {
       noProgressCounter = 0;
       lastProgressTime = ros::Time::now();
       lastDistanceSquaredToGoal = robotPos.distanceToSquared(newGoalPos);
-      recoveryBehaviorTimeTolerance = recoveryBehaviorTimeToleranceBase;
     }else{
       Float currentDistanceSquaredToGoal = robotPos.distanceToSquared(lastGoalPos);
       if(lastDistanceSquaredToGoal > currentDistanceSquaredToGoal + progressToleranceSquared){
         noProgressCounter = 0;
         lastProgressTime = ros::Time::now();
         lastDistanceSquaredToGoal = currentDistanceSquaredToGoal;
-        recoveryBehaviorTimeTolerance = recoveryBehaviorTimeToleranceBase;
       }
     }
 
     if ((ros::Time::now() - lastProgressTime).toSec() < recoveryBehaviorTimeTolerance){
       // set path
       currentGoalPosIndex = newGoalIndex-1; // newGoalIndex is not completed
-      nextGoal();
+      do{
+        nextGoal();
+      }while(isGoalCompleted(robotPos,currentGoalPos) && !isPathOver()); // the path could already be completed 
     } else {
       noProgressCounter++;
-      recoveryBehavior(lastGoalPos, 2 + (noProgressCounter/2.0));
-      recoveryBehaviorTimeTolerance = (ros::Time::now() - lastProgressTime).toSec() + recoveryBehaviorTimeToleranceBase;
-      /* firstGoal = true; // force progress (constant distnace recovery) */
+      ROS_INFO_STREAM("Starting no progress RECOVERY");
+      recoveryBehavior(lastGoalPos, baseRecoveryDistance + noProgressCounter);
+      lastProgressTime = ros::Time::now(); // try again in recoveryBehaviorTimeTolerance seconds
     }
   }
 }
@@ -320,17 +321,26 @@ void endCallback(const std_msgs::StringConstPtr& msg) {
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
   robotPose = odom->pose.pose;
-
   Vector2<Float> currentRobotPos = toVector2<Float>(robotPose.position);
 
-  Float distanceOffsetSquared = currentRobotPos.distanceToSquared(robotPos);
+  if(firstRobotPos){
+    firstRobotPos = false;
 
+    robotPos = currentRobotPos;
+
+    lastNonstuckRobotPos = robotPos;
+    lastNonstuckTime = ros::Time::now();
+
+    return;
+  }
+
+  Float robotPosDistanceOffsetSquared = currentRobotPos.distanceToSquared(robotPos);
   // check if an update is needed
-  if(firstRobotPos || distanceOffsetSquared > movementDetectionThresholdSquared){
+  if(robotPosDistanceOffsetSquared >= movementDetectionThresholdSquared){
     robotPos = currentRobotPos;
 
     // update distance traveled
-    metersTraveled += sqrt(distanceOffsetSquared);
+    metersTraveled += sqrt(robotPosDistanceOffsetSquared);
 
     // update path completion
     while(isGoalCompleted(robotPos,currentGoalPos) && !isPathOver()){
@@ -341,6 +351,19 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
       // stop
       ac->cancelAllGoals();
     }
+
+    // update lastNonstuckRobotPos
+    Float nonstuckRobotPosDistanceOffsetSquared = currentRobotPos.distanceToSquared(lastNonstuckRobotPos);
+    if(isPathOver() || nonstuckRobotPosDistanceOffsetSquared >= nonstuckThresholdSquared){
+      lastNonstuckRobotPos = robotPos;
+      lastNonstuckTime = ros::Time::now();
+    }
+  }
+
+  if (!isPathOver() && (ros::Time::now() - lastNonstuckTime).toSec() > stuckTimeTolerance) {
+    ROS_INFO_STREAM("Starting stuck RECOVERY");
+    recoveryBehavior(lastGoalPos, baseRecoveryDistance + noProgressCounter);
+    lastNonstuckTime = ros::Time::now(); // try again in stuckTimeTolerance seconds
   }
 }
 
