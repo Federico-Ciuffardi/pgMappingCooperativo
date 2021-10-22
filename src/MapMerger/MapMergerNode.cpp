@@ -128,7 +128,6 @@ int main(int argc, char* argv[]) {
   FAIL_IFN(n.param<string>("/robots_map_topic", robotMapTopic, robotMapTopic));
   n.param<string>("/robots_map_update_topic", robotMapUpdateTopic, robotMapUpdateTopic);
   n.param<int>("/min_robot_maps_arrived", minRobotMapsArrived, minRobotMapsArrived);
-  n.param<float>("/decay", mapMerger.decay, mapMerger.decay);
 
   // Initilize Publishers
   mapPub = n.advertise<OccupancyGrid>("/map", 1);
