@@ -49,10 +49,10 @@ function execute_remaining_tests(){
   done
 }
 
-  execute_remaining_tests "cell_size" 1.000000 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 1.000000 1000s"
+execute_remaining_tests "cell_size" 1.0      $n "$SCRIPT_DIR/pgmch test-nocompile office 5 1.0      1000s"
 
-  execute_remaining_tests "cell_size" 0.500000 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.500000 1900s"
+execute_remaining_tests "cell_size" 0.5      $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.5      1900s"
 
-  execute_remaining_tests "cell_size" 0.333333 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.333333 2900s"
+execute_remaining_tests "cell_size" 0.333333 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.333333 2900s"
 
-  execute_remaining_tests "cell_size" 0.250000 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.250000 4000s"
+execute_remaining_tests "cell_size" 0.25     $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.25     4000s"
