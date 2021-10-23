@@ -94,7 +94,6 @@ Point currentGoalPose;
 
 bool firstCompletedGoal = true; 
 Vector2<Float> lastCompletedGoalPos;
-ros::Time lastCompleatedGoalTime;
 
 bool firstGoal = true; 
 ros::Time lastProgressTime;
@@ -195,20 +194,21 @@ void nextGoal(){
     currentGoalPose = path[currentGoalPosIndex];
     sendGoal();
   }else{
-    // if there was a path assigned
-    if(path.size() > 0){
+    // if there was a path assigned the path was completed
+    if(path.size() > 0){ 
+      // process path completion
       if (firstCompletedGoal || lastCompletedGoalPos != currentGoalPos){
         firstCompletedGoal = false;
         lastCompletedGoalPos = currentGoalPos;
-        lastCompleatedGoalTime = ros::Time::now();
-        // clear path
-        currentGoalPosIndex = 0;
-        path.clear();
         // notify path completion
         notifyStatus((char*)"SUCCEED");
       }else{
         succeedAgainTimer.start();
       }
+
+      // clear path
+      currentGoalPosIndex = 0;
+      path.clear();
     }
   }
 }
@@ -247,6 +247,12 @@ void goalPathCallback(const GoalList& msg) {
     path.clear();
     ac->cancelAllGoals();
   }else{
+    if(isPathOver()){ // if old path was completed
+      // reset the stuck status
+      lastNonstuckRobotPos = robotPos;
+      lastNonstuckTime = ros::Time::now();
+    }
+
     path = msg.goals;
     int newGoalIndex = firstUncompletedGoalIndex(path); // trim path
 
@@ -354,7 +360,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 
     // update lastNonstuckRobotPos
     Float nonstuckRobotPosDistanceOffsetSquared = currentRobotPos.distanceToSquared(lastNonstuckRobotPos);
-    if(isPathOver() || nonstuckRobotPosDistanceOffsetSquared >= nonstuckThresholdSquared){
+    if(nonstuckRobotPosDistanceOffsetSquared >= nonstuckThresholdSquared){
       lastNonstuckRobotPos = robotPos;
       lastNonstuckTime = ros::Time::now();
     }
@@ -386,9 +392,9 @@ int main(int argc, char** argv) {
   meterToCells = ceil(1/cellSize);
 
   // Initilize Publishers
-  pathResultPub         = n.advertise<std_msgs::String>("path_result", 10);
+  pathResultPub         = n.advertise<std_msgs::String>("path_result", 1);
   moveBaseSimpleGoalPub = n.advertise<PoseStamped>("move_base_simple/goal", 1);
-  robotReportPub        = n.advertise<RobotReport>("report", 10);
+  robotReportPub        = n.advertise<RobotReport>("report", 1);
 
   // Initilize Subscribers
   moveBaseResultSub = n.subscribe("move_base/result", 1, moveBaseResultCallback);
