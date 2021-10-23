@@ -660,10 +660,10 @@ int main(int argc, char* argv[]) {
   auctionStartDelayTimer        = n.createTimer(auctionStartDelayTimeout, auctionStartDelayTimerRoutine       , true, false);
 
   // Initilize Publishers
-  miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 10);
-  gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 10);
-  topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 10);
-  mapMarkerPub      = n.advertise<OccupancyGrid>("/map_visualization_marker", 10); 
+  miscMarkerPub     = n.advertise<visualization_msgs::Marker>("/misc_visualization_marker", 1);
+  gvdMarkerPub      = n.advertise<visualization_msgs::Marker>("/gvd_visualization_marker", 1);
+  topoMapMarkerPub  = n.advertise<visualization_msgs::Marker>("/topo_map_visualization_marker", 1);
+  mapMarkerPub      = n.advertise<OccupancyGrid>("/map_visualization_marker", 1); 
   auctionPub        = n.advertise<Auction>("/auction", 1);
   endPub            = n.advertise<std_msgs::String>("/end", 1);
 
