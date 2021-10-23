@@ -78,13 +78,13 @@ function init_generic_ros(){
 
   rosparam set /use_sim_time true # use gazebo time
 
-  printf "> Starting rqt_console\n\n"
-  rqt_console &>/dev/null &
+  # printf "> Starting rqt_console\n\n"
+  # rqt_console &>/dev/null &
 
-  sleep 2
+  # sleep 2
 
-  printf "> Starting rqt_console\n\n"
-  rviz -d "${rviz_dir}/${map_name}".rviz &>/dev/null &
+  # printf "> Starting rviz\n\n"
+  # rviz -d "${rviz_dir}/${map_name}".rviz &>/dev/null &
 }
 
 function test(){
