@@ -73,9 +73,6 @@ ros::Subscriber laserScansub;
 MoveBaseClient* ac;
 
 // Others
-ros::Timer succeedAgainTimer;
-/* ros::Duration succeedAgainTimerTimeout(stuckTimeTolerance); */
-ros::Duration succeedAgainTimerTimeout(0.005); // let the map update arrive on succeed before succeeding again
 
 vector<Point> path;
 
@@ -204,7 +201,7 @@ void nextGoal(){
         // notify path completion
         notifyStatus((char*)"SUCCEED");
       }else{
-        succeedAgainTimer.start();
+        notifyStatus((char*)"SUCCEED_AGAIN");
       }
 
       // clear path
@@ -233,15 +230,7 @@ void lidarCallback(const sensor_msgs::LaserScan::ConstPtr &scan) {
   }
 }
 
-
-void succeedAgainTimerTimeoutTimerRoutine(const ros::TimerEvent&){
-  succeedAgainTimer.stop();
-  notifyStatus((char*)"SUCCEED_AGAIN");
-}
-
 void goalPathCallback(const GoalList& msg) {
-  succeedAgainTimer.stop();
-
   if (msg.goals.empty()){
     // stop
     currentGoalPosIndex = 0;
@@ -413,9 +402,6 @@ int main(int argc, char** argv) {
   while(!ac->waitForServer(ros::Duration(5.0))){
     ROS_INFO("Waiting for the move_base action server to come up");
   }
-
-  // Initilize timers
-  succeedAgainTimer = n.createTimer(succeedAgainTimerTimeout, succeedAgainTimerTimeoutTimerRoutine, true, false);
 
   // spin
   ROS_INFO_STREAM("Initilized");

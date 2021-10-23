@@ -12,17 +12,15 @@ using namespace std;
 ////////////////
 
 // auctionStartTimeoutMode:
-///   * -1 : disabled, no timeout, starts the auction immediately after the first robot request 
-///   *  0 : disabled, no timeout, starts the auction immediately after a little timeout to wait for the map update of that first robot
-///   *  1 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
-///          after the first robot request
-///   *  2 : enabled, timeout , delay the auction start to wait for the robots expected to arrive soon (estimated with gvd construction time)
-///          after the first robot request. Reset and decrease the delay on new requests.
+///   * -1 : starts the auction immediately after the first robot request 
+///   *  0 : starts the auction immediately after a delay to wait for the full update associated with completing a goal
 ///
-///   if the time to contruct the bids is grater than 4 seconds all the modes act like the mode 2
+///   if the time to get the auction info is grater than 4 seconds mode -1 acts like mode 0 
+///   (goes back to -1 if the auction info construction time is under 4 seconds again)
 int auctionStartTimeoutModeParam = -1;
 int auctionStartTimeoutMode = auctionStartTimeoutModeParam;
-// mapUpdateDelay: The expected delay of a map update to arrive from the robot to the central module
+
+// mapUpdateDelay: Expected delay of the full update associated with completing a goal 
 float mapUpdateDelay = 2;
 
 /////////////////
