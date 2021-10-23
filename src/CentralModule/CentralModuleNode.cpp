@@ -3,6 +3,7 @@
 #include "pgmappingcooperativo/RobotReport.h"
 #include "../lib/GVD/src/GvdConfig.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include "std_msgs/Float64.h"
 
 using namespace std;
 
@@ -92,6 +93,7 @@ int expectedRobots = 0;
 int requests       = 0;
 
 ros::Time lastAuctionStart;
+ros::Time lastAuctionPublish;
 
 float auctionInfoRealTime;
 ros::Duration auctionInfoTime;
@@ -322,8 +324,8 @@ void startAuction() {
   }else{
     // change timeout mode if took too long to compute the auction info
     if(auctionInfoTime.toSec() > 4){
-      auctionStartTimeoutMode = 2;
-    }else if(auctionStartTimeoutModeParam < 2){
+      auctionStartTimeoutMode = 0;
+    }else{
       auctionStartTimeoutMode = auctionStartTimeoutModeParam;
     }
 
@@ -332,6 +334,9 @@ void startAuction() {
     requests = 0;
     /// Change state
     centralModule.setState(WaitingFirstBid);
+    // store auction info publish time
+    cout<<"debug :: auction started successfully"<<endl;
+    lastAuctionPublish = ros::Time::now();
     // Send auction info so the bids can be calculated
     auctionPub.publish(auction);
     ROS_INFO("Auction information broadcasted");
@@ -502,7 +507,12 @@ void mapUpdateCallBack(const OccupancyGridUpdateConstPtr& msg) {
   centralModule.updateMap(msg);
 }
 
-void requestObjectiveCallBack(const std_msgs::StringConstPtr& msg) {
+void requestObjectiveCallBack(const std_msgs::Float64ConstPtr& msg) {
+  if(ros::Time(msg->data) <= lastAuctionPublish ){ 
+    ROS_INFO_STREAM("Ignore request, arrived "<<(lastAuctionPublish-ros::Time(msg->data)).toSec()<<"s before last auction info calculation ended");
+    return;
+  }
+
   if (centralModule.getState() != WaitingAuction) {
     ROS_DEBUG_STREAM("Auction request ignored, already one on course");
     return;
@@ -669,9 +679,9 @@ int main(int argc, char* argv[]) {
 
   // Initilize Subscribers
   mapSub             = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
-  mapUpdateSub       = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
+  mapUpdateSub       = n.subscribe<OccupancyGridUpdate>("/map_update", 100000, mapUpdateCallBack);
   endSub             = n.subscribe("/end", 1, endCallBack);
-  requestObjetiveSub = n.subscribe<std_msgs::String>("/request_objetive", 1, &requestObjectiveCallBack);
+  requestObjetiveSub = n.subscribe<std_msgs::Float64>("/request_objetive", 1, &requestObjectiveCallBack);
 
   // Initilize Publishers/Subscribers for each robot
 

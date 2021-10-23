@@ -74,7 +74,8 @@ MoveBaseClient* ac;
 
 // Others
 ros::Timer succeedAgainTimer;
-ros::Duration succeedAgainTimerTimeout(stuckTimeTolerance);
+/* ros::Duration succeedAgainTimerTimeout(stuckTimeTolerance); */
+ros::Duration succeedAgainTimerTimeout(0.005); // let the map update arrive on succeed before succeeding again
 
 vector<Point> path;
 
@@ -402,7 +403,7 @@ int main(int argc, char** argv) {
   poseSub           = n.subscribe("odom", 1, odomCallback);
   endSub            = n.subscribe("/end", 1, endCallback);
   mapSub            = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
-  mapUpdateSub      = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
+  mapUpdateSub      = n.subscribe<OccupancyGridUpdate>("/map_update", 100000, mapUpdateCallBack);
   laserScansub = n.subscribe("laser/scan", 1, lidarCallback);
 
 

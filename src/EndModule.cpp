@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
 
   // Initilize Subscribers
   mapSub             = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
-  mapUpdateSub       = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
+  mapUpdateSub       = n.subscribe<OccupancyGridUpdate>("/map_update", 100000, mapUpdateCallBack);
 
   // Initilize Publishers
   endPub = n.advertise<std_msgs::String>("/end", 1);

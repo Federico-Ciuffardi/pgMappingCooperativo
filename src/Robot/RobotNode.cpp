@@ -7,6 +7,7 @@
 #include "ros/init.h"
 #include "ros/this_node.h"
 #include "ros/time.h"
+#include "std_msgs/Float64.h"
 
 ////////////////
 // Parameters //
@@ -153,8 +154,9 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 
 void pathResultCallback(const std_msgs::String::ConstPtr& msg) {
   ROS_INFO_STREAM("Result "<<msg->data<<", requesting objective");
-  std_msgs::String msgRequest;
-  msgRequest.data = "signal";
+  std_msgs::Float64 msgRequest;
+  msgRequest.data = ros::Time::now().toSec();
+
   requestObjetivePub.publish(msgRequest);
 
   if(msg->data != "RECOVERY"){
@@ -258,8 +260,8 @@ int main(int argc, char* argv[]) {
   // Initilize Publishers
   bidPub             = n.advertise<Bid>("bid", 1);
   goalPathPub        = n.advertise<GoalList>("goalPath", 1, true);
-  requestObjetivePub = n.advertise<std_msgs::String>("/request_objetive", 1);
-  pathMarkerPub          = n.advertise<visualization_msgs::Marker>("/robot_path_marker", 1);
+  requestObjetivePub = n.advertise<std_msgs::Float64>("/request_objetive", 1);
+  pathMarkerPub      = n.advertise<visualization_msgs::Marker>("/robot_path_marker", 1);
   posMarkerPub       = n.advertise<visualization_msgs::Marker>("/robot_pos_marker", 1);
 
   // Initilize Subscribers
@@ -268,7 +270,7 @@ int main(int argc, char* argv[]) {
   assignmentSub = n.subscribe("/" + robot.name + "/assigment", 1, assignmentCallback);
   pathResultSub = n.subscribe("path_result", 1, pathResultCallback);
   mapSub        = n.subscribe<OccupancyGrid>("/map", 1, mapCallBack);
-  mapUpdateSub  = n.subscribe<OccupancyGridUpdate>("/map_update", 1, mapUpdateCallBack);
+  mapUpdateSub  = n.subscribe<OccupancyGridUpdate>("/map_update", 100000, mapUpdateCallBack);
   endSub        = n.subscribe("/end", 1, handleEnd);
 
   // spin

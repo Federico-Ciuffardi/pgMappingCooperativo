@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 
   // Initilize Publishers
   mapPub = n.advertise<OccupancyGrid>("/map", 1);
-  mapUpdatePub = n.advertise<OccupancyGridUpdate>("/map_update", 1);
+  mapUpdatePub = n.advertise<OccupancyGridUpdate>("/map_update", 100000);
 
   // Initilize Subscribers
   endSub           = n.subscribe("/endFlag", 1, endCallBack);
