@@ -31,7 +31,7 @@
   <param name="cell_size" type="double" value="$(arg cell_size)" />  
 
   <!-- ## Set TO MATCH the robot speed  -->
-  <arg name="robot_speed" default="0.75" /> 
+  <arg name="robot_speed" default="1.2" /> 
   <param name="robot_speed" type="double" value="$(arg robot_speed)" />  
 
   <!-- ## Set TO MATCH the robot sensor ranges  -->
