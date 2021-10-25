@@ -11,9 +11,9 @@ laser_scan:
   observation_persistence: 0.0
 
   marking: true
-  obstacle_range: 5.99
+  # obstacle_range: 5.99
 
   clearing: true
-  raytrace_range: 5.0
+  # raytrace_range: 5.0
   inf_is_valid: true
 
