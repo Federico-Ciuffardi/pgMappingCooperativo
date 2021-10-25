@@ -217,7 +217,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>/home/fede/.gazebo/models/willowgarage/meshes/willowgarage_collision.dae</uri>
+              <uri>model://willowgarage/meshes/willowgarage_collision.dae</uri>
               <scale>3 3 1</scale>
             </mesh>
           </geometry>
@@ -245,7 +245,7 @@
           <pose>0 0 0 0 -0 0</pose>
           <geometry>
             <mesh>
-              <uri>/home/fede/.gazebo/models/willowgarage/meshes/willowgarage_collision.dae</uri>
+              <uri>model://willowgarage/meshes/willowgarage_collision.dae</uri>
               <scale>3 3 1</scale>
             </mesh>
           </geometry>
