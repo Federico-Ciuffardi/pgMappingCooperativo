@@ -36,8 +36,8 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 ////////////////
 
 // meters
+Float pathCompletionToleranceSquared; //    = squared(2.5);//squared(2);
 Float forcedCompletionToleranceSquared  = squared(1.5);
-Float pathCompletionToleranceSquared    = squared(2.5);//squared(2);
 Float goalCompletionToleranceSquared    = squared(50);
 Float movementDetectionThresholdSquared = squared(0.000001); // 1 micrometer
 Float stopTresholdSquared               = squared(1); // squared(1.25); // squared(1);
@@ -75,6 +75,7 @@ MoveBaseClient* ac;
 vector<Point> path;
 
 float robotSpeed;
+float robotSensorRange;
 int meterToCells;
 Float metersTraveled = 0;
 Float lastMetersTraveled = 0;
@@ -362,6 +363,8 @@ int main(int argc, char** argv) {
 
   // Load params
   FAIL_IFN(n.param<float> ("/robot_speed", robotSpeed, 0));
+  FAIL_IFN(n.param<float> ("/robot_sensor_range", robotSensorRange, 0));
+  pathCompletionToleranceSquared = squared(robotSensorRange*0.4);
 
   float cellSize;
   FAIL_IFN(n.param<float>   ("/cell_size", cellSize, cellSize));
