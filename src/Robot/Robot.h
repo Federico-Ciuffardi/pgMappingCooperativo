@@ -31,6 +31,8 @@ class Robot {
   // Parameters //
   ////////////////
 
+  float pathEntryYawMax=2.5;
+
   // Global parameters (explained in ../../launch/multirobot.launch)
   float sensorRange;
   float robotSpeed;
