@@ -87,13 +87,15 @@
   <param name ="/use_sim_time" value="true"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find pgmappingcooperativo)/worlds/$(arg map_name).world"/>
-    <arg name="paused" value="false"/>
-    <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="false"/>
-    <arg name="headless" value="true"/> 
-    <arg name="recording" value="false"/>
-    <arg name="debug" value="false"/>
+    <arg name="world_name"      value="$(find pgmappingcooperativo)/worlds/$(arg map_name).world"/>
+    <arg name="paused"          value="false"/>
+    <arg name="use_sim_time"    value="true"/>
+    <arg name="gui"             value="false"/>
+    <arg name="recording"       value="false"/>
+    <arg name="debug"           value="false"/>
+    <arg name="verbose"         value="false"/>
+    <arg name="server_required" value="true"/>
+    <arg name="gui_required"    value="false"/>
   </include>
 
   <!-- Initialize robots -->
