@@ -37,13 +37,13 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 // meters
 Float baseRecoveryDistance = 1.5;
-Float minDesiredDistance = 0.5; // min dist detected by sensor
+Float minDesiredDistance   = 0.5; // Desired safe dist to obstacles
+Float stopThreshold        = minDesiredDistance+0.2; // 0.2 estimation of the distance traveled until stoping 
 
 Float pathCompletionToleranceSquared;
 Float forcedCompletionToleranceSquared;
 Float goalCompletionToleranceSquared    = squared(50);
 Float movementDetectionThresholdSquared = squared(0.000001); // 1 micrometer
-Float stopTresholdSquared               = squared(minDesiredDistance); 
 Float progressToleranceSquared          = squared(0.5);
 
 //secs
@@ -123,7 +123,7 @@ bool isGoalCompleted(Vector2<Float> fromPos, Vector2<Float> goalPos){
 
   return fromPos.distanceToSquared(goalPos) < forcedCompletionToleranceSquared ||
          (fromPos.distanceToSquared(goalPos) < completionToleranceSquared &&
-          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(goalPos, occupancyGrid.info),occupancyGrid,1)); //meterToCells
+          unobstructedLine(toPos(fromPos, occupancyGrid.info), toPos(goalPos, occupancyGrid.info),occupancyGrid,ceil(meterToCells*minDesiredDistance))); //meterToCells
 }
 
 ///////////////
@@ -180,7 +180,7 @@ void recoveryBehavior(Vector2<Float> failedPos, float minDistToFailed){
 
   sendGoal(goalPose);
 
-  sleep(minDistToFailed/(robotSpeed*0.75));
+  sleep( 1.3  + (minDistToFailed/(robotSpeed*0.75)) ); // estimated turning time + estimated linear path time
   notifyStatus((char*)"RECOVERY");
   sendGoal();
 }
@@ -327,7 +327,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
       nextGoal();
     }
 
-    if(isPathOver() && minDist*minDist <= stopTresholdSquared){
+    if(isPathOver() && minDist <= stopThreshold){
       // stop
       ac->cancelAllGoals();
     }
@@ -370,7 +370,7 @@ int main(int argc, char** argv) {
   meterToCells = ceil(1/cellSize);
 
   pathCompletionToleranceSquared   = squared(robotSensorRange*0.4);
-  forcedCompletionToleranceSquared = squared(max(cellSize, minDesiredDistance) + cellSize/2);
+  forcedCompletionToleranceSquared = squared(max(cellSize, minDesiredDistance + cellSize/2) + cellSize/2);
 
   // Initilize Publishers
   pathResultPub         = n.advertise<std_msgs::String>("path_result", 1);

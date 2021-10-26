@@ -44,8 +44,8 @@ TebLocalPlannerROS:
   inflation_dist: 1.5
 
   # Trajectory Configuration Parameters 
-  # dt_ref: 0.3
-  # dt_hysteresis: 0.03
+  dt_ref: 0.3
+  dt_hysteresis: 0.03
   max_global_plan_lookahead_dist: 10.0
   exact_arc_length: true
 
