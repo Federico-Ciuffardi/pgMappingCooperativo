@@ -9,6 +9,8 @@
 
   <arg name="robot_sensor_range"/>
 
+  <arg name="robot_radius"/>
+
   <param name ="/use_sim_time" value="true"/>
 
   <include file="$(find p3dx_gazebo)/launch/p3dx.launch" >
@@ -28,11 +30,14 @@
 
       <param name="global_costmap/obstacle_layer/raytrace_range" value="$(eval arg('robot_sensor_range') - arg('cell_size')*0.8 - 0.2)"/>
       <param name="local_costmap/obstacle_layer/raytrace_range"  value="$(eval arg('robot_sensor_range') - arg('cell_size')*0.8 - 0.2)"/>
-
+          
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/local_costmap_params.yaml" command="load" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/global_costmap_params.yaml" command="load" /> 
 
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/base_local_planner_params.yaml" command="load" />
+
+      <param name="TebLocalPlannerROS/footprint_model/radius" value="$(arg robot_radius)" />
+      <param name="TebLocalPlannerROS/min_obstacle_dist" value="$(eval arg('cell_size')/2)"/>
 
       <param name="global_costmap/resolution" value="$(arg cell_size)"/>
 

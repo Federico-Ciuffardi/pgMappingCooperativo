@@ -25,8 +25,11 @@ inline Float minAngleRep(Float angle){
 }
 
 inline bool unobstructedLine(Pos p1, Pos p2, const vector<int8_t> &data, int width,int clearence = 0){
-  for (Pos p : discretizeLine(p1,p2)){
-    if(p == p2 || p == p1) continue;
+  vector<Pos> discretizedLine = discretizeLine(p1,p2);
+  int last = discretizedLine.size()-1;
+  int first = min(clearence,last);
+  for (int i = first ; i <= last; i++){
+    Pos p = discretizedLine[i];
 
     for(int x = -clearence; x <= clearence; x++){
       for(int y = -clearence; y <= clearence; y++){

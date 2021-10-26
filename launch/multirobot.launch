@@ -35,6 +35,10 @@
   <arg name="robot_sensor_range" default="5.6" /> 
   <param name="robot_sensor_range" type="double" value="$(arg robot_sensor_range)" />  
 
+  <!-- ## Set TO MATCH the robot radius -->
+  <arg name="robot_radius" default="0.2275" /> 
+  <param name="robot_radius" type="double" value="$(arg robot_radius)" />  
+
   <!-- # Log -->
   <arg name="file_log_dir" default="$(find pgmappingcooperativo)/logFiles" /> 
   <param name="file_log_dir" type="string" value="$(arg file_log_dir)" />  
@@ -108,6 +112,7 @@
 
       <arg name="cell_size" value="$(arg cell_size)" />
       <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
     </include>
   </group>
 
@@ -120,6 +125,7 @@
 
       <arg name="cell_size" value="$(arg cell_size)" />
       <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
     </include>
   </group>
 
@@ -132,6 +138,7 @@
 
       <arg name="cell_size" value="$(arg cell_size)" />
       <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
     </include>
   </group>
 
@@ -144,6 +151,7 @@
 
       <arg name="cell_size" value="$(arg cell_size)" />
       <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
     </include>
   </group>
 
@@ -156,6 +164,7 @@
 
       <arg name="cell_size" value="$(arg cell_size)" />
       <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
     </include> 
   </group>
  
