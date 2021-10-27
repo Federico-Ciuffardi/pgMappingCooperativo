@@ -22,12 +22,6 @@ class MapMerger {
   // Parameters //
   ////////////////
 
-  // decay
-  /// when a new occupancy grid cell is merged the final value is:
-  ///   * merged_cell_value = decay*new_cell_value + (1-decay)*merged_cell_value
-  /// where decay belongs to the interval (0,1]
-  float decay = 0.1;
-
  private:
   //////////
   // vars //
