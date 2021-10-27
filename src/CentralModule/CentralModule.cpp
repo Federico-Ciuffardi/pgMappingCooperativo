@@ -292,7 +292,7 @@ PosSet accumCircle(PosSet &interior, Pos c, Float radius, PosSet &toCover, Map &
 
     visited.insert(p);
 
-    if(is_elem(p,toCover) && unobstructedLine(c, p, map, {Occupied})){
+    if(is_elem(p,toCover)){
       interior.insert(p);
     }
 
@@ -332,7 +332,7 @@ vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, M
 
     significativeFrontiers.push_back(significativeFrontier);
 
-    accumCircle(coveredFrontiers, significativeFrontier, radius, frontiersSet, map, nonTraversables);
+    accumCircle(coveredFrontiers, significativeFrontier, radius + 0.5, frontiersSet, map, nonTraversables);
   }
 
   return significativeFrontiers;
@@ -359,12 +359,12 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& ma
   };
 
   // Set the frontiers adjacent to obstacles as the first endPoints
+  PosSet adjacentToObst;
   for(Pos frontier : frontiersSet){
-    bool hasObstructedNeighbor = false;
     for(Pos frontierNeighbor : map.adj(frontier)){
-      hasObstructedNeighbor = map[frontierNeighbor] == Occupied;
-      if(hasObstructedNeighbor){
+      if(map[frontierNeighbor] == Occupied){
         endPoints.push(frontier);
+        adjacentToObst.insert(frontier);
         break;
       }
     }
@@ -387,15 +387,21 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& ma
     PosSet circle;
     accumCircle(circle, uncoveredFrontier, radius*2, remainingFrontiers, map, notFrontier);
 
-    Float maxDist = -INF;
+    Float farthestFrontierDist = -INF;
     for(Pos p : circle){
-      maxDist = max(maxDist,p.distanceTo(uncoveredFrontier));
+      farthestFrontierDist = max(farthestFrontierDist,p.distanceTo(uncoveredFrontier));
     }
-    maxDist = min(maxDist,radius*2 - 0.5f);
+
+    Float maxDist = (radius+0.5-sqrt(2))*2;
+    if(is_elem(uncoveredFrontier, adjacentToObst)){ // include the walls
+      maxDist = maxDist - sqrt(2)*2;
+    }
+
+    Float candidateDist = min(farthestFrontierDist, maxDist); 
 
     // get significativeFrontier candidates
     circle.clear();
-    PosSet candidates = accumCircle(circle, uncoveredFrontier, maxDist/2 - 1, remainingFrontiers, map, nonTraversables);
+    PosSet candidates = accumCircle(circle, uncoveredFrontier, candidateDist/2, remainingFrontiers, map, nonTraversables);
 
     // get the significativeFrontier
     Pos significativeFrontier;

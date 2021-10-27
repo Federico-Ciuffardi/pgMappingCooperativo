@@ -214,7 +214,7 @@ void nextGoal(){
       }else {
         timesReCompleted++;
         if(timesReCompleted >= 2){
-          ROS_INFO_STREAM("Too many reassignations to complated goal, starting RECOVERY");
+          ROS_INFO_STREAM("Too many reassignations to completed goal, starting RECOVERY");
           recoveryBehavior(lastCompletedGoalPos, baseRecoveryDistance + (timesReCompleted-2));
         }else{
           notifyStatus((char*)"SUCCEED_AGAIN");

@@ -28,8 +28,8 @@
       <param name="global_costmap/obstacle_layer/obstacle_range" value="$(eval arg('robot_sensor_range')-0.01)"/>
       <param name="local_costmap/obstacle_layer/obstacle_range"  value="$(eval arg('robot_sensor_range')-0.01)"/>
 
-      <param name="global_costmap/obstacle_layer/raytrace_range" value="$(eval arg('robot_sensor_range') - arg('cell_size')*0.8 - 0.2)"/>
-      <param name="local_costmap/obstacle_layer/raytrace_range"  value="$(eval arg('robot_sensor_range') - arg('cell_size')*0.8 - 0.2)"/>
+      <param name="global_costmap/obstacle_layer/raytrace_range" value="$(eval arg('robot_sensor_range') - arg('cell_size')*1.4142135623730950488)"/>
+      <param name="local_costmap/obstacle_layer/raytrace_range"  value="$(eval arg('robot_sensor_range') - arg('cell_size')*1.4142135623730950488)"/>
           
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/local_costmap_params.yaml" command="load" />
       <rosparam file="$(find pgmappingcooperativo)/config/move_base/global_costmap_params.yaml" command="load" /> 
