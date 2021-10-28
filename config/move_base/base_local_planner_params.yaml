@@ -1,4 +1,4 @@
-controller_frequency: 10
+controller_frequency: 20
 
 recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}]
 
