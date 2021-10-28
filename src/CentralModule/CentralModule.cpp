@@ -332,7 +332,7 @@ vector<Pos> getRandomSignificativeFroniers(PosSet &frontiersSet, Float radius, M
 
     significativeFrontiers.push_back(significativeFrontier);
 
-    accumCircle(coveredFrontiers, significativeFrontier, radius + 0.5, frontiersSet, map, nonTraversables);
+    accumCircle(coveredFrontiers, significativeFrontier, radius, frontiersSet, map, nonTraversables);
   }
 
   return significativeFrontiers;
@@ -350,7 +350,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& ma
     PosSet coveredFrontiers;
     PosSet newEndPoints;
     /// set the new coveredFrontiers
-    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius + 0.5, remainingFrontiers, map, nonTraversables);
+    newEndPoints = accumCircle(coveredFrontiers, significativeFrontier, radius, remainingFrontiers, map, nonTraversables);
     substract(remainingFrontiers,coveredFrontiers);
     /// get new end points
     for(Pos p : newEndPoints){
@@ -392,7 +392,7 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& ma
       farthestFrontierDist = max(farthestFrontierDist,p.distanceTo(uncoveredFrontier));
     }
 
-    Float maxDist = (radius+0.5-sqrt(2))*2;
+    Float maxDist = (radius-sqrt(2))*2;
     if(is_elem(uncoveredFrontier, adjacentToObst)){ // include the walls
       maxDist = maxDist - sqrt(2)*2;
     }
@@ -440,7 +440,7 @@ bool contains(vector<Pos> &centers, Float radius, vector<Pos> &points) {
   for(Pos point : points){
     // search for a circle that contains the point
     int i = 0;
-    for(; i < centers.size() && point.distanceToSquared(centers[i]) > radiusSquared; i++);
+    for(; i < centers.size() && point.distanceToSquared(centers[i]) >= radiusSquared; i++);
     // if no circle contains the point (i is an invalid index)
     if( i == centers.size() ) return false;
   }
@@ -470,7 +470,7 @@ vector<Pos> embed(vector<Pos> &from, vector<Pos> &to){
 
 // modified version of: 
 // http://www.goldsborough.me/c++/python/cuda/2017/09/10/20-32-46-exploring_k-means_in_python,_c++_and_cuda/
-vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Float tolerance) {
+vector<Pos> kMeans(const vector<Pos>& posData, size_t k, size_t maxIterations, Float tolerance) {
   // Pick random centroids
   /// initialize randomizer
   /* static random_device seed; */
@@ -483,8 +483,14 @@ vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Floa
   /*   cluster = data[indices(rng)]; */
   /* } */
 
-  /// Pick centroids from the first k data points
-  vector<Pos> means(k);
+  // convert to float
+  vector<Vector2<Float>> data(posData.size());
+  for (int i = 0; i < posData.size(); i++) {
+    data[i] = toVector2<Float>(posData[i]);
+  }
+
+  // Pick centroids from the first k data points
+  vector<Vector2<Float>> means(k);
   for (int i = 0; i < k; i++) {
     means[i] = data[i];
   }
@@ -508,7 +514,7 @@ vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Floa
     }
 
     // Sum up and count points for each cluster.
-    vector<Pos> newMeans(k);
+    vector<Vector2<Float>> newMeans(k);
     std::vector<size_t> counts(k, 0);
     for (size_t point = 0; point < data.size(); ++point) {
       const size_t cluster = assignments[point];
@@ -530,11 +536,17 @@ vector<Pos> kMeans(const vector<Pos>& data, size_t k, size_t maxIterations, Floa
     iteration++;
   } while(maxDistance > tolerance  && iteration < maxIterations);
 
-  if (iteration == maxIterations){
-    ROS_INFO_STREAM("Not enough iterations for k-means to converge, last error: "<<maxDistance);
+  /* if (iteration == maxIterations){ */
+  /*   ROS_INFO_STREAM("Not enough iterations for k-means to converge, last error: "<<maxDistance); */
+  /* } */
+
+  // convert again into pos
+  vector<Pos> meansPos(k);
+  for (int i = 0; i < k; i++) {
+    meansPos[i] = toPos(means[i]);
   }
 
-  return means;
+  return meansPos;
 }
 
 CentralModule::~CentralModule(){

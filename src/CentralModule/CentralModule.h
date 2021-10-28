@@ -42,13 +42,14 @@ class CentralModule {
   // frontierSimplificationMethod:
   // * 0: No frontier simplification
   // * 1: Apply kMeans to each connected component of the frontier set, only the frontiers closest to a k-means centroid are used.
-  //      k is estimated through the robot sensor range
-  // * 2: Apply kMeans to each connected component of the frontier set,, only the frontiers closest to a k-means centroid are used.
+  //      k is estimated through the robot sensor range. 
+  // * 2: Apply kMeans to each connected component of the frontier set, only the frontiers closest to a k-means centroid are used.
   //      k is the minimun so that the circles defined with the significant frontiers as centers and the robot sensor range
-  //      as the radius contains all the frontiers 
+  //      as the radius contains all the frontiers. 
   // * 3: Apply affinity propagation to each connected component of the frontier set, only the frontiers closest to a affinity
   //      propagation centroid are used.
-  // * 4: Use a custom method to get the frontiers to use from the frontier set. (to each connected component of the frontier set)
+  // * 4: Use a random method to get the frontiers to use from the frontier set. (to each connected component of the frontier set)
+  // * 5: Use a deterministic variant of 4.
   int frontierSimplificationMethod = 5;
 
   // bidSegmentValueComponentCoefficient: 
@@ -77,8 +78,8 @@ class CentralModule {
   int auctionInfoIncremental = 1;
 
   // kMeans parameters
-  Float kMeansMaxIter = 10000;
-  Float kMeansTolerance = 0;
+  Float kMeansMaxIter = 100;
+  Float kMeansTolerance = 0.1;
 
   // Global parameters (explained in ../../launch/multirobot.launch)
   int robotNumber;

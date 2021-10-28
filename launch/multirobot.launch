@@ -50,8 +50,8 @@
   <arg name="auction_info_incremental" default="1" /> 
   <param name="auction_info_incremental" type="int" value="$(arg auction_info_incremental)" />  
 
-  <!-- <arg name="frontier_simplification_method" default="1" /> --> 
-  <!-- <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" /> -->  
+  <arg name="frontier_simplification_method" default="5" /> 
+  <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" />  
 
   <!-- <arg name="bid_segment_value_component_coefficient" default="10" /> --> 
   <!-- <param name="bid_segment_value_component_coefficient" type="double" value="$(arg bid_segment_value_component_coefficient)" /> -->  
