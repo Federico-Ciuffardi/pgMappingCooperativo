@@ -31,7 +31,7 @@ class Robot {
   // Parameters //
   ////////////////
 
-  float pathEntryYawMaxPenalty=5;
+  float pathEntryYawMaxPenalty=1.3;
 
   // Global parameters (explained in ../../launch/multirobot.launch)
   float sensorRange;

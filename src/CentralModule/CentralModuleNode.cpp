@@ -495,6 +495,7 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 void mapCallBack(const OccupancyGridConstPtr& msg) {
   centralModule.updateMap(msg);
   if (firstMap){
+    sleep(1);
     firstMapTime = ros::Time::now();
     firstMap = false;
     startAuction();
@@ -642,9 +643,9 @@ int main(int argc, char* argv[]) {
   float cell_size;
   FAIL_IFN(n.param<float>   ("/cell_size", cell_size, cell_size));
 
-  FAIL_IFN(n.param<float> ("/robot_sensor_range", centralModule.sensorRange, 0));
-  centralModule.sensorRange /= cell_size;
-  centralModule.sensorRange += 0.5; // move base takes evidence of occupancy from anywhere in a cell 
+  float sensorRangeM;
+  FAIL_IFN(n.param<float> ("/robot_sensor_range", sensorRangeM, 0));
+  centralModule.sensorRange = (sensorRangeM/cell_size) + 0.5; // 0.5 due to move base taking evidence of occupancy from anywhere in a cell 
 
   FAIL_IFN(n.param<int>   ("/starting_robot_number", centralModule.robotNumber, 0));
   FAIL_IFN(n.param<string>("/map_name", centralModule.mapName, ""));

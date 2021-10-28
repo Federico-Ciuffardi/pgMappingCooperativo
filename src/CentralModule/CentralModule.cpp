@@ -2,6 +2,7 @@
 #include "../lib/affinity_propagation.h"
 #include "map_msgs/OccupancyGridUpdate.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include <cmath>
 #include <cstddef>
 #include <vector>
 #include "../lib/utils.h"
@@ -383,25 +384,32 @@ vector<Pos> getSignificativeFroniers(PosSet &frontiersSet, Float radius, Map& ma
     // skip if already covered
     if (!is_elem(uncoveredFrontier, remainingFrontiers)) continue;
 
-    // get the distance to from the uncoveredFrontier to it farthest frontier (no further than radius*2)
-    PosSet circle;
-    accumCircle(circle, uncoveredFrontier, radius*2, remainingFrontiers, map, notFrontier);
-
-    Float farthestFrontierDist = -INF;
-    for(Pos p : circle){
-      farthestFrontierDist = max(farthestFrontierDist,p.distanceTo(uncoveredFrontier));
-    }
-
-    Float maxDist = (radius-sqrt(2))*2;
+    // set the maximum candidateDist from which the candidates are obtained 
+    Float maxDist = radius-sqrt(2);
     if(is_elem(uncoveredFrontier, adjacentToObst)){ // include the walls
-      maxDist = maxDist - sqrt(2)*2;
+      maxDist = maxDist - sqrt(2);
     }
 
-    Float candidateDist = min(farthestFrontierDist, maxDist); 
+    // Check if a value lower than maxDist is a better candidateDist due to maxDist beeing too large given the remaining frontiers
+    PosSet circle;
+    PosSet circumference = accumCircle(circle, uncoveredFrontier, maxDist*2, remainingFrontiers, map, notFrontier);
+
+    Float candidateDist;
+    if(circumference.empty()){
+      // maxDist is too large given the remaining frontiers
+      Float farthestFrontierDist = -INF;
+      for(Pos p : circle){
+        farthestFrontierDist = max(farthestFrontierDist,p.distanceTo(uncoveredFrontier));
+      }
+      candidateDist = farthestFrontierDist/2;
+    }else{
+      // maxDist is OK
+      candidateDist = maxDist;
+    }
 
     // get significativeFrontier candidates
     circle.clear();
-    PosSet candidates = accumCircle(circle, uncoveredFrontier, candidateDist/2, remainingFrontiers, map, nonTraversables);
+    PosSet candidates = accumCircle(circle, uncoveredFrontier, candidateDist, remainingFrontiers, map, nonTraversables);
 
     // get the significativeFrontier
     Pos significativeFrontier;

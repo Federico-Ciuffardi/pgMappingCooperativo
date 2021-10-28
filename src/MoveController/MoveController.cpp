@@ -36,7 +36,7 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 ////////////////
 
 // meters
-Float baseRecoveryDistance = 1.5;
+Float baseRecoveryDistance = 2;
 Float minDesiredDistance   = 0.5; // Desired safe dist to obstacles
 Float stopThreshold        = minDesiredDistance+0.2; // 0.2 estimation of the distance traveled until stoping 
 
