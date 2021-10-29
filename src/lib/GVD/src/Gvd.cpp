@@ -360,7 +360,7 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   PosSet candidates;
   for (Pos p : distMap->waveCrashes){
     candidates.insert(p);
-    for(Pos pN : map.adj(p, nonTraversables)){
+    for(Pos pN : map.adj(p, nonTraversables)){ // allow the removal or edge clean of non useful neighbors
       if(gridGvd[pN]) candidates.insert(pN);
     }
   }

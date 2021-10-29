@@ -40,6 +40,7 @@ struct DistMap{
   DistPosQueue open; 
 
   PosSet waveCrashes;
+  PosSet preWaveCrashes;
   PosSet modified;
 
   // Info

@@ -84,6 +84,7 @@ void DistMap::setSource(Pos p) {
 
 void DistMap::updateBase(){
   // Clean old result
+  preWaveCrashes.clear();
   waveCrashes.clear();
   modified.clear();
 
@@ -98,11 +99,21 @@ void DistMap::updateBase(){
       processLower(p);
     }
   }
+  for (Pos p : preWaveCrashes){
+    distMap[p].pseudoSources.clear();
+    for (Pos pN : map.adj(p,nonTraversables)) {
+      Float minD;
+      PosSet minDSources;
+      tie(minD,minDSources) = closests(pN,distMap[p].sources);
+      if (minD >= distMap[pN].distance) {
+        processWaveCrash(p,pN);
+      }
+    }
+  }
 }
 
 // Consistent wave
 void DistMap::processLower(Pos p) {
-  waveCrashes.erase(p);
   distMap[p].pseudoSources.clear();
   modified.insert(p);
 
@@ -123,20 +134,12 @@ void DistMap::processLower(Pos p) {
       if (minD == distMap[pN].distance){
         accum(distMap[pN].sources, minDSources);
 
-        // fiter the pseudoSources now adjacent to a new source
-        filter(distMap[pN].pseudoSources, [this,pN](Pos ps){
-          for(Pos s : distMap[pN].sources){
-            if (ps.adjacent(s)) return true;
-          }
-          return false;
-        });
-
         if(!is_elem(pN,modified)){
           open.push(DistPos(distMap[pN].distance, pN));
           modified.insert(pN);
         }
       }
-      processWaveCrash(p, pN);
+      preWaveCrashes.insert(p);
     }
   }
 }
@@ -175,21 +178,16 @@ bool DistMap::isWaveCrash(Pos p){
   return existsNonAdjacent(basisPoints(p));
 
   // ver 2
-  // the unknownSources part is to maintain the gvd connected when updating the connectivityAux
-  /* for(Pos p : distMap[p].sources){ */
-  /*   if(map[p] == Unknown){ */
-  /*     return true; */
-  /*   } */
-  /* } */
-  /* return existsNonAdjacent(basisPoints(p)); */
+  /* return existsNonAdjacent(distMap[p].sources, basisPoints(p)); */
 }
 
-void DistMap::processWaveCrash(Pos p, Pos np){
-  setPseudoSourcesFromWave(p, np);
-  setPseudoSourcesFromWave(np, p);
-
+void DistMap::processWaveCrash(Pos p, Pos pN){
+  // set pseudoSources
+  setPseudoSourcesFromWave(p, pN);
+  setPseudoSourcesFromWave(pN, p);
+  // check if there was a wave crash
   if (isWaveCrash(p)) waveCrashes.insert(p);
-  if (isWaveCrash(np)) waveCrashes.insert(np);
+  if (isWaveCrash(pN)) waveCrashes.insert(pN);
 }
 
 // ver 1
@@ -228,7 +226,7 @@ void DistMap::processWaveCrash(Pos p, Pos np){
 /* } */
 
 // ver 2
-void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
+void DistMap::setPseudoSourcesFromWave(Pos waveP, Pos p){
   PosSet pseudoSources = distMap[p].pseudoSources;
   for ( Pos candidatePseudoSource : distMap[waveP].sources){
     Float candidateDist = p.distanceTo(candidatePseudoSource);
@@ -237,12 +235,33 @@ void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){
     // grater than 1 a pseudo source should be a rounding error caused by discretization
     if(abs(candidateDist - distMap[p].distance) > 1) continue;
 
-    // abort if adjacent to a source (this could be changed to an skip)
+    // Ignore all the candidates from waveP if there is a candidate adjacent to a source (belongs to the same obstacle)
     if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) return;
 
-    // if the candidate distance is the same that the current one(s) then
-    // Skip if adjacent to a pseudo source
-    if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue;
+    // skip if adjacent to a pseudoSource of p or replace it if the candidate is closer
+    bool skip = false;
+    PosSet pseudoSourcesCpy = pseudoSources;
+    PosSet toReplace;
+    for(Pos currentPseudoSource : pseudoSourcesCpy){
+      if(currentPseudoSource.adjacent(candidatePseudoSource)){ // if they belong to the same obstacle keep the closest one
+        Float currentPseudoSourceDist = p.distanceTo(currentPseudoSource);
+        if(candidateDist <= currentPseudoSourceDist){
+          // reaplace
+          toReplace.insert(currentPseudoSource);
+        }else{
+          // skip
+          skip = true;
+          break;
+        }
+      }
+    } 
+    if (skip){
+      continue;
+    }else{
+      for(Pos ps : toReplace){
+        pseudoSources.erase(p);
+      }
+    }
 
     pseudoSources.insert(candidatePseudoSource);
   }
