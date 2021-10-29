@@ -22,6 +22,11 @@ ostream& operator<<(ostream& out, const CellState cs) {
 }
 
 void updateMap(boost::unordered_map<Pos,CellState> &updatedCells,Map &map, Pos p, CellState newCellState) {
+  if((GvdConfig::get()->connectivityMethod == 1 || GvdConfig::get()->connectivityMethod == 2) &&
+      (!map.inside(p+Pos(1,1)) || !map.inside(p+Pos(-1,-1)))){ // the cell is on the border of the map
+    newCellState = Occupied;
+  }
+
   CellState oldState = toOccupancyState(map[p]);
   newCellState = toOccupancyState(newCellState);
   // skip if the update does not change the current value or if the new value is unknown (this should not be taken into account)

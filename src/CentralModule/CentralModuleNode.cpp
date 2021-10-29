@@ -495,7 +495,7 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 void mapCallBack(const OccupancyGridConstPtr& msg) {
   centralModule.updateMap(msg);
   if (firstMap){
-    sleep(1);
+    sleep(1); // wait for the robots to also receive their first map
     firstMapTime = ros::Time::now();
     firstMap = false;
     startAuction();

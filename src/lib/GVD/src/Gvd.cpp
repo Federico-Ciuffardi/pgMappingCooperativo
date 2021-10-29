@@ -108,11 +108,7 @@ bool connectivityAux(Pos p, Map &map, DistMap &distMap){
       break;
     case 2:
     case 3:
-      // p is not unknown or a neighbor of unknown
       if (map[p] == Unknown) return true;
-      /* for (Pos pn : map.adj(p)){ */
-      /*   if (map[pn] == Unknown) return true; */
-      /* } */ 
       return false;
       break;
   }
@@ -283,19 +279,6 @@ void Gvd::updateBase(PosSet &candidates) {
 void Gvd::update(){
   chrono::steady_clock::time_point begin = std::chrono::steady_clock::now(); // start the timer
 
-  // if connectivityMethod is 2 fill boders with obstacles
-  if(GvdConfig::get()->connectivityMethod == 2){
-    pair<Int,Int> size = map.size();
-    for(int x = 0; x < size.first; x++){
-      map[x][0] = Occupied;
-      map[x][size.second - 1] = Occupied;
-    }
-    for(int y = 0; y < size.second; y++){
-      map[0][y] = Occupied;
-      map[size.first - 1][y] = Occupied;
-    }
-  }
-
   // update dist map
   cout << "debug :: Update distMap" << endl;
   distMap->update();
@@ -318,8 +301,7 @@ void Gvd::update(){
 void Gvd::update(MapUpdatedCells &mapUpdatedCells){
   chrono::steady_clock::time_point begin = std::chrono::steady_clock::now(); // start the timer
 
-  switch(GvdConfig::get()->connectivityMethod){
-    case 1:{
+  if(GvdConfig::get()->connectivityMethod==1){
       PosSet unknownBorder;
       for(auto it : mapUpdatedCells){
         Pos p = it.first;
@@ -332,19 +314,6 @@ void Gvd::update(MapUpdatedCells &mapUpdatedCells){
       for(Pos p :unknownBorder){
         mapUpdatedCells[p] = Free;
       }
-    }break;
-    case 2:{
-      // if connectivityMethod is 2 fill boders with obstacles
-      pair<Int,Int> size = map.size();
-      for(int x = 0; x < size.first; x++){
-        updateMap(mapUpdatedCells, map, Pos(x,0), Occupied);
-        updateMap(mapUpdatedCells, map, Pos(x,size.second - 1), Occupied);
-      }
-      for(int y = 0; y < size.second; y++){
-        updateMap(mapUpdatedCells, map, Pos(0,y), Occupied);
-        updateMap(mapUpdatedCells, map, Pos(size.first - 1,y), Occupied);
-      }
-    }break;
   }
 
   // update dist map

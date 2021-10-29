@@ -42,7 +42,7 @@ class CentralModule {
   // frontierSimplificationMethod:
   // * 0: No frontier simplification
   // * 1: Apply kMeans to each connected component of the frontier set, only the frontiers closest to a k-means centroid are used.
-  //      k is estimated through the robot sensor range. 
+  //      k is estimated through the robot sensor range and an estimation of the frontier connected component length. 
   // * 2: Apply kMeans to each connected component of the frontier set, only the frontiers closest to a k-means centroid are used.
   //      k is the minimun so that the circles defined with the significant frontiers as centers and the robot sensor range
   //      as the radius contains all the frontiers. 

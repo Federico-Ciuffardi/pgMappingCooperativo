@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GvdConfig.h"
 #include "data/Grid.h"
 
 /* template<typename T> */
