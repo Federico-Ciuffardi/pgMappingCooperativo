@@ -40,7 +40,7 @@ struct DistMap{
   DistPosQueue open; 
 
   PosSet waveCrashes;
-  PosSet preWaveCrashes;
+  boost::unordered_set<pair<Pos,Pos>> preWaveCrashes;
   PosSet modified;
 
   // Info

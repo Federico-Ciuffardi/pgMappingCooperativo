@@ -99,16 +99,14 @@ void DistMap::updateBase(){
       processLower(p);
     }
   }
-  for (Pos p : preWaveCrashes){
-    distMap[p].pseudoSources.clear();
-    for (Pos pN : map.adj(p,nonTraversables)) {
-      Float minD;
-      PosSet minDSources;
-      tie(minD,minDSources) = closests(pN,distMap[p].sources);
-      if (minD >= distMap[pN].distance) {
-        processWaveCrash(p,pN);
-      }
-    }
+  // Process waveCrashes
+  for (auto preWaveCrash: preWaveCrashes){
+    Pos p  = preWaveCrash.first;
+    Pos pN = preWaveCrash.second;
+
+    // set pseudoSources
+    setPseudoSourcesFromWave(p, pN);
+    if (isWaveCrash(pN)) waveCrashes.insert(pN);
   }
 }
 
@@ -119,6 +117,7 @@ void DistMap::processLower(Pos p) {
 
   for (Pos pN : map.adj(p,nonTraversables)) {
     if (distMap[pN].toRaise) continue; // optimization avoids unnecesary operations
+
     hasBasisPoint(pN); // to clean invalid basis
 
     Float minD;
@@ -139,7 +138,8 @@ void DistMap::processLower(Pos p) {
           modified.insert(pN);
         }
       }
-      preWaveCrashes.insert(p);
+      preWaveCrashes.insert(make_pair(p,pN));
+      preWaveCrashes.insert(make_pair(pN,p));
     }
   }
 }
@@ -174,73 +174,29 @@ bool DistMap::hasBasisPoint(Pos p){
 }
 
 bool DistMap::isWaveCrash(Pos p){
-  // ver 1
   return existsNonAdjacent(basisPoints(p));
-
-  // ver 2
-  /* return existsNonAdjacent(distMap[p].sources, basisPoints(p)); */
 }
 
-void DistMap::processWaveCrash(Pos p, Pos pN){
-  // set pseudoSources
-  setPseudoSourcesFromWave(p, pN);
-  setPseudoSourcesFromWave(pN, p);
-  // check if there was a wave crash
-  if (isWaveCrash(p)) waveCrashes.insert(p);
-  if (isWaveCrash(pN)) waveCrashes.insert(pN);
-}
-
-// ver 1
-/* void DistMap::setPseudoSourcesFromWave(Pos p, Pos waveP){ */
-/*   PosSet pseudoSources = distMap[p].pseudoSources; */
-/*   for ( Pos candidatePseudoSource : distMap[waveP].sources){ */
-/*     Float candidateDist = p.distanceTo(candidatePseudoSource); */
-
-/*     // Skip if the difference of distance of the source and candidatePseudoSource is */ 
-/*     // grater than 1 a pseudo source should be a rounding error caused by discretization */
-/*     if(abs(candidateDist - distMap[p].distance) > 1) continue; */
-
-/*     // Skip if there exist already a pseudo source closer than the candidate */
-/*     Float currentDist = INF; */
-/*     if(!pseudoSources.empty()){ */
-/*       currentDist = p.distanceTo(*pseudoSources.begin()); */
-/*       if (candidateDist > currentDist) continue; */
-/*     } */
-
-/*     // skip if adjacent to a source (this could be changed to an abort) */
-/*     if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) */
-/*       return; */
-
-/*     if (candidateDist < currentDist){ */
-/*       // if candidate distance is less than the current one(s) then remove the current ones */
-/*       pseudoSources.clear(); */
-/*     } else { */
-/*       // if the candidate distance is the same that the current one(s) then */
-/*       // Skip if adjacent to a pseudo source */
-/*       if( exist( pseudoSources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) */
-/*         continue; */
-/*     } */
-/*     pseudoSources.insert(candidatePseudoSource); */
-/*   } */
-/*   distMap[p].pseudoSources = pseudoSources; */
-/* } */
-
-// ver 2
 void DistMap::setPseudoSourcesFromWave(Pos waveP, Pos p){
-  PosSet pseudoSources = distMap[p].pseudoSources;
-  for ( Pos candidatePseudoSource : distMap[waveP].sources){
+  Float minD;
+  PosSet minDSources;
+  tie(minD,minDSources) = closests(p,distMap[waveP].sources);
+
+  if (minD < distMap[waveP].distance) return; // there is no wave crash
+
+  for ( Pos candidatePseudoSource : minDSources){
     Float candidateDist = p.distanceTo(candidatePseudoSource);
 
     // Skip if the difference of distance of the source and candidatePseudoSource is 
     // grater than 1 a pseudo source should be a rounding error caused by discretization
     if(abs(candidateDist - distMap[p].distance) > 1) continue;
 
-    // Ignore all the candidates from waveP if there is a candidate adjacent to a source (belongs to the same obstacle)
-    if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) return;
+    // skip candidate if it is adjacent to a source (belongs to the same obstacle)
+    if( exist( distMap[p].sources, [&](Pos p){ return p.adjacent(candidatePseudoSource); } )) continue;
 
     // skip if adjacent to a pseudoSource of p or replace it if the candidate is closer
     bool skip = false;
-    PosSet pseudoSourcesCpy = pseudoSources;
+    PosSet pseudoSourcesCpy = distMap[p].pseudoSources;
     PosSet toReplace;
     for(Pos currentPseudoSource : pseudoSourcesCpy){
       if(currentPseudoSource.adjacent(candidatePseudoSource)){ // if they belong to the same obstacle keep the closest one
@@ -259,13 +215,12 @@ void DistMap::setPseudoSourcesFromWave(Pos waveP, Pos p){
       continue;
     }else{
       for(Pos ps : toReplace){
-        pseudoSources.erase(p);
+        distMap[p].pseudoSources.erase(p);
       }
     }
 
-    pseudoSources.insert(candidatePseudoSource);
+    distMap[p].pseudoSources.insert(candidatePseudoSource);
   }
-  distMap[p].pseudoSources = pseudoSources;
 }
 
 /////////
