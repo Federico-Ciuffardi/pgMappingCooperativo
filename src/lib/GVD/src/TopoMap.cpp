@@ -110,31 +110,41 @@ void TopoMap::updateBase(PosSet &candidates){
         continue;
 
       // Filter critical lines
-      CriticalInfo criticalInfo;
       boost::unordered_set<Pos> pBasisPoints     = distMap->basisPoints(p);
-      boost::unordered_set<Pos> criticalLineEnds = pBasisPoints;
+      boost::unordered_set<Pos> criticalLineEnds;
+
+      // Keep the only largest angle pair of basis point (larger or equal than 135°)
+      Float maxAngle = M_PI*0.75; //M_PI/1.5;
+      Pos endPoint1 = NULL_POS;
+      Pos endPoint2 = NULL_POS;
 
       for(Pos bp1 : pBasisPoints){
-        if(map[bp1] == Unknown){ 
-          criticalLineEnds.erase(bp1);
-          continue;
-        }
+        if(map[bp1] == Unknown) continue;
+
         for(Pos bp2 : pBasisPoints){
-          if(bp2 == bp1) continue;
+          if(bp2 == bp1 || map[bp2] == Unknown) continue;
 
           Pos p_bp1 = bp1-p;
           Pos p_bp2 = bp2-p;
 
-          if(map[bp2] == Unknown || p_bp1.angle_to(p_bp2) < M_PI/1.5){
-            criticalLineEnds.erase(bp2);
-            continue;
+          Float angle = p_bp1.angle_to(p_bp2);
+          if(angle >= maxAngle){
+            maxAngle = angle;
+            endPoint1 = bp1;
+            endPoint2 = bp2;
           } 
         }
       }
 
-      // Skip if less than 2 critical lines left
-      if(criticalLineEnds.size() < 2) continue;
+      // Skip if no valid line was found
+      if(endPoint1 == NULL_POS) continue;
 
+      criticalLineEnds.insert(endPoint1);
+      criticalLineEnds.insert(endPoint2);
+
+      // set criticalLines
+
+      CriticalInfo criticalInfo;
       for(Pos endPoint : criticalLineEnds){
         for(Pos linePos : discretizeLine(p,endPoint)){
           if(isValid(map[linePos])){
