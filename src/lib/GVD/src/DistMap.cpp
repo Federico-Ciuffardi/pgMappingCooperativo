@@ -100,25 +100,27 @@ void DistMap::updateBase(){
     }
   }
   // Process waveCrashes
-  for (auto preWaveCrash: preWaveCrashes){
-    Pos p  = preWaveCrash.first;
-    Pos pN = preWaveCrash.second;
+  for (Pos pN: preWaveCrashes){
+    distMap[pN].pseudoSources.clear();
+    for (Pos p : map.adj(pN,nonTraversables)) {
+      // set pseudoSources
+      setPseudoSourcesFromWave(p, pN);
+    }
+  }
 
-    // set pseudoSources
-    setPseudoSourcesFromWave(p, pN);
+  for (Pos pN: preWaveCrashes){
     if (isWaveCrash(pN)) waveCrashes.insert(pN);
   }
 }
 
 // Consistent wave
 void DistMap::processLower(Pos p) {
-  distMap[p].pseudoSources.clear();
   modified.insert(p);
 
   for (Pos pN : map.adj(p,nonTraversables)) {
-    if (distMap[pN].toRaise) continue; // optimization avoids unnecesary operations
+    if (distMap[pN].toRaise) continue; // Do not lower yet, a raise is coming
 
-    hasBasisPoint(pN); // to clean invalid basis
+    hasBasisPoint(pN); // clean invalid basisPoints
 
     Float minD;
     PosSet minDSources;
@@ -134,12 +136,12 @@ void DistMap::processLower(Pos p) {
         accum(distMap[pN].sources, minDSources);
 
         if(!is_elem(pN,modified)){
-          open.push(DistPos(distMap[pN].distance, pN));
           modified.insert(pN);
+          open.push(DistPos(distMap[pN].distance, pN));
         }
       }
-      preWaveCrashes.insert(make_pair(p,pN));
-      preWaveCrashes.insert(make_pair(pN,p));
+      preWaveCrashes.insert(pN);
+      preWaveCrashes.insert(p);
     }
   }
 }
@@ -151,7 +153,8 @@ void DistMap::processRaise(Pos p) {
     if (distMap[pN].isCleared || distMap[pN].toRaise) continue;
 
     open.push(DistPos(distMap[pN].distance, pN));
-    // if n does not have any valid obstacle then its distance is invalid
+
+    // if n does not have any valid basisPoint then is not consistent
     // it and should propagate the process raise
     if (!hasBasisPoint(pN)) {
       distMap[pN].clear();
