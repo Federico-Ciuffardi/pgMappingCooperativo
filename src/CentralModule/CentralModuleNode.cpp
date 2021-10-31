@@ -162,18 +162,22 @@ void setRvizMarks(Auction& auction, mapInfoType mapInfo) {
 
   rvizHelper.color = BLUE;
   rvizHelper.mark(edgesMarkerPoints, "gvd_edges");
+  /* ros::Duration(0.00001).sleep(); */
   rvizHelper.color = makeColorRGBA(0.2, 0.505, 1,0.5);
   rvizHelper.mark(connectivityEdgesMarkerPoints, "gvd_conntivity_aux_edges");
+  /* ros::Duration(0.00001).sleep(); */
 
   /// mark vertices (DISABLED)
   /* rvizHelper.type     = cellMarkerType; */
   /* rvizHelper.scale    = makeVector3(cellSize*0.6); rvizHelper.scale.z  = cubeHeight; */
   /* rvizHelper.position = makeVector3(0,0,gvdVertexZ); */
+  /* ros::Duration(0.00001).sleep(); */
 
   /* rvizHelper.color    = BLUE; */
   /* rvizHelper.mark(verticesMarkerPoints, "gvd_vertices"); */
   /* rvizHelper.color    = makeColorRGBA(0.2, 0.505, 1,0.5); */
   /* rvizHelper.mark(connectivityVerticesMarkerPoints, "gvd_connectivity_aux_vertices"); */
+  /* ros::Duration(0.00001).sleep(); */
 
   // Topological map
   rvizHelper.topic = &topoMapMarkerPub;
