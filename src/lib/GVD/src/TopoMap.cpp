@@ -135,8 +135,8 @@ void TopoMap::updateBase(PosSet &candidates){
       // skip vertices that:
       if(!isValid(map[p])                             || // cellState invalid
          !graphGvd[v].isCandidate                     || // are not candiates
-          connectivityAux(p,map,*distMap)             || // are connectivityAux
-         !satisfiesDegreeConstraint(gvd->graphGvd, v)  ) // do not satisfy degreeConstrain
+          connectivityAux(p,map,*distMap)              ) // are connectivityAux
+         /* !satisfiesDegreeConstraint(gvd->graphGvd, v)  ) // do not satisfy degreeConstrain | TODO make it work incrementally */
         continue;
 
 
