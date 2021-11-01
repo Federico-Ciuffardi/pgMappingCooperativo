@@ -60,7 +60,8 @@ struct TopoMap{
   // Funcions //
   //////////////
 
-  pair<Pos,Pos> minAngleConstrain(DistMap& distMap, Pos p);
+  bool minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Pos,pair<Pos,Pos>> &criticalLines);
+
   void updateBase(PosSet &candidates);
 
 };

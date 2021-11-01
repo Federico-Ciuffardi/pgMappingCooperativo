@@ -93,7 +93,7 @@ int requests       = 0;
 ros::Time lastAuctionStart;
 ros::Time lastAuctionPublish;
 
-float auctionInfoRealTime;
+float auctionInfoRealTime = 0;
 ros::Duration auctionInfoTime;
 ros::Duration estimatedAuctionInfoTimeIncrement(0);
 

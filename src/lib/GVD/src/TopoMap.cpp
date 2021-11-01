@@ -15,7 +15,7 @@ bool isValid(CellState cellState){
   return cellState != Frontier && cellState != Occupied && cellState != Unknown;
 }
 
-pair<Pos,Pos> TopoMap::minAngleConstrain(DistMap& distMap, Pos p) {
+bool TopoMap::minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Pos,pair<Pos,Pos>> &criticalLines) {
 
   Float maxAngle = minCriticalLineAngle;
 
@@ -40,7 +40,13 @@ pair<Pos,Pos> TopoMap::minAngleConstrain(DistMap& distMap, Pos p) {
       } 
     }
   }
-  return make_pair(endPoint1,endPoint2);
+
+  if( endPoint1 != NULL_POS ){
+    criticalLines[p] = make_pair(endPoint1,endPoint2);
+    return true;
+  }else{
+    return false;
+  }
 }
 
 // retruns true if the vertex associated with p is a distance local minimum vertex.
@@ -48,7 +54,7 @@ pair<Pos,Pos> TopoMap::minAngleConstrain(DistMap& distMap, Pos p) {
 // Local minimum here means:
 //  * There is no neighbor with less distance
 //  * There is at least one neighbor with greater distance
-bool isLocalMin(DistMap& distMap, GvdGraph& gvd, Pos p) {
+bool localMinConstrain(DistMap& distMap, GvdGraph& gvd, Pos p) {
   bool isMin = true;
   bool hasGreater = false;
 
@@ -113,16 +119,22 @@ bool satisfiesDegreeConstraint(GvdGraph& gvd, GvdGraph::Vertex v) {
   return false;
 }
 
-void TopoMap::updateBase(PosSet &candidates){
+void TopoMap::updateBase(PosSet &preCandidates){
   GvdGraph &graphGvd = gvd->graphGvd;
 
   boost::unordered_map<Pos,pair<Pos,Pos>> criticalLine;
-  cout << "debug :: Calculate isLocalMin, minAngleConstrain for each vertex gvd" << endl;
-  for( Pos pos : candidates ){
-    if(graphGvd.has(pos)){
-      auto &vertexInfo = graphGvd[pos];
-      criticalLine[pos] = minAngleConstrain(*distMap, pos);
-      vertexInfo.isCandidate = isLocalMin(*distMap, graphGvd, pos) && criticalLine[pos].first != NULL_POS;
+  PosSet candidates;
+  cout << "debug :: Calculate which vertices are candidates" << endl;
+  for( Pos p : preCandidates ){
+    if(!graphGvd.has(p)) continue; // skip if p is not in the gvd
+
+    auto &vertexInfo = graphGvd[p];
+    vertexInfo.isCandidate = isValid(map[p])                              && // cellState valid
+                             !connectivityAux(p,map,*distMap)             && // are not connectivityAux
+                             minAngleConstrain(*distMap, p, criticalLine) && // satisfies minAngleConstrain
+                             localMinConstrain(*distMap, graphGvd, p)      ; // satisfies localMinConstrain 
+    if(vertexInfo.isCandidate){
+      candidates.insert(p);
     }
   }
 
@@ -132,13 +144,10 @@ void TopoMap::updateBase(PosSet &candidates){
 
       GvdGraph::Vertex v = graphGvd.idVertexMap[p];
 
-      // skip vertices that:
-      if(!isValid(map[p])                             || // cellState invalid
-         !graphGvd[v].isCandidate                     || // are not candiates
-          connectivityAux(p,map,*distMap)              ) // are connectivityAux
-         /* !satisfiesDegreeConstraint(gvd->graphGvd, v)  ) // do not satisfy degreeConstrain | TODO make it work incrementally */
-        continue;
-
+      // this loop is separated from the previous one to check the degreeConstrain after all the candidates were determined 
+      // TODO make it work incrementally 
+      /* if(!satisfiesDegreeConstraint(gvd->graphGvd, v)) */ 
+      /*   continue; */
 
       // set criticalLines
       boost::unordered_set<Pos> criticalLineEnds;
