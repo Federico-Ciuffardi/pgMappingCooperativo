@@ -31,7 +31,7 @@ public:
   // 0: Do not allow vertex removal
   // 1: Remove the vetex if the vertex also has 3 or more adjacent cells that belong to the GVD 
   // 2: Remove the vertex if the vertex also has 2 or more adjacent cells that belong to the GVD 
-  // 2: Always remove the vertex
+  // 3: Always remove the vertex
   int edgeSimplificationAllowVertexRemoval = 1;
 
   // Set what is the min codition 

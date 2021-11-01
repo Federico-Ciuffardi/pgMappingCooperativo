@@ -18,7 +18,7 @@ typedef Grid<bool> GridGvd;
 struct GvdVertexProperty {
   Pos p = NULL_POS;
 
-  bool isLocalMin = false;
+  bool isCandidate = false;
 
   GvdVertexProperty(){};
 

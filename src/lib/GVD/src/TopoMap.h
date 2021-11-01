@@ -26,6 +26,8 @@ struct TopoMap{
   ///////////////
   // Variables //
   ///////////////
+  // config
+  Float minCriticalLineAngle = M_PI*0.75; //M_PI/1.5;
 
   // Results
   CriticalInfos criticalInfos;
@@ -58,6 +60,7 @@ struct TopoMap{
   // Funcions //
   //////////////
 
+  pair<Pos,Pos> minAngleConstrain(DistMap& distMap, Pos p);
   void updateBase(PosSet &candidates);
 
 };
