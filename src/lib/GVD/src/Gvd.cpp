@@ -10,6 +10,14 @@
 ///////////////////
 // Aux Functions //
 ///////////////////
+/* If removing `p` from  disconects the graph represented with the Grid then  */
+int Gvd::neighbors(Pos p) {
+  int neighbors = 0;
+  for(Pos pN : map.adj(p,nonTraversables)){
+    neighbors += gridGvd[pN];
+  }
+  return neighbors;
+}
 
 
 // increase the sparseness a the graph by removing redundant edges:
@@ -49,12 +57,20 @@ void Gvd::cleanUp(Pos p, GvdGraph &graph, Int simplification, Int vertexRemoval)
       graph.removeE(vN, v);
       graph.removeE(v,vN);
  
-      if(graph.degree(vN)==1 && vertexRemoval){
+      if(graph.degree(vN)==1 &&  (
+            (vertexRemoval == 1 && neighbors(p) > 2) ||
+            (vertexRemoval == 2 && neighbors(p) > 1) ||
+            (vertexRemoval == 3)
+          )){
         graph.removeE(vN,maxDegV);
         graph.removeE(maxDegV,vN);
       }
  
-      if(graph.degree(v)==1 && vertexRemoval){
+      if(graph.degree(v)==1 &&  (
+            (vertexRemoval == 1 && neighbors(p) > 2) ||
+            (vertexRemoval == 2 && neighbors(p) > 1) ||
+            (vertexRemoval == 3)
+          )){
         graph.removeE(v,maxDegV);
         graph.removeE(maxDegV,v);
       }
@@ -140,7 +156,6 @@ void Gvd::updateBase(PosSet &candidates) {
         gridGvd[p] = true;
         break;
       case 1:
-        // ver 1.6 (works and should work on corridors of pair width greater than 4 (and less than 4 too))
         int neighbors = 0;
         bool inNarrowPassage = true;
         for(Pos pN : map.adj(p,nonTraversables)){
@@ -166,7 +181,6 @@ void Gvd::updateBase(PosSet &candidates) {
 
       for(Pos pN : map.adj(p, nonTraversables)){
         if(graphGvd.has(pN)){
-          /* toClean.insert(pN); */
           GvdGraph::Vertex vN  = graphGvd.idVertexMap[pN];
           graphGvd.addE(v,vN);
           graphGvd.addE(vN,v);

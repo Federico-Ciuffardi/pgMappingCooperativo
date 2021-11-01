@@ -27,9 +27,11 @@ public:
   // 2: edges to vertices that can be accessed through a neighbor of grater or equal degree are deleted
   int edgeSimplificationMethod = 2;
 
-  // Allow GVD edge simplification to remove vertex: if when removing edges the verte
+  // Allow GVD edge simplification to remove vertex when the edge simplification leaves the vertex with only onew edge
   // 0: Do not allow vertex removal
-  // 1: Allow vertex removal
+  // 1: Remove the vetex if the vertex also has 3 or more adjacent cells that belong to the GVD 
+  // 2: Remove the vertex if the vertex also has 2 or more adjacent cells that belong to the GVD 
+  // 2: Always remove the vertex
   int edgeSimplificationAllowVertexRemoval = 1;
 
   // Set what is the min codition 

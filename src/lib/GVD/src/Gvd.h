@@ -60,6 +60,7 @@ struct Gvd {
 
   // Functions
   bool isConnectivityAux(Pos p);
+  int neighbors(Pos p);
 
   void update();
   void update(MapUpdatedCells &mapUpdatedCells);
