@@ -19,7 +19,6 @@
   <param name="map_name" type="string" value="$(arg map_name)" />  
 
   <!-- ## Set TO MATCH the size of the used map -->
-  <!--    TODO set this through a file near the .world file as is heavily dependent on the map -->
   <arg name="map_size" default="12380" /> 
   <param name="map_size" type="int" value="$(arg map_size)" />  
 
@@ -47,34 +46,38 @@
   <param name="file_log_level" type="int" value="$(arg file_log_level)" />  
 
   <!-- # CentralModule Check '../src/CentralModule/CentralModule.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params)-->
+
+  <!-- <arg name="auction_info_incremental" default="0" /> --> 
   <arg name="auction_info_incremental" default="1" /> 
   <param name="auction_info_incremental" type="int" value="$(arg auction_info_incremental)" />  
 
+  <!-- <arg name="frontier_simplification_method" default="2" /> --> 
   <arg name="frontier_simplification_method" default="5" /> 
   <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" />  
 
-  <!-- <arg name="bid_segment_value_component_coefficient" default="10" /> --> 
-  <!-- <param name="bid_segment_value_component_coefficient" type="double" value="$(arg bid_segment_value_component_coefficient)" /> -->  
+  <arg name="bid_segment_value_component_coefficient" default="10" /> 
+  <param name="bid_segment_value_component_coefficient" type="double" value="$(arg bid_segment_value_component_coefficient)" />  
 
-  <!-- <arg name="bid_segment_value_component_mode" default="1" /> --> 
-  <!-- <param name="bid_segment_value_component_mode" type="double" value="$(arg bid_segment_value_component_mode)" /> -->  
+  <arg name="bid_segment_value_component_mode" default="1" /> 
+  <param name="bid_segment_value_component_mode" type="double" value="$(arg bid_segment_value_component_mode)" />  
 
   <!-- # GVD lib config. Check '../src/lib/GVD/src/config.h' for help (has defaults values on said file that can be overridden by the ros params) -->
 
-  <!-- <arg name="gvd_connectivity_method" default="0" /> -->
-  <!-- <param name="gvd_connectivity_method" type="int" value="$(arg gvd_connectivity_method)" /> -->
+  <arg name="gvd_connectivity_method" default="1" />
+  <!-- <arg name="gvd_connectivity_method" default="2" /> -->
+  <param name="gvd_connectivity_method" type="int" value="$(arg gvd_connectivity_method)" />
 
-  <!-- <arg name="gvd_vertex_simplification_method" default="1" /> -->
-  <!-- <param name="gvd_vertex_simplification_method" type="int" value="$(arg gvd_vertex_simplification_method)" /> -->  
+  <arg name="gvd_vertex_simplification_method" default="1" />
+  <param name="gvd_vertex_simplification_method" type="int" value="$(arg gvd_vertex_simplification_method)" />  
 
-  <!-- <arg name="gvd_edge_simplification_method" default="2" /> -->
-  <!-- <param name="gvd_edge_simplification_method" type="int" value="$(arg gvd_edge_simplification_method)" /> -->  
+  <arg name="gvd_edge_simplification_method" default="2" />
+  <param name="gvd_edge_simplification_method" type="int" value="$(arg gvd_edge_simplification_method)" />  
 
-  <!-- <arg name="gvd_edge_simplification_allow_vertex_removal" default="1" /> -->
-  <!-- <param name="gvd_edge_simplification_allow_vertex_removal" type="int" value="$(arg gvd_edge_simplification_allow_vertex_removal)" /> -->  
+  <arg name="gvd_edge_simplification_allow_vertex_removal" default="1" />
+  <param name="gvd_edge_simplification_allow_vertex_removal" type="int" value="$(arg gvd_edge_simplification_allow_vertex_removal)" />  
 
-  <!-- <arg name="critical_conditiont_min" default="0" /> -->
-  <!-- <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" /> -->  
+  <arg name="critical_conditiont_min" default="1" />
+  <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" />  
 
   <!-- # Map merger Check '../src/MapMerger/MapMerger.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params) -->
   
@@ -171,6 +174,6 @@
   <!-- Initialize centralized nodes -->
   <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_map_merger" name="pgmappingcooperativo_map_merger" required="true" />
   <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_central_module" name="pgmappingcooperativo_central_module"  required="true"/>
-  <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_end_module" name="pgmappingcooperativo_end_module" required="true" />
+  <!-- <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_end_module" name="pgmappingcooperativo_end_module" required="true" /> -->
 
 </launch>
