@@ -50,16 +50,14 @@ Auction CentralModule::getAuctionInfo() {
 
   // Get the frontiers from the map
   frontiers.clear();
-  for(Pos pos : map.map){
-    if(map.map[pos] == Frontier){
-      frontiers.insert(pos);
-    }
-  }
+  for(Pos f : map.map){
+    if(map.map[f] != Frontier) continue; // skip if f is not a frontier
 
-  // remove useless frontiers (not adjacent to another free space)
-  for(Pos frontier : frontiers){
-    if(map.map.adj(frontier,{Occupied,Unknown}).size() == 0){
-      map.map[frontier] = Free;
+    // remove some useless frontiers (not adjacent to another free space)
+    if(map.map.adj(f,{Occupied,Unknown}).size() == 0){
+      map.map[f] = Free;
+    }else{
+      frontiers.insert(f);
     }
   }
 
@@ -131,6 +129,17 @@ Auction CentralModule::getAuctionInfo() {
     }
   }
 
+  // Restore the state previous to the frontier unfiltering of the last getAuctionInfo
+  for(Pos p : frontiers){
+    // if p was filtered (not a significative frontier) and was also filtered in the previous getAuctionInfo
+    // then restore its state to the one that it had in the previous getAuctionInfo before unfiltering it 
+    // (setting it state again to Frontier)
+    if( map.map[p] != Frontier && is_elem(p,preUnfilterState) ){
+      map.map[p] = preUnfilterState[p];
+    }
+  }
+  preUnfilterState.clear();
+
   // Get the info for the auction, topological map, and the GVD
   cout << "debug :: update topological map" << endl;
   if(!topoMap){
@@ -142,9 +151,12 @@ Auction CentralModule::getAuctionInfo() {
     topoMap->update();
   }
 
-  // Restore frontier (undo simplification)
+  // Unfilter the frontiers (Restore the filtered frontiers states to Frontier)
   for(Pos p : frontiers){
-    map.map[p] = Frontier;
+    if (map.map[p] != Frontier){
+      preUnfilterState[p] = map.map[p];
+      map.map[p] = Frontier;
+    }
   }
 
   // clear map updates (from now on start to accumulate the state changes for the next increment)

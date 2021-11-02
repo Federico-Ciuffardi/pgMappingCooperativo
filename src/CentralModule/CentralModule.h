@@ -104,6 +104,7 @@ class CentralModule {
   // frontier related
   boost::unordered_set<Pos> frontiers;
   ConnectedComponents* frontierConComps = NULL;
+  boost::unordered_map<Pos,CellState> preUnfilterState;
 
   // Auction related
   Auctioneer<RobotId, SegmentId, Pos> auctioneer;
