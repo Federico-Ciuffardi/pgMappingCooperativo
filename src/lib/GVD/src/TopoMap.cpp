@@ -51,9 +51,7 @@ bool TopoMap::minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Po
 
 // retruns true if the vertex associated with p is a distance local minimum vertex.
 //
-// Local minimum here means:
-//  * There is no neighbor with less distance
-//  * There is at least one neighbor with greater distance
+// The definition of local minimum depends on the criticalConditionMin value (check GvdConfig.h)
 bool localMinConstrain(DistMap& distMap, GvdGraph& gvd, Pos p) {
   bool isMin = true;
   bool hasGreater = false;
@@ -65,10 +63,10 @@ bool localMinConstrain(DistMap& distMap, GvdGraph& gvd, Pos p) {
       hasGreater = true; // p has a neighbor with greater distance
     }
 
-    // neighbor of p must be grater or equal
+    // Is local min minimum
     switch (GvdConfig::get()->criticalConditionMin){
-      case 0: isMin = isMin && distMap[p].distance < distMap[pN].distance;
-      case 1: isMin = isMin && distMap[p].distance <= distMap[pN].distance;
+      case 0: isMin = distMap[p].distance < distMap[pN].distance;
+      case 1: isMin = distMap[p].distance <= distMap[pN].distance;
     }
 
     if (!isMin) break;
@@ -77,10 +75,9 @@ bool localMinConstrain(DistMap& distMap, GvdGraph& gvd, Pos p) {
 }
 
 // Return true if there is a path from `prevV` that:
-// * Includes `v` and reaches a
+// * Includes `v`
 // * Ends on a vertex of degree 3 
-// * Does not contain a critial vertex candidate meaning a local min vertex
-//   (see setLocalMins for local min definition) 
+// * Does not contain a critical vertex candidate (excluding `v`)
 bool degreeConstraintAux(GvdGraph& gvd, GvdGraph::Vertex prevV, GvdGraph::Vertex v){
   while(true){
     int degree = gvd.degree(v);
@@ -102,14 +99,10 @@ bool degreeConstraintAux(GvdGraph& gvd, GvdGraph::Vertex prevV, GvdGraph::Vertex
 
 // retruns true if the vertex associated with p satisfies the degreeConstrain and false otherwise
 // The degree constrain is satisfied if:
-// * A vertex has degree 2 
-// * Is a local min
-// * has a path with the characteristics described on the `degreeConstraintAux`
-//   function
-// Precondition: gvd has isLocalMin stablished for each vertex
+// * A vertex has degree 2 (precondition for this function)
+// * has a path with the characteristics described on the `degreeConstraintAux` function
+// Preconditions: (1) gvd has isCandidate stablished for each vertex, (2) the vertex v has degree 2
 bool satisfiesDegreeConstraint(GvdGraph& gvd, GvdGraph::Vertex v) {
-  // Vertex must have a degree of 2
-  if (gvd.degree(v) != 2) return false;
 
   // The vertex must have a neighbor of degree 3 
   for (GvdGraph::Vertex vN : gvd.adj(v)) {
@@ -128,11 +121,15 @@ void TopoMap::updateBase(PosSet &preCandidates){
   for( Pos p : preCandidates ){
     if(!graphGvd.has(p)) continue; // skip if p is not in the gvd
 
-    auto &vertexInfo = graphGvd[p];
+    GvdGraph::Vertex v = graphGvd.idVertexMap[p];
+    auto &vertexInfo = graphGvd[v];
+
     vertexInfo.isCandidate = isValid(map[p])                              && // cellState valid
+                             graphGvd.degree(v) == 2                      && // has degree 2
                              !connectivityAux(p,map,*distMap)             && // are not connectivityAux
                              minAngleConstrain(*distMap, p, criticalLine) && // satisfies minAngleConstrain
                              localMinConstrain(*distMap, graphGvd, p)      ; // satisfies localMinConstrain 
+
     if(vertexInfo.isCandidate){
       candidates.insert(p);
     }
@@ -140,40 +137,36 @@ void TopoMap::updateBase(PosSet &preCandidates){
 
   cout << "debug :: Set the critical vertices and its information" << endl;
   for( Pos p : candidates ){
-    if(graphGvd.has(p)){
+    GvdGraph::Vertex v = graphGvd.idVertexMap[p];
 
-      GvdGraph::Vertex v = graphGvd.idVertexMap[p];
+    // this loop is separated from the previous one to check the degreeConstrain after all the candidates were determined 
+    // TODO make it work incrementally 
+    /* if(!satisfiesDegreeConstraint(gvd->graphGvd, v)) */ 
+    /*   continue; */
 
-      // this loop is separated from the previous one to check the degreeConstrain after all the candidates were determined 
-      // TODO make it work incrementally 
-      /* if(!satisfiesDegreeConstraint(gvd->graphGvd, v)) */ 
-      /*   continue; */
+    // set criticalLines
+    boost::unordered_set<Pos> criticalLineEnds;
 
-      // set criticalLines
-      boost::unordered_set<Pos> criticalLineEnds;
+    criticalLineEnds.insert(criticalLine[p].first);
+    criticalLineEnds.insert(criticalLine[p].second);
 
-      criticalLineEnds.insert(criticalLine[p].first);
-      criticalLineEnds.insert(criticalLine[p].second);
-
-      CriticalInfo criticalInfo;
-      for(Pos endPoint : criticalLineEnds){
-        for(Pos linePos : discretizeLine(p,endPoint)){
-          if(isValid(map[linePos])){
-            map[linePos] = CriticalLine;
-          }
-          if(!is_elem(map[linePos], distMap->sources)){
-            criticalInfo.criticalLines.insert(linePos);
-            criticalLines.insert(linePos);
-          }
+    CriticalInfo criticalInfo;
+    for(Pos endPoint : criticalLineEnds){
+      for(Pos linePos : discretizeLine(p,endPoint)){
+        if(isValid(map[linePos])){
+          map[linePos] = CriticalLine;
+        }
+        if(!is_elem(map[linePos], distMap->sources)){
+          criticalInfo.criticalLines.insert(linePos);
+          criticalLines.insert(linePos);
         }
       }
-
-      criticalInfos[p] = criticalInfo;
-
-      // Set critical in map
-      map[p] = Critical;
-
     }
+
+    criticalInfos[p] = criticalInfo;
+
+    // Set critical in map
+    map[p] = Critical;
   }
 
   cout << "debug :: Set segments" << endl;

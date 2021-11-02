@@ -34,7 +34,7 @@ public:
   // 3: Always remove the vertex
   int edgeSimplificationAllowVertexRemoval = 1;
 
-  // Set what is the min codition 
+  // Set what is the min condition 
   // 0: - All neighbors have greater distance
   // 1: - There is no neighbor with less distance 
   //    - And there is at least one neighbor with greater distance

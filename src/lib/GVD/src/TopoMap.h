@@ -10,7 +10,6 @@
  *  critical info 
  */
 struct CriticalInfo{
-  vector<Pos> frontiers;
   PosSet criticalLines;
 };
 

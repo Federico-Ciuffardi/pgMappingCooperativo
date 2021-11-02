@@ -61,7 +61,7 @@
   <arg name="bid_segment_value_component_mode" default="2" /> 
   <param name="bid_segment_value_component_mode" type="double" value="$(arg bid_segment_value_component_mode)" />  
 
-  <!-- # GVD lib config. Check '../src/lib/GVD/src/config.h' for help (has defaults values on said file that can be overridden by the ros params) -->
+  <!-- # GVD lib config. Check '../src/lib/GVD/src/GvdConfig.h' for help (has defaults values on said file that can be overridden by the ros params) -->
 
   <arg name="gvd_connectivity_method" default="1" />
   <!-- <arg name="gvd_connectivity_method" default="2" /> -->
