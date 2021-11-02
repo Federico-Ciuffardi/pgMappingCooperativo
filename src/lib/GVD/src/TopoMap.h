@@ -30,7 +30,7 @@ struct TopoMap{
 
   // Results
   CriticalInfos criticalInfos;
-  PosSet criticalLines;
+  boost::unordered_map<Pos,int> criticalLines;
 
   DistMap* distMap;
   Gvd* gvd;
@@ -59,7 +59,7 @@ struct TopoMap{
   // Funcions //
   //////////////
 
-  bool minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Pos,pair<Pos,Pos>> &criticalLines);
+  bool minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Pos,pair<Pos,Pos>> &criticalLine);
 
   void updateBase(PosSet &candidates);
 

@@ -15,7 +15,7 @@ bool isValid(CellState cellState){
   return cellState != Frontier && cellState != Occupied && cellState != Unknown;
 }
 
-bool TopoMap::minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Pos,pair<Pos,Pos>> &criticalLines) {
+bool TopoMap::minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Pos,pair<Pos,Pos>> &criticalLine) {
 
   Float maxAngle = minCriticalLineAngle;
 
@@ -42,7 +42,7 @@ bool TopoMap::minAngleConstrain(DistMap& distMap, Pos p, boost::unordered_map<Po
   }
 
   if( endPoint1 != NULL_POS ){
-    criticalLines[p] = make_pair(endPoint1,endPoint2);
+    criticalLine[p] = make_pair(endPoint1,endPoint2);
     return true;
   }else{
     return false;
@@ -153,12 +153,15 @@ void TopoMap::updateBase(PosSet &preCandidates){
     CriticalInfo criticalInfo;
     for(Pos endPoint : criticalLineEnds){
       for(Pos linePos : discretizeLine(p,endPoint)){
+        if(linePos == p || linePos == endPoint) continue;
+
         if(isValid(map[linePos])){
           map[linePos] = CriticalLine;
         }
+
         if(!is_elem(map[linePos], distMap->sources)){
           criticalInfo.criticalLines.insert(linePos);
-          criticalLines.insert(linePos);
+          criticalLines[linePos]++;
         }
       }
     }
@@ -238,8 +241,11 @@ void TopoMap::update(MapUpdatedCells &mapUpdatedCells){
       CriticalInfo criticalInfo = criticalInfos[pos];
       if(map[pos] == Critical) map[pos] = Free;
       for(Pos linePos : criticalInfo.criticalLines){
-        if(map[linePos] == CriticalLine) map[linePos] = Free;
-        criticalLines.erase(linePos);
+        criticalLines[linePos]--;
+        if(criticalLines[linePos] <= 0){
+          if(map[linePos] == CriticalLine) map[linePos] = Free;
+          criticalLines.erase(linePos);
+        }
       }
       criticalInfos.erase(pos);
     }
