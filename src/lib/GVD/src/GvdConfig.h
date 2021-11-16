@@ -38,6 +38,7 @@ public:
   // 0: - All neighbors have greater distance
   // 1: - There is no neighbor with less distance 
   //    - And there is at least one neighbor with greater distance
+  // 2: - There is no neighbor with less distance 
   int criticalConditionMin = 1;
 
 private:

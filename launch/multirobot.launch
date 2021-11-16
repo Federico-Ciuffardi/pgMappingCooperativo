@@ -76,8 +76,8 @@
   <arg name="gvd_edge_simplification_allow_vertex_removal" default="1" />
   <param name="gvd_edge_simplification_allow_vertex_removal" type="int" value="$(arg gvd_edge_simplification_allow_vertex_removal)" />  
 
-  <arg name="critical_conditiont_min" default="1" />
-  <param name="critical_conditiont_min" type="int" value="$(arg critical_conditiont_min)" />  
+  <arg name="critical_condition_min" default="1" />
+  <param name="critical_condition_min" type="int" value="$(arg critical_condition_min)" />  
 
   <!-- # Map merger Check '../src/MapMerger/MapMerger.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params) -->
   

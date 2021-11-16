@@ -65,13 +65,18 @@ bool localMinConstrain(DistMap& distMap, GvdGraph& gvd, Pos p) {
 
     // Is local min minimum
     switch (GvdConfig::get()->criticalConditionMin){
-      case 0: isMin = distMap[p].distance < distMap[pN].distance;
-      case 1: isMin = distMap[p].distance <= distMap[pN].distance;
+      case 0: 
+        isMin = distMap[p].distance < distMap[pN].distance;
+        break;
+      case 1: 
+      case 2:
+        isMin = distMap[p].distance <= distMap[pN].distance;
+        break;
     }
 
     if (!isMin) break;
   }
-  return isMin && hasGreater;
+  return isMin && (hasGreater || GvdConfig::get()->criticalConditionMin == 2);
 }
 
 // Return true if there is a path from `prevV` that:
