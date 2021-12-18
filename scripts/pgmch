@@ -2,23 +2,28 @@
 
 EXE_NAME="pgmch"
 
-NAME="pg mapping cooperativo helper"
+NAME="PG Mapping Cooperativo Helper"
 
-VERSION="0.0.0"
+HELP_MSG="$NAME
 
-HELP_MSG="$NAME $VERSION
+Usage: $EXE_NAME <command> <arg_1:default_value> ...
 
-Usage: $EXE_NAME [<flags>] <command>
+Commands and args:                                             
 
-Flags:
-  -v, --version  output version information and exit
-  -h, --help     display this help and exit
+   compile        
+   |  Compile the workspace '~/catkin_ws'
 
-Commands: command {arg_name:default} ...
+   test <map_name:office> <robot_number:5> <cell_size:1> <timeout:7200>
+   |  Compile and run a single test in <map_name> with <robot_number>.
+   |  The occupancy grid used will have the specified <cell_size>.
+   |  The exploration will stop if it is not completed in <timeout> seconds.
 
-   compile                                      compile the workspace '~/catkin_ws'
-   test    {map_name:office} {robot_number:5}   run a single test in {map_name} with {robot_number}
-   replay  {id:last}                            replay the test with the given {id}
+   test-nocompile <map_name:office> <robot_number:5> <cell_size:1> <timeout:7200>
+   |  Same as test command but without compiling.
+
+   replay <log_folder:last> <playback_speed:1>
+   |  Replay the test that generated the log (must have a .bag file inside).
+   |  The replay will be played at <playback_speed>.
 "
 
 # Variables
@@ -65,6 +70,7 @@ function clean_ros(){
   killall -9 roscore    || true
   killall -9 rosmaster  || true
   pkill -9 gzserver     || true
+  sleep 2
 }
 
 function init_generic_ros(){
@@ -74,20 +80,22 @@ function init_generic_ros(){
   printf "> Starting roscore\n\n"
   roscore &>/dev/null &
 
-  sleep 2
+  sleep 3
 
   rosparam set /use_sim_time true # use gazebo time
 
-  # printf "> Starting rqt_console\n\n"
-  # rqt_console &>/dev/null &
+  printf "> Starting rqt_console\n\n"
+  rqt_console &>/dev/null &
 
-  # sleep 2
+  sleep 2
 
-  # printf "> Starting rviz\n\n"
-  # rviz -d "${rviz_dir}/${map_name}".rviz &>/dev/null &
+  printf "> Starting rviz\n\n"
+  rviz -d "${rviz_dir}/${map_name}".rviz &>/dev/null &
 }
 
 function test(){
+  clean_ros &> /dev/null
+
   # load args
   local map_name="${1:-office}"
   local starting_robot_number="${2:-5}"
@@ -129,6 +137,8 @@ function test(){
 }
 
 function replay() {
+  clean_ros &> /dev/null
+
   # load args
   local in_id="${1:-latest}"
   local rate="${2:-1}"
@@ -169,17 +179,10 @@ set -o nounset      # Disallow expansion of unset variables
 set -o pipefail     # Use last non-zero exit code in a pipeline
 set -o errtrace     # Ensure the error trap handler is inherited
 
-clean_ros &> /dev/null
-
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
       echo "$HELP_MSG"
-      exit 0
-      ;;
-
-    -v|--version)
-      echo "$NAME $VERSION"
       exit 0
       ;;
 

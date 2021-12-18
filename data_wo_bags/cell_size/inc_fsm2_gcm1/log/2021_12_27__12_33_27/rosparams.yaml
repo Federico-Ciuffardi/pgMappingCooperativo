@@ -1,0 +1,2265 @@
+auction_info_incremental: 1
+bid_segment_value_component_coefficient: 10.0
+bid_segment_value_component_mode: 2.0
+cell_size: 0.25
+critical_condition_min: 1
+file_log_dir: /home/fede/catkin_ws/src/pgmappingcooperativo/log/2021_12_27__12_33_27
+file_log_level: 2
+frontier_simplification_method: 2
+gazebo:
+  auto_disable_bodies: false
+  cfm: 0.0
+  contact_max_correcting_vel: 100.0
+  contact_surface_layer: 0.001
+  enable_ros_network: true
+  erp: 0.2
+  gravity_x: 0.0
+  gravity_y: 0.0
+  gravity_z: -9.8
+  max_contacts: 20
+  max_update_rate: 1000.0
+  sor_pgs_iters: 50
+  sor_pgs_precon_iters: 0
+  sor_pgs_rms_error_tol: 0.0
+  sor_pgs_w: 1.3
+  time_step: 0.001
+gvd_connectivity_method: 1
+gvd_edge_simplification_allow_vertex_removal: 1
+gvd_edge_simplification_method: 2
+gvd_vertex_simplification_method: 1
+map_name: office
+map_size: 12380
+min_robot_maps_arrived: 3
+p3dx_0:
+  joint1_position_controller:
+    joint: base_left_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint2_position_controller:
+    joint: base_right_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint_state_controller:
+    publish_rate: 50
+    type: joint_state_controller/JointStateController
+  move_base:
+    GlobalPlanner:
+      allow_unknown: true
+      cost_factor: 3.0
+      lethal_cost: 50
+      neutral_cost: 25
+      orientation_mode: 1
+      orientation_window_size: 1
+      outline_map: false
+      publish_potential: true
+      use_dijkstra: false
+      use_grid_path: true
+    TebLocalPlannerROS:
+      acc_lim_theta: 1.6
+      acc_lim_x: 0.5
+      acc_lim_y: 0.01
+      allow_init_with_backwards_motion: false
+      cmd_angle_instead_rotvel: false
+      costmap_obstacles_behind_robot_dist: 1.5
+      dt_hysteresis: 0.03
+      dt_ref: 0.3
+      dynamic_obstacle_inflation_dist: 0.6
+      enable_homotopy_class_planning: false
+      enable_multithreading: true
+      exact_arc_length: true
+      feasibility_check_no_poses: 5
+      footprint_model:
+        radius: 0.2275
+        type: circular
+      force_reinit_new_goal_angular: 0.78
+      force_reinit_new_goal_dist: 1.0
+      free_goal_vel: true
+      global_plan_overwrite_orientation: true
+      global_plan_viapoint_sep: -0.1
+      h_signature_prescaler: 1.0
+      h_signature_threshold: 0.1
+      include_costmap_obstacles: true
+      include_dynamic_obstacles: false
+      inflation_dist: 1.5
+      is_footprint_dynamic: false
+      legacy_obstacle_association: false
+      max_global_plan_lookahead_dist: 10.0
+      max_number_classes: 5
+      max_vel_theta: 3.2
+      max_vel_x: 1.2
+      max_vel_x_backwards: 1.2
+      max_vel_y: 0.0
+      min_obstacle_dist: 0.125
+      min_turning_radius: 0.0
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      obstacle_association_cutoff_factor: 5.0
+      obstacle_association_force_inclusion_factor: 1.5
+      obstacle_cost_exponent: 1.0
+      obstacle_heading_threshold: 0.45
+      obstacle_poses_affected: 30
+      optimization_activate: true
+      optimization_verbose: false
+      oscillation_recovery: true
+      penalty_epsilon: 0.05
+      publish_feedback: false
+      roadmap_graph_area_length_scale: 1.0
+      roadmap_graph_area_width: 5.0
+      roadmap_graph_no_samples: 15
+      selection_alternative_time_cost: false
+      selection_cost_hysteresis: 1.0
+      selection_obst_cost_scale: 2.0
+      selection_prefer_initial_plan: 0.95
+      selection_viapoint_cost_scale: 1.0
+      shrink_horizon_backup: true
+      switching_blocking_period: 0.0
+      teb_autosize: true
+      via_points_ordered: false
+      viapoints_all_candidates: true
+      visualize_hc_graph: false
+      visualize_with_time_as_z_axis_scale: 0.0
+      weight_acc_lim_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_y: 1.0
+      weight_adapt_factor: 2.0
+      weight_dynamic_obstacle: 50.0
+      weight_dynamic_obstacle_inflation: 0.1
+      weight_inflation: 0.1
+      weight_kinematics_forward_drive: 1.0
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_turning_radius: 1.0
+      weight_max_vel_theta: 1.0
+      weight_max_vel_x: 2.0
+      weight_max_vel_y: 2.0
+      weight_obstacle: 50.0
+      weight_optimaltime: 1.0
+      weight_shortest_path: 0.0
+      weight_viapoint: 1.0
+      wheelbase: 1.0
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 3.2
+    base_global_planner: global_planner/GlobalPlanner
+    base_local_planner: teb_local_planner/TebLocalPlannerROS
+    clearing_rotation_allowed: true
+    conservative_reset_dist: 3.0
+    controller_frequency: 20.0
+    controller_patience: 5.0
+    global_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: map
+      height: 128
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_0/lms100
+          topic: /p3dx_0/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: -64.0
+      origin_y: -64.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 5.0
+      resolution: 0.25
+      robot_base_frame: p3dx_0/base_link
+      robot_radius: 0.2275
+      rolling_window: false
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 128
+    local_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: p3dx_0/odom
+      height: 6
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_0/lms100
+          topic: /p3dx_0/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: 0.0
+      origin_y: 0.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 1.0
+      resolution: 0.05
+      robot_base_frame: p3dx_0/base_link
+      robot_radius: 0.2275
+      rolling_window: true
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 6
+    make_plan_add_unreachable_goal: true
+    make_plan_clear_costmap: true
+    max_planning_retries: -1
+    oscillation_distance: 0.5
+    oscillation_timeout: 0.0
+    planner_frequency: 0.0
+    planner_patience: 5.0
+    recovery_behavior_enabled: true
+    recovery_behaviors:
+    - name: rotate_recovery
+      type: rotate_recovery/RotateRecovery
+    restore_defaults: false
+    shutdown_costmaps: false
+  p3dx_0_robot:
+    init_pose_x: -36.5
+    init_pose_y: 36.5
+  robot_description: "<?xml version=\"1.0\" ?>\n<!-- ===================================================================================\
+    \ -->\n<!-- |    This document was autogenerated by xacro from /home/fede/catkin_ws/src/pioneer_p3dx_model/p3dx_description/urdf/pioneer3dx.xacro\
+    \ | -->\n<!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED              \
+    \                   | -->\n<!-- ===================================================================================\
+    \ -->\n<!-- \nThis is the xacro description of a Pioneer 3DX, to be used in rviz\
+    \ and gazebo.\nCopyright (C) 2013 Rafael Berkvens rafael.berkvens@uantwerpen.be\n\
+    \nThis program is free software: you can redistribute it and/or modify\nit under\
+    \ the terms of the GNU General Public License as published by\nthe Free Software\
+    \ Foundation, either version 3 of the License, or\n(at your option) any later\
+    \ version.\n\nThis program is distributed in the hope that it will be useful,\n\
+    but WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY\
+    \ or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for\
+    \ more details.\n\nYou should have received a copy of the GNU General Public License\n\
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nThis\
+    \ project is based on work by Tracy Davies, where it was in turn based on\nwork\
+    \ original in ucs-ros-pkg.\n -->\n<robot name=\"pioneer3dx\">\n  <!-- properties\
+    \ (constants) -->\n  <property name=\"ns\" value=\"p3dx\"/>\n  <!-- ros_control\
+    \ plugin -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_control.so\" name=\"\
+    gazebo_ros_control\">\n      <!--<robotNamespace>/${ns}</robotNamespace>-->\n\
+    \    </plugin>\n  </gazebo>\n  <!-- base_link -->\n  <gazebo reference=\"base_link\"\
+    >\n    <material>Gazebo/Red</material>\n  </gazebo>\n  <!-- top_plate -->\n  <gazebo\
+    \ reference=\"top_plate\">\n    <material>Gazebo/Black</material>\n  </gazebo>\n\
+    \  <!-- swivel -->\n  <gazebo reference=\"swivel\">\n    <material>Gazebo/Grey</material>\n\
+    \  </gazebo>\n  <!-- center_hubcap -->\n  <gazebo reference=\"center_hubcap\"\
+    >\n    <material>Gazebo/Grey</material>\n  </gazebo>\n  <!-- center_wheel -->\n\
+    \  <gazebo reference=\"center_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.0</mu1>\n    <mu2>0.0</mu2>\n    <kp>1000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <gazebo reference=\"front_sonar\">\n \
+    \   <material value=\"Gazebo/Yellow\"/>\n  </gazebo>\n  <!-- differential drive\
+    \ -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_diff_drive.so\" name=\"\
+    differential_drive_controller\">\n      <alwaysOn>true</alwaysOn>\n      <updateRate>50</updateRate>\n\
+    \      <leftJoint>base_right_wheel_joint</leftJoint>\n      <rightJoint>base_left_wheel_joint</rightJoint>\n\
+    \      <wheelSeparation>0.314</wheelSeparation>\n      <wheelDiameter>0.179</wheelDiameter>\n\
+    \      <torque>5</torque>\n      <commandTopic>cmd_vel</commandTopic>\n      <publishOdom>true</publishOdom>\n\
+    \      <odometryTopic>odom</odometryTopic>\n      <odometryFrame>odom</odometryFrame>\n\
+    \      <robotBaseFrame>base_link</robotBaseFrame>\n      <!-- <publishWheelTF>true</publishWheelTF>\
+    \ -->\n      <publishWheelTF>false</publishWheelTF>\n      <publishWheelJointState>true</publishWheelJointState>\n\
+    \      <wheelAcceleration>0</wheelAcceleration>\n      <wheelTorque>5</wheelTorque>\n\
+    \      <rosDebugLevel>na</rosDebugLevel>\n      <publishTf>1</publishTf>\n   \
+    \   <legacyMode>false</legacyMode>\n    </plugin>\n  </gazebo>\n  <!-- ground\
+    \ truth : not needed as for now odometry provided from differential drive plugin\
+    \ above is perfect -->\n  <!-- <gazebo> -->\n  <!-- \t<plugin name=\"p3d_base_controller\"\
+    \ filename=\"libgazebo_ros_p3d.so\"> -->\n  <!-- \t\t<alwaysOn>true</alwaysOn>\
+    \ -->\n  <!-- \t\t<updateRate>50.0</updateRate> -->\n  <!-- \t\t<bodyName>base_link</bodyName>\
+    \ -->\n  <!-- \t\t<topicName>odom</topicName> -->\n  <!-- \t\t<gaussianNoise>0.0</gaussianNoise>\
+    \ -->\n  <!-- \t\t<frameName>/map</frameName> -->\n  <!-- \t\t<!-1- initialize\
+    \ odometry for fake localization -1-> -->\n  <!-- \t\t<xyzOffsets>0 0 0</xyzOffsets>\
+    \ -->\n  <!-- \t\t<rpyOffsets>0 0 0</rpyOffsets> -->\n  <!-- \t</plugin> -->\n\
+    \  <!-- </gazebo> -->\n  <!-- lms100 -->\n  <gazebo reference=\"lms100\">\n  \
+    \  <sensor name=\"head_hokuyo_sensor\" type=\"gpu_ray\">\n      <!-- based on:\
+    \ Hokuyo URG-04LX-UG01 (but with a 360 scan angle, perfect accuracy and perfect\
+    \ precision) -->\n      <!-- https://www.hokuyo-aut.jp/search/single.php?serial=164\
+    \ -->\n      <pose>0 0 0 0 0 0</pose>\n      <visualize>false</visualize>\n  \
+    \    <update_rate>10</update_rate>\n      <!-- 100msec/scan from a max of 28msec/scan\
+    \ -->\n      <ray>\n        <scan>\n          <horizontal>\n            <samples>1000</samples>\n\
+    \            <!-- Angular resolution: 0.36\xB0 (360\xB0/1000) -->\n          \
+    \  <resolution>2</resolution>\n            <!-- Interpolate 1000 extra samples\
+    \ (http://sdformat.org/spec?ver=1.6&elem=sensor#horizontal_resolution) -->\n \
+    \           <min_angle>-3.1416</min_angle>\n            <max_angle>3.1416</max_angle>\n\
+    \          </horizontal>\n        </scan>\n        <range>\n          <min>0.04</min>\n\
+    \          <!-- Actual min is 0.002 but is too low and detects the robot as an\
+    \ obstacle -->\n          <max>6.0</max>\n          <!-- messurements higher than\
+    \ 5.6m are discarded when mapping, using this larger max value due to gazebo giving\
+    \ weird results when using 5.6 but also when using 4.6, while 5.0 worked fine\
+    \ as 6.0 did, is there a bug in the plugin when using non integer max? -->\n \
+    \         <resolution>0.001</resolution>\n        </range>\n        <noise>\n\
+    \          <type>gaussian</type>\n          <!-- \t<!-1- Noise parameters based\
+    \ on published spec for Hokuyo laser achieving -->\n          <!-- \t\t\"+-30mm\"\
+    \ accuracy at range < 10m. A mean of 0.0m and stddev of 0.01m will -->\n     \
+    \     <!-- \t\tput 99.7% of samples within 0.03m of the true reading. -1-> -->\n\
+    \          <mean>0.0</mean>\n          <stddev>0.0</stddev>\n        </noise>\n\
+    \      </ray>\n      <plugin filename=\"libgazebo_ros_gpu_laser.so\" name=\"gazebo_ros_head_hokuyo_controller\"\
+    >\n        <topicName>laser/scan</topicName>\n        <frameName>lms100</frameName>\n\
+    \      </plugin>\n    </sensor>\n  </gazebo>\n  <!-- chassis -->\n  <link name=\"\
+    base_link\">\n    <inertial>\n      <mass value=\"3.5\"/>\n      <!--<origin xyz=\"\
+    -0.025 0 -0.223\"/> -->\n      <origin xyz=\"-0.05 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.148\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/chassis.stl\"\
+    />\n      </geometry>\n      <material name=\"ChassisRed\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.145\"/>\n     \
+    \ <geometry>\n        <box size=\"0.35 0.25 0.14\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <!-- top_plate -->\n  <link name=\"top_plate\">\n    <inertial>\n\
+    \      <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    top_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/top.stl\"\
+    />\n      </geometry>\n      <material name=\"TopBlack\"/>\n    </visual>\n  \
+    \  <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0.0 0 0\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <box size=\"0.45 0.38 0.01\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_top_joint\" type=\"fixed\"\
+    >\n    <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.234\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"top_plate\"/>\n  </joint>\n  <!-- swivel -->\n  <link name=\"\
+    swivel\">\n    <inertial>\n      <mass value=\"0.1\"/>\n      <origin xyz=\"0\
+    \ 0 0\"/>\n      <inertia ixx=\"0.01\" ixy=\"0\" ixz=\"0\" iyy=\"0.01\" iyz=\"\
+    0\" izz=\"0.01\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/swivel.stl\"/>\n      </geometry>\n      <material\
+    \ name=\"swivel\"/>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.00001 0.00001 0.00001\"\
+    />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"base_swivel_joint\"\
+    \ type=\"fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"-0.185 0 0.055\"/>\n    <axis\
+    \ xyz=\"0 0 1\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"\
+    0\" velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"\
+    />\n    <parent link=\"base_link\"/>\n    <child link=\"swivel\"/>\n  </joint>\n\
+    \  <!-- center_hubcap -->\n  <link name=\"center_hubcap\">\n    <inertial>\n \
+    \     <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"-0.000711733678\" ixz=\"0.00050272983\" iyy=\"0.015218160428\"\
+    \ iyz=\"-0.000004273467\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\"\
+    >\n        <mesh filename=\"package://p3dx_description/meshes/center_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"swivel\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"\
+    0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n  </link>\n\
+    \  <joint name=\"swivel_hubcap_joint\" type=\"fixed\">\n    <origin rpy=\"0 0\
+    \ 0\" xyz=\"-0.026 0 -0.016\"/>\n    <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"\
+    0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"0\" velocity=\"100\"/>\n   \
+    \ <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n    <parent link=\"swivel\"\
+    />\n    <child link=\"center_wheel\"/>\n  </joint>\n  <!-- center_wheel -->\n\
+    \  <link name=\"center_wheel\">\n    <inertial>\n      <mass value=\"1.0\"/>\n\
+    \      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"-0.000711733678\"\
+    \ ixz=\"0.00050272983\" iyy=\"0.015218160428\" iyz=\"-0.000004273467\" izz=\"\
+    0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/center_wheel.stl\"/>\n      </geometry>\n  \
+    \    <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n      <origin\
+    \ rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <cylinder\
+    \ length=\"0.01\" radius=\"0.0375\"/>\n      </geometry>\n    </collision>\n \
+    \ </link>\n  <joint name=\"center_wheel_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"-0.0035 0 -0.001\"/>\n    <parent link=\"center_wheel\"/>\n    <child\
+    \ link=\"center_hubcap\"/>\n  </joint>\n  <!-- wheel -->\n  <link name=\"p3dx_left_wheel\"\
+    >\n    <inertial>\n      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n\
+    \      <inertia ixx=\"0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\"\
+    \ iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n    \
+    \    <mesh filename=\"package://p3dx_description/meshes/left_wheel.stl\"/>\n \
+    \     </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n   \
+    \     <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_left_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_left_wheel\"\
+    />\n    <child link=\"p3dx_left_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n  <link\
+    \ name=\"p3dx_left_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"/>\n \
+    \     <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"0\"\
+    \ ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/left_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_left_wheel_joint\" type=\"continuous\">\n   \
+    \ <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 -0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_left_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_left_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_left_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_left_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>-75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_left_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_left_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- wheel -->\n  <link name=\"p3dx_right_wheel\">\n    <inertial>\n\
+    \      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"\
+    />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+    \      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_wheel.stl\"\
+    />\n      </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n    \
+    \  <geometry>\n        <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_right_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_right_wheel\"\
+    />\n    <child link=\"p3dx_right_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n \
+    \ <link name=\"p3dx_right_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"\
+    />\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"\
+    0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_right_wheel_joint\" type=\"continuous\">\n  \
+    \  <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_right_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_right_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_right_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_right_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_right_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_right_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <link name=\"front_sonar\">\n    <inertial>\n\
+    \      <mass value=\"0.0001\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia\
+    \ ixx=\"1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/front_sonar.stl\"\
+    />\n      </geometry>\n      <material name=\"SonarYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_front_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"0.109 0 0.209\"/>\n    <parent link=\"base_link\"/>\n    <child\
+    \ link=\"front_sonar\"/>\n  </joint>\n  <!-- lms100 laser -->\n  <link name=\"\
+    lms100\">\n    <inertial>\n      <mass value=\"1e-5\"/>\n      <origin rpy=\"\
+    0 0 0\" xyz=\"0 0 0\"/>\n      <inertia ixx=\"1e-6\" ixy=\"0\" ixz=\"0\" iyy=\"\
+    1e-6\" iyz=\"0\" izz=\"1e-6\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://p3dx_description/meshes/lms100.dae\"\
+    />\n      </geometry>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0\
+    \ 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.1 0.1 0.1\"/>\n\
+    \      </geometry>\n    </collision>\n  </link>\n  <joint name=\"lms100_joint\"\
+    \ type=\"fixed\">\n    <axis xyz=\"0 1 0\"/>\n    <origin rpy=\"0 0 0\" xyz=\"\
+    0.12 0 0.26\"/>\n    <parent link=\"base_link\"/>\n    <child link=\"lms100\"\
+    />\n  </joint>\n</robot>\n\n"
+  tf_prefix: p3dx_0
+p3dx_1:
+  joint1_position_controller:
+    joint: base_left_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint2_position_controller:
+    joint: base_right_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint_state_controller:
+    publish_rate: 50
+    type: joint_state_controller/JointStateController
+  move_base:
+    GlobalPlanner:
+      allow_unknown: true
+      cost_factor: 3.0
+      lethal_cost: 50
+      neutral_cost: 25
+      orientation_mode: 1
+      orientation_window_size: 1
+      outline_map: false
+      publish_potential: true
+      use_dijkstra: false
+      use_grid_path: true
+    TebLocalPlannerROS:
+      acc_lim_theta: 1.6
+      acc_lim_x: 0.5
+      acc_lim_y: 0.01
+      allow_init_with_backwards_motion: false
+      cmd_angle_instead_rotvel: false
+      costmap_obstacles_behind_robot_dist: 1.5
+      dt_hysteresis: 0.03
+      dt_ref: 0.3
+      dynamic_obstacle_inflation_dist: 0.6
+      enable_homotopy_class_planning: false
+      enable_multithreading: true
+      exact_arc_length: true
+      feasibility_check_no_poses: 5
+      footprint_model:
+        radius: 0.2275
+        type: circular
+      force_reinit_new_goal_angular: 0.78
+      force_reinit_new_goal_dist: 1.0
+      free_goal_vel: true
+      global_plan_overwrite_orientation: true
+      global_plan_viapoint_sep: -0.1
+      h_signature_prescaler: 1.0
+      h_signature_threshold: 0.1
+      include_costmap_obstacles: true
+      include_dynamic_obstacles: false
+      inflation_dist: 1.5
+      is_footprint_dynamic: false
+      legacy_obstacle_association: false
+      max_global_plan_lookahead_dist: 10.0
+      max_number_classes: 5
+      max_vel_theta: 3.2
+      max_vel_x: 1.2
+      max_vel_x_backwards: 1.2
+      max_vel_y: 0.0
+      min_obstacle_dist: 0.125
+      min_turning_radius: 0.0
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      obstacle_association_cutoff_factor: 5.0
+      obstacle_association_force_inclusion_factor: 1.5
+      obstacle_cost_exponent: 1.0
+      obstacle_heading_threshold: 0.45
+      obstacle_poses_affected: 30
+      optimization_activate: true
+      optimization_verbose: false
+      oscillation_recovery: true
+      penalty_epsilon: 0.05
+      publish_feedback: false
+      roadmap_graph_area_length_scale: 1.0
+      roadmap_graph_area_width: 5.0
+      roadmap_graph_no_samples: 15
+      selection_alternative_time_cost: false
+      selection_cost_hysteresis: 1.0
+      selection_obst_cost_scale: 2.0
+      selection_prefer_initial_plan: 0.95
+      selection_viapoint_cost_scale: 1.0
+      shrink_horizon_backup: true
+      switching_blocking_period: 0.0
+      teb_autosize: true
+      via_points_ordered: false
+      viapoints_all_candidates: true
+      visualize_hc_graph: false
+      visualize_with_time_as_z_axis_scale: 0.0
+      weight_acc_lim_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_y: 1.0
+      weight_adapt_factor: 2.0
+      weight_dynamic_obstacle: 50.0
+      weight_dynamic_obstacle_inflation: 0.1
+      weight_inflation: 0.1
+      weight_kinematics_forward_drive: 1.0
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_turning_radius: 1.0
+      weight_max_vel_theta: 1.0
+      weight_max_vel_x: 2.0
+      weight_max_vel_y: 2.0
+      weight_obstacle: 50.0
+      weight_optimaltime: 1.0
+      weight_shortest_path: 0.0
+      weight_viapoint: 1.0
+      wheelbase: 1.0
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 3.2
+    base_global_planner: global_planner/GlobalPlanner
+    base_local_planner: teb_local_planner/TebLocalPlannerROS
+    clearing_rotation_allowed: true
+    conservative_reset_dist: 3.0
+    controller_frequency: 20.0
+    controller_patience: 5.0
+    global_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: map
+      height: 128
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_1/lms100
+          topic: /p3dx_1/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: -64.0
+      origin_y: -64.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 5.0
+      resolution: 0.25
+      robot_base_frame: p3dx_1/base_link
+      robot_radius: 0.2275
+      rolling_window: false
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 128
+    local_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: p3dx_1/odom
+      height: 6
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_1/lms100
+          topic: /p3dx_1/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: 0.0
+      origin_y: 0.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 1.0
+      resolution: 0.05
+      robot_base_frame: p3dx_1/base_link
+      robot_radius: 0.2275
+      rolling_window: true
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 6
+    make_plan_add_unreachable_goal: true
+    make_plan_clear_costmap: true
+    max_planning_retries: -1
+    oscillation_distance: 0.5
+    oscillation_timeout: 0.0
+    planner_frequency: 0.0
+    planner_patience: 5.0
+    recovery_behavior_enabled: true
+    recovery_behaviors:
+    - name: rotate_recovery
+      type: rotate_recovery/RotateRecovery
+    restore_defaults: false
+    shutdown_costmaps: false
+  p3dx_1_robot:
+    init_pose_x: -36.5
+    init_pose_y: 29.5
+  robot_description: "<?xml version=\"1.0\" ?>\n<!-- ===================================================================================\
+    \ -->\n<!-- |    This document was autogenerated by xacro from /home/fede/catkin_ws/src/pioneer_p3dx_model/p3dx_description/urdf/pioneer3dx.xacro\
+    \ | -->\n<!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED              \
+    \                   | -->\n<!-- ===================================================================================\
+    \ -->\n<!-- \nThis is the xacro description of a Pioneer 3DX, to be used in rviz\
+    \ and gazebo.\nCopyright (C) 2013 Rafael Berkvens rafael.berkvens@uantwerpen.be\n\
+    \nThis program is free software: you can redistribute it and/or modify\nit under\
+    \ the terms of the GNU General Public License as published by\nthe Free Software\
+    \ Foundation, either version 3 of the License, or\n(at your option) any later\
+    \ version.\n\nThis program is distributed in the hope that it will be useful,\n\
+    but WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY\
+    \ or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for\
+    \ more details.\n\nYou should have received a copy of the GNU General Public License\n\
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nThis\
+    \ project is based on work by Tracy Davies, where it was in turn based on\nwork\
+    \ original in ucs-ros-pkg.\n -->\n<robot name=\"pioneer3dx\">\n  <!-- properties\
+    \ (constants) -->\n  <property name=\"ns\" value=\"p3dx\"/>\n  <!-- ros_control\
+    \ plugin -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_control.so\" name=\"\
+    gazebo_ros_control\">\n      <!--<robotNamespace>/${ns}</robotNamespace>-->\n\
+    \    </plugin>\n  </gazebo>\n  <!-- base_link -->\n  <gazebo reference=\"base_link\"\
+    >\n    <material>Gazebo/Red</material>\n  </gazebo>\n  <!-- top_plate -->\n  <gazebo\
+    \ reference=\"top_plate\">\n    <material>Gazebo/Black</material>\n  </gazebo>\n\
+    \  <!-- swivel -->\n  <gazebo reference=\"swivel\">\n    <material>Gazebo/Grey</material>\n\
+    \  </gazebo>\n  <!-- center_hubcap -->\n  <gazebo reference=\"center_hubcap\"\
+    >\n    <material>Gazebo/Grey</material>\n  </gazebo>\n  <!-- center_wheel -->\n\
+    \  <gazebo reference=\"center_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.0</mu1>\n    <mu2>0.0</mu2>\n    <kp>1000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <gazebo reference=\"front_sonar\">\n \
+    \   <material value=\"Gazebo/Yellow\"/>\n  </gazebo>\n  <!-- differential drive\
+    \ -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_diff_drive.so\" name=\"\
+    differential_drive_controller\">\n      <alwaysOn>true</alwaysOn>\n      <updateRate>50</updateRate>\n\
+    \      <leftJoint>base_right_wheel_joint</leftJoint>\n      <rightJoint>base_left_wheel_joint</rightJoint>\n\
+    \      <wheelSeparation>0.314</wheelSeparation>\n      <wheelDiameter>0.179</wheelDiameter>\n\
+    \      <torque>5</torque>\n      <commandTopic>cmd_vel</commandTopic>\n      <publishOdom>true</publishOdom>\n\
+    \      <odometryTopic>odom</odometryTopic>\n      <odometryFrame>odom</odometryFrame>\n\
+    \      <robotBaseFrame>base_link</robotBaseFrame>\n      <!-- <publishWheelTF>true</publishWheelTF>\
+    \ -->\n      <publishWheelTF>false</publishWheelTF>\n      <publishWheelJointState>true</publishWheelJointState>\n\
+    \      <wheelAcceleration>0</wheelAcceleration>\n      <wheelTorque>5</wheelTorque>\n\
+    \      <rosDebugLevel>na</rosDebugLevel>\n      <publishTf>1</publishTf>\n   \
+    \   <legacyMode>false</legacyMode>\n    </plugin>\n  </gazebo>\n  <!-- ground\
+    \ truth : not needed as for now odometry provided from differential drive plugin\
+    \ above is perfect -->\n  <!-- <gazebo> -->\n  <!-- \t<plugin name=\"p3d_base_controller\"\
+    \ filename=\"libgazebo_ros_p3d.so\"> -->\n  <!-- \t\t<alwaysOn>true</alwaysOn>\
+    \ -->\n  <!-- \t\t<updateRate>50.0</updateRate> -->\n  <!-- \t\t<bodyName>base_link</bodyName>\
+    \ -->\n  <!-- \t\t<topicName>odom</topicName> -->\n  <!-- \t\t<gaussianNoise>0.0</gaussianNoise>\
+    \ -->\n  <!-- \t\t<frameName>/map</frameName> -->\n  <!-- \t\t<!-1- initialize\
+    \ odometry for fake localization -1-> -->\n  <!-- \t\t<xyzOffsets>0 0 0</xyzOffsets>\
+    \ -->\n  <!-- \t\t<rpyOffsets>0 0 0</rpyOffsets> -->\n  <!-- \t</plugin> -->\n\
+    \  <!-- </gazebo> -->\n  <!-- lms100 -->\n  <gazebo reference=\"lms100\">\n  \
+    \  <sensor name=\"head_hokuyo_sensor\" type=\"gpu_ray\">\n      <!-- based on:\
+    \ Hokuyo URG-04LX-UG01 (but with a 360 scan angle, perfect accuracy and perfect\
+    \ precision) -->\n      <!-- https://www.hokuyo-aut.jp/search/single.php?serial=164\
+    \ -->\n      <pose>0 0 0 0 0 0</pose>\n      <visualize>false</visualize>\n  \
+    \    <update_rate>10</update_rate>\n      <!-- 100msec/scan from a max of 28msec/scan\
+    \ -->\n      <ray>\n        <scan>\n          <horizontal>\n            <samples>1000</samples>\n\
+    \            <!-- Angular resolution: 0.36\xB0 (360\xB0/1000) -->\n          \
+    \  <resolution>2</resolution>\n            <!-- Interpolate 1000 extra samples\
+    \ (http://sdformat.org/spec?ver=1.6&elem=sensor#horizontal_resolution) -->\n \
+    \           <min_angle>-3.1416</min_angle>\n            <max_angle>3.1416</max_angle>\n\
+    \          </horizontal>\n        </scan>\n        <range>\n          <min>0.04</min>\n\
+    \          <!-- Actual min is 0.002 but is too low and detects the robot as an\
+    \ obstacle -->\n          <max>6.0</max>\n          <!-- messurements higher than\
+    \ 5.6m are discarded when mapping, using this larger max value due to gazebo giving\
+    \ weird results when using 5.6 but also when using 4.6, while 5.0 worked fine\
+    \ as 6.0 did, is there a bug in the plugin when using non integer max? -->\n \
+    \         <resolution>0.001</resolution>\n        </range>\n        <noise>\n\
+    \          <type>gaussian</type>\n          <!-- \t<!-1- Noise parameters based\
+    \ on published spec for Hokuyo laser achieving -->\n          <!-- \t\t\"+-30mm\"\
+    \ accuracy at range < 10m. A mean of 0.0m and stddev of 0.01m will -->\n     \
+    \     <!-- \t\tput 99.7% of samples within 0.03m of the true reading. -1-> -->\n\
+    \          <mean>0.0</mean>\n          <stddev>0.0</stddev>\n        </noise>\n\
+    \      </ray>\n      <plugin filename=\"libgazebo_ros_gpu_laser.so\" name=\"gazebo_ros_head_hokuyo_controller\"\
+    >\n        <topicName>laser/scan</topicName>\n        <frameName>lms100</frameName>\n\
+    \      </plugin>\n    </sensor>\n  </gazebo>\n  <!-- chassis -->\n  <link name=\"\
+    base_link\">\n    <inertial>\n      <mass value=\"3.5\"/>\n      <!--<origin xyz=\"\
+    -0.025 0 -0.223\"/> -->\n      <origin xyz=\"-0.05 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.148\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/chassis.stl\"\
+    />\n      </geometry>\n      <material name=\"ChassisRed\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.145\"/>\n     \
+    \ <geometry>\n        <box size=\"0.35 0.25 0.14\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <!-- top_plate -->\n  <link name=\"top_plate\">\n    <inertial>\n\
+    \      <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    top_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/top.stl\"\
+    />\n      </geometry>\n      <material name=\"TopBlack\"/>\n    </visual>\n  \
+    \  <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0.0 0 0\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <box size=\"0.45 0.38 0.01\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_top_joint\" type=\"fixed\"\
+    >\n    <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.234\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"top_plate\"/>\n  </joint>\n  <!-- swivel -->\n  <link name=\"\
+    swivel\">\n    <inertial>\n      <mass value=\"0.1\"/>\n      <origin xyz=\"0\
+    \ 0 0\"/>\n      <inertia ixx=\"0.01\" ixy=\"0\" ixz=\"0\" iyy=\"0.01\" iyz=\"\
+    0\" izz=\"0.01\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/swivel.stl\"/>\n      </geometry>\n      <material\
+    \ name=\"swivel\"/>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.00001 0.00001 0.00001\"\
+    />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"base_swivel_joint\"\
+    \ type=\"fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"-0.185 0 0.055\"/>\n    <axis\
+    \ xyz=\"0 0 1\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"\
+    0\" velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"\
+    />\n    <parent link=\"base_link\"/>\n    <child link=\"swivel\"/>\n  </joint>\n\
+    \  <!-- center_hubcap -->\n  <link name=\"center_hubcap\">\n    <inertial>\n \
+    \     <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"-0.000711733678\" ixz=\"0.00050272983\" iyy=\"0.015218160428\"\
+    \ iyz=\"-0.000004273467\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\"\
+    >\n        <mesh filename=\"package://p3dx_description/meshes/center_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"swivel\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"\
+    0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n  </link>\n\
+    \  <joint name=\"swivel_hubcap_joint\" type=\"fixed\">\n    <origin rpy=\"0 0\
+    \ 0\" xyz=\"-0.026 0 -0.016\"/>\n    <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"\
+    0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"0\" velocity=\"100\"/>\n   \
+    \ <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n    <parent link=\"swivel\"\
+    />\n    <child link=\"center_wheel\"/>\n  </joint>\n  <!-- center_wheel -->\n\
+    \  <link name=\"center_wheel\">\n    <inertial>\n      <mass value=\"1.0\"/>\n\
+    \      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"-0.000711733678\"\
+    \ ixz=\"0.00050272983\" iyy=\"0.015218160428\" iyz=\"-0.000004273467\" izz=\"\
+    0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/center_wheel.stl\"/>\n      </geometry>\n  \
+    \    <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n      <origin\
+    \ rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <cylinder\
+    \ length=\"0.01\" radius=\"0.0375\"/>\n      </geometry>\n    </collision>\n \
+    \ </link>\n  <joint name=\"center_wheel_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"-0.0035 0 -0.001\"/>\n    <parent link=\"center_wheel\"/>\n    <child\
+    \ link=\"center_hubcap\"/>\n  </joint>\n  <!-- wheel -->\n  <link name=\"p3dx_left_wheel\"\
+    >\n    <inertial>\n      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n\
+    \      <inertia ixx=\"0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\"\
+    \ iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n    \
+    \    <mesh filename=\"package://p3dx_description/meshes/left_wheel.stl\"/>\n \
+    \     </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n   \
+    \     <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_left_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_left_wheel\"\
+    />\n    <child link=\"p3dx_left_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n  <link\
+    \ name=\"p3dx_left_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"/>\n \
+    \     <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"0\"\
+    \ ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/left_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_left_wheel_joint\" type=\"continuous\">\n   \
+    \ <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 -0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_left_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_left_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_left_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_left_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>-75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_left_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_left_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- wheel -->\n  <link name=\"p3dx_right_wheel\">\n    <inertial>\n\
+    \      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"\
+    />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+    \      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_wheel.stl\"\
+    />\n      </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n    \
+    \  <geometry>\n        <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_right_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_right_wheel\"\
+    />\n    <child link=\"p3dx_right_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n \
+    \ <link name=\"p3dx_right_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"\
+    />\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"\
+    0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_right_wheel_joint\" type=\"continuous\">\n  \
+    \  <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_right_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_right_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_right_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_right_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_right_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_right_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <link name=\"front_sonar\">\n    <inertial>\n\
+    \      <mass value=\"0.0001\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia\
+    \ ixx=\"1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/front_sonar.stl\"\
+    />\n      </geometry>\n      <material name=\"SonarYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_front_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"0.109 0 0.209\"/>\n    <parent link=\"base_link\"/>\n    <child\
+    \ link=\"front_sonar\"/>\n  </joint>\n  <!-- lms100 laser -->\n  <link name=\"\
+    lms100\">\n    <inertial>\n      <mass value=\"1e-5\"/>\n      <origin rpy=\"\
+    0 0 0\" xyz=\"0 0 0\"/>\n      <inertia ixx=\"1e-6\" ixy=\"0\" ixz=\"0\" iyy=\"\
+    1e-6\" iyz=\"0\" izz=\"1e-6\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://p3dx_description/meshes/lms100.dae\"\
+    />\n      </geometry>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0\
+    \ 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.1 0.1 0.1\"/>\n\
+    \      </geometry>\n    </collision>\n  </link>\n  <joint name=\"lms100_joint\"\
+    \ type=\"fixed\">\n    <axis xyz=\"0 1 0\"/>\n    <origin rpy=\"0 0 0\" xyz=\"\
+    0.12 0 0.26\"/>\n    <parent link=\"base_link\"/>\n    <child link=\"lms100\"\
+    />\n  </joint>\n</robot>\n\n"
+  tf_prefix: p3dx_1
+p3dx_2:
+  joint1_position_controller:
+    joint: base_left_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint2_position_controller:
+    joint: base_right_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint_state_controller:
+    publish_rate: 50
+    type: joint_state_controller/JointStateController
+  move_base:
+    GlobalPlanner:
+      allow_unknown: true
+      cost_factor: 3.0
+      lethal_cost: 50
+      neutral_cost: 25
+      orientation_mode: 1
+      orientation_window_size: 1
+      outline_map: false
+      publish_potential: true
+      use_dijkstra: false
+      use_grid_path: true
+    TebLocalPlannerROS:
+      acc_lim_theta: 1.6
+      acc_lim_x: 0.5
+      acc_lim_y: 0.01
+      allow_init_with_backwards_motion: false
+      cmd_angle_instead_rotvel: false
+      costmap_obstacles_behind_robot_dist: 1.5
+      dt_hysteresis: 0.03
+      dt_ref: 0.3
+      dynamic_obstacle_inflation_dist: 0.6
+      enable_homotopy_class_planning: false
+      enable_multithreading: true
+      exact_arc_length: true
+      feasibility_check_no_poses: 5
+      footprint_model:
+        radius: 0.2275
+        type: circular
+      force_reinit_new_goal_angular: 0.78
+      force_reinit_new_goal_dist: 1.0
+      free_goal_vel: true
+      global_plan_overwrite_orientation: true
+      global_plan_viapoint_sep: -0.1
+      h_signature_prescaler: 1.0
+      h_signature_threshold: 0.1
+      include_costmap_obstacles: true
+      include_dynamic_obstacles: false
+      inflation_dist: 1.5
+      is_footprint_dynamic: false
+      legacy_obstacle_association: false
+      max_global_plan_lookahead_dist: 10.0
+      max_number_classes: 5
+      max_vel_theta: 3.2
+      max_vel_x: 1.2
+      max_vel_x_backwards: 1.2
+      max_vel_y: 0.0
+      min_obstacle_dist: 0.125
+      min_turning_radius: 0.0
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      obstacle_association_cutoff_factor: 5.0
+      obstacle_association_force_inclusion_factor: 1.5
+      obstacle_cost_exponent: 1.0
+      obstacle_heading_threshold: 0.45
+      obstacle_poses_affected: 30
+      optimization_activate: true
+      optimization_verbose: false
+      oscillation_recovery: true
+      penalty_epsilon: 0.05
+      publish_feedback: false
+      roadmap_graph_area_length_scale: 1.0
+      roadmap_graph_area_width: 5.0
+      roadmap_graph_no_samples: 15
+      selection_alternative_time_cost: false
+      selection_cost_hysteresis: 1.0
+      selection_obst_cost_scale: 2.0
+      selection_prefer_initial_plan: 0.95
+      selection_viapoint_cost_scale: 1.0
+      shrink_horizon_backup: true
+      switching_blocking_period: 0.0
+      teb_autosize: true
+      via_points_ordered: false
+      viapoints_all_candidates: true
+      visualize_hc_graph: false
+      visualize_with_time_as_z_axis_scale: 0.0
+      weight_acc_lim_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_y: 1.0
+      weight_adapt_factor: 2.0
+      weight_dynamic_obstacle: 50.0
+      weight_dynamic_obstacle_inflation: 0.1
+      weight_inflation: 0.1
+      weight_kinematics_forward_drive: 1.0
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_turning_radius: 1.0
+      weight_max_vel_theta: 1.0
+      weight_max_vel_x: 2.0
+      weight_max_vel_y: 2.0
+      weight_obstacle: 50.0
+      weight_optimaltime: 1.0
+      weight_shortest_path: 0.0
+      weight_viapoint: 1.0
+      wheelbase: 1.0
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 3.2
+    base_global_planner: global_planner/GlobalPlanner
+    base_local_planner: teb_local_planner/TebLocalPlannerROS
+    clearing_rotation_allowed: true
+    conservative_reset_dist: 3.0
+    controller_frequency: 20.0
+    controller_patience: 5.0
+    global_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: map
+      height: 128
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_2/lms100
+          topic: /p3dx_2/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: -64.0
+      origin_y: -64.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 5.0
+      resolution: 0.25
+      robot_base_frame: p3dx_2/base_link
+      robot_radius: 0.2275
+      rolling_window: false
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 128
+    local_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: p3dx_2/odom
+      height: 6
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_2/lms100
+          topic: /p3dx_2/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: 0.0
+      origin_y: 0.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 1.0
+      resolution: 0.05
+      robot_base_frame: p3dx_2/base_link
+      robot_radius: 0.2275
+      rolling_window: true
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 6
+    make_plan_add_unreachable_goal: true
+    make_plan_clear_costmap: true
+    max_planning_retries: -1
+    oscillation_distance: 0.5
+    oscillation_timeout: 0.0
+    planner_frequency: 0.0
+    planner_patience: 5.0
+    recovery_behavior_enabled: true
+    recovery_behaviors:
+    - name: rotate_recovery
+      type: rotate_recovery/RotateRecovery
+    restore_defaults: false
+    shutdown_costmaps: false
+  p3dx_2_robot:
+    init_pose_x: -36.5
+    init_pose_y: 22.5
+  robot_description: "<?xml version=\"1.0\" ?>\n<!-- ===================================================================================\
+    \ -->\n<!-- |    This document was autogenerated by xacro from /home/fede/catkin_ws/src/pioneer_p3dx_model/p3dx_description/urdf/pioneer3dx.xacro\
+    \ | -->\n<!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED              \
+    \                   | -->\n<!-- ===================================================================================\
+    \ -->\n<!-- \nThis is the xacro description of a Pioneer 3DX, to be used in rviz\
+    \ and gazebo.\nCopyright (C) 2013 Rafael Berkvens rafael.berkvens@uantwerpen.be\n\
+    \nThis program is free software: you can redistribute it and/or modify\nit under\
+    \ the terms of the GNU General Public License as published by\nthe Free Software\
+    \ Foundation, either version 3 of the License, or\n(at your option) any later\
+    \ version.\n\nThis program is distributed in the hope that it will be useful,\n\
+    but WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY\
+    \ or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for\
+    \ more details.\n\nYou should have received a copy of the GNU General Public License\n\
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nThis\
+    \ project is based on work by Tracy Davies, where it was in turn based on\nwork\
+    \ original in ucs-ros-pkg.\n -->\n<robot name=\"pioneer3dx\">\n  <!-- properties\
+    \ (constants) -->\n  <property name=\"ns\" value=\"p3dx\"/>\n  <!-- ros_control\
+    \ plugin -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_control.so\" name=\"\
+    gazebo_ros_control\">\n      <!--<robotNamespace>/${ns}</robotNamespace>-->\n\
+    \    </plugin>\n  </gazebo>\n  <!-- base_link -->\n  <gazebo reference=\"base_link\"\
+    >\n    <material>Gazebo/Red</material>\n  </gazebo>\n  <!-- top_plate -->\n  <gazebo\
+    \ reference=\"top_plate\">\n    <material>Gazebo/Black</material>\n  </gazebo>\n\
+    \  <!-- swivel -->\n  <gazebo reference=\"swivel\">\n    <material>Gazebo/Grey</material>\n\
+    \  </gazebo>\n  <!-- center_hubcap -->\n  <gazebo reference=\"center_hubcap\"\
+    >\n    <material>Gazebo/Grey</material>\n  </gazebo>\n  <!-- center_wheel -->\n\
+    \  <gazebo reference=\"center_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.0</mu1>\n    <mu2>0.0</mu2>\n    <kp>1000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <gazebo reference=\"front_sonar\">\n \
+    \   <material value=\"Gazebo/Yellow\"/>\n  </gazebo>\n  <!-- differential drive\
+    \ -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_diff_drive.so\" name=\"\
+    differential_drive_controller\">\n      <alwaysOn>true</alwaysOn>\n      <updateRate>50</updateRate>\n\
+    \      <leftJoint>base_right_wheel_joint</leftJoint>\n      <rightJoint>base_left_wheel_joint</rightJoint>\n\
+    \      <wheelSeparation>0.314</wheelSeparation>\n      <wheelDiameter>0.179</wheelDiameter>\n\
+    \      <torque>5</torque>\n      <commandTopic>cmd_vel</commandTopic>\n      <publishOdom>true</publishOdom>\n\
+    \      <odometryTopic>odom</odometryTopic>\n      <odometryFrame>odom</odometryFrame>\n\
+    \      <robotBaseFrame>base_link</robotBaseFrame>\n      <!-- <publishWheelTF>true</publishWheelTF>\
+    \ -->\n      <publishWheelTF>false</publishWheelTF>\n      <publishWheelJointState>true</publishWheelJointState>\n\
+    \      <wheelAcceleration>0</wheelAcceleration>\n      <wheelTorque>5</wheelTorque>\n\
+    \      <rosDebugLevel>na</rosDebugLevel>\n      <publishTf>1</publishTf>\n   \
+    \   <legacyMode>false</legacyMode>\n    </plugin>\n  </gazebo>\n  <!-- ground\
+    \ truth : not needed as for now odometry provided from differential drive plugin\
+    \ above is perfect -->\n  <!-- <gazebo> -->\n  <!-- \t<plugin name=\"p3d_base_controller\"\
+    \ filename=\"libgazebo_ros_p3d.so\"> -->\n  <!-- \t\t<alwaysOn>true</alwaysOn>\
+    \ -->\n  <!-- \t\t<updateRate>50.0</updateRate> -->\n  <!-- \t\t<bodyName>base_link</bodyName>\
+    \ -->\n  <!-- \t\t<topicName>odom</topicName> -->\n  <!-- \t\t<gaussianNoise>0.0</gaussianNoise>\
+    \ -->\n  <!-- \t\t<frameName>/map</frameName> -->\n  <!-- \t\t<!-1- initialize\
+    \ odometry for fake localization -1-> -->\n  <!-- \t\t<xyzOffsets>0 0 0</xyzOffsets>\
+    \ -->\n  <!-- \t\t<rpyOffsets>0 0 0</rpyOffsets> -->\n  <!-- \t</plugin> -->\n\
+    \  <!-- </gazebo> -->\n  <!-- lms100 -->\n  <gazebo reference=\"lms100\">\n  \
+    \  <sensor name=\"head_hokuyo_sensor\" type=\"gpu_ray\">\n      <!-- based on:\
+    \ Hokuyo URG-04LX-UG01 (but with a 360 scan angle, perfect accuracy and perfect\
+    \ precision) -->\n      <!-- https://www.hokuyo-aut.jp/search/single.php?serial=164\
+    \ -->\n      <pose>0 0 0 0 0 0</pose>\n      <visualize>false</visualize>\n  \
+    \    <update_rate>10</update_rate>\n      <!-- 100msec/scan from a max of 28msec/scan\
+    \ -->\n      <ray>\n        <scan>\n          <horizontal>\n            <samples>1000</samples>\n\
+    \            <!-- Angular resolution: 0.36\xB0 (360\xB0/1000) -->\n          \
+    \  <resolution>2</resolution>\n            <!-- Interpolate 1000 extra samples\
+    \ (http://sdformat.org/spec?ver=1.6&elem=sensor#horizontal_resolution) -->\n \
+    \           <min_angle>-3.1416</min_angle>\n            <max_angle>3.1416</max_angle>\n\
+    \          </horizontal>\n        </scan>\n        <range>\n          <min>0.04</min>\n\
+    \          <!-- Actual min is 0.002 but is too low and detects the robot as an\
+    \ obstacle -->\n          <max>6.0</max>\n          <!-- messurements higher than\
+    \ 5.6m are discarded when mapping, using this larger max value due to gazebo giving\
+    \ weird results when using 5.6 but also when using 4.6, while 5.0 worked fine\
+    \ as 6.0 did, is there a bug in the plugin when using non integer max? -->\n \
+    \         <resolution>0.001</resolution>\n        </range>\n        <noise>\n\
+    \          <type>gaussian</type>\n          <!-- \t<!-1- Noise parameters based\
+    \ on published spec for Hokuyo laser achieving -->\n          <!-- \t\t\"+-30mm\"\
+    \ accuracy at range < 10m. A mean of 0.0m and stddev of 0.01m will -->\n     \
+    \     <!-- \t\tput 99.7% of samples within 0.03m of the true reading. -1-> -->\n\
+    \          <mean>0.0</mean>\n          <stddev>0.0</stddev>\n        </noise>\n\
+    \      </ray>\n      <plugin filename=\"libgazebo_ros_gpu_laser.so\" name=\"gazebo_ros_head_hokuyo_controller\"\
+    >\n        <topicName>laser/scan</topicName>\n        <frameName>lms100</frameName>\n\
+    \      </plugin>\n    </sensor>\n  </gazebo>\n  <!-- chassis -->\n  <link name=\"\
+    base_link\">\n    <inertial>\n      <mass value=\"3.5\"/>\n      <!--<origin xyz=\"\
+    -0.025 0 -0.223\"/> -->\n      <origin xyz=\"-0.05 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.148\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/chassis.stl\"\
+    />\n      </geometry>\n      <material name=\"ChassisRed\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.145\"/>\n     \
+    \ <geometry>\n        <box size=\"0.35 0.25 0.14\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <!-- top_plate -->\n  <link name=\"top_plate\">\n    <inertial>\n\
+    \      <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    top_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/top.stl\"\
+    />\n      </geometry>\n      <material name=\"TopBlack\"/>\n    </visual>\n  \
+    \  <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0.0 0 0\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <box size=\"0.45 0.38 0.01\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_top_joint\" type=\"fixed\"\
+    >\n    <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.234\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"top_plate\"/>\n  </joint>\n  <!-- swivel -->\n  <link name=\"\
+    swivel\">\n    <inertial>\n      <mass value=\"0.1\"/>\n      <origin xyz=\"0\
+    \ 0 0\"/>\n      <inertia ixx=\"0.01\" ixy=\"0\" ixz=\"0\" iyy=\"0.01\" iyz=\"\
+    0\" izz=\"0.01\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/swivel.stl\"/>\n      </geometry>\n      <material\
+    \ name=\"swivel\"/>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.00001 0.00001 0.00001\"\
+    />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"base_swivel_joint\"\
+    \ type=\"fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"-0.185 0 0.055\"/>\n    <axis\
+    \ xyz=\"0 0 1\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"\
+    0\" velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"\
+    />\n    <parent link=\"base_link\"/>\n    <child link=\"swivel\"/>\n  </joint>\n\
+    \  <!-- center_hubcap -->\n  <link name=\"center_hubcap\">\n    <inertial>\n \
+    \     <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"-0.000711733678\" ixz=\"0.00050272983\" iyy=\"0.015218160428\"\
+    \ iyz=\"-0.000004273467\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\"\
+    >\n        <mesh filename=\"package://p3dx_description/meshes/center_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"swivel\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"\
+    0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n  </link>\n\
+    \  <joint name=\"swivel_hubcap_joint\" type=\"fixed\">\n    <origin rpy=\"0 0\
+    \ 0\" xyz=\"-0.026 0 -0.016\"/>\n    <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"\
+    0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"0\" velocity=\"100\"/>\n   \
+    \ <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n    <parent link=\"swivel\"\
+    />\n    <child link=\"center_wheel\"/>\n  </joint>\n  <!-- center_wheel -->\n\
+    \  <link name=\"center_wheel\">\n    <inertial>\n      <mass value=\"1.0\"/>\n\
+    \      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"-0.000711733678\"\
+    \ ixz=\"0.00050272983\" iyy=\"0.015218160428\" iyz=\"-0.000004273467\" izz=\"\
+    0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/center_wheel.stl\"/>\n      </geometry>\n  \
+    \    <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n      <origin\
+    \ rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <cylinder\
+    \ length=\"0.01\" radius=\"0.0375\"/>\n      </geometry>\n    </collision>\n \
+    \ </link>\n  <joint name=\"center_wheel_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"-0.0035 0 -0.001\"/>\n    <parent link=\"center_wheel\"/>\n    <child\
+    \ link=\"center_hubcap\"/>\n  </joint>\n  <!-- wheel -->\n  <link name=\"p3dx_left_wheel\"\
+    >\n    <inertial>\n      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n\
+    \      <inertia ixx=\"0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\"\
+    \ iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n    \
+    \    <mesh filename=\"package://p3dx_description/meshes/left_wheel.stl\"/>\n \
+    \     </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n   \
+    \     <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_left_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_left_wheel\"\
+    />\n    <child link=\"p3dx_left_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n  <link\
+    \ name=\"p3dx_left_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"/>\n \
+    \     <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"0\"\
+    \ ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/left_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_left_wheel_joint\" type=\"continuous\">\n   \
+    \ <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 -0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_left_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_left_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_left_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_left_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>-75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_left_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_left_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- wheel -->\n  <link name=\"p3dx_right_wheel\">\n    <inertial>\n\
+    \      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"\
+    />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+    \      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_wheel.stl\"\
+    />\n      </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n    \
+    \  <geometry>\n        <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_right_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_right_wheel\"\
+    />\n    <child link=\"p3dx_right_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n \
+    \ <link name=\"p3dx_right_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"\
+    />\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"\
+    0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_right_wheel_joint\" type=\"continuous\">\n  \
+    \  <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_right_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_right_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_right_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_right_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_right_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_right_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <link name=\"front_sonar\">\n    <inertial>\n\
+    \      <mass value=\"0.0001\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia\
+    \ ixx=\"1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/front_sonar.stl\"\
+    />\n      </geometry>\n      <material name=\"SonarYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_front_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"0.109 0 0.209\"/>\n    <parent link=\"base_link\"/>\n    <child\
+    \ link=\"front_sonar\"/>\n  </joint>\n  <!-- lms100 laser -->\n  <link name=\"\
+    lms100\">\n    <inertial>\n      <mass value=\"1e-5\"/>\n      <origin rpy=\"\
+    0 0 0\" xyz=\"0 0 0\"/>\n      <inertia ixx=\"1e-6\" ixy=\"0\" ixz=\"0\" iyy=\"\
+    1e-6\" iyz=\"0\" izz=\"1e-6\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://p3dx_description/meshes/lms100.dae\"\
+    />\n      </geometry>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0\
+    \ 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.1 0.1 0.1\"/>\n\
+    \      </geometry>\n    </collision>\n  </link>\n  <joint name=\"lms100_joint\"\
+    \ type=\"fixed\">\n    <axis xyz=\"0 1 0\"/>\n    <origin rpy=\"0 0 0\" xyz=\"\
+    0.12 0 0.26\"/>\n    <parent link=\"base_link\"/>\n    <child link=\"lms100\"\
+    />\n  </joint>\n</robot>\n\n"
+  tf_prefix: p3dx_2
+p3dx_3:
+  joint1_position_controller:
+    joint: base_left_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint2_position_controller:
+    joint: base_right_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint_state_controller:
+    publish_rate: 50
+    type: joint_state_controller/JointStateController
+  move_base:
+    GlobalPlanner:
+      allow_unknown: true
+      cost_factor: 3.0
+      lethal_cost: 50
+      neutral_cost: 25
+      orientation_mode: 1
+      orientation_window_size: 1
+      outline_map: false
+      publish_potential: true
+      use_dijkstra: false
+      use_grid_path: true
+    TebLocalPlannerROS:
+      acc_lim_theta: 1.6
+      acc_lim_x: 0.5
+      acc_lim_y: 0.01
+      allow_init_with_backwards_motion: false
+      cmd_angle_instead_rotvel: false
+      costmap_obstacles_behind_robot_dist: 1.5
+      dt_hysteresis: 0.03
+      dt_ref: 0.3
+      dynamic_obstacle_inflation_dist: 0.6
+      enable_homotopy_class_planning: false
+      enable_multithreading: true
+      exact_arc_length: true
+      feasibility_check_no_poses: 5
+      footprint_model:
+        radius: 0.2275
+        type: circular
+      force_reinit_new_goal_angular: 0.78
+      force_reinit_new_goal_dist: 1.0
+      free_goal_vel: true
+      global_plan_overwrite_orientation: true
+      global_plan_viapoint_sep: -0.1
+      h_signature_prescaler: 1.0
+      h_signature_threshold: 0.1
+      include_costmap_obstacles: true
+      include_dynamic_obstacles: false
+      inflation_dist: 1.5
+      is_footprint_dynamic: false
+      legacy_obstacle_association: false
+      max_global_plan_lookahead_dist: 10.0
+      max_number_classes: 5
+      max_vel_theta: 3.2
+      max_vel_x: 1.2
+      max_vel_x_backwards: 1.2
+      max_vel_y: 0.0
+      min_obstacle_dist: 0.125
+      min_turning_radius: 0.0
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      obstacle_association_cutoff_factor: 5.0
+      obstacle_association_force_inclusion_factor: 1.5
+      obstacle_cost_exponent: 1.0
+      obstacle_heading_threshold: 0.45
+      obstacle_poses_affected: 30
+      optimization_activate: true
+      optimization_verbose: false
+      oscillation_recovery: true
+      penalty_epsilon: 0.05
+      publish_feedback: false
+      roadmap_graph_area_length_scale: 1.0
+      roadmap_graph_area_width: 5.0
+      roadmap_graph_no_samples: 15
+      selection_alternative_time_cost: false
+      selection_cost_hysteresis: 1.0
+      selection_obst_cost_scale: 2.0
+      selection_prefer_initial_plan: 0.95
+      selection_viapoint_cost_scale: 1.0
+      shrink_horizon_backup: true
+      switching_blocking_period: 0.0
+      teb_autosize: true
+      via_points_ordered: false
+      viapoints_all_candidates: true
+      visualize_hc_graph: false
+      visualize_with_time_as_z_axis_scale: 0.0
+      weight_acc_lim_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_y: 1.0
+      weight_adapt_factor: 2.0
+      weight_dynamic_obstacle: 50.0
+      weight_dynamic_obstacle_inflation: 0.1
+      weight_inflation: 0.1
+      weight_kinematics_forward_drive: 1.0
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_turning_radius: 1.0
+      weight_max_vel_theta: 1.0
+      weight_max_vel_x: 2.0
+      weight_max_vel_y: 2.0
+      weight_obstacle: 50.0
+      weight_optimaltime: 1.0
+      weight_shortest_path: 0.0
+      weight_viapoint: 1.0
+      wheelbase: 1.0
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 3.2
+    base_global_planner: global_planner/GlobalPlanner
+    base_local_planner: teb_local_planner/TebLocalPlannerROS
+    clearing_rotation_allowed: true
+    conservative_reset_dist: 3.0
+    controller_frequency: 20.0
+    controller_patience: 5.0
+    global_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: map
+      height: 128
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_3/lms100
+          topic: /p3dx_3/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: -64.0
+      origin_y: -64.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 5.0
+      resolution: 0.25
+      robot_base_frame: p3dx_3/base_link
+      robot_radius: 0.2275
+      rolling_window: false
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 128
+    local_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: p3dx_3/odom
+      height: 6
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_3/lms100
+          topic: /p3dx_3/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: 0.0
+      origin_y: 0.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 1.0
+      resolution: 0.05
+      robot_base_frame: p3dx_3/base_link
+      robot_radius: 0.2275
+      rolling_window: true
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 6
+    make_plan_add_unreachable_goal: true
+    make_plan_clear_costmap: true
+    max_planning_retries: -1
+    oscillation_distance: 0.5
+    oscillation_timeout: 0.0
+    planner_frequency: 0.0
+    planner_patience: 5.0
+    recovery_behavior_enabled: true
+    recovery_behaviors:
+    - name: rotate_recovery
+      type: rotate_recovery/RotateRecovery
+    restore_defaults: false
+    shutdown_costmaps: false
+  p3dx_3_robot:
+    init_pose_x: -36.5
+    init_pose_y: 15.5
+  robot_description: "<?xml version=\"1.0\" ?>\n<!-- ===================================================================================\
+    \ -->\n<!-- |    This document was autogenerated by xacro from /home/fede/catkin_ws/src/pioneer_p3dx_model/p3dx_description/urdf/pioneer3dx.xacro\
+    \ | -->\n<!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED              \
+    \                   | -->\n<!-- ===================================================================================\
+    \ -->\n<!-- \nThis is the xacro description of a Pioneer 3DX, to be used in rviz\
+    \ and gazebo.\nCopyright (C) 2013 Rafael Berkvens rafael.berkvens@uantwerpen.be\n\
+    \nThis program is free software: you can redistribute it and/or modify\nit under\
+    \ the terms of the GNU General Public License as published by\nthe Free Software\
+    \ Foundation, either version 3 of the License, or\n(at your option) any later\
+    \ version.\n\nThis program is distributed in the hope that it will be useful,\n\
+    but WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY\
+    \ or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for\
+    \ more details.\n\nYou should have received a copy of the GNU General Public License\n\
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nThis\
+    \ project is based on work by Tracy Davies, where it was in turn based on\nwork\
+    \ original in ucs-ros-pkg.\n -->\n<robot name=\"pioneer3dx\">\n  <!-- properties\
+    \ (constants) -->\n  <property name=\"ns\" value=\"p3dx\"/>\n  <!-- ros_control\
+    \ plugin -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_control.so\" name=\"\
+    gazebo_ros_control\">\n      <!--<robotNamespace>/${ns}</robotNamespace>-->\n\
+    \    </plugin>\n  </gazebo>\n  <!-- base_link -->\n  <gazebo reference=\"base_link\"\
+    >\n    <material>Gazebo/Red</material>\n  </gazebo>\n  <!-- top_plate -->\n  <gazebo\
+    \ reference=\"top_plate\">\n    <material>Gazebo/Black</material>\n  </gazebo>\n\
+    \  <!-- swivel -->\n  <gazebo reference=\"swivel\">\n    <material>Gazebo/Grey</material>\n\
+    \  </gazebo>\n  <!-- center_hubcap -->\n  <gazebo reference=\"center_hubcap\"\
+    >\n    <material>Gazebo/Grey</material>\n  </gazebo>\n  <!-- center_wheel -->\n\
+    \  <gazebo reference=\"center_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.0</mu1>\n    <mu2>0.0</mu2>\n    <kp>1000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <gazebo reference=\"front_sonar\">\n \
+    \   <material value=\"Gazebo/Yellow\"/>\n  </gazebo>\n  <!-- differential drive\
+    \ -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_diff_drive.so\" name=\"\
+    differential_drive_controller\">\n      <alwaysOn>true</alwaysOn>\n      <updateRate>50</updateRate>\n\
+    \      <leftJoint>base_right_wheel_joint</leftJoint>\n      <rightJoint>base_left_wheel_joint</rightJoint>\n\
+    \      <wheelSeparation>0.314</wheelSeparation>\n      <wheelDiameter>0.179</wheelDiameter>\n\
+    \      <torque>5</torque>\n      <commandTopic>cmd_vel</commandTopic>\n      <publishOdom>true</publishOdom>\n\
+    \      <odometryTopic>odom</odometryTopic>\n      <odometryFrame>odom</odometryFrame>\n\
+    \      <robotBaseFrame>base_link</robotBaseFrame>\n      <!-- <publishWheelTF>true</publishWheelTF>\
+    \ -->\n      <publishWheelTF>false</publishWheelTF>\n      <publishWheelJointState>true</publishWheelJointState>\n\
+    \      <wheelAcceleration>0</wheelAcceleration>\n      <wheelTorque>5</wheelTorque>\n\
+    \      <rosDebugLevel>na</rosDebugLevel>\n      <publishTf>1</publishTf>\n   \
+    \   <legacyMode>false</legacyMode>\n    </plugin>\n  </gazebo>\n  <!-- ground\
+    \ truth : not needed as for now odometry provided from differential drive plugin\
+    \ above is perfect -->\n  <!-- <gazebo> -->\n  <!-- \t<plugin name=\"p3d_base_controller\"\
+    \ filename=\"libgazebo_ros_p3d.so\"> -->\n  <!-- \t\t<alwaysOn>true</alwaysOn>\
+    \ -->\n  <!-- \t\t<updateRate>50.0</updateRate> -->\n  <!-- \t\t<bodyName>base_link</bodyName>\
+    \ -->\n  <!-- \t\t<topicName>odom</topicName> -->\n  <!-- \t\t<gaussianNoise>0.0</gaussianNoise>\
+    \ -->\n  <!-- \t\t<frameName>/map</frameName> -->\n  <!-- \t\t<!-1- initialize\
+    \ odometry for fake localization -1-> -->\n  <!-- \t\t<xyzOffsets>0 0 0</xyzOffsets>\
+    \ -->\n  <!-- \t\t<rpyOffsets>0 0 0</rpyOffsets> -->\n  <!-- \t</plugin> -->\n\
+    \  <!-- </gazebo> -->\n  <!-- lms100 -->\n  <gazebo reference=\"lms100\">\n  \
+    \  <sensor name=\"head_hokuyo_sensor\" type=\"gpu_ray\">\n      <!-- based on:\
+    \ Hokuyo URG-04LX-UG01 (but with a 360 scan angle, perfect accuracy and perfect\
+    \ precision) -->\n      <!-- https://www.hokuyo-aut.jp/search/single.php?serial=164\
+    \ -->\n      <pose>0 0 0 0 0 0</pose>\n      <visualize>false</visualize>\n  \
+    \    <update_rate>10</update_rate>\n      <!-- 100msec/scan from a max of 28msec/scan\
+    \ -->\n      <ray>\n        <scan>\n          <horizontal>\n            <samples>1000</samples>\n\
+    \            <!-- Angular resolution: 0.36\xB0 (360\xB0/1000) -->\n          \
+    \  <resolution>2</resolution>\n            <!-- Interpolate 1000 extra samples\
+    \ (http://sdformat.org/spec?ver=1.6&elem=sensor#horizontal_resolution) -->\n \
+    \           <min_angle>-3.1416</min_angle>\n            <max_angle>3.1416</max_angle>\n\
+    \          </horizontal>\n        </scan>\n        <range>\n          <min>0.04</min>\n\
+    \          <!-- Actual min is 0.002 but is too low and detects the robot as an\
+    \ obstacle -->\n          <max>6.0</max>\n          <!-- messurements higher than\
+    \ 5.6m are discarded when mapping, using this larger max value due to gazebo giving\
+    \ weird results when using 5.6 but also when using 4.6, while 5.0 worked fine\
+    \ as 6.0 did, is there a bug in the plugin when using non integer max? -->\n \
+    \         <resolution>0.001</resolution>\n        </range>\n        <noise>\n\
+    \          <type>gaussian</type>\n          <!-- \t<!-1- Noise parameters based\
+    \ on published spec for Hokuyo laser achieving -->\n          <!-- \t\t\"+-30mm\"\
+    \ accuracy at range < 10m. A mean of 0.0m and stddev of 0.01m will -->\n     \
+    \     <!-- \t\tput 99.7% of samples within 0.03m of the true reading. -1-> -->\n\
+    \          <mean>0.0</mean>\n          <stddev>0.0</stddev>\n        </noise>\n\
+    \      </ray>\n      <plugin filename=\"libgazebo_ros_gpu_laser.so\" name=\"gazebo_ros_head_hokuyo_controller\"\
+    >\n        <topicName>laser/scan</topicName>\n        <frameName>lms100</frameName>\n\
+    \      </plugin>\n    </sensor>\n  </gazebo>\n  <!-- chassis -->\n  <link name=\"\
+    base_link\">\n    <inertial>\n      <mass value=\"3.5\"/>\n      <!--<origin xyz=\"\
+    -0.025 0 -0.223\"/> -->\n      <origin xyz=\"-0.05 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.148\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/chassis.stl\"\
+    />\n      </geometry>\n      <material name=\"ChassisRed\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.145\"/>\n     \
+    \ <geometry>\n        <box size=\"0.35 0.25 0.14\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <!-- top_plate -->\n  <link name=\"top_plate\">\n    <inertial>\n\
+    \      <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    top_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/top.stl\"\
+    />\n      </geometry>\n      <material name=\"TopBlack\"/>\n    </visual>\n  \
+    \  <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0.0 0 0\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <box size=\"0.45 0.38 0.01\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_top_joint\" type=\"fixed\"\
+    >\n    <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.234\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"top_plate\"/>\n  </joint>\n  <!-- swivel -->\n  <link name=\"\
+    swivel\">\n    <inertial>\n      <mass value=\"0.1\"/>\n      <origin xyz=\"0\
+    \ 0 0\"/>\n      <inertia ixx=\"0.01\" ixy=\"0\" ixz=\"0\" iyy=\"0.01\" iyz=\"\
+    0\" izz=\"0.01\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/swivel.stl\"/>\n      </geometry>\n      <material\
+    \ name=\"swivel\"/>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.00001 0.00001 0.00001\"\
+    />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"base_swivel_joint\"\
+    \ type=\"fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"-0.185 0 0.055\"/>\n    <axis\
+    \ xyz=\"0 0 1\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"\
+    0\" velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"\
+    />\n    <parent link=\"base_link\"/>\n    <child link=\"swivel\"/>\n  </joint>\n\
+    \  <!-- center_hubcap -->\n  <link name=\"center_hubcap\">\n    <inertial>\n \
+    \     <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"-0.000711733678\" ixz=\"0.00050272983\" iyy=\"0.015218160428\"\
+    \ iyz=\"-0.000004273467\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\"\
+    >\n        <mesh filename=\"package://p3dx_description/meshes/center_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"swivel\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"\
+    0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n  </link>\n\
+    \  <joint name=\"swivel_hubcap_joint\" type=\"fixed\">\n    <origin rpy=\"0 0\
+    \ 0\" xyz=\"-0.026 0 -0.016\"/>\n    <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"\
+    0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"0\" velocity=\"100\"/>\n   \
+    \ <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n    <parent link=\"swivel\"\
+    />\n    <child link=\"center_wheel\"/>\n  </joint>\n  <!-- center_wheel -->\n\
+    \  <link name=\"center_wheel\">\n    <inertial>\n      <mass value=\"1.0\"/>\n\
+    \      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"-0.000711733678\"\
+    \ ixz=\"0.00050272983\" iyy=\"0.015218160428\" iyz=\"-0.000004273467\" izz=\"\
+    0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/center_wheel.stl\"/>\n      </geometry>\n  \
+    \    <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n      <origin\
+    \ rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <cylinder\
+    \ length=\"0.01\" radius=\"0.0375\"/>\n      </geometry>\n    </collision>\n \
+    \ </link>\n  <joint name=\"center_wheel_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"-0.0035 0 -0.001\"/>\n    <parent link=\"center_wheel\"/>\n    <child\
+    \ link=\"center_hubcap\"/>\n  </joint>\n  <!-- wheel -->\n  <link name=\"p3dx_left_wheel\"\
+    >\n    <inertial>\n      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n\
+    \      <inertia ixx=\"0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\"\
+    \ iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n    \
+    \    <mesh filename=\"package://p3dx_description/meshes/left_wheel.stl\"/>\n \
+    \     </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n   \
+    \     <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_left_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_left_wheel\"\
+    />\n    <child link=\"p3dx_left_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n  <link\
+    \ name=\"p3dx_left_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"/>\n \
+    \     <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"0\"\
+    \ ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/left_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_left_wheel_joint\" type=\"continuous\">\n   \
+    \ <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 -0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_left_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_left_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_left_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_left_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>-75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_left_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_left_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- wheel -->\n  <link name=\"p3dx_right_wheel\">\n    <inertial>\n\
+    \      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"\
+    />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+    \      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_wheel.stl\"\
+    />\n      </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n    \
+    \  <geometry>\n        <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_right_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_right_wheel\"\
+    />\n    <child link=\"p3dx_right_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n \
+    \ <link name=\"p3dx_right_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"\
+    />\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"\
+    0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_right_wheel_joint\" type=\"continuous\">\n  \
+    \  <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_right_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_right_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_right_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_right_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_right_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_right_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <link name=\"front_sonar\">\n    <inertial>\n\
+    \      <mass value=\"0.0001\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia\
+    \ ixx=\"1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/front_sonar.stl\"\
+    />\n      </geometry>\n      <material name=\"SonarYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_front_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"0.109 0 0.209\"/>\n    <parent link=\"base_link\"/>\n    <child\
+    \ link=\"front_sonar\"/>\n  </joint>\n  <!-- lms100 laser -->\n  <link name=\"\
+    lms100\">\n    <inertial>\n      <mass value=\"1e-5\"/>\n      <origin rpy=\"\
+    0 0 0\" xyz=\"0 0 0\"/>\n      <inertia ixx=\"1e-6\" ixy=\"0\" ixz=\"0\" iyy=\"\
+    1e-6\" iyz=\"0\" izz=\"1e-6\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://p3dx_description/meshes/lms100.dae\"\
+    />\n      </geometry>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0\
+    \ 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.1 0.1 0.1\"/>\n\
+    \      </geometry>\n    </collision>\n  </link>\n  <joint name=\"lms100_joint\"\
+    \ type=\"fixed\">\n    <axis xyz=\"0 1 0\"/>\n    <origin rpy=\"0 0 0\" xyz=\"\
+    0.12 0 0.26\"/>\n    <parent link=\"base_link\"/>\n    <child link=\"lms100\"\
+    />\n  </joint>\n</robot>\n\n"
+  tf_prefix: p3dx_3
+p3dx_4:
+  joint1_position_controller:
+    joint: base_left_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint2_position_controller:
+    joint: base_right_wheel_joint
+    pid:
+      d: 10.0
+      i: 0.01
+      p: 100.0
+    type: effort_controllers/JointPositionController
+  joint_state_controller:
+    publish_rate: 50
+    type: joint_state_controller/JointStateController
+  move_base:
+    GlobalPlanner:
+      allow_unknown: true
+      cost_factor: 3.0
+      lethal_cost: 50
+      neutral_cost: 25
+      orientation_mode: 1
+      orientation_window_size: 1
+      outline_map: false
+      publish_potential: true
+      use_dijkstra: false
+      use_grid_path: true
+    TebLocalPlannerROS:
+      acc_lim_theta: 1.6
+      acc_lim_x: 0.5
+      acc_lim_y: 0.01
+      allow_init_with_backwards_motion: false
+      cmd_angle_instead_rotvel: false
+      costmap_obstacles_behind_robot_dist: 1.5
+      dt_hysteresis: 0.03
+      dt_ref: 0.3
+      dynamic_obstacle_inflation_dist: 0.6
+      enable_homotopy_class_planning: false
+      enable_multithreading: true
+      exact_arc_length: true
+      feasibility_check_no_poses: 5
+      footprint_model:
+        radius: 0.2275
+        type: circular
+      force_reinit_new_goal_angular: 0.78
+      force_reinit_new_goal_dist: 1.0
+      free_goal_vel: true
+      global_plan_overwrite_orientation: true
+      global_plan_viapoint_sep: -0.1
+      h_signature_prescaler: 1.0
+      h_signature_threshold: 0.1
+      include_costmap_obstacles: true
+      include_dynamic_obstacles: false
+      inflation_dist: 1.5
+      is_footprint_dynamic: false
+      legacy_obstacle_association: false
+      max_global_plan_lookahead_dist: 10.0
+      max_number_classes: 5
+      max_vel_theta: 3.2
+      max_vel_x: 1.2
+      max_vel_x_backwards: 1.2
+      max_vel_y: 0.0
+      min_obstacle_dist: 0.125
+      min_turning_radius: 0.0
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      obstacle_association_cutoff_factor: 5.0
+      obstacle_association_force_inclusion_factor: 1.5
+      obstacle_cost_exponent: 1.0
+      obstacle_heading_threshold: 0.45
+      obstacle_poses_affected: 30
+      optimization_activate: true
+      optimization_verbose: false
+      oscillation_recovery: true
+      penalty_epsilon: 0.05
+      publish_feedback: false
+      roadmap_graph_area_length_scale: 1.0
+      roadmap_graph_area_width: 5.0
+      roadmap_graph_no_samples: 15
+      selection_alternative_time_cost: false
+      selection_cost_hysteresis: 1.0
+      selection_obst_cost_scale: 2.0
+      selection_prefer_initial_plan: 0.95
+      selection_viapoint_cost_scale: 1.0
+      shrink_horizon_backup: true
+      switching_blocking_period: 0.0
+      teb_autosize: true
+      via_points_ordered: false
+      viapoints_all_candidates: true
+      visualize_hc_graph: false
+      visualize_with_time_as_z_axis_scale: 0.0
+      weight_acc_lim_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_y: 1.0
+      weight_adapt_factor: 2.0
+      weight_dynamic_obstacle: 50.0
+      weight_dynamic_obstacle_inflation: 0.1
+      weight_inflation: 0.1
+      weight_kinematics_forward_drive: 1.0
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_turning_radius: 1.0
+      weight_max_vel_theta: 1.0
+      weight_max_vel_x: 2.0
+      weight_max_vel_y: 2.0
+      weight_obstacle: 50.0
+      weight_optimaltime: 1.0
+      weight_shortest_path: 0.0
+      weight_viapoint: 1.0
+      wheelbase: 1.0
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 3.2
+    base_global_planner: global_planner/GlobalPlanner
+    base_local_planner: teb_local_planner/TebLocalPlannerROS
+    clearing_rotation_allowed: true
+    conservative_reset_dist: 3.0
+    controller_frequency: 20.0
+    controller_patience: 5.0
+    global_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: map
+      height: 128
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_4/lms100
+          topic: /p3dx_4/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: -64.0
+      origin_y: -64.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 5.0
+      resolution: 0.25
+      robot_base_frame: p3dx_4/base_link
+      robot_radius: 0.2275
+      rolling_window: false
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 128
+    local_costmap:
+      always_send_full_costmap: false
+      footprint: '[]'
+      footprint_clearing_enabled: false
+      footprint_padding: 0.01
+      global_frame: p3dx_4/odom
+      height: 6
+      inflation_layer:
+        cost_scaling_factor: 10.0
+        enabled: true
+        inflate_unknown: false
+        inflation_radius: 0.0
+      obstacle_layer:
+        combination_method: 1
+        enabled: true
+        footprint_clearing_enabled: true
+        laser_scan:
+          clearing: true
+          data_type: LaserScan
+          inf_is_valid: true
+          marking: true
+          observation_persistence: 0.0
+          sensor_frame: p3dx_4/lms100
+          topic: /p3dx_4/laser/scan
+        max_obstacle_height: 2.0
+        observation_sources: laser_scan
+        obstacle_range: 5.59
+        raytrace_range: 5.246446609406726
+        track_unknown_space: true
+      origin_x: 0.0
+      origin_y: 0.0
+      plugins:
+      - name: obstacle_layer
+        type: costmap_2d::ObstacleLayer
+      - name: inflation_layer
+        type: costmap_2d::InflationLayer
+      publish_frequency: 1.0
+      resolution: 0.05
+      robot_base_frame: p3dx_4/base_link
+      robot_radius: 0.2275
+      rolling_window: true
+      static_map: false
+      transform_tolerance: 0.3
+      update_frequency: 5.0
+      width: 6
+    make_plan_add_unreachable_goal: true
+    make_plan_clear_costmap: true
+    max_planning_retries: -1
+    oscillation_distance: 0.5
+    oscillation_timeout: 0.0
+    planner_frequency: 0.0
+    planner_patience: 5.0
+    recovery_behavior_enabled: true
+    recovery_behaviors:
+    - name: rotate_recovery
+      type: rotate_recovery/RotateRecovery
+    restore_defaults: false
+    shutdown_costmaps: false
+  p3dx_4_robot:
+    init_pose_x: -36.5
+    init_pose_y: 8.5
+  robot_description: "<?xml version=\"1.0\" ?>\n<!-- ===================================================================================\
+    \ -->\n<!-- |    This document was autogenerated by xacro from /home/fede/catkin_ws/src/pioneer_p3dx_model/p3dx_description/urdf/pioneer3dx.xacro\
+    \ | -->\n<!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED              \
+    \                   | -->\n<!-- ===================================================================================\
+    \ -->\n<!-- \nThis is the xacro description of a Pioneer 3DX, to be used in rviz\
+    \ and gazebo.\nCopyright (C) 2013 Rafael Berkvens rafael.berkvens@uantwerpen.be\n\
+    \nThis program is free software: you can redistribute it and/or modify\nit under\
+    \ the terms of the GNU General Public License as published by\nthe Free Software\
+    \ Foundation, either version 3 of the License, or\n(at your option) any later\
+    \ version.\n\nThis program is distributed in the hope that it will be useful,\n\
+    but WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY\
+    \ or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for\
+    \ more details.\n\nYou should have received a copy of the GNU General Public License\n\
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nThis\
+    \ project is based on work by Tracy Davies, where it was in turn based on\nwork\
+    \ original in ucs-ros-pkg.\n -->\n<robot name=\"pioneer3dx\">\n  <!-- properties\
+    \ (constants) -->\n  <property name=\"ns\" value=\"p3dx\"/>\n  <!-- ros_control\
+    \ plugin -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_control.so\" name=\"\
+    gazebo_ros_control\">\n      <!--<robotNamespace>/${ns}</robotNamespace>-->\n\
+    \    </plugin>\n  </gazebo>\n  <!-- base_link -->\n  <gazebo reference=\"base_link\"\
+    >\n    <material>Gazebo/Red</material>\n  </gazebo>\n  <!-- top_plate -->\n  <gazebo\
+    \ reference=\"top_plate\">\n    <material>Gazebo/Black</material>\n  </gazebo>\n\
+    \  <!-- swivel -->\n  <gazebo reference=\"swivel\">\n    <material>Gazebo/Grey</material>\n\
+    \  </gazebo>\n  <!-- center_hubcap -->\n  <gazebo reference=\"center_hubcap\"\
+    >\n    <material>Gazebo/Grey</material>\n  </gazebo>\n  <!-- center_wheel -->\n\
+    \  <gazebo reference=\"center_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.0</mu1>\n    <mu2>0.0</mu2>\n    <kp>1000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <gazebo reference=\"front_sonar\">\n \
+    \   <material value=\"Gazebo/Yellow\"/>\n  </gazebo>\n  <!-- differential drive\
+    \ -->\n  <gazebo>\n    <plugin filename=\"libgazebo_ros_diff_drive.so\" name=\"\
+    differential_drive_controller\">\n      <alwaysOn>true</alwaysOn>\n      <updateRate>50</updateRate>\n\
+    \      <leftJoint>base_right_wheel_joint</leftJoint>\n      <rightJoint>base_left_wheel_joint</rightJoint>\n\
+    \      <wheelSeparation>0.314</wheelSeparation>\n      <wheelDiameter>0.179</wheelDiameter>\n\
+    \      <torque>5</torque>\n      <commandTopic>cmd_vel</commandTopic>\n      <publishOdom>true</publishOdom>\n\
+    \      <odometryTopic>odom</odometryTopic>\n      <odometryFrame>odom</odometryFrame>\n\
+    \      <robotBaseFrame>base_link</robotBaseFrame>\n      <!-- <publishWheelTF>true</publishWheelTF>\
+    \ -->\n      <publishWheelTF>false</publishWheelTF>\n      <publishWheelJointState>true</publishWheelJointState>\n\
+    \      <wheelAcceleration>0</wheelAcceleration>\n      <wheelTorque>5</wheelTorque>\n\
+    \      <rosDebugLevel>na</rosDebugLevel>\n      <publishTf>1</publishTf>\n   \
+    \   <legacyMode>false</legacyMode>\n    </plugin>\n  </gazebo>\n  <!-- ground\
+    \ truth : not needed as for now odometry provided from differential drive plugin\
+    \ above is perfect -->\n  <!-- <gazebo> -->\n  <!-- \t<plugin name=\"p3d_base_controller\"\
+    \ filename=\"libgazebo_ros_p3d.so\"> -->\n  <!-- \t\t<alwaysOn>true</alwaysOn>\
+    \ -->\n  <!-- \t\t<updateRate>50.0</updateRate> -->\n  <!-- \t\t<bodyName>base_link</bodyName>\
+    \ -->\n  <!-- \t\t<topicName>odom</topicName> -->\n  <!-- \t\t<gaussianNoise>0.0</gaussianNoise>\
+    \ -->\n  <!-- \t\t<frameName>/map</frameName> -->\n  <!-- \t\t<!-1- initialize\
+    \ odometry for fake localization -1-> -->\n  <!-- \t\t<xyzOffsets>0 0 0</xyzOffsets>\
+    \ -->\n  <!-- \t\t<rpyOffsets>0 0 0</rpyOffsets> -->\n  <!-- \t</plugin> -->\n\
+    \  <!-- </gazebo> -->\n  <!-- lms100 -->\n  <gazebo reference=\"lms100\">\n  \
+    \  <sensor name=\"head_hokuyo_sensor\" type=\"gpu_ray\">\n      <!-- based on:\
+    \ Hokuyo URG-04LX-UG01 (but with a 360 scan angle, perfect accuracy and perfect\
+    \ precision) -->\n      <!-- https://www.hokuyo-aut.jp/search/single.php?serial=164\
+    \ -->\n      <pose>0 0 0 0 0 0</pose>\n      <visualize>false</visualize>\n  \
+    \    <update_rate>10</update_rate>\n      <!-- 100msec/scan from a max of 28msec/scan\
+    \ -->\n      <ray>\n        <scan>\n          <horizontal>\n            <samples>1000</samples>\n\
+    \            <!-- Angular resolution: 0.36\xB0 (360\xB0/1000) -->\n          \
+    \  <resolution>2</resolution>\n            <!-- Interpolate 1000 extra samples\
+    \ (http://sdformat.org/spec?ver=1.6&elem=sensor#horizontal_resolution) -->\n \
+    \           <min_angle>-3.1416</min_angle>\n            <max_angle>3.1416</max_angle>\n\
+    \          </horizontal>\n        </scan>\n        <range>\n          <min>0.04</min>\n\
+    \          <!-- Actual min is 0.002 but is too low and detects the robot as an\
+    \ obstacle -->\n          <max>6.0</max>\n          <!-- messurements higher than\
+    \ 5.6m are discarded when mapping, using this larger max value due to gazebo giving\
+    \ weird results when using 5.6 but also when using 4.6, while 5.0 worked fine\
+    \ as 6.0 did, is there a bug in the plugin when using non integer max? -->\n \
+    \         <resolution>0.001</resolution>\n        </range>\n        <noise>\n\
+    \          <type>gaussian</type>\n          <!-- \t<!-1- Noise parameters based\
+    \ on published spec for Hokuyo laser achieving -->\n          <!-- \t\t\"+-30mm\"\
+    \ accuracy at range < 10m. A mean of 0.0m and stddev of 0.01m will -->\n     \
+    \     <!-- \t\tput 99.7% of samples within 0.03m of the true reading. -1-> -->\n\
+    \          <mean>0.0</mean>\n          <stddev>0.0</stddev>\n        </noise>\n\
+    \      </ray>\n      <plugin filename=\"libgazebo_ros_gpu_laser.so\" name=\"gazebo_ros_head_hokuyo_controller\"\
+    >\n        <topicName>laser/scan</topicName>\n        <frameName>lms100</frameName>\n\
+    \      </plugin>\n    </sensor>\n  </gazebo>\n  <!-- chassis -->\n  <link name=\"\
+    base_link\">\n    <inertial>\n      <mass value=\"3.5\"/>\n      <!--<origin xyz=\"\
+    -0.025 0 -0.223\"/> -->\n      <origin xyz=\"-0.05 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.148\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/chassis.stl\"\
+    />\n      </geometry>\n      <material name=\"ChassisRed\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.145\"/>\n     \
+    \ <geometry>\n        <box size=\"0.35 0.25 0.14\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <!-- top_plate -->\n  <link name=\"top_plate\">\n    <inertial>\n\
+    \      <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n   \
+    \ <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    top_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/top.stl\"\
+    />\n      </geometry>\n      <material name=\"TopBlack\"/>\n    </visual>\n  \
+    \  <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0.0 0 0\"/>\n      <geometry\
+    \ name=\"pioneer_geom\">\n        <box size=\"0.45 0.38 0.01\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_top_joint\" type=\"fixed\"\
+    >\n    <origin rpy=\"0 0 0\" xyz=\"-0.045 0 0.234\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"top_plate\"/>\n  </joint>\n  <!-- swivel -->\n  <link name=\"\
+    swivel\">\n    <inertial>\n      <mass value=\"0.1\"/>\n      <origin xyz=\"0\
+    \ 0 0\"/>\n      <inertia ixx=\"0.01\" ixy=\"0\" ixz=\"0\" iyy=\"0.01\" iyz=\"\
+    0\" izz=\"0.01\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/swivel.stl\"/>\n      </geometry>\n      <material\
+    \ name=\"swivel\"/>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.00001 0.00001 0.00001\"\
+    />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"base_swivel_joint\"\
+    \ type=\"fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"-0.185 0 0.055\"/>\n    <axis\
+    \ xyz=\"0 0 1\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"\
+    0\" velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"\
+    />\n    <parent link=\"base_link\"/>\n    <child link=\"swivel\"/>\n  </joint>\n\
+    \  <!-- center_hubcap -->\n  <link name=\"center_hubcap\">\n    <inertial>\n \
+    \     <mass value=\"0.01\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"-0.000711733678\" ixz=\"0.00050272983\" iyy=\"0.015218160428\"\
+    \ iyz=\"-0.000004273467\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\"\
+    >\n        <mesh filename=\"package://p3dx_description/meshes/center_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"swivel\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"\
+    0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n  </link>\n\
+    \  <joint name=\"swivel_hubcap_joint\" type=\"fixed\">\n    <origin rpy=\"0 0\
+    \ 0\" xyz=\"-0.026 0 -0.016\"/>\n    <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"\
+    0 0 0\"/>\n    <limit effort=\"100\" k_velocity=\"0\" velocity=\"100\"/>\n   \
+    \ <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n    <parent link=\"swivel\"\
+    />\n    <child link=\"center_wheel\"/>\n  </joint>\n  <!-- center_wheel -->\n\
+    \  <link name=\"center_wheel\">\n    <inertial>\n      <mass value=\"1.0\"/>\n\
+    \      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"-0.000711733678\"\
+    \ ixz=\"0.00050272983\" iyy=\"0.015218160428\" iyz=\"-0.000004273467\" izz=\"\
+    0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\"\
+    \ xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"\
+    package://p3dx_description/meshes/center_wheel.stl\"/>\n      </geometry>\n  \
+    \    <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n      <origin\
+    \ rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <cylinder\
+    \ length=\"0.01\" radius=\"0.0375\"/>\n      </geometry>\n    </collision>\n \
+    \ </link>\n  <joint name=\"center_wheel_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"-0.0035 0 -0.001\"/>\n    <parent link=\"center_wheel\"/>\n    <child\
+    \ link=\"center_hubcap\"/>\n  </joint>\n  <!-- wheel -->\n  <link name=\"p3dx_left_wheel\"\
+    >\n    <inertial>\n      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n\
+    \      <inertia ixx=\"0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\"\
+    \ iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"pioneer_geom\">\n    \
+    \    <mesh filename=\"package://p3dx_description/meshes/left_wheel.stl\"/>\n \
+    \     </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n    <collision>\n\
+    \      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n   \
+    \     <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_left_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_left_wheel\"\
+    />\n    <child link=\"p3dx_left_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n  <link\
+    \ name=\"p3dx_left_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"/>\n \
+    \     <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"0\"\
+    \ ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/left_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_left_wheel_joint\" type=\"continuous\">\n   \
+    \ <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 -0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_left_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_left_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_left_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_left_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>-75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_left_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_left_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- wheel -->\n  <link name=\"p3dx_right_wheel\">\n    <inertial>\n\
+    \      <mass value=\"0.5\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+    0.012411765597\" ixy=\"0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"\
+    />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+    \      <geometry name=\"pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_wheel.stl\"\
+    />\n      </geometry>\n      <material name=\"WheelBlack\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"-1.57079635 0 0\" xyz=\"0 0 0\"/>\n    \
+    \  <geometry>\n        <!--<mesh filename=\"package://p3dx_description/meshes/${suffix}_wheel.stl\"\
+    /> -->\n        <cylinder length=\"0.01\" radius=\"0.09\"/>\n      </geometry>\n\
+    \    </collision>\n  </link>\n  <joint name=\"base_right_hubcap_joint\" type=\"\
+    fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n    <parent link=\"p3dx_right_wheel\"\
+    />\n    <child link=\"p3dx_right_hubcap\"/>\n  </joint>\n  <!-- hubcap -->\n \
+    \ <link name=\"p3dx_right_hubcap\">\n    <inertial>\n      <mass value=\"0.01\"\
+    />\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.012411765597\" ixy=\"\
+    0\" ixz=\"0\" iyy=\"0.015218160428\" iyz=\"0\" izz=\"0.011763977943\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/right_hubcap.stl\"\
+    />\n      </geometry>\n      <material name=\"HubcapYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_right_wheel_joint\" type=\"continuous\">\n  \
+    \  <axis xyz=\"0 1 0\"/>\n    <anchor xyz=\"0 0 0\"/>\n    <limit effort=\"100\"\
+    \ velocity=\"100\"/>\n    <joint_properties damping=\"0.0\" friction=\"0.0\"/>\n\
+    \    <origin rpy=\"0 0 0\" xyz=\"0 0.158 0.091\"/>\n    <parent link=\"base_link\"\
+    />\n    <child link=\"p3dx_right_wheel\"/>\n  </joint>\n  <!-- gazebo elements\
+    \ -->\n  <transmission name=\"base_link_right_wheel_trans\">\n    <type>pr2_mechanism_model/SimpleTransmission</type>\n\
+    \    <joint name=\"base_right_wheel_joint\">\n      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>\n\
+    \    </joint>\n    <actuator name=\"base_right_wheel_motor\">\n      <hardwareInterface>EffortJointInterface</hardwareInterface>\n\
+    \      <mechanicalReduction>75.06766917293233</mechanicalReduction>\n    </actuator>\n\
+    \  </transmission>\n  <gazebo reference=\"p3dx_right_hubcap\">\n    <material>Gazebo/Yellow</material>\n\
+    \  </gazebo>\n  <gazebo reference=\"p3dx_right_wheel\">\n    <material>Gazebo/Black</material>\n\
+    \    <mu1>0.5</mu1>\n    <mu2>50.0</mu2>\n    <kp>100000000.0</kp>\n    <kd>1.0</kd>\n\
+    \  </gazebo>\n  <!-- front_sonar -->\n  <link name=\"front_sonar\">\n    <inertial>\n\
+    \      <mass value=\"0.0001\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia\
+    \ ixx=\"1\" ixy=\"0\" ixz=\"0\" iyy=\"1\" iyz=\"0\" izz=\"1\"/>\n    </inertial>\n\
+    \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry name=\"\
+    pioneer_geom\">\n        <mesh filename=\"package://p3dx_description/meshes/front_sonar.stl\"\
+    />\n      </geometry>\n      <material name=\"SonarYellow\"/>\n    </visual>\n\
+    \    <collision>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
+    \        <box size=\"0.00001 0.00001 0.00001\"/>\n      </geometry>\n    </collision>\n\
+    \  </link>\n  <joint name=\"base_front_joint\" type=\"fixed\">\n    <origin rpy=\"\
+    0 0 0\" xyz=\"0.109 0 0.209\"/>\n    <parent link=\"base_link\"/>\n    <child\
+    \ link=\"front_sonar\"/>\n  </joint>\n  <!-- lms100 laser -->\n  <link name=\"\
+    lms100\">\n    <inertial>\n      <mass value=\"1e-5\"/>\n      <origin rpy=\"\
+    0 0 0\" xyz=\"0 0 0\"/>\n      <inertia ixx=\"1e-6\" ixy=\"0\" ixz=\"0\" iyy=\"\
+    1e-6\" iyz=\"0\" izz=\"1e-6\"/>\n    </inertial>\n    <visual>\n      <origin\
+    \ rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://p3dx_description/meshes/lms100.dae\"\
+    />\n      </geometry>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0\
+    \ 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <box size=\"0.1 0.1 0.1\"/>\n\
+    \      </geometry>\n    </collision>\n  </link>\n  <joint name=\"lms100_joint\"\
+    \ type=\"fixed\">\n    <axis xyz=\"0 1 0\"/>\n    <origin rpy=\"0 0 0\" xyz=\"\
+    0.12 0 0.26\"/>\n    <parent link=\"base_link\"/>\n    <child link=\"lms100\"\
+    />\n  </joint>\n</robot>\n\n"
+  tf_prefix: p3dx_4
+robot_radius: 0.2275
+robot_sensor_range: 5.6
+robot_speed: 1.2
+robots_map_topic: move_base/global_costmap/costmap
+robots_map_update_topic: move_base/global_costmap/costmap_updates
+rosdistro: 'noetic
+
+  '
+roslaunch:
+  uris:
+    host_ubuntupc__41191: http://ubuntuPC:41191/
+    host_ubuntupc__42107: http://ubuntuPC:42107/
+rosversion: '1.15.13
+
+  '
+run_id: 567829c4-672a-11ec-a68a-850c678f0e41
+starting_robot_number: 5
+use_sim_time: true

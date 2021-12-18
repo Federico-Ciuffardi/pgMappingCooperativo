@@ -1,5 +1,7 @@
 #!/usr/bin/env bash 
 
+# this was abandoned, the one used was test_driver 
+
 # Variables
 pkg_dir="${HOME}/catkin_ws/src/pgmappingcooperativo"
 rviz_dir="${pkg_dir}/rviz"

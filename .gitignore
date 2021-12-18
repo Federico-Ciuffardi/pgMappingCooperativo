@@ -10,8 +10,8 @@ build
 CTestTestfile.cmake
 libMAIN_SOURCES.a
 logFiles
-log
+/log
 log_old
-data
+/data
 data_old
 doc

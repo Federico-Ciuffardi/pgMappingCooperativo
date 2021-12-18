@@ -17,7 +17,7 @@ vector<CellState> notFrontier = {Occupied, Unknown, Free, Critical, CriticalLine
 //////////////////
 CentralModule::CentralModule() {
   state = WaitingAuction;
-
+  objIdTime = 0;
   assignmentId = 0;
   auctionId = 0;
 }
@@ -63,6 +63,9 @@ Auction CentralModule::getAuctionInfo() {
 
   // Simplify the frontiers obtaining the significative frontiers and using those instead of all the frontiers
   if(frontierSimplificationMethod > 0){
+    float secOnNanosec = 1000000000;
+    std::chrono::steady_clock::time_point objIdTimeStart = std::chrono::steady_clock::now();
+
     // Calculate the connectedComponents of frontiers
     if (!frontierConComps) {
       frontierConComps = new ConnectedComponents(map.map, notFrontier);
@@ -127,7 +130,10 @@ Auction CentralModule::getAuctionInfo() {
       // mark only the significant frontiers
       for(Pos f : significativeFrontiers) map.map[f] = Frontier;
     }
+
+    objIdTime = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - objIdTimeStart).count())/secOnNanosec;
   }
+
 
   // Restore the state previous to the frontier unfiltering of the last getAuctionInfo
   for(Pos p : frontiers){

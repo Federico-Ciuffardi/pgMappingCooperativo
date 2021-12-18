@@ -9,13 +9,13 @@ SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 
 function count_executed_tests(){
-  test_param=$1
-  test_value=$2
+  local test_param=$1
+  local test_value=$2
 
-  count=0
+  local count=0
   for log in $log_dir/* ; do
     if [ -f "$log/termination.yaml" ] ; then
-      val=$(ruby -r yaml -e "puts YAML.load_file(ARGV[0])[\"$test_param\"]" "$log/rosparams.yaml")
+      local val=$(ruby -r yaml -e "puts YAML.load_file(ARGV[0])[\"$test_param\"]" "$log/rosparams.yaml")
       if [ $val = $test_value ] ; then
         ((count=count+1))
       fi
@@ -25,34 +25,39 @@ function count_executed_tests(){
 }
 
 function remaining_tests(){
-  test_param=$1
-  test_value=$2
-  desired_tests=$3
+  local test_param=$1
+  local test_value=$2
+  local desired_tests=$3
 
-  current=$(count_executed_tests $test_param $test_value)
+  local current=$(count_executed_tests $test_param $test_value)
+
+  local remaining=0
   ((remaining=desired_tests-current))
+
   echo $remaining
 }
 
 function execute_remaining_tests(){
-  test_param=$1
-  test_value=$2
-  desired_tests=$3
-  test_cmd=$4
+  local test_param=$1
+  local test_value=$2
+  local desired_tests=$3
+  local test_cmd=$4
 
-  remaining=$(remaining_tests $test_param $test_value $desired_tests)
+  local remaining=$(remaining_tests $test_param $test_value $desired_tests)
   while [ $remaining  -gt 0 ] ; do
     for (( n = 0 ; n < $remaining ; n++ )); do
       $test_cmd
     done
-    remaining=$(remaining_tests $1 $2 $3)
+    remaining=$(remaining_tests $test_param $test_value $desired_tests)
   done
 }
 
-execute_remaining_tests "cell_size" 1.0      $n "$SCRIPT_DIR/pgmch test-nocompile office 5 1.0      1000s"
+test_num=20
 
-execute_remaining_tests "cell_size" 0.5      $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.5      1900s"
+execute_remaining_tests "cell_size" 1.0      $test_num "$SCRIPT_DIR/pgmch test-nocompile office 5 1.0      1000s"
 
-execute_remaining_tests "cell_size" 0.333333 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.333333 2900s"
+execute_remaining_tests "cell_size" 0.5      $test_num "$SCRIPT_DIR/pgmch test-nocompile office 5 0.5      1900s"
 
-execute_remaining_tests "cell_size" 0.25     $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.25     4000s"
+execute_remaining_tests "cell_size" 0.333333 $test_num "$SCRIPT_DIR/pgmch test-nocompile office 5 0.333333 2900s"
+
+execute_remaining_tests "cell_size" 0.25     $test_num "$SCRIPT_DIR/pgmch test-nocompile office 5 0.25     4000s"

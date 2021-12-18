@@ -1,0 +1,65 @@
+#!/usr/bin/env bash 
+
+# this was abandoned, the one used was test_driver 
+
+# Variables
+pkg_dir="${HOME}/catkin_ws/src/pgmappingcooperativo"
+rviz_dir="${pkg_dir}/rviz"
+config_dir="${pkg_dir}/config"
+log_dir="${pkg_dir}/log"
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+
+function count_executed_tests(){
+  test_param=$1
+  test_value=$2
+
+  count=0
+  for log in $log_dir/* ; do
+    if [ -f "$log/termination.yaml" ] ; then
+      val=$(ruby -r yaml -e "puts YAML.load_file(ARGV[0])[\"$test_param\"]" "$log/rosparams.yaml")
+      if [ $val = $test_value ] ; then
+        ((count=count+1))
+      fi
+    fi
+  done
+  echo $count
+}
+
+function remaining_tests(){
+  test_param=$1
+  test_value=$2
+  desired_tests=$3
+
+  current=$(count_executed_tests $test_param $test_value)
+  ((remaining=desired_tests-current))
+  echo $remaining
+}
+
+function execute_remaining_tests(){
+  test_param=$1
+  test_value=$2
+  desired_tests=$3
+  test_cmd=$4
+
+  remaining=$(remaining_tests $test_param $test_value $desired_tests)
+  while [ $remaining  -gt 0 ] ; do
+    for (( n = 0 ; n < $remaining ; n++ )); do
+      $test_cmd
+    done
+    remaining=$(remaining_tests $1 $2 $3)
+  done
+}
+
+
+for (( n = 1 ; n <= 20 ; n++ )); do
+  execute_remaining_tests "starting_robot_number" 1 $n "$SCRIPT_DIR/pgmch test-nocompile office 1 0.5 5900s"
+
+  execute_remaining_tests "starting_robot_number" 3 $n "$SCRIPT_DIR/pgmch test-nocompile office 3 0.5 3400s"
+
+  execute_remaining_tests "starting_robot_number" 5 $n "$SCRIPT_DIR/pgmch test-nocompile office 5 0.5 1900s"
+
+  execute_remaining_tests "starting_robot_number" 2 $n "$SCRIPT_DIR/pgmch test-nocompile office 2 0.5 3900s"
+
+  execute_remaining_tests "starting_robot_number" 4 $n "$SCRIPT_DIR/pgmch test-nocompile office 4 0.5 2400s"
+done

@@ -124,6 +124,7 @@ class CentralModule {
   // Auction related
   TopoMap* topoMap = NULL;
   boost::unordered_map<RobotId,boost::unordered_map<Pos,Float>> pathLengths;
+  float objIdTime;
 
   // Map related
   IncrementalMap map;

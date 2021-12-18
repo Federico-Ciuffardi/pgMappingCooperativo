@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<launch>  
+  <!--########-->
+  <!-- Config -->
+  <!--########-->
+
+  <!-- # Exploration (must set)                                                           -->
+  <!--   There are two types of parameters on this section if their description contains: -->
+  <!--   * TO MATCH => Has to be the same value as other value specified somewhere else   -->
+  <!--   * TO USE   => The value specifies what should the program do                     -->
+
+  <!-- ## Set to the number of robots TO USE in the exploration                                                          -->
+  <!--    Currently must be a value from 1 to 5, to add more check the end of this file and add more robots analogously) -->
+  <arg name="starting_robot_number" default="3" />
+  <param name="starting_robot_number" type="int" value="$(arg starting_robot_number)" />
+
+  <!-- ## Set to the name of the gazebo map TO USE. The file "../worlds/map_name.world" must exist and be a valid gazebo world    -->
+  <arg name="map_name" default="office" />
+  <param name="map_name" type="string" value="$(arg map_name)" />  
+
+  <!-- ## Set TO MATCH the size of the used map -->
+  <arg name="map_size" default="12380" /> 
+  <param name="map_size" type="int" value="$(arg map_size)" />  
+
+  <!-- ## Set the cell size TO USE in the occupancy grid  -->
+  <arg name="cell_size" default="0.500" /> 
+  <param name="cell_size" type="double" value="$(arg cell_size)" />  
+
+  <!-- ## Set TO MATCH the robot speed  -->
+  <arg name="robot_speed" default="1.2" /> 
+  <param name="robot_speed" type="double" value="$(arg robot_speed)" />  
+
+  <!-- ## Set TO MATCH the robot sensor ranges  -->
+  <arg name="robot_sensor_range" default="5.6" /> 
+  <param name="robot_sensor_range" type="double" value="$(arg robot_sensor_range)" />  
+
+  <!-- ## Set TO MATCH the robot radius -->
+  <arg name="robot_radius" default="0.2275" /> 
+  <param name="robot_radius" type="double" value="$(arg robot_radius)" />  
+
+  <!-- # Log -->
+  <arg name="file_log_dir" default="$(find pgmappingcooperativo)/logFiles" /> 
+  <param name="file_log_dir" type="string" value="$(arg file_log_dir)" />  
+
+  <arg name="file_log_level" default="2" /> 
+  <param name="file_log_level" type="int" value="$(arg file_log_level)" />  
+
+  <!-- # CentralModule Check '../src/CentralModule/CentralModule.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params)-->
+
+  <arg name="auction_info_incremental" default="0" /> 
+  <!-- <arg name="auction_info_incremental" default="1" /> --> 
+  <param name="auction_info_incremental" type="int" value="$(arg auction_info_incremental)" />  
+
+  <!-- <arg name="frontier_simplification_method" default="2" /> --> 
+  <arg name="frontier_simplification_method" default="5" /> 
+  <param name="frontier_simplification_method" type="int" value="$(arg frontier_simplification_method)" />  
+
+  <arg name="bid_segment_value_component_coefficient" default="10" /> 
+  <param name="bid_segment_value_component_coefficient" type="double" value="$(arg bid_segment_value_component_coefficient)" />  
+
+  <arg name="bid_segment_value_component_mode" default="2" /> 
+  <param name="bid_segment_value_component_mode" type="double" value="$(arg bid_segment_value_component_mode)" />  
+
+  <!-- # GVD lib config. Check '../src/lib/GVD/src/GvdConfig.h' for help (has defaults values on said file that can be overridden by the ros params) -->
+
+  <arg name="gvd_connectivity_method" default="1" />
+  <!-- <arg name="gvd_connectivity_method" default="2" /> -->
+  <param name="gvd_connectivity_method" type="int" value="$(arg gvd_connectivity_method)" />
+
+  <arg name="gvd_vertex_simplification_method" default="1" />
+  <param name="gvd_vertex_simplification_method" type="int" value="$(arg gvd_vertex_simplification_method)" />  
+
+  <arg name="gvd_edge_simplification_method" default="2" />
+  <param name="gvd_edge_simplification_method" type="int" value="$(arg gvd_edge_simplification_method)" />  
+
+  <arg name="gvd_edge_simplification_allow_vertex_removal" default="1" />
+  <param name="gvd_edge_simplification_allow_vertex_removal" type="int" value="$(arg gvd_edge_simplification_allow_vertex_removal)" />  
+
+  <arg name="critical_condition_min" default="1" />
+  <param name="critical_condition_min" type="int" value="$(arg critical_condition_min)" />  
+
+  <!-- # Map merger Check '../src/MapMerger/MapMerger.{h,cpp}' for help (has defaults values on said file that can be overridden by the ros params) -->
+  
+  <arg name="robots_map_topic" default="move_base/global_costmap/costmap" />
+  <param name="robots_map_topic" type="string" value="$(arg robots_map_topic)" />  
+
+  <arg name="robots_map_update_topic" default="move_base/global_costmap/costmap_updates" />
+  <param name="robots_map_update_topic" type="string" value="$(arg robots_map_update_topic)" />  
+
+  <arg name="min_robot_maps_arrived" default="3" />
+  <param name="min_robot_maps_arrived" type="int" value="$(arg min_robot_maps_arrived)" />  
+
+  <!-- start gazebo -->
+  <param name ="/use_sim_time" value="true"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"      value="$(find pgmappingcooperativo)/worlds/$(arg map_name).world"/>
+    <arg name="paused"          value="false"/>
+    <arg name="use_sim_time"    value="true"/>
+    <arg name="gui"             value="false"/>
+    <arg name="recording"       value="false"/>
+    <arg name="debug"           value="false"/>
+    <arg name="verbose"         value="false"/>
+    <arg name="server_required" value="true"/>
+    <arg name="gui_required"    value="false"/>
+  </include>
+
+  <!-- Initialize robots -->
+  <group if="$(eval arg('starting_robot_number')  >= 1 )">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="p3dx_0" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="36.5" />
+      <arg name="z"  value="0.0" />
+
+      <arg name="cell_size" value="$(arg cell_size)" />
+      <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 2 )">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="p3dx_1" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="29.5" />
+      <arg name="z"  value="0.0" />
+
+      <arg name="cell_size" value="$(arg cell_size)" />
+      <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 3 )">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="p3dx_2" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="22.5" />
+      <arg name="z"  value="0.0" />
+
+      <arg name="cell_size" value="$(arg cell_size)" />
+      <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 4)">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="p3dx_3" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="15.5" />
+      <arg name="z"  value="0.0" />
+
+      <arg name="cell_size" value="$(arg cell_size)" />
+      <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('starting_robot_number') >= 5)">
+    <include file="$(find pgmappingcooperativo)/launch/one_robot.launch" >
+      <arg name="ns" value="p3dx_4" />
+      <arg name="x"  value="-36.5" />
+      <arg name="y"  value="8.5" />
+      <arg name="z"  value="0.0" />
+
+      <arg name="cell_size" value="$(arg cell_size)" />
+      <arg name="robot_sensor_range" value="$(arg robot_sensor_range)" />
+      <arg name="robot_radius" value="$(arg robot_radius)" />
+    </include> 
+  </group>
+ 
+  <!-- Initialize centralized nodes -->
+  <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_map_merger" name="pgmappingcooperativo_map_merger" required="true" />
+  <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_central_module" name="pgmappingcooperativo_central_module"  required="true"/>
+  <!-- <node pkg="pgmappingcooperativo" type="pgmappingcooperativo_end_module" name="pgmappingcooperativo_end_module" required="true" /> -->
+
+</launch>

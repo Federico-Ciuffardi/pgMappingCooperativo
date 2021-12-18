@@ -1,0 +1,7 @@
+image: /home/fede/catkin_ws/src/pgmappingcooperativo/log/2021_11_17__09_17_00/map.pgm
+resolution: 0.250000
+origin: [-64.000000, -64.000000, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+

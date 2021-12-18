@@ -112,6 +112,9 @@ string metersTraveledLog;
 string gvdUpdateTimeLog;
 string gvdUpdateTimeIncrementLog;
 string gvdUpdateAuctionInfoPercentLog;
+string objIdTimeLog;
+string objIdTimeIncrementLog;
+string objIdAuctionInfoPercentLog;
 
 bool endFlag = false;
 
@@ -274,13 +277,18 @@ void tryToShutdown(){
     logAppend(metersTraveledLog, to_string(robotReport.metersTraveled));
   }
 
-  gplot.graph_file(auctionInfoTimeLog,          "Celdas exploradas", "Tiempo de obtención de info para subasta (s)",true);
-  gplot.graph_file(auctionInfoTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de obtención info para subasta (s)");
+  gplot.graph_file(auctionInfoTimeLog,          "Celdas exploradas", "Tiempo de obtención de información (s)",true);
+  gplot.graph_file(auctionInfoTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de obtención de información (s)");
 
-  gplot.graph_file(gvdUpdateTimeLog,          "Celdas exploradas", "Tiempo de obtención del GVD (s)", true);
-  gplot.graph_file(gvdUpdateTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de obtención del GVD (s)");
+  gplot.graph_file(gvdUpdateTimeLog,          "Celdas exploradas", "Tiempo de construcción del GVD (s)", true);
+  gplot.graph_file(gvdUpdateTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de construcción del GVD (s)");
 
-  gplot.graph_file(gvdUpdateAuctionInfoPercentLog, "Celdas exploradas", "Porcentaje de obtención GVD en obtención info subasta", true);
+  gplot.graph_file(gvdUpdateAuctionInfoPercentLog, "Celdas exploradas", "Porcentaje de construcción GVD en obtención de información", true);
+
+  gplot.graph_file(objIdTimeLog,          "Celdas exploradas", "Tiempo de simplificación de objetivos (s)", true);
+  gplot.graph_file(objIdTimeIncrementLog, "Celdas exploradas", "Diferencia de tiempo de simplificación de objetivos (s)");
+
+  gplot.graph_file(objIdAuctionInfoPercentLog, "Celdas exploradas", "Porcentaje de simplificación de objetivos en obtención de información", true);
 
   std::system(("rosrun map_server map_saver --occ 50 --free 49 -f "+ centralModule.fileLogDir +"/map map:=map_visualization_marker &").c_str());
   ros::Duration(5).sleep();
@@ -300,6 +308,7 @@ void startAuction() {
   ros::Duration lastauctionInfoTime = auctionInfoTime;
   float lastAuctionInfoRealTime = auctionInfoRealTime;
   float lastgvdUpdateTime = centralModule.topoMap ? centralModule.topoMap->gvd->updateTime : 0; //real time
+  float lastIdObjTime = centralModule.objIdTime; //real time
 
   // Start the timers
   ros::Time auctionInfoStart = ros::Time::now();
@@ -361,17 +370,32 @@ void startAuction() {
     string timeIncrement = to_string(auctionInfoRealTime - lastAuctionInfoRealTime);
     logAppend(auctionInfoTimeIncrementLog, exploredCells + "  " + timeIncrement);
 
-    // log auctionInfoTime
+    // objId
+    /// log objIdTime 
+    time = to_string(centralModule.objIdTime);
+    logAppend(objIdTimeLog, exploredCells + "  " + time);
+
+    /// log auctionInfoIncrementalTime
+    timeIncrement = to_string(centralModule.objIdTime - lastIdObjTime);
+    logAppend(objIdTimeIncrementLog, exploredCells + "  " + timeIncrement);
+
+    // gvdUpdate
+    /// log gvdUpdateTime
     time = to_string(centralModule.topoMap->gvd->updateTime);
     logAppend(gvdUpdateTimeLog, exploredCells + "  " + time);
 
-    // log gvdUpdateTimeIncrementLog
+    /// log gvdUpdateTimeIncrementLog
     timeIncrement = to_string(centralModule.topoMap->gvd->updateTime - lastgvdUpdateTime);
     logAppend(gvdUpdateTimeIncrementLog, exploredCells + "  " + timeIncrement);
 
-    // log auctionInfoTime spent on gvdUpate
+    // misc
+    /// log auctionInfoTime spent on gvdUpateTime
     time = to_string(100*(centralModule.topoMap->gvd->updateTime/auctionInfoRealTime));
     logAppend(gvdUpdateAuctionInfoPercentLog, exploredCells + "  " + time);
+
+    /// log auctionInfoTime spent on gvdUpateTime
+    time = to_string(100*(centralModule.objIdTime/auctionInfoRealTime));
+    logAppend(objIdAuctionInfoPercentLog, exploredCells + "  " + time);
   }
 
   cout<<"debug :: auction started successfully"<<endl;
@@ -499,7 +523,7 @@ void auctionStartDelayTimerRoutine(const ros::TimerEvent&) {
 void mapCallBack(const OccupancyGridConstPtr& msg) {
   centralModule.updateMap(msg);
   if (firstMap){
-    sleep(1); // wait for the robots to also receive their first map
+    sleep(5); // wait for the robots to also receive their first map
     firstMapTime = ros::Time::now();
     firstMap = false;
     startAuction();
@@ -661,6 +685,9 @@ int main(int argc, char* argv[]) {
   // log files
   auctionInfoTimeLog             = centralModule.fileLogDir + "/auction_info_time";
   auctionInfoTimeIncrementLog    = centralModule.fileLogDir + "/auction_info_time_diff";
+  objIdTimeLog                   = centralModule.fileLogDir + "/obj_id_time";
+  objIdTimeIncrementLog          = centralModule.fileLogDir + "/obj_id_time_diff";
+  objIdAuctionInfoPercentLog     = centralModule.fileLogDir + "/obj_id_auction_info_percent_log";
   gvdUpdateTimeLog               = centralModule.fileLogDir + "/gvd_construction_time";
   gvdUpdateTimeIncrementLog      = centralModule.fileLogDir + "/gvd_construction_time_diff";
   gvdUpdateAuctionInfoPercentLog = centralModule.fileLogDir + "/gvd_update_auction_info_percent_log";

@@ -55,6 +55,8 @@ def process_times(predigest, this_log_dir, x_value, name):
 
     set_predigest_value(predigest, x_value, name+"_max", max(times))
 
+    set_predigest_value(predigest, x_value, name+"_min", max(min(times),0))
+
     time_sum = sum(times)
     set_predigest_value(predigest, x_value, name+"_sum",  time_sum)
 
@@ -187,6 +189,16 @@ for this_log in os.scandir(log_dir):
 
     process_times(predigest, this_log_dir, x_value, 'gvd_construction_time')
     process_times(predigest, this_log_dir, x_value, 'gvd_construction_time_diff')
+    process_times(predigest, this_log_dir, x_value, 'gvd_update_auction_info_percent_log')
+
+    set_predigest_value(predigest, x_value, "gvd_update_auction_info_percent", 100 * predigest["gvd_construction_time_sum"][x_value][-1] /predigest["auction_info_time_sum"][x_value][-1])
+
+    if os.path.isfile(f"{this_log_dir}/obj_id_time"):
+        process_times(predigest, this_log_dir, x_value, 'obj_id_time')
+        process_times(predigest, this_log_dir, x_value, 'obj_id_time_diff')
+        process_times(predigest, this_log_dir, x_value, 'obj_id_auction_info_percent_log')
+
+        set_predigest_value(predigest, x_value, "obj_id_auction_info_percent", 100 * predigest["obj_id_time_sum"][x_value][-1] /predigest["auction_info_time_sum"][x_value][-1])
 
 # Paso 2 armar los digest de cada predigest
 
@@ -220,7 +232,7 @@ for y_param, values in predigest.items():
                                                    # 0 but leads to neg value instead)
         digest[y_param]["std_dev"][x_value] = math.sqrt(inside_root)/n
 
-# Paso 3 dejar el digest (quizas tambien el pre digest) en el file sistem
+# Paso 3 dejar el digest (quizas tambien el pre digest) en el file system
 
 with open(f'{digest_dir}/predigest.yaml', 'w') as outfile:
     yaml.dump(predigest, outfile)
