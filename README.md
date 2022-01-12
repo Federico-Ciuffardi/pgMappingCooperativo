@@ -1,16 +1,35 @@
-# Exploración multirobot basada en la segmentación del espacio
-El trabajo desarrollado trata sobre el problema de exploración utilizando un grupo de robots, más específicamente sobre
-como lograr distribución eficiente de los robots en el espacio para una mayor coordinación en la exploración. Para esto, en lugar de
-distribuir los robots sobre las fronteras entre el espacio conocido y el desconocido, como es usual, la propuesta apunta a identificar 
-porciones del espacio similares a habitaciones o corredores, llamados segmentos, para luego distribuir los robots primero sobre
-dichos segmentos y luego sobre las fronteras de los mismos.
+# Exploración multirobot basada en grillas de ocupación probabilística y diagramas de Voronoi
 
-## Como usar
-Correr `./pgmch test [map_name] [starting_robot_number]` donde:
-* `map_name` puede ser o `office`
-* `starting_robot` es un numero entre `1` y `5`
+## Como usar (Ubuntu 20.04)
 
-Esto corresponde a explorar el entorno `map_name` con `starting_robot` robots.
+1. Instalar ROS noetic y crear un workspace de catkin:
+* Seguir tutorial de http://wiki.ros.org/noetic/Installation/Ubuntu instalando
+  la version completa (`ros-noetic-desktop-full`).
+* Seguir tutorial de
+  http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment
+  salteando el primer paso (ROS ya instalado).
 
-Correr `./pgmch --help` para mas información.
+2. Instalar las dependencias:
+```bash
+sudo apt install ros-noetic-navigation
+sudo apt install ros-noetic-teb-local-planner
+sudo apt install ros-noetic-map-msgs
+```
 
+3. Clonar en workspace de catkin: 
+
+```bash
+git clone https://gitlab.fing.edu.uy/federico.ciuffardi/pioneer_p3dx_model ~/catkin_ws/src/pioneer_p3dx_model
+
+git clone https://gitlab.fing.edu.uy/federico.ciuffardi/pgmappingcooperativo.git ~/catkin_ws/src/pgmappingcooperativo
+```
+
+4. Ejecutar una simulación de prueba:
+```bash
+~/catkin_ws/src/pgmappingcooperativo/scripts/pgmch test office <robot_number> <cell_size>
+```
+Donde:
+* `robot_number` es la cantidad de robots a utilizar (entre 1 y 5)
+* `cell_size` es el tamaño de las celdas de las grillas de ocupación (recomendado entre 0.25 y 1)
+
+Correr `~/catkin_ws/src/pgmappingcooperativo/scripts/pgmch --help` para más información.
