@@ -13,12 +13,12 @@ Commands and args:
    compile        
    |  Compile the workspace '~/catkin_ws'
 
-   test <map_name:office> <robot_number:5> <cell_size:1> <timeout:7200>
+   test <map_name:office> <robot_number:5> <cell_size:0.5> <timeout:7200>
    |  Compile and run a single test in <map_name> with <robot_number>.
    |  The occupancy grid used will have the specified <cell_size>.
    |  The exploration will stop if it is not completed in <timeout> seconds.
 
-   test-nocompile <map_name:office> <robot_number:5> <cell_size:1> <timeout:7200>
+   test-nocompile <map_name:office> <robot_number:5> <cell_size:0.5> <timeout:7200>
    |  Same as test command but without compiling.
 
    replay <log_folder:last> <playback_speed:1>
@@ -99,7 +99,7 @@ function test(){
   # load args
   local map_name="${1:-office}"
   local starting_robot_number="${2:-5}"
-  local cell_size="${3:-1}"
+  local cell_size="${3:-0.5}"
   local timeout="${4:-7200}"
 
   # get new id
