@@ -32,4 +32,6 @@ Donde:
 * `robot_number` es la cantidad de robots a utilizar (entre 1 y 5)
 * `cell_size` es el tamaño de las celdas de las grillas de ocupación (recomendado entre 0.25 y 1)
 
+## Documentación
+
 Correr `~/catkin_ws/src/pgmappingcooperativo/scripts/pgmch --help` y leer `~/catkin_ws/src/pgmappingcooperativo/launch/multirobot.launch` para más información.

@@ -94,6 +94,9 @@ function init_generic_ros(){
 }
 
 function test(){
+  mkdir -p "${HOME}/.gazebo/models"
+  cp -r "$pkg_dir/models/willowgarage" "${HOME}/.gazebo/models"
+
   clean_ros &> /dev/null
 
   # load args
