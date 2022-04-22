@@ -34,4 +34,7 @@ Donde:
 
 ## Documentación
 
-Correr `~/catkin_ws/src/pgmappingcooperativo/scripts/pgmch --help` y leer `~/catkin_ws/src/pgmappingcooperativo/launch/multirobot.launch` para más información.
+Por más información:
+* Ejecutar `~/catkin_ws/src/pgmappingcooperativo/scripts/pgmch --help`
+* Leer el contenido de `~/catkin_ws/src/pgmappingcooperativo/launch/multirobot.launch`
+* Leer el [informe](https://gitlab.fing.edu.uy/federico.ciuffardi/pgmappingcooperativo/-/blob/master/informe_pg_federico_ciuffardi.pdf)
