@@ -1,5 +1,7 @@
 # Exploración multirobot basada en grillas de ocupación probabilística y diagramas de Voronoi
 
+https://github.com/user-attachments/assets/86537be4-33a6-4bf3-aef6-d0acb0961ec7
+
 ## Como usar (Ubuntu 20.04)
 
 1. Instalar ROS noetic y crear un workspace de catkin:
